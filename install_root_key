@@ -1,0 +1,14 @@
+#!/bin/bash
+
+hash -r
+
+DIR="$( _dir="${0%/*}" ; cd "${_dir:-.}" ; /bin/pwd )"
+PATH="${DIR}/chef-scripts:/bin:/usr/bin"
+export PATH
+
+tmpfile="$(mktemp "/tmp/${0##*/}.XXXX")" || exit 2
+dest=~/.ssh/id_rsa.root
+
+trap 'rm -f "${tmpfile}"' EXIT HUP TERM
+get-root-key > "${tmpfile}" || exit 3
+install -m0600 "${tmpfile}" "${dest}"
