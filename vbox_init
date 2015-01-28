@@ -1,0 +1,13 @@
+#!/bin/bash
+
+hash -r
+PROG="${0##*/}"
+DIR="$(_dir="${0%/*}" ; cd "${_dir:-.}" ; /bin/pwd)"
+
+export PATH=$DIR:/bin:/usr/bin
+
+set -x
+utils/clean.sh
+time -p vbox_create.sh
+utils/startvms.sh
+vagrant ssh -c "cd chef-bcpc && ./wait_and_bootstrap.sh"
