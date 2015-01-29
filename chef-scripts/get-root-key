@@ -5,7 +5,10 @@
 
 require 'chef'
 
-env='Test-Laptop'
+env = case ARGV[0]
+        when nil then 'Test-Laptop'
+        else ARGV[0]
+      end
 
 Chef::Config.from_file("#{ENV['HOME']}/chef-bcpc/.chef/knife.rb")
 item = Chef::DataBagItem.load('configs',env)
