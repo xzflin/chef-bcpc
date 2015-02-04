@@ -63,22 +63,22 @@ function download_VM_files {
       fi
   fi
 
-  ISO=ubuntu-12.04-mini.iso
+  ISO=ubuntu-14.04-mini.iso
 
-  # Grab the Ubuntu 12.04 installer image
+  # Grab the Ubuntu installer image
   if [[ ! -f  $ISO ]]; then
       if [[ -f $CACHEDIR/$ISO ]]; then
 	  cp $CACHEDIR/$ISO .
       else
-     #$CURL -o ubuntu-12.04-mini.iso http://archive.ubuntu.com/ubuntu/dists/precise/main/installer-amd64/current/images/netboot/mini.iso
-	  $CURL -o $ISO http://archive.ubuntu.com/ubuntu/dists/precise-updates/main/installer-amd64/current/images/raring-netboot/mini.iso
+	  #$CURL -o $ISO http://archive.ubuntu.com/ubuntu/dists/trusty/main/installer-amd64/current/images/netboot/mini.iso
+	  $CURL -o $ISO http://archive.ubuntu.com/ubuntu/dists/trusty-updates/main/installer-amd64/current/images/netboot/mini.iso
       fi
       if [[ -d $CACHEDIR && ! -f $CACHEDIR/$ISO ]]; then
 	  cp $ISO $CACHEDIR
       fi
   fi
 
-  BOX='precise-server-cloudimg-amd64-vagrant-disk1.box'
+  BOX='trusty-server-cloudimg-amd64-vagrant-disk1.box'
 
   # Can we create the bootstrap VM via Vagrant
   if hash vagrant 2> /dev/null ; then
@@ -87,7 +87,7 @@ function download_VM_files {
 	if [[ -f $CACHEDIR/$BOX ]]; then
 	    cp $CACHEDIR/$BOX .
 	else
-	    $CURL -o precise-server-cloudimg-amd64-vagrant-disk1.box http://cloud-images.ubuntu.com/vagrant/precise/current/precise-server-cloudimg-amd64-vagrant-disk1.box
+	    $CURL -o $BOX http://cloud-images.ubuntu.com/vagrant/trusty/current/$BOX
 	fi
 	if [[ -d $CACHEDIR && ! -f $CACHEDIR/$BOX ]]; then
 	    cp $BOX $CACHEDIR
@@ -225,8 +225,8 @@ function create_bootstrap_VM {
                     $VBM storageattach $vm --storagectl "SATA Controller" --device 0 --port $port --type hdd --medium $P/$vm/$vm-$disk.vdi
                     port=$((port+1))
                 done
-                # Add the bootable mini ISO for installing Ubuntu 12.04
-                $VBM storageattach $vm --storagectl "IDE Controller" --device 0 --port 0 --type dvddrive --medium ubuntu-12.04-mini.iso
+                # Add the bootable mini ISO for installing Ubuntu ISO
+                $VBM storageattach $vm --storagectl "IDE Controller" --device 0 --port 0 --type dvddrive --medium $ISO
                 $VBM modifyvm $vm --boot1 disk
             fi
             # Add the network interfaces
