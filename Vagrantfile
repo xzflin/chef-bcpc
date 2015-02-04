@@ -50,9 +50,9 @@ Vagrant.configure("2") do |config|
 #
 #  end
 
-  config.vm.box = "precise64"
+  config.vm.box = "trusty64"
   #config.vm.box_url = "http://cloud-images.ubuntu.com/precise/current/precise-server-cloudimg-amd64-vagrant-disk1.box"
-  config.vm.box_url = "precise-server-cloudimg-amd64-vagrant-disk1.box"
+  config.vm.box_url = "trusty-server-cloudimg-amd64-vagrant-disk1.box"
 
   memory = ( ENV["BOOTSTRAP_VM_MEM"] or "1536" )
   cpus = ( ENV["BOOTSTRAP_VM_CPUs"] or "1" )
