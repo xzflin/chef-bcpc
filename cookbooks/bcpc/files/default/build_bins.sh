@@ -164,16 +164,16 @@ if [ ! -f ubuntu-14.04-mini.iso ]; then
 fi
 FILES="ubuntu-14.04-mini.iso $FILES"
 
-# Grab the CentOS 6 PXE boot images
-if [ ! -f centos-6-initrd.img ]; then
-    ccurl  http://mirror.net.cen.ct.gov/centos/6/os/x86_64/images/pxeboot/initrd.img centos-6-initrd.img
-fi
-FILES="centos-6-initrd.img $FILES"
-
-if [ ! -f centos-6-vmlinuz ]; then
-    ccurl  http://mirror.net.cen.ct.gov/centos/6/os/x86_64/images/pxeboot/vmlinuz centos-6-vmlinuz
-fi
-FILES="centos-6-vmlinuz $FILES"
+## Grab the CentOS 6 PXE boot images
+#if [ ! -f centos-6-initrd.img ]; then
+#    ccurl  http://mirror.net.cen.ct.gov/centos/6/os/x86_64/images/pxeboot/initrd.img centos-6-initrd.img
+#fi
+#FILES="centos-6-initrd.img $FILES"
+#
+#if [ ! -f centos-6-vmlinuz ]; then
+#    ccurl  http://mirror.net.cen.ct.gov/centos/6/os/x86_64/images/pxeboot/vmlinuz centos-6-vmlinuz
+#fi
+#FILES="centos-6-vmlinuz $FILES"
 
 # Make the diamond package
 if [ ! -f diamond.deb ]; then
@@ -261,11 +261,11 @@ if [ ! -f zabbix-agent.tar.gz ] || [ ! -f zabbix-server.tar.gz ]; then
 fi
 FILES="zabbix-agent.tar.gz zabbix-server.tar.gz $FILES"
 
-# Get some python libs 
-if [ ! -f python-requests-aws_0.1.5_all.deb ]; then
-    fpm -s python -t deb -v 0.1.5 requests-aws
-fi
-FILES="python-requests-aws_0.1.5_all.deb $FILES"
+## Get some python libs
+#if [ ! -f python-requests-aws_0.1.6_all.deb ]; then
+#    fpm -s python -t deb -v 0.1.6 requests-aws
+#fi
+#FILES="python-requests-aws_0.1.6_all.deb $FILES"
 
 
 popd
