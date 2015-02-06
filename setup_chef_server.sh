@@ -42,15 +42,9 @@ else
 #EOF
 #  fi
   chef-server-ctl reconfigure
-  # TODO: change the names? idk
-  if [[ -n $SUDO_USER ]]; then
-    OWNER=$SUDO_USER
-  else
-    OWNER=$USER
-  fi
-  install -d -m0700 -o $OWNER $HOME/.knife
-  chef-server-ctl user-create admin admin admin admin@localhost.com welcome --filename $HOME/.knife/admin.pem
-  chef-server-ctl org-create bcpc "BCPC" --association admin --filename $HOME/.knife/chef-validator.pem
+#TODO: set umask here...
+  chef-server-ctl user-create admin admin admin admin@localhost.com welcome --filename /etc/chef/admin.pem
+  chef-server-ctl org-create bcpc "BCPC" --association admin --filename /etc/chef/chef-validator.pem
 fi
 
 # copy our ssh-key to be authorized for root
