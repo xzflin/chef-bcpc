@@ -2,6 +2,22 @@
 
 # Expected to be run in the root of the Chef Git repository (e.g. chef-bcpc)
 
+gen_knife_config(){
+  cat <<EOF
+current_dir = File.dirname(__FILE__)
+log_level                :info
+log_location             STDOUT
+node_name                "admin"
+client_key               "#{current_dir}/admin.pem"
+validation_client_name   "chef-validator"
+validation_key           "#{current_dir}/chef-validator.pem"
+chef_server_url          "https://${BOOTSTRAP_IP}:4000"
+cache_type               'BasicFile'
+cache_options( :path => "#{ENV['HOME']}/.chef/checksums" )
+cookbook_path            ["#{current_dir}/../cookbooks"]
+EOF
+}
+
 set -x
 
 if [[ -f ./proxy_setup.sh ]]; then
@@ -26,8 +42,9 @@ if [[ -f .chef/knife.rb ]]; then
   knife client delete $USER -y || true
   mv .chef/ ".chef_found_$(date +"%m-%d-%Y %H:%M:%S")"
 fi
-./configure-knife.sh http://$BOOTSTRAP_IP:4000 welcome
 
+install -d -m0700 .chef
+gen_knife_config > .chef/knife.rb
 cp -p .chef/knife.rb .chef/knife-proxy.rb
 
 if [[ ! -z "$http_proxy" ]]; then
