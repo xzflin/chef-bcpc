@@ -11,7 +11,7 @@ node_name                "admin"
 client_key               "#{current_dir}/admin.pem"
 validation_client_name   "chef-validator"
 validation_key           "#{current_dir}/chef-validator.pem"
-chef_server_url          "https://${BOOTSTRAP_IP}:4000"
+chef_server_url          "https://bcpc-bootstrap"
 cache_type               'BasicFile'
 cache_options( :path => "#{ENV['HOME']}/.chef/checksums" )
 cookbook_path            ["#{current_dir}/../cookbooks"]
@@ -52,6 +52,10 @@ if [[ ! -z "$http_proxy" ]]; then
   echo "https_proxy \"${https_proxy}\"" >> .chef/knife-proxy.rb
 fi
 
+# TODO: this is bogus
+# copy chef keys
+cp -p /etc/chef/admin.pem .chef/
+cp -p /etc/chef/chef-validator.pem .chef/
 cd cookbooks
 
 # allow versions on cookbooks so 
