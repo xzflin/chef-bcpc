@@ -22,6 +22,7 @@ set -x
 
 if [[ -f ./proxy_setup.sh ]]; then
   . ./proxy_setup.sh
+  sudo ./proxy_cert_download_hack.sh
 fi
 
 if [[ -z "$1" ]]; then
@@ -52,10 +53,6 @@ if [[ ! -z "$http_proxy" ]]; then
   echo "https_proxy \"${https_proxy}\"" >> .chef/knife-proxy.rb
 fi
 
-# TODO: this is bogus
-# copy chef keys
-cp -p /etc/chef/admin.pem .chef/
-cp -p /etc/chef/chef-validator.pem .chef/
 cd cookbooks
 
 # allow versions on cookbooks so 
