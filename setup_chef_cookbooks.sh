@@ -2,6 +2,7 @@
 
 # Expected to be run in the root of the Chef Git repository (e.g. chef-bcpc)
 
+# TODO: extract chef organization
 gen_knife_config(){
   cat <<EOF
 current_dir = File.dirname(__FILE__)
@@ -11,7 +12,7 @@ node_name                "admin"
 client_key               "#{current_dir}/admin.pem"
 validation_client_name   "chef-validator"
 validation_key           "#{current_dir}/chef-validator.pem"
-chef_server_url          "https://bcpc-bootstrap"
+chef_server_url          "https://bcpc-bootstrap/organizations/bcpc"
 cache_type               'BasicFile'
 cache_options( :path => "#{ENV['HOME']}/.chef/checksums" )
 cookbook_path            ["#{current_dir}/../cookbooks"]
@@ -53,6 +54,8 @@ if [[ ! -z "$http_proxy" ]]; then
   echo "https_proxy \"${https_proxy}\"" >> .chef/knife-proxy.rb
 fi
 
+# TODO: Is this right place for this?
+knife ssl fetch
 cd cookbooks
 
 # allow versions on cookbooks so 
