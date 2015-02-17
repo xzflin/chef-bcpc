@@ -10,8 +10,8 @@ log_level                :info
 log_location             STDOUT
 node_name                "admin"
 client_key               "#{current_dir}/admin.pem"
-validation_client_name   "chef-validator"
-validation_key           "#{current_dir}/chef-validator.pem"
+validation_client_name   "bcpc-validator"
+validation_key           "#{current_dir}/bcpc-validator.pem"
 chef_server_url          "https://bcpc-bootstrap/organizations/bcpc"
 cache_type               'BasicFile'
 cache_options( :path => "#{ENV['HOME']}/.chef/checksums" )
