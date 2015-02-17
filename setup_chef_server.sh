@@ -43,8 +43,8 @@ EOF
   fi
   chef-server-ctl reconfigure
   chef-server-ctl user-create admin admin admin admin@localhost.com welcome --filename /etc/opscode/admin.pem
-  chef-server-ctl org-create bcpc "BCPC" --association admin --filename /etc/opscode/chef-validator.pem
-  chmod 0600 /etc/opscode/{chef-validator,admin}.pem
+  chef-server-ctl org-create bcpc "BCPC" --association admin --filename /etc/opscode/bcpc-validator.pem
+  chmod 0600 /etc/opscode/{bcpc-validator,admin}.pem
 fi
 
 dpkg -E -i cookbooks/bcpc/files/default/bins/chef-client.deb
@@ -57,7 +57,7 @@ fi
 
 install -d -m0770 -o $OWNER .chef
 install -m0600 -o $OWNER /etc/opscode/admin.pem .chef/admin.pem
-install -m0600 -o $OWNER /etc/opscode/chef-validator.pem .chef/chef-validator.pem
+install -m0600 -o $OWNER /etc/opscode/bcpc-validator.pem .chef/bcpc-validator.pem
 
 # copy our ssh-key to be authorized for root
 if [[ -f $HOME/.ssh/authorized_keys && ! -f /root/.ssh/authorized_keys ]]; then
