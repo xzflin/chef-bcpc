@@ -6,3 +6,10 @@
 
 # vim
 *.sw[a-z]
+
+# Binary files from build_bins.sh
+#cookbooks/bcpc/files/default/bins/**
+*.deb
+*.box
+*.vdi
+*.gem
