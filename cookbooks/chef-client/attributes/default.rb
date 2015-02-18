@@ -1,3 +1,4 @@
+# Hacked on by: Kundai Andrew Midzi (<kmidzi@bloomberg.net>)
 #
 # Author:: Joshua Timberman (<joshua@chef.io>)
 # Author:: Seth Chisamore (<schisamo@chef.io>)
@@ -57,12 +58,6 @@ default['chef_client']['cron'] = {
   'use_cron_d' => false,
   'mailto' => nil,
 }
-
-# Configuration for Windows scheduled task
-default['chef_client']['task']['frequency'] = 'minute'
-default['chef_client']['task']['frequency_modifier'] = node['chef_client']['interval'].to_i / 60
-default['chef_client']['task']['user'] = 'SYSTEM'
-default['chef_client']['task']['password'] = '' # SYSTEM user does not need a password, but windows_task LWRP wants one
 
 default['chef_client']['load_gems'] = {}
 
@@ -151,14 +146,6 @@ when 'smartos'
   default['chef_client']['method_dir'] = '/opt/local/lib/svc/method'
   default['chef_client']['bin_dir'] = '/opt/local/bin'
   default['chef_client']['locale'] = 'en_US.UTF-8'
-when 'windows'
-  default['chef_client']['init_style']  = 'windows'
-  default['chef_client']['conf_dir']    = 'C:/chef'
-  default['chef_client']['run_path']    = "#{node["chef_client"]["conf_dir"]}/run"
-  default['chef_client']['cache_path']  = "#{node["chef_client"]["conf_dir"]}/cache"
-  default['chef_client']['backup_path'] = "#{node["chef_client"]["conf_dir"]}/backup"
-  default['chef_client']['log_dir']     = "#{node["chef_client"]["conf_dir"]}/log"
-  default['chef_client']['bin']         = 'C:/opscode/chef/bin/chef-client'
 else
   default['chef_client']['init_style']  = 'none'
   default['chef_client']['run_path']    = '/var/run'
