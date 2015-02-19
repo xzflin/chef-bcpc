@@ -24,7 +24,7 @@ module Opscode
       include Chef::DSL::PlatformIntrospection if Chef::VERSION >= '11.0.0'
 
       def chef_server_user
-        Chef::VERSION >= '11.0.0' ? 'chef_server' : 'chef'
+        Chef::VERSION >= '11.0.0' ? 'opscode' : 'chef'
       end
 
       def chef_server?
