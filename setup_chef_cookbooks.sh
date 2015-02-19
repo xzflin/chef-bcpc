@@ -59,7 +59,7 @@ knife ssl fetch
 cd cookbooks
 
 # allow versions on cookbooks so 
-for cookbook in "apt 1.10.0" ubuntu cron "chef-client 3.3.8" chef-solo-search ntp "yum 3.2.2" "logrotate 1.6.0"; do
+for cookbook in "apt 1.10.0" ubuntu cron ntp "yum 3.2.2" "logrotate 1.6.0"; do
   if [[ ! -d ${cookbook% *} ]]; then
      # unless the proxy was defined this knife config will be the same as the one generated above
     knife cookbook site download $cookbook --config ../.chef/knife-proxy.rb
