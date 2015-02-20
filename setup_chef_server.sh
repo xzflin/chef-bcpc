@@ -26,15 +26,15 @@ if dpkg -s chef-server-core 2>/dev/null | grep -q Status.*installed; then
   echo chef server is installed
 else
   dpkg -i cookbooks/bcpc/files/default/bins/chef-server.deb
-  if [ ! -f /etc/opscode/chef-server.rb ]; then
+  if [ ! -s /etc/opscode/chef-server.rb ]; then
     if [ ! -d /etc/opscode ]; then
       mkdir /etc/opscode
       chown 775 /etc/opscode
     fi
     cat > /etc/opscode/chef-server.rb <<EOF
-api_fqdn "${BOOTSTRAP_IP}"
+# api_fqdn "${BOOTSTRAP_IP}"
 # allow connecting to http port directly
-nginx['enable_non_ssl'] = true
+# nginx['enable_non_ssl'] = true
 # have nginx listen on port 4000
 nginx['non_ssl_port'] = 4000
 # allow long-running recipes not to die with an error due to auth
