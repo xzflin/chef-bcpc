@@ -52,12 +52,6 @@ cookbook_file "/tmp/nova-libvirt.patch" do
     mode 00644
 end
 
-cookbook_file "/tmp/nova-sql.patch" do
-    source "nova-sql.patch"
-    owner "root"
-    mode 00644
-end
-
 bash "patch-for-nova-live-migration" do
    user "root"
    code <<-EOH
@@ -73,21 +67,6 @@ bash "patch-for-nova-live-migration" do
    not_if "test -f /usr/lib/python2.7/dist-packages/nova/nova-libvirt.patch"
    notifies :restart, "service[nova-compute]", :immediately
 end
-
-#bash "patch-for-nova-sql-bugs" do
-#    user "root"
-#    code <<-EOH
-#        cd /usr/lib/python2.7/dist-packages/nova
-#        patch -p2 < /tmp/nova-sql.patch
-#        rv=$?
-#        if [ $rv -ne 0 ]; then
-#          echo "Error applying patch ($rv) - aborting!"
-#          exit $rv
-#        fi
-#        cp /tmp/nova-sql.patch .
-#    EOH
-#    not_if "test -f /usr/lib/python2.7/dist-packages/nova/nova-sql.patch"
-#end
 
 template "/etc/nova/ssl-bcpc.pem" do
     source "ssl-bcpc.pem.erb"
