@@ -36,7 +36,6 @@ set -x
 
 if [[ -f ./proxy_setup.sh ]]; then
   . ./proxy_setup.sh
-  sudo ./proxy_cert_download_hack.sh
 fi
 
 if [[ -z "$1" ]]; then

@@ -57,6 +57,11 @@ if [[ -f $HOME/.ssh/authorized_keys && ! -f /root/.ssh/authorized_keys ]]; then
   cp $HOME/.ssh/authorized_keys /root/.ssh/authorized_keys
 fi
 
+# Bad hack for finnicky MITM proxies...
+if [[ -n "https_proxy" ]] ; then
+  ./proxy_cert_download_hack.sh
+fi
+
 # install knife-acl plugin
 read shebang < $(type -P knife)
 ruby_interp="${shebang:2}"
