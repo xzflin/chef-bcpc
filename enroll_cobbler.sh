@@ -45,7 +45,14 @@ for i in bcpc-vm1 bcpc-vm2 bcpc-vm3; do
     exit 1 
   fi 
   echo "Registering $i with $MAC for ${subnet}.${node}"
-  REGISTERCMD="sudo cobbler system remove --name=$i; sudo cobbler system add --name=$i --hostname=$i --profile=bcpc_host --ip-address=${subnet}.${node} --mac=${MAC}"
+  read -d %% REGISTERCMD <<EOF
+    ip=${subnet}.${node} ;
+    read _ _ dev _ < <(ip route get \$ip) || { echo "Could not determine device." >&2 ; exit 2 ; } ;
+    sudo cobbler system remove --name="$i" ;
+    sudo cobbler system add --name="$i" --hostname="$i" --profile=bcpc_host --ip-address=${subnet}.${node} \\
+     --mac="${MAC}" --interface=\${dev}
+     %%
+EOF
   if hash vagrant 2>/dev/null; then
     vagrant ssh -c "$REGISTERCMD"
   else
