@@ -19,6 +19,19 @@ cookbook_path            ["#{current_dir}/../cookbooks"]
 EOF
 }
 
+copy_client_keys(){
+  if [[ -n "$SUDO_USER" ]]; then
+    OWNER=$SUDO_USER
+  else
+    OWNER=$USER
+  fi
+
+  install -d -m0770 -o $OWNER .chef
+# TODO: this is just bad form...
+  sudo install -m0600 -o $OWNER /etc/opscode/admin.pem .chef/admin.pem
+  sudo install -m0600 -o $OWNER /etc/opscode/bcpc-validator.pem .chef/bcpc-validator.pem
+}
+
 set -x
 
 if [[ -f ./proxy_setup.sh ]]; then
@@ -53,6 +66,8 @@ if [[ ! -z "$http_proxy" ]]; then
   echo  "http_proxy  \"${http_proxy}\"" >> .chef/knife-proxy.rb
   echo "https_proxy \"${https_proxy}\"" >> .chef/knife-proxy.rb
 fi
+
+copy_client_keys
 
 # TODO: Is this right place for this?
 knife ssl fetch

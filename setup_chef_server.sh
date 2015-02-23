@@ -49,16 +49,6 @@ fi
 
 dpkg -E -i cookbooks/bcpc/files/default/bins/chef-client.deb
 
-if [[ -n "$SUDO_USER" ]]; then
-  OWNER=$SUDO_USER
-else
-  OWNER=$USER
-fi
-
-install -d -m0770 -o $OWNER .chef
-install -m0600 -o $OWNER /etc/opscode/admin.pem .chef/admin.pem
-install -m0600 -o $OWNER /etc/opscode/bcpc-validator.pem .chef/bcpc-validator.pem
-
 # copy our ssh-key to be authorized for root
 if [[ -f $HOME/.ssh/authorized_keys && ! -f /root/.ssh/authorized_keys ]]; then
   if [[ ! -d /root/.ssh ]]; then
