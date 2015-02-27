@@ -1,8 +1,8 @@
 #
 # Cookbook Name:: bcpc
-# Recipe:: tpm
+# Recipe:: keepalived-common
 #
-# Copyright 2014, Bloomberg Finance L.P.
+# Copyright 2013, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,28 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-if node['bcpc']['enabled']['tpm'] then
 
-  include_recipe "bcpc::default"
+include_recipe "bcpc::default"
 
-  package "rng-tools"
-  package "tpm-tools"
-  package "trousers"
+package "keepalived" do
+    action :upgrade
+end
 
-  service "rng-tools" do
-    action :stop
-  end
-
-
-  template "/etc/default/rng-tools" do
-    source "rng-tools.erb"
-    user "root"
-    group "root"
-    mode 0644
-  end
-
-  service "rng-tools" do
-    action :start
-  end
-
+service "keepalived" do
+    action [:enable, :start]
 end

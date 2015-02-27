@@ -1,8 +1,8 @@
 #
 # Cookbook Name:: bcpc
-# Recipe:: tpm
+# Recipe:: haproxy-head
 #
-# Copyright 2014, Bloomberg Finance L.P.
+# Copyright 2013, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,28 +16,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-if node['bcpc']['enabled']['tpm'] then
 
-  include_recipe "bcpc::default"
+include_recipe "bcpc::default"
+include_recipe "bcpc::haproxy-common"
 
-  package "rng-tools"
-  package "tpm-tools"
-  package "trousers"
-
-  service "rng-tools" do
-    action :stop
-  end
-
-
-  template "/etc/default/rng-tools" do
-    source "rng-tools.erb"
-    user "root"
-    group "root"
-    mode 0644
-  end
-
-  service "rng-tools" do
-    action :start
-  end
-
+template "/etc/haproxy/haproxy.cfg" do
+    source "haproxy-head.cfg.erb"
+    mode 00644
+    variables(
+        :servers => get_head_nodes,
+        :all_servers => get_ceph_osd_nodes
+    )
+    notifies :restart, "service[haproxy]", :immediately
 end

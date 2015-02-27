@@ -54,6 +54,7 @@ bash "write-client-radosgw-key" do
         chmod 644 /var/lib/ceph/radosgw/ceph-radosgw.gateway/keyring
     EOH
     not_if "test -f /var/lib/ceph/radosgw/ceph-radosgw.gateway/keyring"
+    notifies :restart, "service[radosgw-all]", :delayed
 end
 
 rgw_optimal_pg = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['rgw']['replicas']*node['bcpc']['ceph']['rgw']['portion']/100)
@@ -71,7 +72,10 @@ rgw_crush_ruleset = (node['bcpc']['ceph']['rgw']['type'] == "ssd") ? node['bcpc'
     end
     bash "set-#{pool}-rados-pool-replicas" do
         user "root"
-        replicas = [get_all_nodes.length, node['bcpc']['ceph']['rgw']['replicas']].min
+        replicas = [search_nodes("recipe", "ceph-work").length, node['bcpc']['ceph']['rgw']['replicas']].min
+        if replicas < 1; then
+            replicas = 1
+        end
         code "ceph osd pool set #{pool} size #{replicas}"
         not_if "ceph osd pool get #{pool} size | grep #{replicas}"
     end
@@ -92,6 +96,7 @@ file "/var/www/s3gw.fcgi" do
     group "root"
     mode 0755
     content "#!/bin/sh\n exec /usr/bin/radosgw -c /etc/ceph/ceph.conf -n client.radosgw.gateway"
+    notifies :restart, "service[radosgw-all]", :immediately
 end
 
 template "/etc/apache2/sites-available/radosgw" do
