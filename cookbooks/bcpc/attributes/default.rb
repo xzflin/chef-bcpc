@@ -185,7 +185,7 @@ default['bcpc']['repos']['gridcentric'] = "http://downloads.gridcentric.com/pack
 # For a complete list of Ubuntu mirrors, please see:
 # https://launchpad.net/ubuntu/+archivemirrors
 default['bcpc']['mirror']['ubuntu'] = "us.archive.ubuntu.com/ubuntu"
-default['bcpc']['mirror']['ubuntu-dist'] = ['precise']
+default['bcpc']['mirror']['ubuntu-dist'] = ['trusty']
 default['bcpc']['mirror']['ceph-dist'] = ['firefly']
 default['bcpc']['mirror']['os-dist'] = ['icehouse']
 
