@@ -10,5 +10,7 @@ tmpfile="$(mktemp "/tmp/${0##*/}.XXXX")" || exit 2
 dest=~/.ssh/id_rsa.root
 
 trap 'rm -f "${tmpfile}"' EXIT HUP TERM
+# TODO: read trusted_certs dir from config
+sudo bash -c 'cat .chef/trusted_certs/$(uname -n).crt >> /opt/chef/embedded/ssl/cert.pem'
 get-root-key > "${tmpfile}" || exit 3
 install -m0600 "${tmpfile}" "${dest}"
