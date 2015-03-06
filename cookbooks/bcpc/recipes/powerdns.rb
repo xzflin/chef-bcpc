@@ -421,7 +421,7 @@ if node['bcpc']['enabled']['dns'] then
         end
     end
 
-    %w{openstack kibana zabbix}.each do |static|
+    %w{openstack zabbix}.each do |static|
         ruby_block "create-management-dns-entry-#{static}" do
             block do
                 system "mysql -uroot -p#{get_config('mysql-root-password')} #{node['bcpc']['dbname']['pdns']} -e 'SELECT name FROM records_static' | grep -q \"#{static}.#{node['bcpc']['domain_name']}\""
@@ -434,7 +434,7 @@ if node['bcpc']['enabled']['dns'] then
         end
     end
 
-    %w{graphite}.each do |static|
+    %w{graphite kibana}.each do |static|
         ruby_block "create-monitoring-dns-entry-#{static}" do
             block do
                 system "mysql -uroot -p#{get_config('mysql-root-password')} #{node['bcpc']['dbname']['pdns']} -e 'SELECT name FROM records_static' | grep -q \"#{static}.#{node['bcpc']['domain_name']}\""
