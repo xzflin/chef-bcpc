@@ -36,9 +36,9 @@ ip rule add from all lookup local pref 1000
 ip rule del pref 0
 ip rule del pref 0
 
+<% if node['bcpc']['enabled']['secure_fixed_networks'] -%>
 # Prevent any fixed network traffic from seeing our management and storage
 # by skipping past the local table and using the main routing table
-<% if node['bcpc']['enabled']['secure_fixed_networks'] -%>
 ip rule del pref 100
 ip rule del pref 200
 ip rule add from <%=@node["bcpc"]["fixed"]["cidr"]%> to <%=@node["bcpc"]["management"]["cidr"]%> pref 100 table main
