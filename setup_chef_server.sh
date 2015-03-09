@@ -58,7 +58,7 @@ if [[ -f $HOME/.ssh/authorized_keys && ! -f /root/.ssh/authorized_keys ]]; then
 fi
 
 # Bad hack for finnicky MITM proxies...
-if [[ -n "https_proxy" ]] ; then
+if [[ -n "$https_proxy" ]] ; then
   ./proxy_cert_download_hack.sh
 fi
 
