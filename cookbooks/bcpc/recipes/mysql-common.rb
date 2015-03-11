@@ -28,7 +28,6 @@ end
 template "/etc/mysql/my.cnf" do
     source "my.cnf.erb"
     mode 00644
-    notifies :restart, "service[mysql]", :delayed
 end
 
 directory "/etc/mysql/conf.d" do
