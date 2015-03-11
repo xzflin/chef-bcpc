@@ -19,8 +19,21 @@ wait_for_ssh(){
   exec 3>&-
 }
 
-bootstrap_heads(){
-  time -p wait_for_ssh 10.0.100.11
+setup_headnodes(){
+  bootstrap_head bcpc-vm1.local.lan 10.0.100.11
+
+  local keyfile=~/.ssh/id_rsa.root
+  if [ ! -r "${keyfile}" ] ; then
+      ./install_root_key
+  fi
+  ssh -i "${keyfile}" -lroot 10.0.100.11 chef-client
+}
+
+bootstrap_head(){
+  local nodename="$1"
+  local ip="$2"
+  if [ -z "${ip}" ] ; then return 1 ; fi
+  time -p wait_for_ssh "${ip}"
   echo "Configuring temporary hosts entry for chef server"
   read -d %% ent <<EoF
 # Added by ${0##*/}
@@ -28,7 +41,7 @@ bootstrap_heads(){
 %%
 EoF
   echo $ent
-  ssh -ostricthostkeychecking=no -i "${keyfile}" -lroot 10.0.100.11 <<EoF
+  ssh -ostricthostkeychecking=no -i "${keyfile}" -lroot "${ip}" <<EoF
   if ! getent ahosts bcpc-bootstrap &> /dev/null ; then
   cat <<EoS >> /etc/hosts
 $ent
@@ -39,10 +52,10 @@ EoF
   knife bootstrap --bootstrap-no-proxy "${chef_server_host}" --bootstrap-proxy "${https_proxy}" \
     -i "${keyfile}" -x root --node-ssl-verify-mode=none \
     --bootstrap-wget-options "--no-check-certificate" \
-    -r 'role[BCPC-Headnode]' -E Test-Laptop 10.0.100.11
+    -r 'role[BCPC-Headnode]' -E Test-Laptop "${ip}"
     knife actor map
     # TODO: hardcode nodename prob bad...
-    knife group add actor admins bcpc-vm1.local.lan
+    knife group add actor admins "${nodename}"
 }
 
 # TODO: This and above name together are confusing!
@@ -64,9 +77,8 @@ fi
 chef_server_host=bcpc-bootstrap
 keyfile=~/.ssh/id_rsa.bcpc
 
-bootstrap_heads
 set -e
-ssh -i "${keyfile}" -lroot 10.0.100.11 chef-client
+setup_headnodes
 
 echo "Waiting to bootstrap workers"
 set -x
