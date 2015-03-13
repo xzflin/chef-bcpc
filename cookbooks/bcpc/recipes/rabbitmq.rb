@@ -96,7 +96,7 @@ end
 
 service "rabbitmq-server" do
     stop_command "service rabbitmq-server stop && epmd -kill"
-    action [:enable, :start]
+    action [:enable]
 end
 
 get_head_nodes.each do |server|
