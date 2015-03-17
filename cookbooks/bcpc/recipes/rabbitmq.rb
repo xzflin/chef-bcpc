@@ -42,7 +42,7 @@ end
 template "/var/lib/rabbitmq/.erlang.cookie" do
     source "erlang.cookie.erb"
     mode 00400
-    notifies :restart, "service[rabbitmq-server]", :delayed
+    notifies :restart, "service[rabbitmq-server]", :immediately
 end
 
 template "/etc/rabbitmq/rabbitmq-env.conf" do
@@ -70,13 +70,13 @@ end
 template "/etc/rabbitmq/rabbitmq.conf.d/bcpc.conf" do
     source "rabbitmq-bcpc.conf.erb"
     mode 00644
-    notifies :restart, "service[rabbitmq-server]", :delayed
+    notifies :restart, "service[rabbitmq-server]", :immediately
 end
 
 template "/etc/rabbitmq/rabbitmq.config" do
     source "rabbitmq.config.erb"
     mode 00644
-    notifies :restart, "service[rabbitmq-server]", :delayed
+    notifies :restart, "service[rabbitmq-server]", :immediately
 end
 
 execute "enable-rabbitmq-web-mgmt" do
