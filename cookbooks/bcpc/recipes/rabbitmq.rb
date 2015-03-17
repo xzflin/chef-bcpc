@@ -85,15 +85,6 @@ execute "enable-rabbitmq-web-mgmt" do
     notifies :restart, "service[rabbitmq-server]", :delayed
 end
 
-bash "rabbitmq-stop" do
-    user "root"
-    action :nothing
-    code <<-EOH
-        service rabbitmq-server stop
-        epmd -kill
-    EOH
-end
-
 service "rabbitmq-server" do
     stop_command "service rabbitmq-server stop && epmd -kill"
     action [:enable]
