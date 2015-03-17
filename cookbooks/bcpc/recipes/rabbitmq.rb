@@ -80,8 +80,8 @@ template "/etc/rabbitmq/rabbitmq.config" do
 end
 
 execute "enable-rabbitmq-web-mgmt" do
-    command "/usr/lib/rabbitmq/bin/rabbitmq-plugins enable rabbitmq_management"
-    not_if "/usr/lib/rabbitmq/bin/rabbitmq-plugins list -e | grep rabbitmq_management"
+    command "/usr/sbin/rabbitmq-plugins enable rabbitmq_management"
+    not_if "/usr/sbin/rabbitmq-plugins list -m -e | grep '^rabbitmq_management$'"
     notifies :restart, "service[rabbitmq-server]", :delayed
 end
 
