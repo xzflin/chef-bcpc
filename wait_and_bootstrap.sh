@@ -20,7 +20,7 @@ wait_for_ssh(){
 }
 
 setup_headnodes(){
-  bootstrap_head bcpc-vm1.local.lan 10.0.100.11
+  bootstrap_head bcpc-vm1.local.lan 10.0.100.11 || true
 
   local keyfile=~/.ssh/id_rsa.root
   if [ ! -r "${keyfile}" ] ; then
