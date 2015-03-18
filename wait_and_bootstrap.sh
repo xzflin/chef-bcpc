@@ -20,7 +20,18 @@ wait_for_ssh(){
 }
 
 setup_headnodes(){
-  bootstrap_head bcpc-vm1.local.lan 10.0.100.11 || true
+  local out_tail="$(bootstrap_head bcpc-vm1.local.lan 10.0.100.11 | tee /dev/tty | tail -2)"
+  local err_msg=
+  read _ _ err_msg <<EoS
+  ${out_tail}
+EoS
+  # TODO: don't call grep here...
+  # Note that err_msg may have line delimiting characters at end, i.e , no anchor
+  if echo "${err_msg}" | grep '^ERROR: 403 "Forbidden"' ; then
+     :
+  else
+    return 1
+  fi
 
   local keyfile=~/.ssh/id_rsa.root
   if [ ! -r "${keyfile}" ] ; then
@@ -53,9 +64,8 @@ EoF
     -i "${keyfile}" -x root --node-ssl-verify-mode=none \
     --bootstrap-wget-options "--no-check-certificate" \
     -r 'role[BCPC-Headnode]' -E Test-Laptop "${ip}"
-    knife actor map
-    # TODO: hardcode nodename prob bad...
-    knife group add actor admins "${nodename}"
+    knife actor map >&2
+    knife group add actor admins "${nodename}" >&2
 }
 
 # TODO: This and above name together are confusing!
