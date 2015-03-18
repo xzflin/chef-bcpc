@@ -49,7 +49,7 @@ EoS
   fi
   getent hosts bcpc-bootstrap
 EoF
-  knife bootstrap --bootstrap-no-proxy "${chef_server_host}" --bootstrap-proxy "${https_proxy}" \
+  knife bootstrap --bootstrap-no-proxy "${chef_server_host}" ${bootstrap_proxy_args} \
     -i "${keyfile}" -x root --node-ssl-verify-mode=none \
     --bootstrap-wget-options "--no-check-certificate" \
     -r 'role[BCPC-Headnode]' -E Test-Laptop "${ip}"
@@ -63,21 +63,29 @@ bootstrap_worker(){
   local ip="$1"
   if [ -z "${ip}" ] ; then return 1 ; fi
   time -p wait_for_ssh "${ip}"
-  knife bootstrap --bootstrap-no-proxy "${chef_server_host}" --bootstrap-proxy "${https_proxy}" \
+  knife bootstrap --bootstrap-no-proxy "${chef_server_host}" ${bootstrap_proxy_args} \
     -i "${keyfile}" -x root \
     --bootstrap-wget-options "--no-check-certificate" \
     -r 'role[BCPC-Worknode]' -E Test-Laptop "$ip"
 }
 
-if [[ -f ./proxy_setup.sh ]]; then
-  . ./proxy_setup.sh
-  export -n http{,s}_proxy  # do not interfere with subsequent calls to knife
-fi
+configure_proxy(){
+  if [[ -f ./proxy_setup.sh ]]; then
+    . ./proxy_setup.sh
+    export -n http{,s}_proxy  # do not interfere with subsequent calls to knife
+  fi
+  if [[ -n "${https_proxy}" ]] ; then
+    bootstrap_proxy_args="--bootstrap-proxy ${https_proxy}"
+  else
+    bootstrap_proxy_args=""
+  fi
+}
 
 chef_server_host=bcpc-bootstrap
 keyfile=~/.ssh/id_rsa.bcpc
 
 set -e
+configure_proxy
 setup_headnodes
 
 echo "Waiting to bootstrap workers"
