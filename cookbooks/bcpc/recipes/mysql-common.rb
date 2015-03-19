@@ -25,15 +25,15 @@ directory "/etc/mysql" do
     mode 00755
 end
 
-template "/etc/mysql/my.cnf" do
-    source "my.cnf.erb"
-    mode 00644
-end
-
 directory "/etc/mysql/conf.d" do
     owner "root"
     group "root"
     mode 00755
+end
+
+template "/etc/mysql/my.cnf" do
+    source "my.cnf.erb"
+    mode 00644
 end
 
 service "mysql" do
