@@ -37,8 +37,8 @@ directory "/etc/mysql/conf.d" do
 end
 
 service "mysql" do
-    action [:enable, :start]
-    start_command "service mysql start || true"
+    action [:enable]
+    supports :status => true, :restart => true, :reload => true
 end
 
 package "xinetd" do
