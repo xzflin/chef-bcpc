@@ -54,6 +54,7 @@ template "/etc/mysql/debian.cnf" do
         :root_user_key => "mysql-root-user",
         :root_pass_key => "mysql-root-password"
     )
+    notifies :reload, "service[mysql]", :immediately
 end
 
 template "/etc/mysql/conf.d/wsrep.cnf" do
