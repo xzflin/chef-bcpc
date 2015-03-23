@@ -20,22 +20,10 @@ wait_for_ssh(){
 }
 
 setup_headnodes(){
-  local out_tail="$(bootstrap_head bcpc-vm1.local.lan 10.0.100.11 | tee /dev/tty | tail -2)"
-  local err_msg=
-  read _ _ err_msg <<EoS
-  ${out_tail}
-EoS
-  # TODO: don't call grep here...
-  # Note that err_msg may have line delimiting characters at end, i.e , no anchor
-  if echo "${err_msg}" | grep '^ERROR: 403 "Forbidden"' ; then
-     :
-  else
-    return 1
-  fi
-
+  bootstrap_head bcpc-vm1.local.lan 10.0.100.11 || true
   local keyfile=~/.ssh/id_rsa.root
   if [ ! -r "${keyfile}" ] ; then
-      ./install_root_key
+      ./install_root_key || keyfile=~/.ssh/id_rsa.bcpc
   fi
   ssh -i "${keyfile}" -lroot 10.0.100.11 chef-client
 }
