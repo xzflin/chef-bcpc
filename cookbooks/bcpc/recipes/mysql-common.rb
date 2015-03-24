@@ -18,6 +18,7 @@
 #
 
 include_recipe "bcpc::default"
+include_recipe "bcpc::xinetd"
 
 directory "/etc/mysql" do
     owner "root"
@@ -42,10 +43,6 @@ service "mysql" do
     supports :status => true, :restart => true, :reload => true
 end
 
-package "xinetd" do
-    action :upgrade
-end
-
 bash "add-mysqlchk-to-etc-services" do
     user "root"
     code <<-EOH
@@ -60,10 +57,6 @@ template "/etc/xinetd.d/mysqlchk" do
     group "root"
     mode 00440
     notifies :restart, "service[xinetd]", :immediately
-end
-
-service "xinetd" do
-    action [:enable, :start]
 end
 
 package "debconf-utils"
