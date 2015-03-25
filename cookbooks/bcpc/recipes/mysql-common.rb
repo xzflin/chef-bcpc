@@ -48,7 +48,7 @@ bash "add-mysqlchk-to-etc-services" do
     code <<-EOH
         printf "mysqlchk\t3307/tcp\n" >> /etc/services
     EOH
-    not_if "grep mysqlchk /etc/services"
+    not_if "getent services mysqlchk/tcp"
 end
 
 template "/etc/xinetd.d/mysqlchk" do
