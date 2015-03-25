@@ -20,6 +20,7 @@ package "xinetd" do
 end
 
 service "xinetd" do
-    action [:enable]
+    action [:enable, :start]
+    provider Chef::Provider::Service::Init::Debian
     supports :status => true, :restart => true
 end
