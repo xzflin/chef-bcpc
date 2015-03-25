@@ -25,6 +25,7 @@ setup_headnodes(){
   if [ ! -r "${keyfile}" ] ; then
       ./install_root_key || keyfile=~/.ssh/id_rsa.bcpc
   fi
+  echo "Proceeding with second chef-client run"
   ssh -i "${keyfile}" -lroot 10.0.100.11 chef-client
 }
 
