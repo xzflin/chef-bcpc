@@ -45,8 +45,7 @@ end
 
 ruby_block "setup-389ds-server" do
     block do
-        system "test -d /etc/dirsrv/slapd-#{node['hostname']}"
-        if not $?.success? then
+        if !Dir.exists? "/etc/dirsrv/slapd-#{node['hostname']}"
             %x[ setup-ds-admin --file=/tmp/389ds-install.inf -k -s
                 service dirsrv stop
                 service dirsrv-admin stop
@@ -55,15 +54,18 @@ ruby_block "setup-389ds-server" do
                 sed --in-place '/^MaxSpareThreads/d' /etc/dirsrv/admin-serv/httpd.conf
                 sed --in-place '/^ThreadsPerChild/d' /etc/dirsrv/admin-serv/httpd.conf
                 sed --in-place 's/^nsslapd-port.*/nsslapd-listenhost: #{node['bcpc']['management']['ip']}\\nnsslapd-port: 389/' /etc/dirsrv/slapd-#{node['hostname']}/dse.ldif
-                echo "dn: cn=Replication Manager,cn=config" >> /etc/dirsrv/slapd-#{node['hostname']}/dse.ldif
-                echo "objectClass: inetorgperson" >> /etc/dirsrv/slapd-#{node['hostname']}/dse.ldif
-                echo "objectClass: person" >> /etc/dirsrv/slapd-#{node['hostname']}/dse.ldif
-                echo "objectClass: top" >> /etc/dirsrv/slapd-#{node['hostname']}/dse.ldif
-                echo "cn: Replication Manager" >> /etc/dirsrv/slapd-#{node['hostname']}/dse.ldif
-                echo "sn: RM" >> /etc/dirsrv/slapd-#{node['hostname']}/dse.ldif
-                echo "userPassword: #{get_config('389ds-replication-password')}" >> /etc/dirsrv/slapd-#{node['hostname']}/dse.ldif
-                echo "passwordExpirationTime: 20380119031407Z" >> /etc/dirsrv/slapd-#{node['hostname']}/dse.ldif
-                echo "nsIdleTimeout: 0" >> /etc/dirsrv/slapd-#{node['hostname']}/dse.ldif
+                echo \
+"\
+dn: cn=Replication Manager,cn=config
+objectClass: inetorgperson
+objectClass: person
+objectClass: top
+cn: Replication Manager
+sn: RM
+userPassword: #{get_config('389ds-replication-password')}
+passwordExpirationTime: 20380119031407Z
+nsIdleTimeout: 0\
+" >> /etc/dirsrv/slapd-#{node['hostname']}/dse.ldif
                 service dirsrv start
                 service dirsrv-admin start
             ]
@@ -90,7 +92,7 @@ dn: cn=config
 changetype: modify
 replace: nsslapd-allow-anonymous-access
 nsslapd-allow-anonymous-access: off
-
+EOH
         ]
     end
 end
