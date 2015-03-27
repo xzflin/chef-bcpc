@@ -20,7 +20,8 @@ wait_for_ssh(){
 }
 
 setup_headnodes(){
-  bootstrap_head bcpc-vm1.local.lan 10.0.100.11 || true
+  # TODO: get name-ip mappings from somewhere else
+  bootstrap_head bcpc-vm1.bcpc.example.com 10.0.100.11 || true
   local keyfile=~/.ssh/id_rsa.root
   if [ ! -r "${keyfile}" ] ; then
       ./install_root_key || keyfile=~/.ssh/id_rsa.bcpc
@@ -52,7 +53,7 @@ EoF
   knife bootstrap --bootstrap-no-proxy "${chef_server_host}" ${bootstrap_proxy_args} \
     -i "${keyfile}" -x root --node-ssl-verify-mode=none \
     --bootstrap-wget-options "--no-check-certificate" \
-    -r 'role[BCPC-Headnode]' -E Test-Laptop "${ip}"
+    -r 'role[BCPC-Headnode]' -E Test-Laptop "${ip}" -N "${nodename}"
     knife actor map >&2
     knife group add actor admins "${nodename}" >&2
 }
