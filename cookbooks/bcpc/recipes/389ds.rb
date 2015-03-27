@@ -105,7 +105,7 @@ end
                 %x[ ldapmodify -h #{node['bcpc']['management']['ip']} -p 389  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" << EOH
 dn: cn=#{cn},ou=Groups,#{node['bcpc']['domain_name'].split('.').collect { |x| 'dc='+x }.join(',')}
 changetype: delete
-
+EOH
                 ]
             end
         end
@@ -123,7 +123,7 @@ changetype: add
 objectClass: top
 objectClass: organizationalunit
 ou: #{ou}
-
+EOH
                 ]
             end
         end
@@ -141,7 +141,7 @@ changetype: add
 objectclass: top
 objectclass: groupOfNames
 ou: groups
-
+EOH
                 ]
             end
         end
@@ -159,7 +159,7 @@ objectclass: top
 objectclass: extensibleObject
 cn: changelog5
 nsslapd-changelogdir: /var/lib/dirsrv/slapd-#{node['hostname']}/changelogdb
-
+EOH
             ]
         end
     end
@@ -183,7 +183,7 @@ nsds5replicatype: 3
 nsds5flags: 1
 nsds5ReplicaPurgeDelay: 604800
 nsds5ReplicaBindDN: #{get_config('389ds-replication-user')},cn=config
-
+EOH
             ]
         end
     end
@@ -210,7 +210,7 @@ nsds5replicaroot: #{domain}
 description: Agreement to sync from #{server['hostname']} to #{node['hostname']}
 nsds5replicatedattributelist: (objectclass=*) $ EXCLUDE authorityRevocationList
 nsds5replicacredentials: #{get_config('389ds-replication-password')}
-
+EOH
                 ]
                 # Initialize this node once if it's brand new
                 if not node['bcpc']['ldap_initialized'] then
@@ -219,7 +219,7 @@ dn: cn=To-#{node['hostname']},cn=replica,cn="#{domain}",cn=mapping tree,cn=confi
 changetype: modify
 add: nsds5BeginReplicaRefresh
 nsds5BeginReplicaRefresh: start
-
+EOH
                     ]
                     node.set['bcpc']['ldap_initialized'] = true
                     node.save rescue nil
