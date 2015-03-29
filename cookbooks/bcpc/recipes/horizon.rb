@@ -44,11 +44,12 @@ package "openstack-dashboard-ubuntu-theme" do
     action :remove
 end
 
-file "/etc/apache2/conf.d/openstack-dashboard.conf" do
+# This maybe better served by a2disconf
+file "/etc/apache2/conf-available/openstack-dashboard.conf" do
     action :delete
 end
 
-template "/etc/apache2/sites-available/openstack-dashboard" do
+template "/etc/apache2/sites-available/openstack-dashboard.conf" do
     source "apache-openstack-dashboard.conf.erb"
     owner "root"
     group "root"
