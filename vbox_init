@@ -10,4 +10,5 @@ set -x
 utils/clean.sh
 time -p vbox_create.sh
 utils/startvms.sh
+build_snaps.sh
 vagrant ssh -c "cd chef-bcpc && ./wait_and_bootstrap.sh"
