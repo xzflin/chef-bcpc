@@ -63,6 +63,8 @@ end
 
 service "apache2" do
     action [:enable, :start]
+    supports :status => true, :reload => true
+    provider Chef::Provider::Service::Init::Debian
 end
 
 template "/var/www/html/index.html" do
