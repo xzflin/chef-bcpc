@@ -31,8 +31,7 @@ CLUSTER_VM_CPUs=2
 CLUSTER_VM_DRIVE_SIZE=20480
 
 VBOX_DIR="`dirname ${BASH_SOURCE[0]}`/vbox"
-P=`python -c "import os.path; print os.path.abspath(\"${VBOX_DIR}/\")"`
-
+P="$(cd $VBOX_DIR ; /bin/pwd)" || exit
 
 # from EVW packer branch
 vbm_import() {
@@ -144,12 +143,11 @@ function create_bootstrap_VM {
   if hash vagrant 2> /dev/null ; then
     echo "Vagrant detected - using Vagrant to initialize bcpc-bootstrap VM"
     cp ../Vagrantfile .
-    if [[ ! -f insecure_private_key ]]; then
-      # Ensure that the private key has been created by running vagrant at least once
-      vagrant status
-      cp $HOME/.vagrant.d/insecure_private_key .
-    fi
     vagrant up
+    keyfile="$(vagrant ssh-config bootstrap | awk '/Host bootstrap/,/^$/{ if ($0 ~ /^ +IdentityFile/) print $2}')"
+    if [[ -f "$keyfile" ]]; then
+      cp "$keyfile" insecure_private_key
+    fi
   else
     echo "Vagrant not detected - using raw VirtualBox for bcpc-bootstrap"
     if [[ -z "$WIN" ]]; then

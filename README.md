@@ -23,7 +23,7 @@ Setup
 =====
 
 These recipes are currently intended for building a BCPC cloud on top of
-Ubuntu 12.04 servers using Chef 10. When setting this up in VMs, be sure to
+Ubuntu 12.04 servers using Chef 11. When setting this up in VMs, be sure to
 add a few dedicated disks (for ceph OSDs) aside from boot volume. In
 addition, it's expected that you have three separate NICs per machine, with
 the following as defaults (and recommendations for VM settings):
@@ -133,12 +133,13 @@ BCPC currently relies upon a number of open-source packages:
  - [HAProxy](http://haproxy.1wt.eu/)
  - [Keepalived](http://www.keepalived.org/)
  - [Kibana](http://kibana.org/)
+ - [Memcached](http://memcached.org)
  - [OpenStack](http://www.openstack.org/)
  - [Percona XtraDB Cluster](http://www.percona.com/software/percona-xtradb-cluster)
  - [PowerDNS](https://www.powerdns.com/)
  - [RabbitMQ](http://www.rabbitmq.com/)
  - [Ubuntu](http://www.ubuntu.com/)
- - [Vagrant](http://www.vagrantup.com/) - Verified with version 1.2.2
+ - [Vagrant](http://www.vagrantup.com/) - Verified with version 1.7.2
  - [VirtualBox](https://www.virtualbox.org/) - >= 4.3.x supported
  - [Zabbix](http://www.zabbix.com/)
 

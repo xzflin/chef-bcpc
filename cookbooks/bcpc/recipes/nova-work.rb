@@ -52,41 +52,35 @@ cookbook_file "/tmp/nova-libvirt.patch" do
     mode 00644
 end
 
-cookbook_file "/tmp/nova-sql.patch" do
-    source "nova-sql.patch"
-    owner "root"
+bash "patch-for-nova-live-migration" do
+   user "root"
+   code <<-EOH
+       cd /usr/lib/python2.7/dist-packages/nova
+       patch -p2 < /tmp/nova-libvirt.patch
+       rv=$?
+       if [ $rv -ne 0 ]; then
+         echo "Error applying patch ($rv) - aborting!"
+         exit $rv
+       fi
+       cp /tmp/nova-libvirt.patch .
+   EOH
+   not_if "test -f /usr/lib/python2.7/dist-packages/nova/nova-libvirt.patch"
+   notifies :restart, "service[nova-compute]", :immediately
+end
+
+template "/etc/nova/ssl-bcpc.pem" do
+    source "ssl-bcpc.pem.erb"
+    owner "nova"
+    group "nova"
     mode 00644
 end
 
-#bash "patch-for-nova-libvirt-bugs" do
-#    user "root"
-#    code <<-EOH
-#        cd /usr/lib/python2.7/dist-packages/nova
-#        patch -p2 < /tmp/nova-libvirt.patch
-#        rv=$?
-#        if [ $rv -ne 0 ]; then
-#          echo "Error applying patch ($rv) - aborting!"
-#          exit $rv
-#        fi
-#        cp /tmp/nova-libvirt.patch .
-#    EOH
-#    not_if "test -f /usr/lib/python2.7/dist-packages/nova/nova-libvirt.patch"
-#end
-
-#bash "patch-for-nova-sql-bugs" do
-#    user "root"
-#    code <<-EOH
-#        cd /usr/lib/python2.7/dist-packages/nova
-#        patch -p2 < /tmp/nova-sql.patch
-#        rv=$?
-#        if [ $rv -ne 0 ]; then
-#          echo "Error applying patch ($rv) - aborting!"
-#          exit $rv
-#        fi
-#        cp /tmp/nova-sql.patch .
-#    EOH
-#    not_if "test -f /usr/lib/python2.7/dist-packages/nova/nova-sql.patch"
-#end
+template "/etc/nova/ssl-bcpc.key" do
+    source "ssl-bcpc.key.erb"
+    owner "nova"
+    group "nova"
+    mode 00600
+end
 
 directory "/var/lib/nova/.ssh" do
     owner "nova"
@@ -106,7 +100,7 @@ template "/var/lib/nova/.ssh/known_hosts" do
     owner "nova"
     group "nova"
     mode 00644
-    variables(:servers => get_all_nodes)
+    variables(:servers => search_nodes("recipe", "nova-work"))
 end
 
 template "/var/lib/nova/.ssh/id_rsa" do
@@ -224,9 +218,16 @@ cookbook_file "/usr/local/bin/nova-service-restart" do
   mode "00755"
 end
 
+template "/usr/local/bin/nova-service-restart-wrapper" do
+    source "nova-service-restart-wrapper.erb"
+    owner "root"
+    group "root"
+    mode 00700
+end
+
 cron "restart-nova-kludge" do
   action :create
-  command "/usr/local/bin/nova-service-restart -i #{node['bcpc']['management']['vip']} -u #{get_config('mysql-nova-user')} -p '#{get_config('mysql-nova-password')}'  > /dev/null 2>&1"
+  command "/usr/local/bin/nova-service-restart-wrapper"
   minute '*/5'   # run this every 5 mins
 end
 

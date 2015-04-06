@@ -11,13 +11,20 @@
         "ssd_disks" : [ "sdd", "sde" ],
         "chooseleaf" : "host"
       },
+      "nova" : {
+        "ram_allocation_ratio" : "20.0",
+        "cpu_allocation_ratio": "20.0"
+      },
       "domain_name" : "bcpc.example.com",
       "management": {
         "vip" : "10.0.100.5",
         "interface" : "eth1",
         "netmask" : "255.255.255.0",
         "cidr" : "10.0.100.0/24",
-        "gateway" : "10.0.100.3"
+        "gateway" : "10.0.100.3",
+        "monitoring": {
+          "vip" : "10.0.100.6"
+        }
       },
       "storage": {
         "interface" : "eth2",
