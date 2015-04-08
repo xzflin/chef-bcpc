@@ -56,6 +56,26 @@ if node['bcpc']['enabled']['dns'] then
         mode 00600
         notifies :restart, "service[pdns]", :delayed
     end
+    
+	# if this attribute is true, Chef will back up the PowerDNS database and drop it if
+	# the specified lock file does not exist
+	# (a drop is necessary to facilitate migrating to the bulk fixed IP scheme)
+	if node['bcpc']['enabled']['automate_migration_to_fixed_ip_dns']
+		lock_file = "/usr/local/etc/.already_migrated_to_fixed_ip_dns"
+		
+		ruby_block "back-up-powerdns-database-pre-migration" do
+			block do
+				system "mysqldump -uroot -p#{get_config('mysql-root-password')} pdns > /tmp/pdns-database-backup.sql"
+				raise "Unable to back up pdns database" unless $?.success?
+			end # block
+			not_if { File.exists?(lock_file) }
+		end # ruby_block "back-up-powerdns-database-pre-migration"
+		
+		file lock_file do
+			action :create_if_missing
+		end # file lock_file
+	end # if node['bcpc']['enabled']['automate_migration_to_fixed_ip_dns']
+    	
 
     ruby_block "powerdns-database-creation" do
         block do
@@ -123,6 +143,51 @@ if node['bcpc']['enabled']['dns'] then
             end
         end
     end
+    
+	ruby_block "powerdns-function-ip4_to_ptr_name" do
+  	block do
+      system "mysql -uroot -p#{get_config('mysql-root-password')} -e 'SELECT name FROM mysql.proc WHERE name = \"ip4_to_ptr_name\" AND db = \"#{node['bcpc']['dbname']['pdns']}\";' \"#{node['bcpc']['dbname']['pdns']}\" | grep -q \"ip4_to_ptr_name\""
+      if not $?.success?
+      	%x[ mysql -uroot -p#{get_config('mysql-root-password')} #{node['bcpc']['dbname']['pdns']} <<-EOH
+                    delimiter //
+                    CREATE FUNCTION ip4_to_ptr_name(ip4 VARCHAR(64) CHARACTER SET latin1) RETURNS VARCHAR(64)
+                    COMMENT 'Returns the reversed IP with .in-addr.arpa appended, suitable for use in the name column of PTR records.'
+                    DETERMINISTIC
+                    BEGIN
+                    return concat_ws( '.',  SUBSTRING_INDEX( SUBSTRING_INDEX(ip4, '.', 4), '.', -1),
+                                            SUBSTRING_INDEX( SUBSTRING_INDEX(ip4, '.', 3), '.', -1),
+                                            SUBSTRING_INDEX( SUBSTRING_INDEX(ip4, '.', 2), '.', -1),
+                                            SUBSTRING_INDEX( SUBSTRING_INDEX(ip4, '.', 1), '.', -1), 'in-addr.arpa');
+                    END//
+        ]
+        self.notifies :restart, "service[pdns]", :delayed
+    	end
+  	end
+  end
+    
+    ruby_block "powerdns-function-dns-name" do
+        block do
+            system "mysql -uroot -p#{get_config('mysql-root-password')} -e 'SELECT name FROM mysql.proc WHERE name = \"dns_name\" AND db = \"#{node['bcpc']['dbname']['pdns']}\";' \"#{node['bcpc']['dbname']['pdns']}\" | grep -q \"dns_name\""
+            if not $?.success? then
+                %x[ mysql -uroot -p#{get_config('mysql-root-password')} #{node['bcpc']['dbname']['pdns']} <<-EOH
+                    delimiter //
+                    CREATE FUNCTION dns_name (tenant VARCHAR(64) CHARACTER SET latin1) RETURNS VARCHAR(64)
+                    COMMENT 'Returns the project name in a DNS acceptable format. Roughly RFC 1035.'
+                    DETERMINISTIC
+                    BEGIN
+                      SELECT LOWER(tenant) INTO tenant;
+                      SELECT REPLACE(tenant, '&', 'and') INTO tenant;
+                      SELECT REPLACE(tenant, '_', '-') INTO tenant;
+                      SELECT REPLACE(tenant, ' ', '-') INTO tenant;
+                      SELECT REPLACE(tenant, '.', '-') INTO tenant;
+                      RETURN tenant;
+                    END//
+                ]
+                self.notifies :restart, "service[pdns]", :delayed
+                self.resolve_notification_references
+            end
+        end
+    end
 
     ruby_block "powerdns-table-records" do
         block do
@@ -152,16 +217,11 @@ if node['bcpc']['enabled']['dns'] then
                         INSERT INTO records (domain_id, name, content, type, ttl, prio) VALUES ((SELECT id FROM domains WHERE name='#{node['bcpc']['domain_name']}'),'#{node['bcpc']['domain_name']}','#{node['bcpc']['domain_name']} root.#{node['bcpc']['domain_name']} #{Time.now.to_i}','SOA',300,NULL);
 
                         INSERT INTO records (domain_id, name, content, type, ttl, prio) VALUES ((SELECT id FROM domains WHERE name='#{reverse_float_zone}'),'#{reverse_float_zone}','#{node['bcpc']['domain_name']} root.#{node['bcpc']['domain_name']} #{Time.now.to_i}','SOA',300,NULL);
-   
+                        INSERT INTO records (domain_id, name, content, type, ttl, prio) VALUES ((SELECT id FROM domains WHERE name='#{reverse_fixed_zone}'),'#{reverse_fixed_zone}','#{node['bcpc']['domain_name']} root.#{node['bcpc']['domain_name']} #{Time.now.to_i}','SOA',300,NULL);
+
                         CREATE INDEX rec_name_index ON records(name);
                         CREATE INDEX nametype_index ON records(name,type);
                         CREATE INDEX domain_id ON records(domain_id);
-                    return concat_ws( '.',  SUBSTRING_INDEX( SUBSTRING_INDEX(ip4, '.', 4), '.', -1),
-                                            SUBSTRING_INDEX( SUBSTRING_INDEX(ip4, '.', 3), '.', -1),
-                                            SUBSTRING_INDEX( SUBSTRING_INDEX(ip4, '.', 2), '.', -1),
-                                            SUBSTRING_INDEX( SUBSTRING_INDEX(ip4, '.', 1), '.', -1), 'in-addr.arpa');
-
-                    END//
                 ]
                 self.notifies :restart, "service[pdns]", :delayed
                 self.resolve_notification_references
@@ -169,29 +229,29 @@ if node['bcpc']['enabled']['dns'] then
         end
     end
 
-    ruby_block "powerdns-table-domains-view" do
-        block do
-            system "mysql -uroot -p#{get_config('mysql-root-password')} -e 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA = \"#{node['bcpc']['dbname']['pdns']}\" AND TABLE_NAME=\"domains\"' | grep -q \"domains\""
-            if not $?.success? then
-                %x[ mysql -uroot -p#{get_config('mysql-root-password')} #{node['bcpc']['dbname']['pdns']} <<-EOH
-                    CREATE OR REPLACE VIEW domains AS
-                        SELECT id,name,master,last_check,type,notified_serial,account FROM domains_static UNION
-                        SELECT
-                            # rank each project to create an ID and add the maximum ID from the static table
-                            (SELECT COUNT(*) FROM keystone_project WHERE y.id <= id) + (SELECT MAX(id) FROM domains_static) AS id,
-                            CONCAT(CONCAT(dns_name(y.name), '.'),'#{node['bcpc']['domain_name']}') AS name,
-                            NULL AS master,
-                            NULL AS last_check,
-                            'NATIVE' AS type,
-                            NULL AS notified_serial,
-                            NULL AS account
-                            FROM keystone_project y;
-                ]
-                self.notifies :restart, "service[pdns]", :delayed
-                self.resolve_notification_references
-            end
-        end
-    end
+#    ruby_block "powerdns-table-domains-view" do
+#        block do
+#            system "mysql -uroot -p#{get_config('mysql-root-password')} -e 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA = \"#{node['bcpc']['dbname']['pdns']}\" AND TABLE_NAME=\"domains\"' | grep -q \"domains\""
+#            if not $?.success? then
+#                %x[ mysql -uroot -p#{get_config('mysql-root-password')} #{node['bcpc']['dbname']['pdns']} <<-EOH
+#                    CREATE OR REPLACE VIEW domains AS
+#                        SELECT id,name,master,last_check,type,notified_serial,account FROM domains UNION
+#                        SELECT
+#                            # rank each project to create an ID and add the maximum ID from the static table
+#                            (SELECT COUNT(*) FROM keystone_project WHERE y.id <= id) + (SELECT MAX(id) FROM domains) AS id,
+#                            CONCAT(CONCAT(dns_name(y.name), '.'),'#{node['bcpc']['domain_name']}') AS name,
+#                            NULL AS master,
+#                            NULL AS last_check,
+#                            'NATIVE' AS type,
+#                            NULL AS notified_serial,
+#                            NULL AS account
+#                            FROM keystone_project y;
+#                ]
+#                self.notifies :restart, "service[pdns]", :delayed
+#                self.resolve_notification_references
+#            end
+#        end
+#    end
 
     ruby_block "powerdns-table-records_forward-view" do
         block do
@@ -201,18 +261,18 @@ if node['bcpc']['enabled']['dns'] then
                     CREATE OR REPLACE VIEW records_forward AS
                         /* SOA Forward */
                         select -1 as id ,
-                            (SELECT id FROM domains_static WHERE name='#{node['bcpc']['domain_name']}') as domain_id,
+                            (SELECT id FROM domains WHERE name='#{node['bcpc']['domain_name']}') as domain_id,
                             '#{node['bcpc']['domain_name']}' as name,
                             'SOA' as type,
                             concat('#{node['bcpc']['domain_name']} root.#{node['bcpc']['domain_name']} ', (select cast(unix_timestamp(greatest(coalesce(max(created_at), 0), coalesce(max(updated_at), 0), coalesce(max(deleted_at), 0))) as unsigned integer) from nova.floating_ips) ) as content,
                              300 as ttl, NULL as prio,
                              NULL as change_date
                         union
-                        SELECT id,domain_id,name,type,content,ttl,prio,change_date FROM records_static UNION  
+                        SELECT id,domain_id,name,type,content,ttl,prio,change_date FROM records UNION  
                         # assume we only have 500 or less static records
-                        SELECT domains.id+500 AS id, domains.id AS domain_id, domains.name AS name, 'NS' AS type, '#{node['bcpc']['management']['vip']}' AS content, 300 AS ttl, NULL AS prio, NULL AS change_date FROM domains WHERE id > (SELECT MAX(id) FROM domains_static) UNION
+                        SELECT domains.id+500 AS id, domains.id AS domain_id, domains.name AS name, 'NS' AS type, '#{node['bcpc']['management']['vip']}' AS content, 300 AS ttl, NULL AS prio, NULL AS change_date FROM domains WHERE id > (SELECT MAX(id) FROM domains) UNION
                         # assume we only have 250 or less static domains
-                        SELECT domains.id+750 AS id, domains.id AS domain_id, domains.name AS name, 'SOA' AS type, concat('#{node['bcpc']['domain_name']} root.#{node['bcpc']['domain_name']} ', (select cast(unix_timestamp(greatest(coalesce(max(created_at), 0), coalesce(max(updated_at), 0), coalesce(max(deleted_at), 0))) as unsigned integer) from nova.floating_ips) ) AS content, 300 AS ttl, NULL AS prio, NULL AS change_date FROM domains WHERE id > (SELECT MAX(id) FROM domains_static) UNION
+                        SELECT domains.id+750 AS id, domains.id AS domain_id, domains.name AS name, 'SOA' AS type, concat('#{node['bcpc']['domain_name']} root.#{node['bcpc']['domain_name']} ', (select cast(unix_timestamp(greatest(coalesce(max(created_at), 0), coalesce(max(updated_at), 0), coalesce(max(deleted_at), 0))) as unsigned integer) from nova.floating_ips) ) AS content, 300 AS ttl, NULL AS prio, NULL AS change_date FROM domains WHERE id > (SELECT MAX(id) FROM domains) UNION
                         # again, assume we only have 250 or less static domains
                         SELECT nova.instances.id+10000 AS id,
                             # query the domain ID from the domains view
@@ -248,7 +308,7 @@ if node['bcpc']['enabled']['dns'] then
                     create or replace view records_reverse as
                     /* SOA reverse */
                     select -2 as id,
-                        (SELECT id FROM domains_static WHERE name='#{reverse_dns_zone}') as domain_id,
+                        (SELECT id FROM domains WHERE name='#{reverse_dns_zone}') as domain_id,
                         '#{reverse_dns_zone}' as name, 
                         'SOA' as type,
                         concat('#{node['bcpc']['domain_name']} root.#{node['bcpc']['domain_name']} ', (select cast(unix_timestamp(greatest(coalesce(max(created_at), 0), coalesce(max(updated_at), 0), coalesce(max(deleted_at), 0))) as unsigned integer) from nova.floating_ips) ) as content,
@@ -407,10 +467,10 @@ if node['bcpc']['enabled']['dns'] then
     %w{graphite kibana}.each do |static|
         ruby_block "create-monitoring-dns-entry-#{static}" do
             block do
-                system "mysql -uroot -p#{get_config('mysql-root-password')} #{node['bcpc']['dbname']['pdns']} -e 'SELECT name FROM records_static' | grep -q \"#{static}.#{node['bcpc']['domain_name']}\""
+                system "mysql -uroot -p#{get_config('mysql-root-password')} #{node['bcpc']['dbname']['pdns']} -e 'SELECT name FROM records' | grep -q \"#{static}.#{node['bcpc']['domain_name']}\""
                 if not $?.success? then
                     %x[ mysql -uroot -p#{get_config('mysql-root-password')} #{node['bcpc']['dbname']['pdns']} <<-EOH
-                            INSERT INTO records_static (domain_id, name, content, type, ttl, prio) VALUES ((SELECT id FROM domains WHERE name='#{node['bcpc']['domain_name']}'),'#{static}.#{node['bcpc']['domain_name']}','#{node['bcpc']['management']['monitoring']['vip']}','A',300,NULL);
+                            INSERT INTO records (domain_id, name, content, type, ttl, prio) VALUES ((SELECT id FROM domains WHERE name='#{node['bcpc']['domain_name']}'),'#{static}.#{node['bcpc']['domain_name']}','#{node['bcpc']['management']['monitoring']['vip']}','A',300,NULL);
                     ]
                 end
             end
@@ -424,8 +484,8 @@ if node['bcpc']['enabled']['dns'] then
                 if not $?.success? then
                     %x[ mysql -uroot -p#{get_config('mysql-root-password')} #{node['bcpc']['dbname']['pdns']} <<-EOH
                             INSERT INTO records (domain_id, name, content, type, ttl, prio) VALUES ((SELECT id FROM domains WHERE name='#{node['bcpc']['domain_name']}'),'#{static}.#{node['bcpc']['domain_name']}','#{node['bcpc']['floating']['vip']}','A',300,NULL);
-                            INSERT INTO records_static (domain_id, name, content, type, ttl, prio) VALUES ((SELECT id FROM domains WHERE name='#{node['bcpc']['domain_name']}'),'#{static}.#{node['bcpc']['domain_name']}','#{node['bcpc']['floating']['vip']}','A',300,NULL);
-                            INSERT INTO records_static (domain_id, name, content, type, ttl, prio) VALUES ((SELECT id FROM domains WHERE name='#{node[:bcpc][:domain_name]}'),'*.#{static}.#{node[:bcpc][:domain_name]}','#{static}.#{node[:bcpc][:domain_name]}','CNAME',300,NULL);
+                            INSERT INTO records (domain_id, name, content, type, ttl, prio) VALUES ((SELECT id FROM domains WHERE name='#{node['bcpc']['domain_name']}'),'#{static}.#{node['bcpc']['domain_name']}','#{node['bcpc']['floating']['vip']}','A',300,NULL);
+                            INSERT INTO records (domain_id, name, content, type, ttl, prio) VALUES ((SELECT id FROM domains WHERE name='#{node[:bcpc][:domain_name]}'),'*.#{static}.#{node[:bcpc][:domain_name]}','#{static}.#{node[:bcpc][:domain_name]}','CNAME',300,NULL);
                     ]
                 end
             end
@@ -455,32 +515,16 @@ if node['bcpc']['enabled']['dns'] then
         end                
       end
     end
-    end
+  end
 
-  ruby_block "powerdns-function-ip4_to_ptr_name" do
-        block do
-      system "mysql -uroot -p#{get_config('mysql-root-password')} -e 'SELECT name FROM mysql.proc WHERE name = \"ip4_to_ptr_name\" AND db = \"#{node['bcpc']['dbname']['pdns']}\";' \"#{node['bcpc']['dbname']['pdns']}\" | grep -q \"ip4_to_ptr_name\""
-            if not $?.success? then
-              %x[ mysql -uroot -p#{get_config('mysql-root-password')} #{node['bcpc']['dbname']['pdns']} <<-EOH
-                    delimiter //
-                    CREATE FUNCTION ip4_to_ptr_name(ip4 VARCHAR(64) CHARACTER SET latin1) RETURNS VARCHAR(64)
-                    COMMENT 'Returns the reversed IP with .in-addr.arpa appended, suitable for use in the name column of PTR records.'
-                    DETERMINISTIC
-                    BEGIN
-                    return concat_ws( '.',  SUBSTRING_INDEX( SUBSTRING_INDEX(ip4, '.', 4), '.', -1),
-                                            SUBSTRING_INDEX( SUBSTRING_INDEX(ip4, '.', 3), '.', -1),
-                                            SUBSTRING_INDEX( SUBSTRING_INDEX(ip4, '.', 2), '.', -1),
-                                            SUBSTRING_INDEX( SUBSTRING_INDEX(ip4, '.', 1), '.', -1), 'in-addr.arpa');
-                    END//
-                ]
-                self.notifies :restart, "service[pdns]", :delayed
-            end
-        end
-    end
+	# this cron job needs to be removed because it wipes out the contents of the pdns.records table that are seeded by add-fixed-ips
+	cron "powerdns_populate_records" do
+		action :delete
+	end
 
   ruby_block "add-fixed-ips" do
     block do
-      system "mysql -N -B -u root -pW2x42JNYBdeaQ6gDCA0Y -e 'select (select count(*) from nova.fixed_ips) - (select count(*) from pdns.records where name like \"ip-%\" and type=\"A\") as diff;' | egrep \"^0$\"" 
+      system "mysql -N -B -u root -p#{get_config('mysql-root-password')} -e 'select (select count(*) from nova.fixed_ips) - (select count(*) from pdns.records where name like \"ip-%\" and type=\"A\") as diff;' | egrep \"^0$\"" 
       if not $?.success? then     
         reverse_dns_zone = node['bcpc']['fixed']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['fixed']['cidr'])
         pwd = get_config('mysql-root-password')
@@ -527,7 +571,4 @@ if node['bcpc']['enabled']['dns'] then
     weekday "*"
     command "/usr/local/bin/if_vip /usr/local/bin/dns_fill.py -c /usr/local/etc/dns_fill.yml run"
   end
-
-
-  
 end

@@ -57,7 +57,7 @@ class dns_popper(object):
             for add in v:
                if add["OS-EXT-IPS:type"] =="floating":
                   # huzzah found a float
-                  tenant = self.keystone.tenants.get(server.tenant_id)
+                  tenant = self.keystone.tenants.get(tid)
 
                   tname  = tenant.name
                   sname = server.name
@@ -68,7 +68,7 @@ class dns_popper(object):
                   rc.append( (dnsname, "CNAME", "public-" + str(add["addr"]).replace(".", "-") + "."+self.config["domain"]) )
       return rc
 
-   def get_recrods_from_db(self,):
+   def get_records_from_db(self,):
       c = self.db_con.cursor()
       c.execute("""select name, content from records where type="CNAME" and content like "public-%";""")
       rows = []
@@ -104,7 +104,7 @@ def c_run(args):
    config = c_load_config(args.config)
    dnsp = dns_popper(config)
    nova_rows = dnsp.generate_records_from_vms()
-   db_rows = dnsp.get_recrods_from_db()
+   db_rows = dnsp.get_records_from_db()
    dnsp.update_db(db_rows, nova_rows)
 
 
@@ -112,7 +112,7 @@ def c_dump(args):
    config = c_load_config(args.config)
    dnsp = dns_popper(config)
    nrec = dnsp.generate_records_from_vms()
-   dbrec = dnsp.get_recrods_from_db()
+   dbrec = dnsp.get_records_from_db()
    print nrec, dbrec
    
 if __name__ == '__main__':
