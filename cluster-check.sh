@@ -25,7 +25,7 @@ if [[ -z "$1" ]]; then
     exit
 fi
 if [[ -z `which fping` ]]; then
-    echo "This tool uses fping. You should be able to install fpring with `sudo apt-get install fping`"
+    echo "This tool uses fping. You should be able to install fping with `sudo apt-get install fping`"
     exit
 fi
 
@@ -101,10 +101,11 @@ if [[ -f cluster.txt ]]; then
             else
                 vtrace "$HOSTNAME is up"
             fi
-	    if [[ ! "$ROLE" = "head" && ! "$ROLE" = work && ! "$ROLE" = storage-work ]]; then
-		vtrace "$HOSTNAME : unrecognized $ROLE - skipping "
-		continue
-	    fi
+             if [[ ! "$ROLE" = "head" && ! "$ROLE" = "work" && ! "$ROLE" = "storage-work" ]]; then
+                  vtrace "$HOSTNAME : unrecognized $ROLE - skipping "
+                  UP=$[UP - 1]
+                  continue
+            fi
             HOSTS="$HOSTS $IPADDR"
             IDX=`echo $IPADDR | tr '.' '-'`
             HOSTNAMES["$IDX"]="$HOSTNAME"
