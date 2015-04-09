@@ -5,8 +5,19 @@ hash -r
 set -e
 
 port=8443   # what if already occupied?
-target=supermarket.chef.io
-cafile=/opt/chef/embedded/ssl/cert.pem
+if [[ $1 != "" ]]; then
+    target=$1
+else
+    target=supermarket.chef.io
+fi
+
+if [[ $2 != "" ]]; then
+    cafile=$2
+else
+    cafile=/opt/chef/embedded/ssl/cert.pem
+fi
+
+echo "Copying SSL certificate for $target into store $cafile"
 
 if [[ -f ./proxy_setup.sh ]]; then
   . ./proxy_setup.sh

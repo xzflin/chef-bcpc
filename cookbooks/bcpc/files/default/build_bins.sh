@@ -63,8 +63,16 @@ VER_KIBANA=2581d314f12f520638382d23ffc03977f481c1e4
 VER_DIAMOND=f33aa2f75c6ea2dfbbc659766fe581e5bfe2476d
 VER_ESPLUGIN=9c032b7c628d8da7745fbb1939dcd2db52629943
 
-if [[ -f ./proxy_setup.sh ]]; then
-  . ./proxy_setup.sh
+PROXY_INFO_FILE="/home/vagrant/proxy_info.sh"
+if [[ -f $PROXY_INFO_FILE ]]; then
+  . $PROXY_INFO_FILE
+fi
+
+# define calling gem with a proxy if necessary
+if [[ -z $http_proxy ]]; then
+    GEM_PROXY=""
+else
+    GEM_PROXY="-p $http_proxy"
 fi
 
 
@@ -101,14 +109,15 @@ pushd $DIR/bins/
 # Install tools needed for packaging
 apt-get -y install git ruby-dev make pbuilder python-mock python-configobj python-support cdbs python-all-dev python-stdeb libmysqlclient-dev libldap2-dev
 if [ -z `gem list --local fpm | grep fpm | cut -f1 -d" "` ]; then
-  gem install fpm --no-ri --no-rdoc
+  gem install $GEM_PROXY fpm --no-ri --no-rdoc
 fi
 
 # Fetch chef client and server debs
-CHEF_CLIENT_URL=https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/13.04/x86_64/chef_12.0.3-1_amd64.deb
+CHEF_CLIENT_URL=https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/13.04/x86_64/chef_12.2.1-1_amd64.deb
 CHEF_CLIENT_BOOTSTRAP_URL=$CHEF_CLIENT_URL
 #TODO: maybe unstable url...?
-CHEF_SERVER_URL=https://packagecloud.io/chef/stable/ubuntu/pool/trusty/main/c/chef-server-core/chef-server-core_12.0.3-1_amd64.deb
+# this URL requires curl -L because it will redirect
+CHEF_SERVER_URL=https://web-dl.packagecloud.io/chef/stable/packages/ubuntu/trusty/chef-server-core_12.0.7-1_amd64.deb
 
 if [ ! -f chef-client.deb ]; then
    ccurl  ${CHEF_CLIENT_URL} chef-client.deb
@@ -145,7 +154,7 @@ for i in elasticsearch tail-multiline tail-ex record-reformer rewrite; do
         else
             VERS=""
         fi
-        gem fetch fluent-plugin-${i} ${VERS}
+        gem fetch $GEM_PROXY fluent-plugin-${i} ${VERS}
         mv fluent-plugin-${i}-*.gem fluent-plugin-${i}.gem
     fi
     FILES="fluent-plugin-${i}.gem $FILES"

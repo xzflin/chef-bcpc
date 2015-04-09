@@ -34,6 +34,11 @@ copy_client_keys(){
 
 set -x
 
+PROXY_INFO_FILE="/home/vagrant/proxy_info.sh"
+if [[ -f $PROXY_INFO_FILE ]]; then
+  . $PROXY_INFO_FILE
+fi
+
 if [[ -f ./proxy_setup.sh ]]; then
   . ./proxy_setup.sh
 fi

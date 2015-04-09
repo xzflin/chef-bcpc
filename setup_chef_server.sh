@@ -10,6 +10,18 @@ if [[ -f ./proxy_setup.sh ]]; then
   . ./proxy_setup.sh
 fi
 
+PROXY_INFO_FILE="/home/vagrant/proxy_info.sh"
+if [[ -f $PROXY_INFO_FILE ]]; then
+  . $PROXY_INFO_FILE
+fi
+
+# define calling gem with a proxy if necessary
+if [[ -z $http_proxy ]]; then
+    GEM_PROXY=""
+else
+    GEM_PROXY="-p $http_proxy"
+fi
+
 if [[ -z "$1" ]]; then
         BOOTSTRAP_IP=10.0.100.3
 else
@@ -57,13 +69,17 @@ if [[ -f $HOME/.ssh/authorized_keys && ! -f /root/.ssh/authorized_keys ]]; then
   cp $HOME/.ssh/authorized_keys /root/.ssh/authorized_keys
 fi
 
+echo "HTTP proxy: $http_proxy"
+echo "HTTPS proxy: $https_proxy"
+
 # Bad hack for finnicky MITM proxies...
 if [[ -n "$https_proxy" ]] ; then
-  ./proxy_cert_download_hack.sh
+  ./proxy_cert_download_hack.sh rubygems.org
+  ./proxy_cert_download_hack.sh supermarket.chef.io
 fi
 
 # install knife-acl plugin
 read shebang < $(type -P knife)
 ruby_interp="${shebang:2}"
 bindir="${ruby_interp%/*}"
-$bindir/gem install knife-acl
+$bindir/gem install $GEM_PROXY knife-acl
