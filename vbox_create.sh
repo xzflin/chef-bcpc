@@ -20,6 +20,7 @@ fi
 # Bootstrap VM Defaults (these need to be exported for Vagrant's Vagrantfile)
 export BOOTSTRAP_VM_MEM=1536
 export BOOTSTRAP_VM_CPUs=1
+export BOOTSTRAM_VM_VRAM=16
 # Use this if you intend to make an apt-mirror in this VM (see the
 # instructions on using an apt-mirror towards the end of bootstrap.md)
 # -- Vagrant VMs do not use this size --
@@ -215,6 +216,7 @@ function create_bootstrap_VM {
                 $VBM createvm --name $vm --ostype Ubuntu_64 --basefolder $P --register
                 $VBM modifyvm $vm --memory $BOOTSTRAP_VM_MEM
                 $VBM modifyvm $vm --cpus $BOOTSTRAP_VM_CPUs
+                $VBM modifyvm $vm --vram $BOOTSTRAP_VM_VRAM
                 $VBM storagectl $vm --name "SATA Controller" --add sata
                 $VBM storagectl $vm --name "IDE Controller" --add ide
                 # Create a number of hard disks
