@@ -28,9 +28,11 @@ api_paste_config=/etc/nova/api-paste.ini
 s3_host=<%=node['bcpc']['management']['vip']%>
 ec2_listen=<%= node['bcpc']['management']['ip'] %>
 ec2_host=<%=node['bcpc']['management']['vip']%>
+ec2_workers=<%=node['bcpc']['nova']['workers']%>
 osapi_compute_listen=<%= node['bcpc']['management']['ip'] %>
 metadata_listen=169.254.169.254
 metadata_host=169.254.169.254
+metadata_workers=<%=node['bcpc']['nova']['workers']%>
 dmz_cidr=169.254.169.254/32
 <% if @servers.include?(node) -%>
 enabled_apis=ec2,osapi_compute,metadata
@@ -40,6 +42,7 @@ enabled_apis=metadata
 <% if not node['bcpc']['vms_key'].nil? %>
 osapi_compute_extension=nova.api.openstack.compute.contrib.standard_extensions
 osapi_compute_extension=cobalt.nova.osapi.cobalt_extension.Cobalt_extension
+osapi_compute_workers=<%=node['bcpc']['nova']['workers']%>
 <% end %>
 
 # Nova Scheduler
@@ -155,3 +158,6 @@ admin_user = <%=get_config('keystone-admin-user')%>
 admin_password = <%=get_config('keystone-admin-password')%>
 admin_token = <%=get_config('keystone-admin-token')%>
 signing_dir = /var/lib/nova
+
+[conductor]
+workers=<%=node['bcpc']['nova']['workers']%>
