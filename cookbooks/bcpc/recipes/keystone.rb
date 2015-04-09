@@ -159,16 +159,3 @@ ruby_block "keystone-add-test-admin-role" do
         end
     end
 end
-
-template "/usr/local/bin/keystone_token_cleaner" do
-    source "keystone.token_cleaner.erb"
-    owner "root"
-    group "root"
-    mode 00755
-end
-
-cron "keystone-token-flush" do
-  action :create
-  command "/usr/local/bin/keystone_token_cleaner"
-  hour node['bcpc']['keystone_token_clean_hour']
-end
