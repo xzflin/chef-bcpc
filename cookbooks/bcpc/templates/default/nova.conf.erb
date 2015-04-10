@@ -30,6 +30,7 @@ ec2_listen=<%= node['bcpc']['management']['ip'] %>
 ec2_host=<%=node['bcpc']['management']['vip']%>
 ec2_workers=<%=node['bcpc']['nova']['workers']%>
 osapi_compute_listen=<%= node['bcpc']['management']['ip'] %>
+osapi_compute_workers=<%=node['bcpc']['nova']['workers']%>
 metadata_listen=169.254.169.254
 metadata_host=169.254.169.254
 metadata_workers=<%=node['bcpc']['nova']['workers']%>
@@ -42,7 +43,6 @@ enabled_apis=metadata
 <% if not node['bcpc']['vms_key'].nil? %>
 osapi_compute_extension=nova.api.openstack.compute.contrib.standard_extensions
 osapi_compute_extension=cobalt.nova.osapi.cobalt_extension.Cobalt_extension
-osapi_compute_workers=<%=node['bcpc']['nova']['workers']%>
 <% end %>
 
 # Nova Scheduler
