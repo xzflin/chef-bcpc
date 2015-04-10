@@ -45,8 +45,13 @@ package "openstack-dashboard-ubuntu-theme" do
 end
 
 # This maybe better served by a2disconf
+file "/etc/apache2/conf-enabled/openstack-dashboard.conf" do
+    action :delete
+    notifies :restart, "service[apache2]", :delayed
+end
 file "/etc/apache2/conf-available/openstack-dashboard.conf" do
     action :delete
+    notifies :restart, "service[apache2]", :delayed
 end
 
 template "/etc/apache2/sites-available/openstack-dashboard.conf" do
