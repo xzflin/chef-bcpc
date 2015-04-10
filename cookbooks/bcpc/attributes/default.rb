@@ -241,6 +241,9 @@ default['bcpc']['keystone_token_clean_hour'] = "2"
 default['bcpc']['nova']['ram_allocation_ratio'] = 1.0
 default['bcpc']['nova']['reserved_host_memory_mb'] = 1024
 default['bcpc']['nova']['cpu_allocation_ratio'] = 2.0
+# "workers" parameters in nova are set to number of CPUs
+# available by default. This provides an override.
+default['bcpc']['nova']['workers'] = 2
 ###########################################
 #
 # Routemon settings
