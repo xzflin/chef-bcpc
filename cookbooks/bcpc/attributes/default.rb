@@ -257,3 +257,13 @@ default['bcpc']['nova']['workers'] = 2
 # subsequently only monitors and reports
 #
 default['bcpc']['routemon']['numfixes'] = 0
+
+###########################################
+#
+# MySQL settings
+#
+###########################################
+#
+# If set to 0, max_connections for MySQL on heads will default to an
+# auto-calculated value.
+default['bcpc']['mysql-head']['max_connections'] = 0
