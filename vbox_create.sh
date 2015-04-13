@@ -328,8 +328,6 @@ ip=${2-10.0.100.3}
     echo "Bootstrap complete - setting up Chef server"
     echo "N.B. This may take approximately 30-45 minutes to complete."
     ./bootstrap_chef.sh --vagrant-remote $ip $environment
-    # magic sleep to give things a little time to update before Cobbler runs
-    sleep 10
     ./enroll_cobbler.sh
   else
     ./non_vagrant_boot.sh
