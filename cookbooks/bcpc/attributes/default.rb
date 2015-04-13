@@ -241,6 +241,11 @@ default['bcpc']['keystone_token_clean_hour'] = "2"
 default['bcpc']['nova']['ram_allocation_ratio'] = 1.0
 default['bcpc']['nova']['reserved_host_memory_mb'] = 1024
 default['bcpc']['nova']['cpu_allocation_ratio'] = 2.0
+# "workers" parameters in nova are set to number of CPUs
+# available by default. This provides an override.
+default['bcpc']['nova']['workers'] = 2
+# Patch toggle for https://github.com/bloomberg/chef-bcpc/pull/493
+default['bcpc']['nova']['live_migration_patch'] = false
 ###########################################
 #
 # Routemon settings
@@ -254,3 +259,13 @@ default['bcpc']['nova']['cpu_allocation_ratio'] = 2.0
 # subsequently only monitors and reports
 #
 default['bcpc']['routemon']['numfixes'] = 0
+
+###########################################
+#
+# MySQL settings
+#
+###########################################
+#
+# If set to 0, max_connections for MySQL on heads will default to an
+# auto-calculated value.
+default['bcpc']['mysql-head']['max_connections'] = 0

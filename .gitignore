@@ -1,5 +1,7 @@
 .rake_test_cache
 .chef/
+.idea/
+*.iml
 id_rsa
 secret_file
 cookbooks/apt/
