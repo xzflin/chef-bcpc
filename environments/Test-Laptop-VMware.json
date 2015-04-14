@@ -2,6 +2,9 @@
   "name": "Test-Laptop-VMware",
   "override_attributes": {
     "bcpc": {
+      "enabled" : {
+        "secure_fixed_networks" : false
+      },
       "keepalived" : {
         "checks" : false
       },
