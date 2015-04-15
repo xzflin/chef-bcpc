@@ -87,16 +87,3 @@ template "/usr/local/bin/chk_mysql_quorum" do
     owner "root"
     group "root"
 end
-
-ruby_block "phpmyadmin-debconf-setup" do
-    block do
-        if not system "debconf-get-selections | grep phpmyadmin >/dev/null 2>&1" then
-            puts %x[
-                echo 'phpmyadmin phpmyadmin/dbconfig-install boolean true' | debconf-set-selections
-                echo 'phpmyadmin phpmyadmin/mysql/admin-pass password #{get_config('mysql-monitoring-root-password')}' | debconf-set-selections
-                echo 'phpmyadmin phpmyadmin/mysql/app-pass password #{get_config('mysql-monitoring-phpmyadmin-password')}' | debconf-set-selections
-                echo 'phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2' | debconf-set-selections
-            ]
-        end
-    end
-end
