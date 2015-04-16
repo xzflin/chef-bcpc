@@ -56,26 +56,6 @@ if node['bcpc']['enabled']['dns'] then
         mode 00600
         notifies :restart, "service[pdns]", :delayed
     end
-    
-	# if this attribute is true, Chef will back up the PowerDNS database and drop it if
-	# the specified lock file does not exist
-	# (a drop is necessary to facilitate migrating to the bulk fixed IP scheme)
-	if node['bcpc']['enabled']['automate_migration_to_fixed_ip_dns']
-		lock_file = "/usr/local/etc/.already_migrated_to_fixed_ip_dns"
-		
-		ruby_block "back-up-powerdns-database-pre-migration" do
-			block do
-				system "mysqldump -uroot -p#{get_config('mysql-root-password')} pdns > /tmp/pdns-database-backup.sql"
-				raise "Unable to back up pdns database" unless $?.success?
-			end # block
-			not_if { File.exists?(lock_file) }
-		end # ruby_block "back-up-powerdns-database-pre-migration"
-		
-		file lock_file do
-			action :create_if_missing
-		end # file lock_file
-	end # if node['bcpc']['enabled']['automate_migration_to_fixed_ip_dns']
-    	
 
     ruby_block "powerdns-database-creation" do
         block do
