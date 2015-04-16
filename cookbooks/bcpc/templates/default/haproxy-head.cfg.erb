@@ -68,7 +68,7 @@ listen ldap-389ds <%=node['bcpc']['management']['vip']%>:389
   option tcplog
   option tcpka
 <% @servers.each do |server| -%>
-  <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:389 check inter 5s rise 1 fall 1 observe layer4" %>
+  <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:4389 check inter 5s rise 1 fall 1 observe layer4" %>
 <% end -%>
 
 listen keystone-api
