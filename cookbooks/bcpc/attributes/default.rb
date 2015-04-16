@@ -222,6 +222,9 @@ default['bcpc']['ports']['apache']['radosgw_https'] = 443
 default['bcpc']['ports']['haproxy']['radosgw'] = 80
 default['bcpc']['ports']['haproxy']['radosgw_https'] = 443
 
+default['bcpc']['ports']['389ds']['local'] = 4389
+default['bcpc']['ports']['389ds']['floating'] = 389
+
 # Can be set to 'http' or 'https'
 default['bcpc']['protocol']['keystone'] = "https"
 default['bcpc']['protocol']['glance'] = "https"

@@ -53,7 +53,7 @@ ruby_block "setup-389ds-server" do
                 sed --in-place '/^MinSpareThreads/d' /etc/dirsrv/admin-serv/httpd.conf
                 sed --in-place '/^MaxSpareThreads/d' /etc/dirsrv/admin-serv/httpd.conf
                 sed --in-place '/^ThreadsPerChild/d' /etc/dirsrv/admin-serv/httpd.conf
-                sed --in-place 's/^nsslapd-port.*/nsslapd-listenhost: #{node['bcpc']['management']['ip']}\\nnsslapd-port: 389/' /etc/dirsrv/slapd-#{node['hostname']}/dse.ldif
+                sed --in-place 's/^nsslapd-port.*/nsslapd-listenhost: #{node['bcpc']['management']['ip']}\\nnsslapd-port: #{node['bcpc']['ports']['389ds']['local']}/' /etc/dirsrv/slapd-#{node['hostname']}/dse.ldif
                 echo \
 "\
 dn: cn=Replication Manager,cn=config
@@ -87,7 +87,7 @@ end
 ruby_block "disable-anonymous-bind" do
     action :nothing
     block do
-        %x[ ldapmodify -h #{node['bcpc']['management']['ip']} -p 389  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" << EOH
+        %x[ ldapmodify -h #{node['bcpc']['management']['ip']} -p #{node['bcpc']['ports']['389ds']['local']}  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" << EOH
 dn: cn=config
 changetype: modify
 replace: nsslapd-allow-anonymous-access
@@ -101,8 +101,8 @@ end
 ['Accounting Managers', 'HR Managers', 'PD Managers', 'QA Managers'].each do |cn|
     ruby_block "create-cn-for-#{cn}" do
         block do
-            if system "ldapsearch -h #{node['bcpc']['management']['ip']} -p 389  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" -b \"#{node['bcpc']['domain_name'].split('.').collect { |x| 'dc='+x }.join(',')}\" \"(cn=#{cn})\" | grep ^dn: > /dev/null 2>&1" then
-                %x[ ldapmodify -h #{node['bcpc']['management']['ip']} -p 389  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" << EOH
+            if system "ldapsearch -h #{node['bcpc']['management']['ip']} -p #{node['bcpc']['ports']['389ds']['local']}  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" -b \"#{node['bcpc']['domain_name'].split('.').collect { |x| 'dc='+x }.join(',')}\" \"(cn=#{cn})\" | grep ^dn: > /dev/null 2>&1" then
+                %x[ ldapmodify -h #{node['bcpc']['management']['ip']} -p #{node['bcpc']['ports']['389ds']['local']}  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" << EOH
 dn: cn=#{cn},ou=Groups,#{node['bcpc']['domain_name'].split('.').collect { |x| 'dc='+x }.join(',')}
 changetype: delete
 EOH
@@ -116,8 +116,8 @@ end
 %w{ Tenants Roles }.each do |ou|
     ruby_block "create-ou-for-#{ou}" do
         block do
-            if not system "ldapsearch -h #{node['bcpc']['management']['ip']} -p 389  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" -b \"#{node['bcpc']['domain_name'].split('.').collect { |x| 'dc='+x }.join(',')}\" \"(ou=#{ou})\" | grep ^dn: > /dev/null 2>&1" then
-                %x[ ldapmodify -h #{node['bcpc']['management']['ip']} -p 389  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" << EOH
+            if not system "ldapsearch -h #{node['bcpc']['management']['ip']} -p #{node['bcpc']['ports']['389ds']['local']}  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" -b \"#{node['bcpc']['domain_name'].split('.').collect { |x| 'dc='+x }.join(',')}\" \"(ou=#{ou})\" | grep ^dn: > /dev/null 2>&1" then
+                %x[ ldapmodify -h #{node['bcpc']['management']['ip']} -p #{node['bcpc']['ports']['389ds']['local']}  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" << EOH
 dn: ou=#{ou},#{node['bcpc']['domain_name'].split('.').collect { |x| 'dc='+x }.join(',')}
 changetype: add
 objectClass: top
@@ -134,8 +134,8 @@ end
 %w{ Users Tenants }.each do |cn|
     ruby_block "create-cn-for-#{cn}" do
         block do
-            if not system "ldapsearch -h #{node['bcpc']['management']['ip']} -p 389  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" -b \"#{node['bcpc']['domain_name'].split('.').collect { |x| 'dc='+x }.join(',')}\" \"(cn=OpenStack #{cn})\" | grep ^dn: > /dev/null 2>&1" then
-                %x[ ldapmodify -h #{node['bcpc']['management']['ip']} -p 389  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" << EOH
+            if not system "ldapsearch -h #{node['bcpc']['management']['ip']} -p #{node['bcpc']['ports']['389ds']['local']}  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" -b \"#{node['bcpc']['domain_name'].split('.').collect { |x| 'dc='+x }.join(',')}\" \"(cn=OpenStack #{cn})\" | grep ^dn: > /dev/null 2>&1" then
+                %x[ ldapmodify -h #{node['bcpc']['management']['ip']} -p #{node['bcpc']['ports']['389ds']['local']}  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" << EOH
 dn: cn=OpenStack #{cn},ou=Groups,#{node['bcpc']['domain_name'].split('.').collect { |x| 'dc='+x }.join(',')}
 changetype: add
 objectclass: top
@@ -151,8 +151,8 @@ end
 # Create a changelog so that we can setup replication
 ruby_block "create-ldap-changelog" do
     block do
-        if not system "ldapsearch -h #{node['bcpc']['management']['ip']} -p 389  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" -b cn=config \"(cn=changelog5)\" | grep -v filter | grep changelog5 > /dev/null 2>&1" then
-            %x[ ldapmodify -h #{node['bcpc']['management']['ip']} -p 389  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" << EOH
+        if not system "ldapsearch -h #{node['bcpc']['management']['ip']} -p #{node['bcpc']['ports']['389ds']['local']}  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" -b cn=config \"(cn=changelog5)\" | grep -v filter | grep changelog5 > /dev/null 2>&1" then
+            %x[ ldapmodify -h #{node['bcpc']['management']['ip']} -p #{node['bcpc']['ports']['389ds']['local']}  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" << EOH
 dn: cn=changelog5,cn=config
 changetype: add
 objectclass: top
@@ -168,9 +168,9 @@ end
 # Create a replica object to hold our replication agreements
 ruby_block "create-ldap-supplier-replica" do
     block do
-        if not system "ldapsearch -h #{node['bcpc']['management']['ip']} -p 389  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" -b cn=config \"(cn=replica)\" | grep -v filter | grep replica > /dev/null 2>&1" then
+        if not system "ldapsearch -h #{node['bcpc']['management']['ip']} -p #{node['bcpc']['ports']['389ds']['local']}  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" -b cn=config \"(cn=replica)\" | grep -v filter | grep replica > /dev/null 2>&1" then
             domain = node['bcpc']['domain_name'].split('.').collect { |x| 'dc='+x }.join(',')
-            %x[ ldapmodify -h #{node['bcpc']['management']['ip']} -p 389  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" << EOH
+            %x[ ldapmodify -h #{node['bcpc']['management']['ip']} -p #{node['bcpc']['ports']['389ds']['local']}  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" << EOH
 dn: cn=replica,cn="#{domain}",cn=mapping tree,cn=config
 changetype: add
 objectclass: top
@@ -194,16 +194,16 @@ get_head_nodes.each do |server|
         only_if { server['hostname'] != node['hostname'] }
         block do
             # Setup replication from the other head node to us
-            if not system "ldapsearch -h #{server['bcpc']['management']['ip']} -p 389  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" -b cn=config \"(cn=To-#{node['hostname']})\" | grep -v filter | grep #{node['hostname']} > /dev/null 2>&1" then
+            if not system "ldapsearch -h #{server['bcpc']['management']['ip']} -p #{node['bcpc']['ports']['389ds']['local']}  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" -b cn=config \"(cn=To-#{node['hostname']})\" | grep -v filter | grep #{node['hostname']} > /dev/null 2>&1" then
                 domain = node['bcpc']['domain_name'].split('.').collect { |x| 'dc='+x }.join(',')
-                %x[ ldapmodify -h #{server['bcpc']['management']['ip']} -p 389  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" << EOH
+                %x[ ldapmodify -h #{server['bcpc']['management']['ip']} -p #{node['bcpc']['ports']['389ds']['local']}  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" << EOH
 dn: cn=To-#{node['hostname']},cn=replica,cn="#{domain}",cn=mapping tree,cn=config
 changetype: add
 objectclass: top
 objectclass: nsds5replicationagreement
 cn: To-#{node['hostname']}
 nsds5replicahost: #{node['bcpc']['management']['ip']}
-nsds5replicaport: 389
+nsds5replicaport: #{node['bcpc']['ports']['389ds']['local']}
 nsds5ReplicaBindDN: #{get_config('389ds-replication-user')},cn=config
 nsds5replicabindmethod: SIMPLE
 nsds5replicaroot: #{domain}
@@ -214,7 +214,7 @@ EOH
                 ]
                 # Initialize this node once if it's brand new
                 if not node['bcpc']['ldap_initialized'] then
-                    %x[ ldapmodify -h #{server['bcpc']['management']['ip']} -p 389  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" << EOH
+                    %x[ ldapmodify -h #{server['bcpc']['management']['ip']} -p #{node['bcpc']['ports']['389ds']['local']}  -D \"#{get_config('389ds-rootdn-user')}\" -w \"#{get_config('389ds-rootdn-password')}\" << EOH
 dn: cn=To-#{node['hostname']},cn=replica,cn="#{domain}",cn=mapping tree,cn=config
 changetype: modify
 add: nsds5BeginReplicaRefresh
