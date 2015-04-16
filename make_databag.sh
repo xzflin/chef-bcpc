@@ -91,7 +91,6 @@ File.open("/tmp/openssl.cnf", 'w') {|f| f.write(ssl_conf)}
     "mysql-nova-user": "nova",
     "mysql-pdns-password": "<%="#{secure_password}"%>",
     "mysql-pdns-user": "pdns",
-    "mysql-phpmyadmin-password": "<%="#{secure_password}"%>",
     "mysql-root-password": "<%="#{secure_password}"%>",
     "mysql-root-user": "root",
     "mysql-zabbix-password": "<%="#{secure_password}"%>",
