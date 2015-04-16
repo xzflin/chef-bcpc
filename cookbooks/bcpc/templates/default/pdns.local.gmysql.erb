@@ -9,9 +9,9 @@
 # Launch gmysql backend
 launch=gmysql
 
-gmysql-host=<%=node['bcpc']['management']['vip']%>
-gmysql-port=3306
-gmysql-user=<%=get_config('mysql-pdns-user')%>
-gmysql-password=<%=get_config('mysql-pdns-password')%>
-gmysql-dbname=<%=node['bcpc']['dbname']['pdns']%>
+backend-host=<%=node['bcpc']['management']['vip']%>
+backend-port=3306
+backend-user=<%=get_config('mysql-pdns-user')%>
+backend-password=<%=get_config('mysql-pdns-password')%>
+backend-dbname=<%=node['bcpc']['dbname']['pdns']%>
 #gmysql-dnssec=yes
