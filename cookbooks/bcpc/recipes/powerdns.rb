@@ -45,12 +45,6 @@ if node['bcpc']['enabled']['dns'] then
         notifies :restart, "service[pdns]", :delayed
     end
 
-    # the presence of this file can interfere with the other configurations, so explicitly remove it
-    file "/etc/powerdns/pdns.d/pdns.local.gmysql.conf" do
-      action :delete
-      notifies :restart, "service[pdns]", :delayed
-    end
-
     ruby_block "powerdns-database-creation" do
         block do
             system "mysql -uroot -p#{get_config('mysql-root-password')} -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['pdns']}\"' | grep -q \"#{node['bcpc']['dbname']['pdns']}\""
@@ -316,7 +310,15 @@ if node['bcpc']['enabled']['dns'] then
         end
     end
 
-    template "/etc/powerdns/pdns.d/pdns.local.gmysql" do
+    # delete a bunch of files put in place by the default packages that will interfere with PowerDNS's operation
+    %w{/etc/powerdns/bindbackend.conf /etc/powerdns/pdns.d/pdns.local.conf /etc/powerdns/pdns.d/pdns.simplebind.conf}.each do |pdns_conf_file|
+        file pdns_conf_file do
+            action :delete
+            notifies :restart, "service[pdns]", :delayed
+        end
+    end
+
+    template "/etc/powerdns/pdns.d/pdns.local.gmysql.conf" do
         source "pdns.local.gmysql.erb"
         owner "pdns"
         group "root"
