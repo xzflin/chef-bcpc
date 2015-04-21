@@ -281,3 +281,11 @@ default['bcpc']['mysql-head']['max_connections'] = 0
 #
 # Package version to pin to
 default['bcpc']['elasticsearch']['version'] = '1.5.1'
+###########################################
+#
+# Kibana settings
+#
+###########################################
+#
+# Package version to pin to
+default['bcpc']['kibana']['version'] = '4.0.2'
