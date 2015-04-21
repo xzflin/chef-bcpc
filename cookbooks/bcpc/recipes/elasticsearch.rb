@@ -21,19 +21,23 @@ if node['bcpc']['enabled']['logging'] then
 
     include_recipe "bcpc::default"
 
+    apt_repository 'elasticsearch' do
+        uri node['bcpc']['repos']['elasticsearch']
+        distribution 'stable'
+        components ['main']
+        key 'elasticsearch.key'
+    end
+
+    apt_preference 'elasticsearch' do
+        pin          "version #{node['bcpc']['elasticsearch']['version']}"
+        pin_priority '600'
+    end
+
     package "openjdk-7-jre-headless" do
-        action :upgrade
+        action :install
     end
 
-    cookbook_file "/tmp/elasticsearch-1.1.1.deb" do
-        source "bins/elasticsearch-1.1.1.deb"
-        owner "root"
-        mode 00444
-    end
-
-    package "elasticsearch" do
-        provider Chef::Provider::Package::Dpkg
-        source "/tmp/elasticsearch-1.1.1.deb"
+    package 'elasticsearch' do
         action :install
     end
 
