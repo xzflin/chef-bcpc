@@ -297,6 +297,7 @@ default['bcpc']['cpupower']['governor'] = "ondemand"
 #
 # Package version to pin to
 default['bcpc']['elasticsearch']['version'] = '1.5.1'
+
 ###########################################
 #
 # Kibana settings
@@ -305,3 +306,13 @@ default['bcpc']['elasticsearch']['version'] = '1.5.1'
 #
 # Package version to pin to
 default['bcpc']['kibana']['version'] = '4.0.2'
+
+###########################################
+#
+# Graphite settings
+#
+###########################################
+#
+# Default retention rates
+# http://graphite.readthedocs.org/en/latest/config-carbon.html#storage-schemas-conf
+default['bcpc']['graphite']['retention'] = '60s:1d'
