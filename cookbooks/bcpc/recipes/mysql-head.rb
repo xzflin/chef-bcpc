@@ -57,11 +57,15 @@ template "/etc/mysql/debian.cnf" do
     notifies :restart, "service[mysql]", :delayed
 end
 
+if node['bcpc']['mysql-head']['max_connections'] == 0 then
+    node.default['bcpc']['mysql-head']['max_connections'] = [get_head_nodes.length*100+get_all_nodes.length*10, 200].max
+end
+
 template "/etc/mysql/conf.d/wsrep.cnf" do
     source "wsrep.cnf.erb"
     mode 00644
     variables(
-        :max_connections => [get_head_nodes.length*50+search_nodes("recipe", "nova-work").length*5, 200].max,
+        :max_connections => node['bcpc']['mysql-head']['max_connections'],
         :servers => get_head_nodes,
         :wsrep_cluster_name => node['bcpc']['region_name'],
         :wsrep_port => 4567,
@@ -69,17 +73,4 @@ template "/etc/mysql/conf.d/wsrep.cnf" do
         :galera_pass_key => "mysql-galera-password"
     )
     notifies :restart, "service[mysql]", :immediately
-end
-
-ruby_block "phpmyadmin-debconf-setup" do
-    block do
-        if not system "debconf-get-selections | grep phpmyadmin >/dev/null 2>&1" then
-            puts %x[
-                echo 'phpmyadmin phpmyadmin/dbconfig-install boolean true' | debconf-set-selections
-                echo 'phpmyadmin phpmyadmin/mysql/admin-pass password #{get_config('mysql-root-password')}' | debconf-set-selections
-                echo 'phpmyadmin phpmyadmin/mysql/app-pass password #{get_config('mysql-phpmyadmin-password')}' | debconf-set-selections
-                echo 'phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2' | debconf-set-selections
-            ]
-        end
-    end
 end

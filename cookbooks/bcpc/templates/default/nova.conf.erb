@@ -28,9 +28,12 @@ api_paste_config=/etc/nova/api-paste.ini
 s3_host=<%=node['bcpc']['management']['vip']%>
 ec2_listen=<%= node['bcpc']['management']['ip'] %>
 ec2_host=<%=node['bcpc']['management']['vip']%>
+ec2_workers=<%=node['bcpc']['nova']['workers']%>
 osapi_compute_listen=<%= node['bcpc']['management']['ip'] %>
+osapi_compute_workers=<%=node['bcpc']['nova']['workers']%>
 metadata_listen=169.254.169.254
 metadata_host=169.254.169.254
+metadata_workers=<%=node['bcpc']['nova']['workers']%>
 dmz_cidr=169.254.169.254/32
 <% if @servers.include?(node) -%>
 enabled_apis=ec2,osapi_compute,metadata
@@ -155,3 +158,6 @@ admin_user = <%=get_config('keystone-admin-user')%>
 admin_password = <%=get_config('keystone-admin-password')%>
 admin_token = <%=get_config('keystone-admin-token')%>
 signing_dir = /var/lib/nova
+
+[conductor]
+workers=<%=node['bcpc']['nova']['workers']%>

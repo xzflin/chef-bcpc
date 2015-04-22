@@ -50,6 +50,8 @@ default['bcpc']['enabled']['network_tests'] = true
 default['bcpc']['enabled']['radosgw_cache'] = false
 # This will enable using TPM-based hwrngd
 default['bcpc']['enabled']['tpm'] = false
+# This will block VMs from talking to the management network
+default['bcpc']['enabled']['secure_fixed_networks'] = true
 
 # This can be either 'sql' or 'ldap' to either store identities
 # in the mysql DB or the LDAP server
@@ -171,6 +173,7 @@ default['bcpc']['repos']['fluentd'] = "http://packages.treasure-data.com/precise
 default['bcpc']['repos']['ceph-apache'] = "http://gitbuilder.ceph.com/apache2-deb-precise-x86_64-basic/ref/master"
 default['bcpc']['repos']['ceph-fcgi'] = "http://gitbuilder.ceph.com/libapache-mod-fastcgi-deb-precise-x86_64-basic/ref/master"
 default['bcpc']['repos']['gridcentric'] = "http://downloads.gridcentric.com/packages/%s/%s/ubuntu"
+default['bcpc']['repos']['elasticsearch'] = "http://packages.elasticsearch.org/elasticsearch/1.5/debian"
 
 ###########################################
 #
@@ -188,6 +191,7 @@ default['bcpc']['mirror']['ubuntu'] = "us.archive.ubuntu.com/ubuntu"
 default['bcpc']['mirror']['ubuntu-dist'] = ['precise']
 default['bcpc']['mirror']['ceph-dist'] = ['firefly']
 default['bcpc']['mirror']['os-dist'] = ['icehouse']
+default['bcpc']['mirror']['elasticsearch-dist'] = '1.5'
 
 ###########################################
 #
@@ -241,6 +245,11 @@ default['bcpc']['keystone_token_clean_hour'] = "2"
 default['bcpc']['nova']['ram_allocation_ratio'] = 1.0
 default['bcpc']['nova']['reserved_host_memory_mb'] = 1024
 default['bcpc']['nova']['cpu_allocation_ratio'] = 2.0
+# "workers" parameters in nova are set to number of CPUs
+# available by default. This provides an override.
+default['bcpc']['nova']['workers'] = 2
+# Patch toggle for https://github.com/bloomberg/chef-bcpc/pull/493
+default['bcpc']['nova']['live_migration_patch'] = false
 ###########################################
 #
 # Routemon settings
@@ -254,3 +263,37 @@ default['bcpc']['nova']['cpu_allocation_ratio'] = 2.0
 # subsequently only monitors and reports
 #
 default['bcpc']['routemon']['numfixes'] = 0
+
+###########################################
+#
+# MySQL settings
+#
+###########################################
+#
+# If set to 0, max_connections for MySQL on heads will default to an
+# auto-calculated value.
+default['bcpc']['mysql-head']['max_connections'] = 0
+
+###########################################
+#
+# CPU governor settings
+#
+###########################################
+#
+# Available options: conservative, ondemand, userspace, powersave, performance
+# Different states (cribbed from https://wiki.archlinux.org/index.php/CPU_frequency_scaling):
+# - ondemand: Dynamically switch between CPU(s) available if at 95% cpu load
+# - performance: Run the cpu at max frequency
+# - conservative: Dynamically switch between CPU(s) available if at 75% load
+# - powersave: Run the cpu at the minimum frequency
+# - userspace: Run the cpu at user specified frequencies
+default['bcpc']['cpupower']['governor'] = "ondemand"
+
+###########################################
+#
+# Elasticsearch settings
+#
+###########################################
+#
+# Package version to pin to
+default['bcpc']['elasticsearch']['version'] = '1.5.1'

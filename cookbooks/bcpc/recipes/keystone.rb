@@ -152,7 +152,7 @@ end
 ruby_block "keystone-add-test-admin-role" do
     block do
         system ". /root/keystonerc; . /root/adminrc; keystone user-role-list --user #{get_config('keystone-test-user')} --tenant '#{node['bcpc']['admin_tenant']}' 2>&1 | grep '#{node['bcpc']['admin_role']}'"
-        if $?.success? then
+        if not $?.success? then
             %x[ . /root/adminrc
                 keystone user-role-add --user #{get_config('keystone-test-user')} --role '#{node['bcpc']['admin_role']}' --tenant '#{node['bcpc']['admin_tenant']}'
             ]

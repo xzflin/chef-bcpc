@@ -61,6 +61,7 @@
     Alias /ceph-<%= @ceph_ver %> /var/spool/apt-mirror/mirror/ceph.com/debian-<%= @ceph_ver %>
     <% end %>
     Alias /ceph-extras /var/spool/apt-mirror/mirror/ceph.com/packages/ceph-extras/debian
+    Alias /elasticsearch /var/spool/apt-mirror/mirror/packages.elasticsearch.org/elasticsearch/<%=@node['bcpc']['mirror']['elasticsearch-dist']%>/debian
     Alias /fluentd /var/spool/apt-mirror/mirror/packages.treasure-data.com/precise
     Alias /hwraid /var/spool/apt-mirror/mirror/hwraid.le-vert.net/ubuntu
     Alias /percona /var/spool/apt-mirror/mirror/repo.percona.com/apt

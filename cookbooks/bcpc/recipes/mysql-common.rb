@@ -67,16 +67,3 @@ service "xinetd" do
 end
 
 package "debconf-utils"
-
-package "phpmyadmin" do
-    action :upgrade
-end
-
-bash "phpmyadmin-config-setup" do
-    user "root"
-    code <<-EOH
-        echo '$cfg["AllowArbitraryServer"] = TRUE;' >> /etc/phpmyadmin/config.inc.php
-    EOH
-    not_if "cat /etc/phpmyadmin/config.inc.php | grep AllowArbitraryServer"
-    notifies :restart, "service[apache2]", :delayed
-end

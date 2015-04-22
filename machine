@@ -1,0 +1,22 @@
+#!/bin/bash
+#
+# Lookup a machine in cluster.txt by substring of name, IP address or
+# role
+#
+if [[ -z "$1" ]]; then
+    echo "Usage $0: <node name or ip address>"
+    exit 1
+else
+    HOST_REQUESTED="$1"
+fi
+FOUND=
+while read HOST MACADDR IPADDR ILOIPADDR DOMAIN ROLE; do
+    if [[ $HOST = *"$HOST_REQUESTED"* || $HOST_REQUESTED = $IPADDR || $HOST_REQUESTED = $ROLE ]]; then
+	echo "Node $HOST ($IPADDR), MAC address $MACADDR, iLO $ILOIPADDR, domain $DOMAIN, role $ROLE"
+	FOUND=true
+    fi 
+done < cluster.txt
+if [[ -z "$FOUND" ]]; then
+    echo "$HOST_REQUESTED not found"
+    exit 1
+fi
