@@ -70,7 +70,7 @@ class dns_popper(object):
 
    def get_records_from_db(self,):
       c = self.db_con.cursor()
-      c.execute("""select name, content from records where type="CNAME" and content like "public-%";""")
+      c.execute("""select name, content from records where type="CNAME" and bcpc_record_type="DYNAMIC" and content like "public-%";""")
       rows = []
       for row in c.fetchall():
          rows.append( (row[0],  "CNAME", row[1] ))
@@ -85,10 +85,10 @@ class dns_popper(object):
       try:
          if to_delete:
             syslog.syslog(syslog.LOG_NOTICE, "Deleting %d CNAMEs from pdns" % (len(to_delete)))      
-            c.executemany("""delete from records where name=%s and type=%s and content=%s""", to_delete)
+            c.executemany("""delete from records where name=%s and type=%s and content=%s and bcpc_record_type='DYNAMIC'""", to_delete)
          if to_add:
             syslog.syslog(syslog.LOG_NOTICE, "Adding %d CNAMEs to pdns" % (len(to_delete)))
-            c.executemany("""insert into records  (domain_id, name, type, content, ttl) values (%s, %s, %s, %s, 300)""", 
+            c.executemany("""insert into records  (domain_id, name, type, content, ttl, bcpc_record_type) values (%s, %s, %s, %s, 300, 'DYNAMIC')""",
                           [(self.domain_id, rec[0], rec[1], rec[2]) for rec in to_add] )
          self.db_con.commit()
       except  mdb.Error, e:
