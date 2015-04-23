@@ -76,6 +76,8 @@ deb-i386 http://www.rabbitmq.com/debian testing main
 deb http://public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.16/repos/ubuntu12 HDP-UTILS main
 deb http://public-repo-1.hortonworks.com/HDP/ubuntu12/2.x HDP main
 
+deb <%=@node['bcpc']['repos']['elasticsearch']%> stable main
+
 clean http://<%=@node['bcpc']['mirror']['ubuntu']%>
 clean http://ceph.com
 clean http://gitbuilder.ceph.com
@@ -86,3 +88,4 @@ clean http://apt.opscode.com
 clean http://www.rabbitmq.com/debian
 clean http://packages.treasure-data.com
 clean http://public-repo-1.hortonworks.com
+clean http://packages.elasticsearch.org

@@ -74,16 +74,3 @@ template "/etc/mysql/conf.d/wsrep.cnf" do
     )
     notifies :restart, "service[mysql]", :immediately
 end
-
-ruby_block "phpmyadmin-debconf-setup" do
-    block do
-        if not system "debconf-get-selections | grep phpmyadmin >/dev/null 2>&1" then
-            puts %x[
-                echo 'phpmyadmin phpmyadmin/dbconfig-install boolean true' | debconf-set-selections
-                echo 'phpmyadmin phpmyadmin/mysql/admin-pass password #{get_config('mysql-root-password')}' | debconf-set-selections
-                echo 'phpmyadmin phpmyadmin/mysql/app-pass password #{get_config('mysql-phpmyadmin-password')}' | debconf-set-selections
-                echo 'phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2' | debconf-set-selections
-            ]
-        end
-    end
-end

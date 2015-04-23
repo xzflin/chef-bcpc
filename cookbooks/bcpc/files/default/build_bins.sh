@@ -58,7 +58,7 @@ filecheck() {
 
 
 # Define the appropriate version of each binary to grab/build
-VER_KIBANA=2581d314f12f520638382d23ffc03977f481c1e4
+VER_KIBANA=4.0.2
 # newer versions of Diamond depend upon dh-python which isn't in precise/12.04
 VER_DIAMOND=f33aa2f75c6ea2dfbbc659766fe581e5bfe2476d
 VER_ESPLUGIN=9c032b7c628d8da7745fbb1939dcd2db52629943
@@ -116,15 +116,15 @@ if [ ! -f chef-server.deb ]; then
 fi
 FILES="chef-client.deb chef-server.deb $FILES"
 
-# Build kibana3 installable bundle
-if [ ! -f kibana3.tgz ]; then
-    git clone https://github.com/elasticsearch/kibana.git kibana3
-    cd kibana3/src
-    git archive --output ../../kibana3.tgz --prefix kibana3/ $VER_KIBANA
-    cd ../..
-    rm -rf kibana3
+KIBANA_URL=https://download.elastic.co/kibana/kibana/kibana-${VER_KIBANA}-linux-x64.tar.gz
+# Build kibana 4 deb
+if [ ! -f kibana_${VER_KIBANA}_amd64.deb ]; then
+    ccurl ${KIBANA_URL} kibana-${VER_KIBANA}.tar.gz
+    tar -zxf kibana-${VER_KIBANA}.tar.gz
+    fpm -s dir -t deb --prefix /opt/kibana -n kibana -v ${VER_KIBANA} -C kibana-${VER_KIBANA}-linux-x64
+    rm -rf kibana-${VER_KIBANA}-linux-x64{,.tar.gz}
 fi
-FILES="kibana3.tgz $FILES"
+FILES="kibana_${VER_KIBANA}_amd64.deb $FILES"
 
 # any pegged gem versions
 REV_elasticsearch="0.2.0"
@@ -181,23 +181,6 @@ if [ ! -f diamond.deb ]; then
     rm -rf Diamond
 fi
 FILES="diamond.deb $FILES"
-
-# Snag elasticsearch
-ES_VER=1.1.1
-if [ ! -f elasticsearch-${ES_VER}.deb ]; then
-    ccurl https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-${ES_VER}.deb
-fi
-if [ ! -f elasticsearch-${ES_VER}.deb.sha1.txt ]; then
-    ccurl https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-${ES_VER}.deb.sha1.txt
-fi
-if [[ `shasum elasticsearch-${ES_VER}.deb` != `cat elasticsearch-${ES_VER}.deb.sha1.txt` ]]; then
-    echo "SHA mismatch detected for elasticsearch ${ES_VER}!"
-    echo "Have: `shasum elasticsearch-${ES_VER}.deb`"
-    echo "Expected: `cat elasticsearch-${ES_VER}.deb.sha1.txt`"
-    exit 1
-fi
-
-FILES="elasticsearch-${ES_VER}.deb elasticsearch-${ES_VER}.deb.sha1.txt $FILES"
 
 if [ ! -f elasticsearch-plugins.tgz ]; then
     git clone https://github.com/mobz/elasticsearch-head.git
