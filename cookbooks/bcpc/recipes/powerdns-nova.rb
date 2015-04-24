@@ -27,6 +27,11 @@ if node['bcpc']['enabled']['dns']
     owner "root"
     group "root"
     mode 00644
+    variables({
+      :database_name      => node['bcpc']['dbname']['pdns'],
+      :domain_name        => node['bcpc']['domain_name'],
+      :reverse_fixed_zone => (node['bcpc']['fixed']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['fixed']['cidr'])),
+    })
   end
 
   ruby_block "powerdns-load-fixed-records" do
