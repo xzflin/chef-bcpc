@@ -4,6 +4,18 @@
 #
 ################################################
 
+
+[eventlet_server]
+# The IP Address of the network interface to for the public
+# service to listen on. (string value)
+# Deprecated group/name - [DEFAULT]/bind_host
+public_bind_host = <%= node['bcpc']['management']['ip'] %>
+
+# The IP Address of the network interface to for the admin
+# service to listen on. (string value)
+# Deprecated group/name - [DEFAULT]/bind_host
+admin_bind_host = <%= node['bcpc']['management']['ip'] %>
+
 [DEFAULT]
 
 #
@@ -18,15 +30,6 @@
 # paste.ini). (string value)
 admin_token = <%=get_config('keystone-admin-token')%>
 
-# The IP Address of the network interface to for the public
-# service to listen on. (string value)
-# Deprecated group/name - [DEFAULT]/bind_host
-public_bind_host = <%= node['bcpc']['management']['ip'] %>
-
-# The IP Address of the network interface to for the admin
-# service to listen on. (string value)
-# Deprecated group/name - [DEFAULT]/bind_host
-admin_bind_host = <%= node['bcpc']['management']['ip'] %>
 
 # The port which the OpenStack Compute service listens on.
 # (integer value)
@@ -941,7 +944,7 @@ user_enabled_emulation_dn=cn=OpenStack Users,ou=Groups,<%= node['bcpc']['domain_
 #user_additional_attribute_mapping=
 
 # Search base for projects (string value)
-tenant_tree_dn=ou=Tenants,<%= node['bcpc']['domain_name'].split('.').collect { |x| 'dc='+x }.join(',') %>
+project_tree_dn=ou=Tenants,<%= node['bcpc']['domain_name'].split('.').collect { |x| 'dc='+x }.join(',') %>
 
 # LDAP search filter for projects. (string value)
 #tenant_filter=<None>
@@ -984,11 +987,11 @@ tenant_tree_dn=ou=Tenants,<%= node['bcpc']['domain_name'].split('.').collect { |
 # If True, Keystone uses an alternative method to determine if
 # a project is enabled or not by checking if they are a member
 # of the "tenant_enabled_emulation_dn" group. (boolean value)
-tenant_enabled_emulation=true
+project_enabled_emulation=true
 
 # DN of the group entry to hold enabled projects when using
 # enabled emulation. (string value)
-tenant_enabled_emulation_dn=cn=OpenStack Tenants,ou=Groups,<%= node['bcpc']['domain_name'].split('.').collect { |x| 'dc='+x }.join(',') %>
+project_enabled_emulation_dn=cn=OpenStack Tenants,ou=Groups,<%= node['bcpc']['domain_name'].split('.').collect { |x| 'dc='+x }.join(',') %>
 
 # Additional attribute mappings for projects. Attribute
 # mapping format is <ldap_attr>:<user_attr>, where ldap_attr
@@ -1301,7 +1304,7 @@ expiration=3600
 provider = keystone.token.providers.pki.Provider
 
 # Keystone Token persistence backend driver. (string value)
-driver=keystone.token.backends.memcache.Token
+driver=keystone.token.persistence.backends.memcache.Token
 
 # Toggle for token system cacheing. This has no effect unless
 # global caching is enabled. (boolean value)

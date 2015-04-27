@@ -20,15 +20,16 @@
 include_recipe "bcpc::default"
 
 # N.B. These are not needed until Juno comes out for trusty
-#package "ubuntu-cloud-keyring" do
-#    action :upgrade
-#end
+package "ubuntu-cloud-keyring" do
+    action :upgrade
+end
 
-#apt_repository "openstack" do
-#    uri node['bcpc']['repos']['openstack']
-#    distribution "#{node['lsb']['codename']}-#{node['bcpc']['openstack_branch']}/#{node['bcpc']['openstack_release']}"
-#    components ["main"]
-#end
+apt_repository "openstack" do
+    uri node['bcpc']['repos']['openstack']
+    distribution "#{node['lsb']['codename']}-#{node['bcpc']['openstack_branch']}/#{node['bcpc']['openstack_release']}"
+    components ["main"]
+    key "ubuntu-cloud.key"
+end
 
 %w{ python-novaclient
     python-cinderclient
@@ -58,23 +59,23 @@ end
     end
 end
 
-cookbook_file "/tmp/heatclient.patch" do
-    source "heatclient.patch"
-    owner "root"
-    mode 0644
-end
+#cookbook_file "/tmp/heatclient.patch" do
+#    source "heatclient.patch"
+#    owner "root"
+#    mode 0644
+#end
 
-bash "patch-for-heatclient-bugs" do
-    user "root"
-    code <<-EOH
-        cd /usr/lib/python2.7/dist-packages/heatclient
-        patch < /tmp/heatclient.patch
-        rv=$?
-        if [ $rv -ne 0 ]; then
-          echo "Error applying patch ($rv) - aborting!"
-          exit $rv
-        fi
-        cp /tmp/heatclient.patch .
-    EOH
-    not_if "test -f /usr/lib/python2.7/dist-packages/heatclient/heatclient.patch"
-end
+#bash "patch-for-heatclient-bugs" do
+#    user "root"
+#    code <<-EOH
+#        cd /usr/lib/python2.7/dist-packages/heatclient
+#        patch < /tmp/heatclient.patch
+#        rv=$?
+#        if [ $rv -ne 0 ]; then
+#          echo "Error applying patch ($rv) - aborting!"
+#          exit $rv
+#        fi
+#        cp /tmp/heatclient.patch .
+#    EOH
+#    not_if "test -f /usr/lib/python2.7/dist-packages/heatclient/heatclient.patch"
+#end

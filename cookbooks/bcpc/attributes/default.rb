@@ -7,7 +7,7 @@ default['bcpc']['country'] = "US"
 default['bcpc']['state'] = "NY"
 default['bcpc']['location'] = "New York"
 default['bcpc']['organization'] = "Bloomberg"
-default['bcpc']['openstack_release'] = "icehouse"
+default['bcpc']['openstack_release'] = "kilo"
 # Can be "updates" or "proposed"
 default['bcpc']['openstack_branch'] = "updates"
 # Should be kvm (or qemu if testing in VMs that don't support VT-x)
@@ -192,7 +192,7 @@ default['bcpc']['repos']['elasticsearch'] = "http://packages.elasticsearch.org/e
 default['bcpc']['mirror']['ubuntu'] = "us.archive.ubuntu.com/ubuntu"
 default['bcpc']['mirror']['ubuntu-dist'] = ['trusty']
 default['bcpc']['mirror']['ceph-dist'] = ['firefly']
-default['bcpc']['mirror']['os-dist'] = ['icehouse']
+default['bcpc']['mirror']['os-dist'] = ['kilo']
 default['bcpc']['mirror']['elasticsearch-dist'] = '1.5'
 
 ###########################################

@@ -43,7 +43,8 @@ end
 
 %w{ceph python-ceph}.each do |pkg|
     package pkg do
-        action :upgrade
+        action :install
+        version "0.80.9-1trusty"
     end
 end
 
