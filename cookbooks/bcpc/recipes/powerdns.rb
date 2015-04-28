@@ -216,6 +216,8 @@ end
     end
   end
 
+  # this file is added by the pdns-server package and will conflict with
+  # our config file
   file "/etc/powerdns/pdns.d/pdns.local.gmysql.conf" do
     action :delete
     notifies :restart, "service[pdns]", :delayed
