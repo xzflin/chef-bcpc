@@ -6,16 +6,6 @@
 
 [DEFAULT]
 
-# MySQL Connection
-sql_connection=mysql://<%=get_config('mysql-nova-user')%>:<%=get_config('mysql-nova-password')%>@<%=node['bcpc']['management']['vip']%>/<%=node['bcpc']['dbname']['nova']%>
-sql_idle_timeout=3600
-
-# Rabbit message queue settings
-rabbit_host=<%=node['bcpc']['management']['vip']%>
-rabbit_password=<%=get_config('rabbitmq-password')%>
-rabbit_ha_queues=False
-rabbit_durable_queues=False
-
 # If using qpid...
 #rpc_backend=nova.openstack.common.rpc.impl_qpid
 #qpid_hostname=<%=node['bcpc']['management']['vip']%>
@@ -131,7 +121,6 @@ cnt_vpn_clients=5
 # Misc other settings
 logdir=/var/log/nova
 state_path=/var/lib/nova
-lock_path=/var/lock/
 rootwrap_config=/etc/nova/rootwrap.conf
 verbose=False
 debug=False
@@ -142,6 +131,21 @@ ec2_private_dns_show_ip=True
 ca_file = /etc/ssl/certs/ssl-bcpc.pem
 cinder_ca_certificates_file = /etc/ssl/certs/ssl-bcpc.pem
 
+[oslo_concurrency]
+lock_path=/var/lock/
+
+[oslo_messaging_rabbit]
+# Rabbit message queue settings
+rabbit_host=<%=node['bcpc']['management']['vip']%>
+rabbit_password=<%=get_config('rabbitmq-password')%>
+rabbit_ha_queues=False
+amqp_durable_queues=False
+
+[database]
+# MySQL Connection
+connection=mysql://<%=get_config('mysql-nova-user')%>:<%=get_config('mysql-nova-password')%>@<%=node['bcpc']['management']['vip']%>/<%=node['bcpc']['dbname']['nova']%>
+idle_timeout=3600
+
 [ssl]
 ca_file = /etc/ssl/certs/ssl-bcpc.pem
 
@@ -149,14 +153,15 @@ ca_file = /etc/ssl/certs/ssl-bcpc.pem
 [keystone_authtoken]
 cafile = /etc/ssl/certs/ssl-bcpc.pem
 auth_uri = <%=node['bcpc']['protocol']['keystone']%>://<%=node['bcpc']['management']['vip']%>:5000/v2.0/
-auth_host = <%=node['bcpc']['management']['vip']%>
-auth_port = 35357
-auth_protocol = <%=node['bcpc']['protocol']['keystone']%>
+#auth_host = <%=node['bcpc']['management']['vip']%>
+#auth_port = 35357
+#auth_protocol = <%=node['bcpc']['protocol']['keystone']%>
+identity_uri = <%=node['bcpc']['protocol']['keystone']%>://<%=node['bcpc']['management']['vip']%>:35357
 auth_version = v2.0
 admin_tenant_name = <%=node['bcpc']['admin_tenant']%>
 admin_user = <%=get_config('keystone-admin-user')%>
 admin_password = <%=get_config('keystone-admin-password')%>
-admin_token = <%=get_config('keystone-admin-token')%>
+#admin_token = <%=get_config('keystone-admin-token')%>
 signing_dir = /var/lib/nova
 
 [conductor]
