@@ -41,10 +41,10 @@ bash "check-ceph-version" do
 	EOH
 end
 
-%w{ceph python-ceph}.each do |pkg|
+%w{librados2 librbd1 libcephfs1 python-ceph ceph-common ceph}.each do |pkg|
     package pkg do
         action :install
-        version "0.80.9-1trusty"
+        version "0.80.9-0ubuntu0.14.04.1"
     end
 end
 

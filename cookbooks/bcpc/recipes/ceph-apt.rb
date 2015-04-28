@@ -17,12 +17,12 @@
 # limitations under the License.
 #
 
-apt_repository "ceph" do
-    uri node['bcpc']['repos']['ceph']
-    distribution node['lsb']['codename']
-    components ["main"]
-    key "ceph-release.key"
-end
+#apt_repository "ceph" do
+#    uri node['bcpc']['repos']['ceph']
+#    distribution node['lsb']['codename']
+#    components ["main"]
+#    key "ceph-release.key"
+#end
 
 # No Trusty packages yet (20140726)
 #apt_repository "ceph-extras" do
@@ -31,6 +31,24 @@ end
 #    components ["main"]
 #    key "ceph-release.key"
 #end
+
+####
+# putting the openstack repo here as a test so that there are candidates for the Ceph package installation,
+# with the ceph-firefly repo having been commented out
+
+# N.B. These are not needed until Juno comes out for trusty
+package "ubuntu-cloud-keyring" do
+    action :upgrade
+end
+
+apt_repository "openstack" do
+    uri node['bcpc']['repos']['openstack']
+    distribution "#{node['lsb']['codename']}-#{node['bcpc']['openstack_branch']}/#{node['bcpc']['openstack_release']}"
+    components ["main"]
+    key "ubuntu-cloud.key"
+end
+
+###########
 
 apt_repository "ceph-fcgi" do
     uri node['bcpc']['repos']['ceph-fcgi']
