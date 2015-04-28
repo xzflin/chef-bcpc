@@ -276,32 +276,6 @@ qpid_heartbeat = 5
 qpid_protocol = tcp
 qpid_tcp_nodelay = True
 
-# ============ Filesystem Store Options ========================
-
-# Directory that the Filesystem backend store
-# writes image data to
-filesystem_store_datadir = /var/lib/glance/images/
-
-# A list of directories where image data can be stored.
-# This option may be specified multiple times for specifying multiple store
-# directories. Either one of filesystem_store_datadirs or
-# filesystem_store_datadir option is required. A priority number may be given
-# after each directory entry, separated by a ":".
-# When adding an image, the highest priority directory will be selected, unless
-# there is not enough space available in cases where the image size is already
-# known. If no priority is given, it is assumed to be zero and the directory
-# will be considered for selection last. If multiple directories have the same
-# priority, then the one with the most free space available is selected.
-# If same store is specified multiple times then BadStoreConfiguration
-# exception will be raised.
-#filesystem_store_datadirs = /var/lib/glance/images/:1
-
-# A path to a JSON file that contains metadata describing the storage
-# system.  When show_multiple_locations is True the information in this
-# file will be returned with any location that is contained in this
-# store.
-#filesystem_store_metadata_file = None
-
 # ============ Swift Store Options =============================
 
 # Version of the authentication service to use
@@ -551,6 +525,33 @@ image_cache_dir = /var/lib/glance/image-cache/
 # only relevant if your database engine is MySQL.
 #db_enforce_mysql_charset = True
 
+# ============ Filesystem Store Options ========================
+[glance_store]
+# Directory that the Filesystem backend store
+# writes image data to
+filesystem_store_datadir = /var/lib/glance/images/
+
+# A list of directories where image data can be stored.
+# This option may be specified multiple times for specifying multiple store
+# directories. Either one of filesystem_store_datadirs or
+# filesystem_store_datadir option is required. A priority number may be given
+# after each directory entry, separated by a ":".
+# When adding an image, the highest priority directory will be selected, unless
+# there is not enough space available in cases where the image size is already
+# known. If no priority is given, it is assumed to be zero and the directory
+# will be considered for selection last. If multiple directories have the same
+# priority, then the one with the most free space available is selected.
+# If same store is specified multiple times then BadStoreConfiguration
+# exception will be raised.
+#filesystem_store_datadirs = /var/lib/glance/images/:1
+
+# A path to a JSON file that contains metadata describing the storage
+# system.  When show_multiple_locations is True the information in this
+# file will be returned with any location that is contained in this
+# store.
+#filesystem_store_metadata_file = None
+
+
 # =============== Database Options =================================
 
 [database]
@@ -653,14 +654,15 @@ node['bcpc']['management']['vip']%>/<%=node['bcpc']['dbname']['glance']%>
 [keystone_authtoken]
 cafile = /etc/ssl/certs/ssl-bcpc.pem
 auth_uri = <%=node['bcpc']['protocol']['keystone']%>://<%=node['bcpc']['management']['vip']%>:5000/v2.0/
-auth_host = <%=node['bcpc']['management']['vip']%>
-auth_port = 35357
-auth_protocol = <%=node['bcpc']['protocol']['keystone']%>
+#auth_host = <%=node['bcpc']['management']['vip']%>
+#auth_port = 35357
+#auth_protocol = <%=node['bcpc']['protocol']['keystone']%>
+identity_uri = <%=node['bcpc']['protocol']['keystone']%>://<%=node['bcpc']['management']['vip']%>:35357
 auth_version = v2.0
 admin_tenant_name = <%=node['bcpc']['admin_tenant']%>
 admin_user = <%=get_config('keystone-admin-user')%>
 admin_password = <%=get_config('keystone-admin-password')%>
-admin_token = <%=get_config('keystone-admin-token')%>
+#admin_token = <%=get_config('keystone-admin-token')%>
 signing_dir = /var/lib/glance
 
 [paste_deploy]
