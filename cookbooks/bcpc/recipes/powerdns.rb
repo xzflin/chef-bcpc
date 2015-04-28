@@ -216,6 +216,11 @@ end
     end
   end
 
+  file "/etc/powerdns/pdns.d/pdns.local.gmysql.conf" do
+    action :delete
+    notifies :restart, "service[pdns]", :delayed
+  end
+
   template "/etc/powerdns/pdns.d/pdns.local.gmysql" do
     source "pdns.local.gmysql.erb"
     owner "pdns"
