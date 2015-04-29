@@ -32,6 +32,7 @@ end
 
 package "openstack-dashboard" do
     action :upgrade
+    notifies :run, "bash[dpkg-reconfigure-openstack-dashboard]", :delayed
 end
 
 package "cobalt-horizon" do
@@ -42,6 +43,7 @@ end
 
 package "openstack-dashboard-ubuntu-theme" do
     action :remove
+    notifies :run, "bash[dpkg-reconfigure-openstack-dashboard]", :delayed
 end
 
 # This maybe better served by a2disconf
@@ -95,5 +97,13 @@ bash "horizon-database-sync" do
     action :nothing
     user "root"
     code "/usr/share/openstack-dashboard/manage.py syncdb --noinput"
+    notifies :restart, "service[apache2]", :immediately
+end
+
+# needed to regenerate the static assets for the dashboard
+bash "dpkg-reconfigure-openstack-dashboard" do
+    action :nothing
+    user "root"
+    code "dpkg-reconfigure openstack-dashboard"
     notifies :restart, "service[apache2]", :immediately
 end
