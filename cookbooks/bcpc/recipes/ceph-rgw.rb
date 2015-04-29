@@ -24,7 +24,8 @@
 include_recipe "bcpc::apache2"
 
 package "radosgw" do
-    action :upgrade
+    action :install
+    version "0.80.9-0ubuntu0.14.04.1"
 end
 
 package "python-boto"
