@@ -105,5 +105,6 @@ bash "dpkg-reconfigure-openstack-dashboard" do
     action :nothing
     user "root"
     code "dpkg-reconfigure openstack-dashboard"
+    returns [0, 1]
     notifies :restart, "service[apache2]", :immediately
 end
