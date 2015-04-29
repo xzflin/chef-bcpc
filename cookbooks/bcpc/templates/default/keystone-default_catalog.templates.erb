@@ -32,7 +32,7 @@ catalog.<%=node['bcpc']['region_name']%>.volume.name = Volume Service
 catalog.<%=node['bcpc']['region_name']%>.volumev2.publicURL = <%=node['bcpc']['protocol']['cinder']%>://<%=node['bcpc']['management']['vip']%>:8776/v2/$(tenant_id)s
 catalog.<%=node['bcpc']['region_name']%>.volumev2.adminURL = <%=node['bcpc']['protocol']['cinder']%>://<%=node['bcpc']['management']['vip']%>:8776/v2/$(tenant_id)s
 catalog.<%=node['bcpc']['region_name']%>.volumev2.internalURL = <%=node['bcpc']['protocol']['cinder']%>://<%=node['bcpc']['management']['vip']%>:8776/v2/$(tenant_id)s
-catalog.<%=node['bcpc']['region_name']%>.volumev2.name = VolumeV2 Service
+catalog.<%=node['bcpc']['region_name']%>.volumev2.name = cinderv2
 
 catalog.<%=node['bcpc']['region_name']%>.ec2.publicURL = <%=node['bcpc']['protocol']['nova']%>://<%=node['bcpc']['management']['vip']%>:8773/services/Cloud
 catalog.<%=node['bcpc']['region_name']%>.ec2.adminURL = <%=node['bcpc']['protocol']['nova']%>://<%=node['bcpc']['management']['vip']%>:8773/services/Admin
