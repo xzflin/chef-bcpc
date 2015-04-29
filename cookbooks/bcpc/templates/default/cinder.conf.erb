@@ -49,6 +49,9 @@ rabbit_password=<%=get_config('rabbitmq-password')%>
 rabbit_ha_queues=False
 amqp_durable_queues=False
 
+[oslo_concurrency]
+lock_path=/var/lock/cinder
+
 [database]
 # MySQL Connection
 connection=mysql://<%=get_config('mysql-cinder-user')%>:<%=get_config('mysql-cinder-password')%>@<%=node['bcpc']['management']['vip']%>/<%=node['bcpc']['dbname']['cinder']%>
