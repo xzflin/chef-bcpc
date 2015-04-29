@@ -43,6 +43,7 @@ end
     python-mysqldb
     python-six
     python-ldap
+    python-openstackclient
 }.each do |pkg|
     package pkg do
         action :upgrade
