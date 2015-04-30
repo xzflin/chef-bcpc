@@ -44,7 +44,7 @@ end
 %w{librados2 librbd1 libcephfs1 python-ceph ceph-common ceph}.each do |pkg|
     package pkg do
         action :install
-        version "0.80.9-0ubuntu0.14.04.1"
+        version node['bcpc']['ceph']['version']
     end
 end
 

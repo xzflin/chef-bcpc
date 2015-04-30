@@ -78,6 +78,8 @@ default['bcpc']['fixed']['vlan_interface'] = node['bcpc']['floating']['interface
 #  Ceph settings for the cluster
 #
 ###########################################
+default['bcpc']['ceph']['version'] = "0.80.9-0ubuntu0.14.04.2"
+
 default['bcpc']['ceph']['chooseleaf'] = "rack"
 default['bcpc']['ceph']['pgp_auto_adjust'] = false
 default['bcpc']['ceph']['pgs_per_node'] = 1024
