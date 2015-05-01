@@ -79,30 +79,6 @@ if node['bcpc']['nova']['nova_single_cpu'] then
     end
 end
 
-#cookbook_file "/tmp/nova-libvirt.patch" do
-#    source "nova-libvirt.patch"
-#    owner "root"
-#    mode 00644
-#end
-
-#if node['bcpc']['nova']['live_migration_patch'] then
-#    bash "patch-for-nova-live-migration" do
-#       user "root"
-#       code <<-EOH
-#           cd /usr/lib/python2.7/dist-packages/nova
-#           patch -p2 < /tmp/nova-libvirt.patch
-#           rv=$?
-#           if [ $rv -ne 0 ]; then
-#             echo "Error applying patch ($rv) - aborting!"
-#             exit $rv
-#           fi
-#           cp /tmp/nova-libvirt.patch .
-#       EOH
-#       not_if "test -f /usr/lib/python2.7/dist-packages/nova/nova-libvirt.patch"
-#       notifies :restart, "service[nova-compute]", :immediately
-#    end
-#end
-
 template "/etc/nova/ssl-bcpc.pem" do
     source "ssl-bcpc.pem.erb"
     owner "nova"
@@ -265,47 +241,5 @@ cron "restart-nova-kludge" do
   command "/usr/local/bin/nova-service-restart-wrapper"
   minute '*/5'   # run this every 5 mins
 end
-
-#cookbook_file "/tmp/metadata.patch" do
-#    source "metadata.patch"
-#    owner "root"
-#    mode 0644
-#end
-
-#bash "patch-for-ip-hostnames-metadata" do
-#    user "root"
-#    code <<-EOH
-#        cd /usr/lib/python2.7/dist-packages/nova/api/metadata/
-#        patch < /tmp/metadata.patch
-#        rv=$?
-#        if [ $rv -ne 0 ]; then
-#          echo "Error applying patch ($rv) - aborting!"
-#          exit $rv
-#        fi
-#        cp /tmp/metadata.patch .
-#    EOH
-#    not_if "test -f /usr/lib/python2.7/dist-packages/nova/api/metadata/metadata.patch"
-#end
-
-#cookbook_file "/tmp/linux-net.patch" do
-#    source "linux-net.patch"
-#    owner "root"
-#    mode 0644
-#end
-
-#bash "patch-for-ip-hostnames-networking" do
-#    user "root"
-#    code <<-EOH
-#        cd /usr/lib/python2.7/dist-packages/nova/network/
-#        patch < /tmp/linux-net.patch
-#        rv=$?
-#        if [ $rv -ne 0 ]; then
-#          echo "Error applying patch ($rv) - aborting!"
-#          exit $rv
-#        fi
-#        cp /tmp/linux-net.patch .
-#    EOH
-#    not_if "test -f /usr/lib/python2.7/dist-packages/nova/network/linux-net.patch"
-#end
 
 include_recipe "bcpc::cobalt"
