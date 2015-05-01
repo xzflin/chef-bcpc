@@ -162,10 +162,6 @@ default['bcpc']['dns_servers'] = ["8.8.8.8", "8.8.4.4"]
 #  Repos for things we rely on
 #
 ###########################################
-default['bcpc']['repos']['ceph'] = "http://www.ceph.com/debian-firefly"
-default['bcpc']['repos']['ceph-extras'] = "http://www.ceph.com/packages/ceph-extras/debian"
-default['bcpc']['repos']['ceph-el6-x86_64'] = "http://ceph.com/rpm-dumpling/el6/x86_64"
-default['bcpc']['repos']['ceph-el6-noarch'] = "http://ceph.com/rpm-dumpling/el6/noarch"
 default['bcpc']['repos']['rabbitmq'] = "http://www.rabbitmq.com/debian"
 default['bcpc']['repos']['mysql'] = "http://repo.percona.com/apt"
 default['bcpc']['repos']['haproxy'] = "http://ppa.launchpad.net/vbernat/haproxy-1.5/ubuntu"
@@ -174,8 +170,6 @@ default['bcpc']['repos']['hwraid'] = "http://hwraid.le-vert.net/ubuntu"
 # there is no trusty repo for fluentd from this provider
 #default['bcpc']['repos']['fluentd'] = "http://packages.treasure-data.com/#{node['lsb']['codename']}"
 default['bcpc']['repos']['fluentd'] = "http://packages.treasure-data.com/precise"
-default['bcpc']['repos']['ceph-apache'] = "http://gitbuilder.ceph.com/apache2-deb-#{node['lsb']['codename']}-x86_64-basic/ref/master"
-default['bcpc']['repos']['ceph-fcgi'] = "http://gitbuilder.ceph.com/libapache-mod-fastcgi-deb-#{node['lsb']['codename']}-x86_64-basic/ref/master"
 default['bcpc']['repos']['gridcentric'] = "http://downloads.gridcentric.com/packages/%s/%s/ubuntu"
 default['bcpc']['repos']['elasticsearch'] = "http://packages.elasticsearch.org/elasticsearch/1.5/debian"
 

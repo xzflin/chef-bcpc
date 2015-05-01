@@ -446,7 +446,6 @@ index d844783..9a9e53a 100644
        },
 +      "repos": {
 +        "ceph": "http://10.0.100.3/ceph-dumpling",
-+        "ceph-extras": "http://10.0.100.3/ceph-extras",
 +        "rabbitmq": "http://10.0.100.3/rabbitmq",
 +        "mysql": "http://10.0.100.3/percona",
 +        "openstack": "http://10.0.100.3/ubuntu-cloud",
