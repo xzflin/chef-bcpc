@@ -70,7 +70,7 @@ backend graphite-web-backend
 
 backend kibana-backend
   balance source
-  option httpchk GET /
+  option httpchk HEAD /elasticsearch/ HTTP/1.1\r\nHost: <%=node['bcpc']['management']['monitoring']['vip']%>
   http-check expect status 200
   reqrep ^([^\ :]*)\ /kibana/(.*) \1\ /\2
 <% @servers.each do |server| -%>
@@ -116,5 +116,5 @@ listen elasticsearch <%=node['bcpc']['management']['monitoring']['vip']%>:9200
   option httpchk GET /
   http-check expect status 200
 <% @servers.each do |server| -%>
- <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:9200 check inter 5s rise 1 fall 1" %>
+  <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:9200 check inter 5s rise 1 fall 1" %>
 <% end -%>
