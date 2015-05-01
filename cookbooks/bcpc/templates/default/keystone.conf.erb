@@ -4,18 +4,6 @@
 #
 ################################################
 
-
-[eventlet_server]
-# The IP Address of the network interface to for the public
-# service to listen on. (string value)
-# Deprecated group/name - [DEFAULT]/bind_host
-public_bind_host = <%= node['bcpc']['management']['ip'] %>
-
-# The IP Address of the network interface to for the admin
-# service to listen on. (string value)
-# Deprecated group/name - [DEFAULT]/bind_host
-admin_bind_host = <%= node['bcpc']['management']['ip'] %>
-
 [DEFAULT]
 
 #

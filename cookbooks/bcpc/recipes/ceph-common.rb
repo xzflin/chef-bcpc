@@ -17,15 +17,10 @@
 # limitations under the License.
 #
 
+include_recipe "bcpc::openstack-packages"
+
 if platform?("debian", "ubuntu")
     include_recipe "bcpc::networking"
-end
-
-case node['platform']
-when "centos", "redhat", "fedora", "suse", "amazon", "scientific"
-    include_recipe "bcpc::ceph-yum"
-when "debian", "ubuntu"
-    include_recipe "bcpc::ceph-apt"
 end
 
 cookbook_file "/usr/local/bin/apt-pkg-check-version" do
