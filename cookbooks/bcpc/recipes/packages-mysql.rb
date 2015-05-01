@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: bcpc
-# Recipe:: mysql-packages
+# Recipe:: packages-mysql
 #
 # Copyright 2013, Bloomberg Finance L.P.
 #

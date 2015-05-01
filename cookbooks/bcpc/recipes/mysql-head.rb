@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-include_recipe "bcpc::mysql-packages"
+include_recipe "bcpc::packages-mysql"
 
 ruby_block "initialize-mysql-config" do
     block do
