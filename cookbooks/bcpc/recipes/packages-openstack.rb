@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: bcpc
-# Recipe:: openstack-packages
+# Recipe:: packages-openstack
 #
 # Copyright 2015, Bloomberg Finance L.P.
 #

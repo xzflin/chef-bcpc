@@ -18,7 +18,7 @@
 #
 
 include_recipe "bcpc::default"
-include_recipe "bcpc::openstack-packages"
+include_recipe "bcpc::packages-openstack"
 
 %w{ python-novaclient
     python-cinderclient

@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-include_recipe "bcpc::openstack-packages"
+include_recipe "bcpc::packages-openstack"
 
 if platform?("debian", "ubuntu")
     include_recipe "bcpc::networking"
