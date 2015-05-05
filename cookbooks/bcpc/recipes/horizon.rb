@@ -35,6 +35,36 @@ package "openstack-dashboard" do
     notifies :run, "bash[dpkg-reconfigure-openstack-dashboard]", :delayed
 end
 
+#  _   _  ____ _  __   __  ____   _  _____ ____ _   _
+# | | | |/ ___| | \ \ / / |  _ \ / \|_   _/ ___| | | |
+# | | | | |  _| |  \ V /  | |_) / _ \ | || |   | |_| |
+# | |_| | |_| | |___| |   |  __/ ___ \| || |___|  _  |
+#  \___/ \____|_____|_|   |_| /_/   \_\_| \____|_| |_|
+
+# this patch explicitly sets the Content-Length header when uploading files into
+# containers via Horizon
+cookbook_file "/tmp/horizon-swift-content-length.patch" do
+    source "horizon-swift-content-length.patch"
+    owner "root"
+    mode 00644
+end
+
+bash "patch-for-horizon-swift-content-length" do
+    user "root"
+    code <<-EOH
+       cd /usr/share/openstack-dashboard
+       patch -p0 < /tmp/horizon-swift-content-length.patch
+       rv=$?
+       if [ $rv -ne 0 ]; then
+         echo "Error applying patch ($rv) - aborting!"
+         exit $rv
+       fi
+       cp /tmp/horizon-swift-content-length.patch .
+    EOH
+    not_if "test -f /usr/share/openstack-dashboard/horizon-swift-content-length.patch"
+    notifies :restart, "service[apache2]", :delayed
+end
+
 package "cobalt-horizon" do
     only_if { not node["bcpc"]["vms_key"].nil? }
     action :upgrade
