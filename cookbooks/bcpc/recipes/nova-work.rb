@@ -148,6 +148,14 @@ bash "set-libvirt-bin-ulimit" do
     notifies :restart, "service[libvirt-bin]", :delayed
 end
 
+template "/etc/default/libvirt-bin" do
+  source "libvirt-bin-default.erb"
+  owner "root"
+  group "root"
+  mode 00644
+  notifies :restart, "service[libvirt-bin]", :delayed
+end
+
 template "/etc/libvirt/libvirtd.conf" do
     source "libvirtd.conf.erb"
     owner "root"
