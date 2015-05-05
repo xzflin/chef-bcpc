@@ -9,7 +9,7 @@ default['bcpc']['location'] = "New York"
 default['bcpc']['organization'] = "Bloomberg"
 default['bcpc']['openstack_release'] = "kilo"
 # Can be "updates" or "proposed"
-default['bcpc']['openstack_branch'] = "updates"
+default['bcpc']['openstack_branch'] = "proposed"
 # Should be kvm (or qemu if testing in VMs that don't support VT-x)
 default['bcpc']['virt_type'] = "kvm"
 # Define the kernel to be installed. By default, track latest LTS kernel
