@@ -34,7 +34,8 @@ apt_repository "haproxy" do
 end
 
 package "haproxy" do
-    action :upgrade
+    action :install
+    version "1.5.3-1~ubuntu14.04.1"
 end
 
 bash "enable-defaults-haproxy" do
