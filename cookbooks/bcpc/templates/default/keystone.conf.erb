@@ -337,7 +337,7 @@ enabled = true
 
 # Memcache servers in the format of "host:port". (dogpile.cache.memcache and
 # keystone.cache.memcache_pool backends only). (list value)
-memcache_servers = <%=@servers.map{|s| s + ":11211"}.join(',')%>
+memcache_servers = <%=@servers.map{|x| x['bcpc']['management']['ip'] + ":11211"}.join(',')%>
 
 # Number of seconds memcached server is considered dead before it is tried
 # again. (dogpile.cache.memcache and keystone.cache.memcache_pool backends
