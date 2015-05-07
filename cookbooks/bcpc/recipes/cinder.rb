@@ -47,6 +47,10 @@ template "/etc/cinder/cinder.conf" do
     owner "cinder"
     group "cinder"
     mode 00600
+    variables({
+      :servers => get_head_nodes,
+      :rabbit_hosts_shuffle_rng => Random.new(IPAddr.new(node['bcpc']['management']['ip']).to_i),
+    })
     notifies :restart, "service[cinder-api]", :delayed
     notifies :restart, "service[cinder-volume]", :delayed
     notifies :restart, "service[cinder-scheduler]", :delayed

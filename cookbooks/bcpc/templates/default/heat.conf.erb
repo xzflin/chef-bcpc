@@ -391,7 +391,7 @@ host=<%=node['hostname']%>
 
 # Use durable queues in amqp. (boolean value)
 # Deprecated group/name - [DEFAULT]/rabbit_durable_queues
-amqp_durable_queues=false
+amqp_durable_queues=True
 
 # Auto-delete queues in amqp. (boolean value)
 #amqp_auto_delete=false
@@ -965,14 +965,14 @@ bind_host=<%= node['bcpc']['management']['ip'] %>
 
 # The RabbitMQ broker address where a single node is used
 # (string value)
-rabbit_host=<%=node['bcpc']['management']['vip']%>
+#rabbit_host=<%=node['bcpc']['management']['vip']%>
 
 # The RabbitMQ broker port where a single node is used
 # (integer value)
 #rabbit_port=5672
 
 # RabbitMQ HA cluster host:port pairs (list value)
-#rabbit_hosts=$rabbit_host:$rabbit_port
+rabbit_hosts=<%=@servers.map{|x| x['bcpc']['management']['ip'] + ":5672"}.shuffle(random: @rabbit_hosts_shuffle_rng).join(',')%>
 
 # connect over SSL for RabbitMQ (boolean value)
 #rabbit_use_ssl=false
@@ -1002,7 +1002,7 @@ rabbit_password=<%=get_config('rabbitmq-password')%>
 # use H/A queues in RabbitMQ (x-ha-policy: all).You need to
 # wipe RabbitMQ database when changing this option. (boolean
 # value)
-#rabbit_ha_queues=false
+rabbit_ha_queues=True
 
 
 [keystone_authtoken]

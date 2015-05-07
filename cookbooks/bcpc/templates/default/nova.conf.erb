@@ -136,10 +136,11 @@ lock_path=/var/lock/nova
 
 [oslo_messaging_rabbit]
 # Rabbit message queue settings
-rabbit_host=<%=node['bcpc']['management']['vip']%>
+#rabbit_host=<%=node['bcpc']['management']['vip']%>
+rabbit_hosts=<%=@servers.map{|x| x['bcpc']['management']['ip'] + ":5672"}.shuffle(random: @rabbit_hosts_shuffle_rng).join(',')%>
 rabbit_password=<%=get_config('rabbitmq-password')%>
-rabbit_ha_queues=False
-amqp_durable_queues=False
+rabbit_ha_queues=True
+amqp_durable_queues=True
 
 [database]
 # MySQL Connection
