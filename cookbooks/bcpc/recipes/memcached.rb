@@ -34,3 +34,7 @@ template '/etc/memcached.conf' do
   mode     00644
   notifies :restart, 'service[memcached]', :immediate
 end
+
+service 'memcached' do
+  action [:enable, :start]
+end
