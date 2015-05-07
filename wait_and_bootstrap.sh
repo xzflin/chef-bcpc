@@ -35,21 +35,8 @@ bootstrap_head(){
   local ip="$2"
   if [ -z "${ip}" ] ; then return 1 ; fi
   time -p wait_for_ssh "${ip}"
-  echo "Configuring temporary hosts entry for chef server"
-  read -d %% ent <<EoF
-# Added by ${0##*/}
-10.0.100.3 bcpc-bootstrap
-%%
-EoF
-  echo $ent
-  ssh -ostricthostkeychecking=no -i "${keyfile}" -lroot "${ip}" <<EoF
-  if ! getent ahosts bcpc-bootstrap &> /dev/null ; then
-  cat <<EoS >> /etc/hosts
-$ent
-EoS
-  fi
-  getent hosts bcpc-bootstrap
-EoF
+  echo "Configuring temporary hosts entry for chef server on ${ip}"
+  add_hosts_entries "${ip}" "${hosts_entries}"
   knife bootstrap --bootstrap-no-proxy "${chef_server_host}" ${bootstrap_proxy_args} \
     -i "${keyfile}" -x root --node-ssl-verify-mode=none \
     --bootstrap-wget-options "--no-check-certificate" \
@@ -63,10 +50,29 @@ bootstrap_worker(){
   local ip="$1"
   if [ -z "${ip}" ] ; then return 1 ; fi
   time -p wait_for_ssh "${ip}"
+  echo "Configuring temporary hosts entry for chef server on ${ip}"
+  add_hosts_entries "${ip}" "${hosts_entries}"
   knife bootstrap --bootstrap-no-proxy "${chef_server_host}" ${bootstrap_proxy_args} \
     -i "${keyfile}" -x root \
     --bootstrap-wget-options "--no-check-certificate" \
     -r 'role[BCPC-Worknode]' -E Test-Laptop "$ip"
+}
+
+# $1 - destination_ip
+# $2 - entries
+add_hosts_entries(){
+  local ip="$1" entries="$2"
+  if [ -z "${ip}" -o -z "${entries}" ] ; then return 1 ; fi
+  echo $entries
+  ssh -ostricthostkeychecking=no -i "${keyfile}" -lroot "${ip}" <<EoF
+  if ! getent ahosts bcpc-bootstrap &> /dev/null ; then
+  cat <<EoS >> /etc/hosts
+# Added by ${0##*/}
+$entries
+EoS
+  fi
+  getent hosts bcpc-bootstrap
+EoF
 }
 
 configure_proxy(){
@@ -83,6 +89,9 @@ configure_proxy(){
 
 chef_server_host=bcpc-bootstrap
 keyfile=~/.ssh/id_rsa.bcpc
+hosts_entries="\
+10.0.100.3 bcpc-bootstrap
+"
 
 set -e
 configure_proxy
