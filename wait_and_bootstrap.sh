@@ -33,7 +33,7 @@ setup_headnodes(){
 bootstrap_head(){
   local nodename="$1"
   local ip="$2"
-  if [ -z "${ip}" ] ; then return 1 ; fi
+  if [ -z "${ip}" -o -z "${nodename}" ] ; then return 1 ; fi
   time -p wait_for_ssh "${ip}"
   echo "Configuring temporary hosts entry for chef server on ${ip}"
   add_hosts_entries "${ip}" "${hosts_entries}"
@@ -45,17 +45,17 @@ bootstrap_head(){
     knife group add actor admins "${nodename}" >&2
 }
 
-# TODO: This and above name together are confusing!
 bootstrap_worker(){
-  local ip="$1"
-  if [ -z "${ip}" ] ; then return 1 ; fi
+  local nodename="$1"
+  local ip="$2"
+  if [ -z "${ip}" -o -z "${nodename}" ] ; then return 1 ; fi
   time -p wait_for_ssh "${ip}"
   echo "Configuring temporary hosts entry for chef server on ${ip}"
   add_hosts_entries "${ip}" "${hosts_entries}"
   knife bootstrap --bootstrap-no-proxy "${chef_server_host}" ${bootstrap_proxy_args} \
     -i "${keyfile}" -x root \
     --bootstrap-wget-options "--no-check-certificate" \
-    -r 'role[BCPC-Worknode]' -E Test-Laptop "$ip"
+    -r 'role[BCPC-Worknode]' -E Test-Laptop "$ip" -N "${nodename}"
 }
 
 # $1 - destination_ip
@@ -87,10 +87,23 @@ configure_proxy(){
   fi
 }
 
+# Quick hack to determine name from ip
+ip_to_name(){
+  local ip="$1"
+  # prefer over ${ip##*.} for easier validation
+  IFS='.' read _ _ _ nodenum <<EoF
+$ip
+EoF
+  if [ -z "${ip}" -o -z "${nodenum}" ] ; then return 1 ; fi
+  local suffix=$((nodenum - 10))
+  echo bcpc-vm${suffix}.${domainname}
+}
+
+domainname=bcpc.example.com
 chef_server_host=bcpc-bootstrap
 keyfile=~/.ssh/id_rsa.bcpc
 hosts_entries="\
-10.0.100.3 bcpc-bootstrap
+10.0.100.3 ${chef_server_host}
 "
 
 set -e
@@ -99,5 +112,5 @@ setup_headnodes
 
 echo "Waiting to bootstrap workers"
 set -x
-for ip in 10.0.100.{12..13} ; do eval "bootstrap_worker ${ip} &" ; done
+for ip in 10.0.100.{12..13} ; do eval "bootstrap_worker "$(ip_to_name ${ip})" ${ip} &" ; done
 wait
