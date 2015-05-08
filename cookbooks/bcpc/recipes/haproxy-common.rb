@@ -35,7 +35,7 @@ end
 
 package "haproxy" do
     action :install
-    version "1.5.3-1~ubuntu14.04.1"
+    version node['bcpc']['haproxy']['version']
 end
 
 bash "enable-defaults-haproxy" do

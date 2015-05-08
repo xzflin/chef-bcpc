@@ -328,3 +328,12 @@ default['bcpc']['kibana']['version'] = '4.0.2'
 # Default retention rates
 # http://graphite.readthedocs.org/en/latest/config-carbon.html#storage-schemas-conf
 default['bcpc']['graphite']['retention'] = '60s:1d'
+
+###########################################
+#
+# HAProxy settings
+#
+###########################################
+#
+# Package version to pin to
+default['bcpc']['haproxy']['version'] = '1.5.12-1ppa1~trusty'
