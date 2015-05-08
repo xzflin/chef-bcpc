@@ -27,6 +27,13 @@ ruby_block "initialize-rabbitmq-config" do
     end
 end
 
+apt_repository "erlang" do
+    uri node['bcpc']['repos']['erlang']
+    distribution node['lsb']['codename']
+    components ["contrib"]
+    key "erlang.key"
+end
+
 apt_repository "rabbitmq" do
     uri node['bcpc']['repos']['rabbitmq']
     distribution 'testing'
@@ -34,8 +41,42 @@ apt_repository "rabbitmq" do
     key "rabbitmq.key"
 end
 
+%w{erlang-asn1
+   erlang-base
+   erlang-corba
+   erlang-crypto
+   erlang-diameter
+   erlang-edoc
+   erlang-eldap
+   erlang-erl-docgen
+   erlang-eunit
+   erlang-ic
+   erlang-inets
+   erlang-inviso
+   erlang-mnesia
+   erlang-nox
+   erlang-odbc
+   erlang-os-mon
+   erlang-parsetools
+   erlang-percept
+   erlang-public-key
+   erlang-runtime-tools
+   erlang-snmp
+   erlang-ssh
+   erlang-ssl
+   erlang-syntax-tools
+   erlang-tools
+   erlang-webtool
+   erlang-xmerl}.each do |erlang_package|
+  package erlang_package do
+    action :install
+    version node['bcpc']['erlang']['version']
+  end
+end
+
 package "rabbitmq-server" do
-    action :upgrade
+    action :install
+    version node['bcpc']['rabbitmq']['version']
     notifies :stop, "service[rabbitmq-server]", :immediately
 end
 

@@ -25,6 +25,18 @@ default['bcpc']['vms_key'] = nil
 
 ###########################################
 #
+# Package versions
+#
+###########################################
+default['bcpc']['elasticsearch']['version'] = '1.5.1'
+default['bcpc']['ceph']['version'] = '0.80.9-0ubuntu0.14.04.2'
+default['bcpc']['erlang']['version'] = '1:17.5'
+default['bcpc']['haproxy']['version'] = '1.5.12-1ppa1~trusty'
+default['bcpc']['kibana']['version'] = '4.0.2'
+default['bcpc']['rabbitmq']['version'] = '3.5.1-1'
+
+###########################################
+#
 #  Flags to enable/disable BCPC cluster features
 #
 ###########################################
@@ -74,8 +86,6 @@ default['bcpc']['fixed']['vlan_interface'] = node['bcpc']['floating']['interface
 #  Ceph settings for the cluster
 #
 ###########################################
-default['bcpc']['ceph']['version'] = "0.80.9-0ubuntu0.14.04.2"
-
 default['bcpc']['ceph']['chooseleaf'] = "rack"
 default['bcpc']['ceph']['pgp_auto_adjust'] = false
 default['bcpc']['ceph']['pgs_per_node'] = 1024
@@ -168,6 +178,7 @@ default['bcpc']['repos']['hwraid'] = "http://hwraid.le-vert.net/ubuntu"
 default['bcpc']['repos']['fluentd'] = "http://packages.treasure-data.com/precise"
 default['bcpc']['repos']['gridcentric'] = "http://downloads.gridcentric.com/packages/%s/%s/ubuntu"
 default['bcpc']['repos']['elasticsearch'] = "http://packages.elasticsearch.org/elasticsearch/1.5/debian"
+default['bcpc']['repos']['erlang'] = "http://packages.erlang-solutions.com/ubuntu"
 
 ###########################################
 #
@@ -303,24 +314,6 @@ default['bcpc']['cpupower']['governor'] = "ondemand"
 
 ###########################################
 #
-# Elasticsearch settings
-#
-###########################################
-#
-# Package version to pin to
-default['bcpc']['elasticsearch']['version'] = '1.5.1'
-
-###########################################
-#
-# Kibana settings
-#
-###########################################
-#
-# Package version to pin to
-default['bcpc']['kibana']['version'] = '4.0.2'
-
-###########################################
-#
 # Graphite settings
 #
 ###########################################
@@ -328,12 +321,3 @@ default['bcpc']['kibana']['version'] = '4.0.2'
 # Default retention rates
 # http://graphite.readthedocs.org/en/latest/config-carbon.html#storage-schemas-conf
 default['bcpc']['graphite']['retention'] = '60s:1d'
-
-###########################################
-#
-# HAProxy settings
-#
-###########################################
-#
-# Package version to pin to
-default['bcpc']['haproxy']['version'] = '1.5.12-1ppa1~trusty'
