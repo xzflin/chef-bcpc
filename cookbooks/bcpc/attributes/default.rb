@@ -53,10 +53,6 @@ default['bcpc']['enabled']['tpm'] = false
 # This will block VMs from talking to the management network
 default['bcpc']['enabled']['secure_fixed_networks'] = true
 
-# This can be either 'sql' or 'ldap' to either store identities
-# in the mysql DB or the LDAP server
-default['bcpc']['keystone']['backend'] = 'ldap'
-
 # If radosgw_cache is enabled, default to 20MB max file size
 default['bcpc']['radosgw']['cache_max_file_size'] = 20000000
 
@@ -245,6 +241,9 @@ default['bcpc']['keystone']['enable_caching'] = true
 default['bcpc']['keystone']['debug'] = false
 # Enable verbose logging.
 default['bcpc']['keystone']['verbose'] = false
+# This can be either 'sql' or 'ldap' to either store identities
+# in the mysql DB or the LDAP server
+default['bcpc']['keystone']['backend'] = 'ldap'
 
 ###########################################
 #

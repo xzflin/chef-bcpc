@@ -200,7 +200,7 @@ admin_bind_host = <%=node['bcpc']['management']['ip']%>
 #domain_specific_drivers_enabled = false
 #domain_configurations_from_database = false
 #domain_config_dir = /etc/keystone/domains
-driver = keystone.identity.backends.ldap.Identity
+driver = keystone.identity.backends.<%=node['bcpc']['keystone']['backend']%>.Identity
 <% if node['bcpc']['keystone']['enable_caching'] %>
 caching = true
 <% else %>
