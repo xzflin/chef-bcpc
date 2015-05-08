@@ -96,7 +96,7 @@ enabled = true
 enabled = false
 <% end %>
 <% debug_cache = node['bcpc']['keystone']['enable_caching'] and node['bcpc']['keystone']['debug'] ? "debug_cache_backend = true" : "debug_cache_backend = false" %>
-<%=debug_cache%>
+debug_cache_backend = <%=debug_cache%>
 <% if node['bcpc']['keystone']['enable_caching'] %>
 memcache_servers = <%=@servers.map{|x| x['bcpc']['management']['ip'] + ":11211"}.join(',')%>
 <% else %>
