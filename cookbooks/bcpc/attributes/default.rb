@@ -230,9 +230,21 @@ default['bcpc']['protocol']['nova'] = "https"
 default['bcpc']['protocol']['cinder'] = "https"
 default['bcpc']['protocol']['heat'] = "https"
 
-# Hour for the cron job to run keystone_token_cleaner script which
-# runs `keystone-manage token_flush` to clean out stale tokens
-default['bcpc']['keystone_token_clean_hour'] = "2"
+###########################################
+#
+#  Keystone Settings
+#
+###########################################
+#
+# Eventlet server is deprecated in Kilo, so by default we
+# serve Keystone via Apache now.
+default['bcpc']['keystone']['eventlet_server'] = false
+# Turn caching via memcached on or off.
+default['bcpc']['keystone']['enable_caching'] = true
+# Enable debug logging (also caching debug logging).
+default['bcpc']['keystone']['debug'] = false
+# Enable verbose logging.
+default['bcpc']['keystone']['verbose'] = false
 
 ###########################################
 #
