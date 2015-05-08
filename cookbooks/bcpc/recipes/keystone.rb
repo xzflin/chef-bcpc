@@ -21,11 +21,6 @@ include_recipe "bcpc::mysql-head"
 include_recipe "bcpc::openstack"
 include_recipe "bcpc::apache2"
 
-# do not run or try to start standalone keystone service since it is now served by WSGI
-service "keystone" do
-  action [:disable, :stop]
-end
-
 ruby_block "initialize-keystone-config" do
     block do
         make_config('mysql-keystone-user', "keystone")
@@ -46,6 +41,11 @@ end
 
 package 'keystone' do
     action :upgrade
+end
+
+# do not run or try to start standalone keystone service since it is now served by WSGI
+service "keystone" do
+    action [:disable, :stop]
 end
 
 template "/etc/keystone/keystone.conf" do
