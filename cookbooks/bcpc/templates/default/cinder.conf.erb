@@ -33,7 +33,7 @@ osapi_volume_workers=1
 # Other service endpoints
 glance_api_servers=<%=node['bcpc']['protocol']['glance']%>://<%=node['bcpc']['management']['vip']%>:9292
 glance_api_insecure=True
-glance_api_version=1
+glance_api_version=2
 
 # Volume driver settings for RBD
 enabled_backends=<%= node['bcpc']['ceph']['enabled_pools'].map {|type| type.upcase}.join(",") %>
