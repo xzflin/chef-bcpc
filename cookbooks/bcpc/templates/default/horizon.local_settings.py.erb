@@ -124,7 +124,9 @@ SECRET_KEY = '<%=get_config('horizon-secret-key')%>'
 CACHES = {
    'default': {
        'BACKEND' : 'django.core.cache.backends.memcached.MemcachedCache',
-       'LOCATION' : '<%=node['bcpc']['management']['vip']%>:11211'
+       'LOCATION' : [
+           <%=@servers.map{|x| "#{x['bcpc']['management']['ip']}:11211"}.join(',')%>
+       ]
    }
 }
 

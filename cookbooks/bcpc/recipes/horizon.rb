@@ -106,6 +106,7 @@ template "/etc/openstack-dashboard/local_settings.py" do
     owner "root"
     group "root"
     mode 00644
+    variables(:servers => get_head_nodes)
     notifies :restart, "service[apache2]", :delayed
 end
 
