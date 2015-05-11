@@ -125,7 +125,7 @@ CACHES = {
    'default': {
        'BACKEND' : 'django.core.cache.backends.memcached.MemcachedCache',
        'LOCATION' : [
-           <%=@servers.map{|x| "#{x['bcpc']['management']['ip']}:11211"}.join(',')%>
+           <%=@servers.map{|x| "\"#{x['bcpc']['management']['ip']}:11211\""}.join(',')%>
        ]
    }
 }
