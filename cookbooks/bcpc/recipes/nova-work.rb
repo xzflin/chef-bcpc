@@ -133,7 +133,7 @@ template "/etc/default/libvirt-bin" do
   owner "root"
   group "root"
   mode 00644
-  notifies :restart, "service[libvirt-bin]", :immediately
+  notifies :restart, "service[libvirt-bin]", :delayed
 end
 
 template "/etc/libvirt/libvirtd.conf" do
@@ -146,6 +146,7 @@ end
 
 service "libvirt-bin" do
     action [:enable, :start]
+    restart_command "/etc/init.d/libvirt-bin restart"
 end
 
 template "/etc/nova/virsh-secret.xml" do
