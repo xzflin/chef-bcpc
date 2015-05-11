@@ -12,6 +12,9 @@
 #qpid_username=admin
 #qpid_password=<%=get_config('rabbitmq-password')%>
 
+# memcached settings
+memcached_servers=<%=@servers.map{|x| x['bcpc']['management']['ip'] + ":11211"}.join(",")%>
+
 # Nova API settings
 auth_strategy=keystone
 api_paste_config=/etc/nova/api-paste.ini
@@ -99,7 +102,6 @@ novnc_enabled=True
 novncproxy_base_url=https://<%=node['bcpc']['management']['ip']%>:6080/vnc_auto.html
 vncserver_proxyclient_address=127.0.0.1
 novncproxy_host=<%=node['bcpc']['management']['ip']%>
-memcached_servers=<%=node['bcpc']['management']['vip']%>:11211
 
 # Glance settings
 image_service=nova.image.glance.GlanceImageService
