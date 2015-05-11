@@ -128,32 +128,12 @@ template "/var/lib/nova/.ssh/config" do
     mode 00600
 end
 
-bash "enable-defaults-libvirt-bin" do
-    user "root"
-    code <<-EOH
-        sed --in-place '/^libvirtd_opts=/d' /etc/default/libvirt-bin
-        echo 'libvirtd_opts=\"-d -l\"' >> /etc/default/libvirt-bin
-    EOH
-    not_if "grep -e '^libvirtd_opts=\"-d -l\"' /etc/default/libvirt-bin"
-    notifies :restart, "service[libvirt-bin]", :delayed
-end
-
-bash "set-libvirt-bin-ulimit" do
-    user "root"
-    code <<-EOH
-        sed --in-place '/^ulimit/d' /etc/default/libvirt-bin
-        echo "ulimit -n #{node['bcpc']['libvirt-bin']['ulimit']['nofile']}" >> /etc/default/libvirt-bin
-    EOH
-    not_if "grep -e \"^ulimit -n #{node['bcpc']['libvirt-bin']['ulimit']['nofile']}$\" /etc/default/libvirt-bin"
-    notifies :restart, "service[libvirt-bin]", :delayed
-end
-
 template "/etc/default/libvirt-bin" do
   source "libvirt-bin-default.erb"
   owner "root"
   group "root"
   mode 00644
-  notifies :restart, "service[libvirt-bin]", :delayed
+  notifies :restart, "service[libvirt-bin]", :immediately
 end
 
 template "/etc/libvirt/libvirtd.conf" do

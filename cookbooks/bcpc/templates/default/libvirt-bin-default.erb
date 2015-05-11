@@ -9,4 +9,4 @@ start_libvirtd="yes"
 # pass in location of kerberos keytab
 #export KRB5_KTNAME=/etc/libvirt/libvirt.keytab
 libvirtd_opts="-l -d"
-ulimit -n 4096
+ulimit -n <%=node['bcpc']['libvirt-bin']['ulimit']['nofile']%>
