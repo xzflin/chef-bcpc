@@ -98,6 +98,36 @@ template "/root/keystonerc" do
     mode 00600
 end
 
+#  _   _  ____ _  __   __  ____   _  _____ ____ _   _
+# | | | |/ ___| | \ \ / / |  _ \ / \|_   _/ ___| | | |
+# | | | | |  _| |  \ V /  | |_) / _ \ | || |   | |_| |
+# | |_| | |_| | |___| |   |  __/ ___ \| || |___|  _  |
+#  \___/ \____|_____|_|   |_| /_/   \_\_| \____|_| |_|
+
+# this patch modifies Keystone LDAP lookup so that it won't substitute None into
+# the LDAP search query
+cookbook_file "/tmp/keystone-ldap_filter.patch" do
+    source "keystone-ldap_filter.patch"
+    owner "root"
+    mode 00644
+end
+
+bash "patch-for-keystone-ldap_filter" do
+    user "root"
+    code <<-EOH
+       cd /usr/lib/python2.7/dist-packages/keystone
+       patch -p1 < /tmp/keystone-ldap_filter.patch
+       rv=$?
+       if [ $rv -ne 0 ]; then
+         echo "Error applying patch ($rv) - aborting!"
+         exit $rv
+       fi
+       cp /tmp/keystone-ldap_filter.patch .
+    EOH
+    not_if "test -f /usr/lib/python2.7/dist-packages/keystone/keystone-ldap_filter.patch"
+    notifies :restart, "service[apache2]", :immediately
+end
+
 # configure WSGI
 
 # /var/www created by apache2 package, /var/www/cgi-bin created in bcpc::apache2
@@ -175,11 +205,10 @@ end
 
 ruby_block "keystone-create-test-tenants" do
     block do
-        system ". /root/keystonerc; . /root/adminrc; keystone user-get #{get_config('keystone-test-user')} 2>&1 | grep -e '^No user'"
-        if $?.success? then
+        system ". /root/adminrc; openstack user list 2>&1 | grep #{get_config('keystone-test-user')}"
+        unless $?.success? then
             %x[ . /root/adminrc
-                export KEYSTONE_ADMIN_TENANT_ID=`keystone tenant-get "#{node['bcpc']['admin_tenant']}" | grep " id " | awk '{print $4}'`
-                keystone user-create --name #{get_config('keystone-test-user')} --tenant-id $KEYSTONE_ADMIN_TENANT_ID --pass  #{get_config('keystone-test-password')} --enabled true
+                openstack user create --project #{node['bcpc']['admin_tenant']} --password #{get_config('keystone-test-password')} --enable #{get_config('keystone-test-user')}
             ]
         end
     end
@@ -187,10 +216,10 @@ end
 
 ruby_block "keystone-add-test-admin-role" do
     block do
-        system ". /root/keystonerc; . /root/adminrc; keystone user-role-list --user #{get_config('keystone-test-user')} --tenant '#{node['bcpc']['admin_tenant']}' 2>&1 | grep '#{node['bcpc']['admin_role']}'"
+        system ". /root/adminrc; export OPENSTACK_ADMIN_ROLE_ID=`openstack role show #{node['bcpc']['admin_role']} | grep ' id ' | awk '{ print $4 }'`; openstack role assignment list --user #{get_config('keystone-test-user')} | grep $OPENSTACK_ADMIN_ROLE_ID"
         if not $?.success? then
             %x[ . /root/adminrc
-                keystone user-role-add --user #{get_config('keystone-test-user')} --role '#{node['bcpc']['admin_role']}' --tenant '#{node['bcpc']['admin_tenant']}'
+                openstack role add --project '#{node['bcpc']['admin_tenant']}' --user '#{get_config('keystone-test-user')}' '#{node['bcpc']['admin_role']}'
             ]
         end
     end
