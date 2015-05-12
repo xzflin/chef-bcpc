@@ -33,7 +33,7 @@ default['bcpc']['ceph']['version'] = '0.80.9-0ubuntu0.14.04.2'
 default['bcpc']['erlang']['version'] = '1:17.5'
 default['bcpc']['haproxy']['version'] = '1.5.12-1ppa1~trusty'
 default['bcpc']['kibana']['version'] = '4.0.2'
-default['bcpc']['rabbitmq']['version'] = '3.5.1-1'
+default['bcpc']['rabbitmq']['version'] = '3.5.2-1'
 
 ###########################################
 #
