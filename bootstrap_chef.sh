@@ -124,3 +124,4 @@ echo "Configuring SSH access keys for bootstrap procedure"
 $SSH_CMD "cd $BCPC_DIR && sudo ./install_bootstrap_ssh_key.sh"
 
 popd
+echo "Finished bootstrap of Chef server!"
