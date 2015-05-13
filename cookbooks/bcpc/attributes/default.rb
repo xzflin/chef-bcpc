@@ -144,7 +144,7 @@ default['bcpc']['floating']['available_subnet'] = "192.168.43.128/25"
 default['bcpc']['floating']['interface'] = nil
 # if 'interface' is a VLAN interface, specifying a parent allows MTUs
 # to be set properly
-default['bcpc']['floating']['interface-parent'] nil
+default['bcpc']['floating']['interface-parent'] = nil
 
 default['bcpc']['fixed']['cidr'] = "1.127.0.0/16"
 default['bcpc']['fixed']['vlan_start'] = "1000"
