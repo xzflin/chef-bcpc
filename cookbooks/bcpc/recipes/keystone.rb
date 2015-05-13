@@ -152,6 +152,15 @@ bash "keystone-database-sync" do
     notifies :restart, "service[apache2]", :immediately
 end
 
+# this is a synchronization resource that polls Keystone on the VIP to verify that it's not returning 503s,
+# if something above has restarted Apache and Keystone isn't ready to play yet
+bash "wait-for-keystone-to-become-operational" do
+  code <<-EOH
+    sleep 1
+    while curl https://#{node['bcpc']['management']['vip']}:5000 | grep 'HTTP 503' >/dev/null 2>&1; do echo Waiting for Keystone to become operational...; sleep 1; done
+  EOH
+end
+
 bash "keystone-create-users-tenants" do
     user "root"
     code <<-EOH
