@@ -51,9 +51,9 @@ template "/etc/cinder/cinder.conf" do
       :servers => get_head_nodes,
       :rabbit_hosts_shuffle_rng => Random.new(IPAddr.new(node['bcpc']['management']['ip']).to_i),
     })
-    notifies :restart, "service[cinder-api]", :delayed
-    notifies :restart, "service[cinder-volume]", :delayed
-    notifies :restart, "service[cinder-scheduler]", :delayed
+    notifies :restart, "service[cinder-api]", :immediately
+    notifies :restart, "service[cinder-volume]", :immediately
+    notifies :restart, "service[cinder-scheduler]", :immediately
 end
 
 ruby_block "cinder-database-creation" do
@@ -77,6 +77,14 @@ bash "cinder-database-sync" do
     notifies :restart, "service[cinder-api]", :immediately
     notifies :restart, "service[cinder-volume]", :immediately
     notifies :restart, "service[cinder-scheduler]", :immediately
+end
+
+# this is a synchronization resource that polls Cinder until it stops returning 503s
+bash "wait-for-cinder-to-become-operational" do
+    code <<-EOH
+        sleep 1
+        while cinder list 2>&1 | grep 'HTTP 503' >/dev/null 2>&1; do echo Waiting for Cinder to become operational...; sleep 1; done
+    EOH
 end
 
 node['bcpc']['ceph']['enabled_pools'].each do |type|
