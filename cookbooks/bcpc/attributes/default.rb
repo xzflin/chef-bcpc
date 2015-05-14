@@ -273,6 +273,7 @@ default['bcpc']['nova']['cpu_allocation_ratio'] = 2.0
 default['bcpc']['nova']['workers'] = 2
 # Patch toggle for https://github.com/bloomberg/chef-bcpc/pull/493
 default['bcpc']['nova']['live_migration_patch'] = false
+
 ###########################################
 #
 # Routemon settings
@@ -360,3 +361,13 @@ default['bcpc']['bootstrap']['mirror_path'] = "/ubuntu"
 # non-standard path
 #default['bcpc']['bootstrap']['mirror']      = "mirror.cc.columbia.edu"
 #default['bcpc']['bootstrap']['mirror_path'] = "/pub/linux/ubuntu/archive"
+
+###########################################
+#
+# Rally settings
+#
+###########################################
+#
+# Package versions
+# None needed at this time
+default['bcpc']['rally']['user'] = 'ubuntu'
