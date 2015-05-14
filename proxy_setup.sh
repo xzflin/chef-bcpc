@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # proxy setup
 #
 # Make sure this file defines CURL in any case
@@ -11,7 +12,7 @@ export CURL='curl'
 if [ -n "$PROXY" ]; then
     
    echo "Setting up and testing proxy"
-   
+
    export http_proxy=http://${PROXY}
    export https_proxy=https://${PROXY}
    
@@ -26,5 +27,7 @@ if [ -n "$PROXY" ]; then
        exit 1
    else
        echo "Using a proxy at $PROXY"
-   fi   
+   fi
+else
+    echo "\$PROXY not defined, not defining \$http_proxy and \$https_proxy"
 fi

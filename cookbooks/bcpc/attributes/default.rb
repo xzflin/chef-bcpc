@@ -9,7 +9,7 @@ default['bcpc']['location'] = "New York"
 default['bcpc']['organization'] = "Bloomberg"
 default['bcpc']['openstack_release'] = "icehouse"
 # Can be "updates" or "proposed"
-default['bcpc']['openstack_branch'] = "proposed"
+default['bcpc']['openstack_branch'] = "updates"
 # Should be kvm (or qemu if testing in VMs that don't support VT-x)
 default['bcpc']['virt_type'] = "kvm"
 # Define the kernel to be installed. By default, track latest LTS kernel
@@ -169,9 +169,11 @@ default['bcpc']['repos']['mysql'] = "http://repo.percona.com/apt"
 default['bcpc']['repos']['haproxy'] = "http://ppa.launchpad.net/vbernat/haproxy-1.5/ubuntu"
 default['bcpc']['repos']['openstack'] = "http://ubuntu-cloud.archive.canonical.com/ubuntu"
 default['bcpc']['repos']['hwraid'] = "http://hwraid.le-vert.net/ubuntu"
+# there is no trusty repo for fluentd from this provider
+#default['bcpc']['repos']['fluentd'] = "http://packages.treasure-data.com/#{node['lsb']['codename']}"
 default['bcpc']['repos']['fluentd'] = "http://packages.treasure-data.com/precise"
-default['bcpc']['repos']['ceph-apache'] = "http://gitbuilder.ceph.com/apache2-deb-precise-x86_64-basic/ref/master"
-default['bcpc']['repos']['ceph-fcgi'] = "http://gitbuilder.ceph.com/libapache-mod-fastcgi-deb-precise-x86_64-basic/ref/master"
+default['bcpc']['repos']['ceph-apache'] = "http://gitbuilder.ceph.com/apache2-deb-#{node['lsb']['codename']}-x86_64-basic/ref/master"
+default['bcpc']['repos']['ceph-fcgi'] = "http://gitbuilder.ceph.com/libapache-mod-fastcgi-deb-#{node['lsb']['codename']}-x86_64-basic/ref/master"
 default['bcpc']['repos']['gridcentric'] = "http://downloads.gridcentric.com/packages/%s/%s/ubuntu"
 default['bcpc']['repos']['elasticsearch'] = "http://packages.elasticsearch.org/elasticsearch/1.5/debian"
 
@@ -188,7 +190,7 @@ default['bcpc']['repos']['elasticsearch'] = "http://packages.elasticsearch.org/e
 # For a complete list of Ubuntu mirrors, please see:
 # https://launchpad.net/ubuntu/+archivemirrors
 default['bcpc']['mirror']['ubuntu'] = "us.archive.ubuntu.com/ubuntu"
-default['bcpc']['mirror']['ubuntu-dist'] = ['precise']
+default['bcpc']['mirror']['ubuntu-dist'] = ['trusty']
 default['bcpc']['mirror']['ceph-dist'] = ['firefly']
 default['bcpc']['mirror']['os-dist'] = ['icehouse']
 default['bcpc']['mirror']['elasticsearch-dist'] = '1.5'
@@ -221,6 +223,9 @@ default['bcpc']['ports']['apache']['radosgw'] = 80
 default['bcpc']['ports']['apache']['radosgw_https'] = 443
 default['bcpc']['ports']['haproxy']['radosgw'] = 80
 default['bcpc']['ports']['haproxy']['radosgw_https'] = 443
+
+default['bcpc']['ports']['389ds']['local'] = 4389
+default['bcpc']['ports']['389ds']['floating'] = 389
 
 # Can be set to 'http' or 'https'
 default['bcpc']['protocol']['keystone'] = "https"

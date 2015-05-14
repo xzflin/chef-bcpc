@@ -99,7 +99,7 @@ file "/var/www/s3gw.fcgi" do
     notifies :restart, "service[radosgw-all]", :immediately
 end
 
-template "/etc/apache2/sites-available/radosgw" do
+template "/etc/apache2/sites-available/radosgw.conf" do
     source "apache-radosgw.conf.erb"
     owner "root"
     group "root"

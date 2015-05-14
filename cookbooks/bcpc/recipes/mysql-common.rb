@@ -18,17 +18,12 @@
 #
 
 include_recipe "bcpc::default"
+include_recipe "bcpc::xinetd"
 
 directory "/etc/mysql" do
     owner "root"
     group "root"
     mode 00755
-end
-
-template "/etc/mysql/my.cnf" do
-    source "my.cnf.erb"
-    mode 00644
-    notifies :restart, "service[mysql]", :delayed
 end
 
 directory "/etc/mysql/conf.d" do
@@ -37,13 +32,15 @@ directory "/etc/mysql/conf.d" do
     mode 00755
 end
 
-service "mysql" do
-    action [:enable, :start]
-    start_command "service mysql start || true"
+template "/etc/mysql/my.cnf" do
+    source "my.cnf.erb"
+    mode 00644
+    notifies :restart, "service[mysql]", :immediately
 end
 
-package "xinetd" do
-    action :upgrade
+service "mysql" do
+    action [:enable]
+    supports :status => true, :restart => true, :reload => true
 end
 
 bash "add-mysqlchk-to-etc-services" do
@@ -51,7 +48,7 @@ bash "add-mysqlchk-to-etc-services" do
     code <<-EOH
         printf "mysqlchk\t3307/tcp\n" >> /etc/services
     EOH
-    not_if "grep mysqlchk /etc/services"
+    not_if "getent services mysqlchk/tcp"
 end
 
 template "/etc/xinetd.d/mysqlchk" do
@@ -60,10 +57,6 @@ template "/etc/xinetd.d/mysqlchk" do
     group "root"
     mode 00440
     notifies :restart, "service[xinetd]", :immediately
-end
-
-service "xinetd" do
-    action [:enable, :start]
 end
 
 package "debconf-utils"

@@ -1,0 +1,28 @@
+#!/bin/bash
+
+hash -r
+
+usage(){
+    ret=${1:-0}
+    if [ ${ret} -eq 0 ] ; then
+        exec 3>&1
+    else
+        exec 3>&2
+    fi
+    cat <<EoF
+${0##*/} opts args
+EoF
+    exec 3>&-
+    return ${ret}
+}
+
+sharedfs=/chef-bcpc-host
+
+read -d %% cmd <<EoF
+[ -d $sharedfs -a -x $sharedfs ] || exit 1 ;
+cd chef-bcpc && find cookbooks/bcpc/files/default/bins -name '*.deb' -o -name '*.sha1.txt' -o -name '*.sha256.txt' -o -name '*.gem' -o -name '*.tar.gz' -o -name '*.tgz' > files.lst ; tar -T files.lst -czf bins.tar.gz ;
+mv bins.tar.gz $sharedfs/
+%%
+EoF
+
+vagrant ssh -c "${cmd}"

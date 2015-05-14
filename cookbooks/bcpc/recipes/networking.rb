@@ -24,7 +24,7 @@ include_recipe "bcpc::certs"
 template "/etc/hosts" do
     source "hosts.erb"
     mode 00644
-    variables(:servers => get_all_nodes)
+    variables(:servers => get_all_nodes, :bootstrap_node => get_bootstrap_node)
 end
 
 template "/etc/ssh/sshd_config" do

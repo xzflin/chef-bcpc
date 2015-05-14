@@ -125,10 +125,6 @@ template "/usr/local/bin/rabbitmqcheck" do
     group "root"
 end
 
-package "xinetd" do
-    action :upgrade
-end
-
 bash "add-amqpchk-to-etc-services" do
     user "root"
     code <<-EOH
@@ -137,16 +133,14 @@ bash "add-amqpchk-to-etc-services" do
     not_if "grep amqpchk /etc/services"
 end
 
+include_recipe "bcpc::xinetd"
+
 template "/etc/xinetd.d/amqpchk" do
     source "xinetd-amqpchk.erb"
     owner "root"
     group "root"
     mode 00440
     notifies :restart, "service[xinetd]", :immediately
-end
-
-service "xinetd" do
-    action [:enable, :start]
 end
 
 ruby_block "reap-dead-rabbitmq-servers" do

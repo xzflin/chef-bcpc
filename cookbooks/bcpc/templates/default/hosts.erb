@@ -14,5 +14,13 @@ ff02::1 ip6-allnodes
 ff02::2 ip6-allrouters
 
 <% @servers.each do |server| -%>
-<%= "#{server['bcpc']['management']['ip']}   #{server['fqdn']} #{server['hostname']}.#{node['bcpc']['domain_name']} #{server['hostname']}" %>
+<%= "#{server['bcpc']['management']['ip']}\t#{server['hostname']}.#{node['bcpc']['domain_name']} #{server['fqdn']} #{server['hostname']}" %>
 <% end -%>
+<%=
+    if @bootstrap_node
+      bs_node_ip = ( @bootstrap_node['bcpc']['bootstrap'] && @bootstrap_node['bcpc']['bootstrap']['server'] )
+      str = <<-EoF
+#{bs_node_ip}\t#{@bootstrap_node['fqdn']}
+      EoF
+    end
+%>

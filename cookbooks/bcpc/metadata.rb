@@ -9,6 +9,5 @@ version          IO.read(File.join(File.dirname(__FILE__), '.version'))
 depends "apt", ">= 1.9.2"
 depends "ubuntu", ">= 1.1.2"
 depends "chef-client", ">= 2.2.2"
-depends "chef-solo-search", ">= 0.5.1"
 depends "cron", ">= 1.2.2"
 depends "ntp", ">= 1.3.2"

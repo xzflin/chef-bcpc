@@ -57,4 +57,5 @@ end
 service "haproxy" do
     restart_command "service haproxy stop && service haproxy start && sleep 5"
     action [:enable, :start]
+    supports :reload => true, :status => true
 end

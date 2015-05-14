@@ -35,7 +35,7 @@ end
     end
 end
 
-%w{ssl wsgi python php5 proxy_http rewrite cache disk_cache}.each do |mod|
+%w{ssl wsgi python php5 proxy_http rewrite cache cache_disk}.each do |mod|
     bash "apache-enable-#{mod}" do
         user "root"
         code "a2enmod #{mod}"
@@ -63,9 +63,11 @@ end
 
 service "apache2" do
     action [:enable, :start]
+    supports :status => true, :reload => true
+    provider Chef::Provider::Service::Init::Debian
 end
 
-template "/var/www/index.html" do
+template "/var/www/html/index.html" do
     source "index.html.erb"
     owner "root"
     group "root"

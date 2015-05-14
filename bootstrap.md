@@ -342,19 +342,36 @@ Also, after the first run, make the BCPC-Headnode an administrator, or you will 
 '''
 [...]error: Net::HTTPServerException: 403 "Forbidden"
 '''
-To make a host an administrator, one can access the Chef web UI via
-http://10.0.100.3:4040 and follow:
-Clients -> &lt;Host> -> Edit -> Admin (toggle true) -> Save Client
-where &lt;Host> is something like bcpc-vm1.local.lan, then re-run the
-bootstrap command. 
 
-Note that a clue to the current name and password is on the right-hand side of that page 
-and will likely still be the defaults if this is your first time
-through. Also note that this will change your password in the
+This error occurs because the initial head node run attempts to write a number of items to the
 data bag.
 
-If you get a "Tampered with cookie 500" error clear out your cookies
-from your browser for 10.0.100.3
+To make a node an administrator in Chef 12, you must use knife acl (the old way of marking
+the client as an admin is no longer functional and will always indicate admin: false no
+matter how many times you think you've changed it).
+
+(Note: if knife is complaining that the acl command does not exist, make sure you are using
+the `knife` binary in `/opt/opscode/embedded/bin`, which the bootstrap script should have installed
+the `knife-acl` gem for already. If that still does not work, run `/opt/opscode/embedded/bin/gem list`
+and verify that `knife-acl` is installed.)
+
+First generate an actor map, which will write out a YAML file to your current directory:
+```
+knife actor map
+```
+
+Next, add the client to the admins group (your client name may be different):
+```
+knife group add actor admins bcpc-vm1.local.lan
+```
+
+Once this is done, verify that the admins group contains your client:
+```
+knife group show admins
+```
+
+If the client shows up under the actors and clients lists, you should be good to go and will be able to
+successfully bootstrap the head node.
 
 Bootstrapping these nodes will take quite a long time - as much as an
 hour or more. You can monitor progress by logging into the VMs and
