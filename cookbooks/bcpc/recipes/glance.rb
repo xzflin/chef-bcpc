@@ -131,7 +131,7 @@ end
         user "root"
         optimal = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['images']['replicas']*node['bcpc']['ceph']['images']['portion']/100)
         code "ceph osd pool set #{node['bcpc']['ceph']['images']['name']} #{pg} #{optimal}"
-        not_if "((`ceph osd pool get #{node['bcpc']['ceph']['images']['name']} #{pg} | awk '{print $2}'` >= #{optimal}))"
+        only_if { %x[ceph osd pool get #{node['bcpc']['ceph']['images']['name']} #{pg} | awk '{print $2}'].to_i < optimal }
         notifies :run, "bash[wait-for-pgs-creating]", :immediately
     end
 end
