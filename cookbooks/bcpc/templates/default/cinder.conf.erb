@@ -16,20 +16,13 @@ debug = False
 auth_strategy = keystone
 state_path = /var/lib/cinder
 logdir=/var/log/cinder
+# v1 API is being removed in Liberty
+enable_v1_api=true
+enable_v2_api=true
 
 # Bind to mgt IP only
 osapi_volume_listen=<%=node['bcpc']['management']['ip']%>
 osapi_volume_workers=1
-
-# MySQL Connection
-sql_connection=mysql://<%=get_config('mysql-cinder-user')%>:<%=get_config('mysql-cinder-password')%>@<%=node['bcpc']['management']['vip']%>/<%=node['bcpc']['dbname']['cinder']%>
-sql_idle_timeout=3600
-
-# Rabbit message queue settings
-rabbit_host=<%=node['bcpc']['management']['vip']%>
-rabbit_password=<%=get_config('rabbitmq-password')%>
-rabbit_ha_queues=False
-rabbit_durable_queues=False
 
 # If using qpid...
 #rpc_backend=cinder.openstack.common.rpc.impl_qpid
@@ -40,7 +33,7 @@ rabbit_durable_queues=False
 # Other service endpoints
 glance_api_servers=<%=node['bcpc']['protocol']['glance']%>://<%=node['bcpc']['management']['vip']%>:9292
 glance_api_insecure=True
-glance_api_version=2
+glance_api_version=1
 
 # Volume driver settings for RBD
 enabled_backends=<%= node['bcpc']['ceph']['enabled_pools'].map {|type| type.upcase}.join(",") %>
@@ -49,20 +42,37 @@ enabled_backends=<%= node['bcpc']['ceph']['enabled_pools'].map {|type| type.upca
 #control_exchange = cinder
 #notification_driver = cinder.openstack.common.notifier.rpc_notifier
 
+[oslo_messaging_rabbit]
+# Rabbit message queue settings
+#rabbit_host=<%=node['bcpc']['management']['vip']%>
+rabbit_hosts=<%=@servers.map{|x| x['bcpc']['management']['ip'] + ":5672"}.shuffle(random: @rabbit_hosts_shuffle_rng).join(',')%>
+rabbit_password=<%=get_config('rabbitmq-password')%>
+rabbit_ha_queues=True
+amqp_durable_queues=True
+
+[oslo_concurrency]
+lock_path=/var/lock/cinder
+
+[database]
+# MySQL Connection
+connection=mysql://<%=get_config('mysql-cinder-user')%>:<%=get_config('mysql-cinder-password')%>@<%=node['bcpc']['management']['vip']%>/<%=node['bcpc']['dbname']['cinder']%>
+idle_timeout=3600
+
 [ssl]
 ca_file = /etc/ssl/certs/ssl-bcpc.pem
 
 [keystone_authtoken]
 cafile = /etc/ssl/certs/ssl-bcpc.pem
 auth_uri = <%=node['bcpc']['protocol']['keystone']%>://<%=node['bcpc']['management']['vip']%>:5000/v2.0/
-auth_host = <%=node['bcpc']['management']['vip']%>
-auth_port = 35357
-auth_protocol = <%=node['bcpc']['protocol']['keystone']%>
+#auth_host = <%=node['bcpc']['management']['vip']%>
+#auth_port = 35357
+#auth_protocol = <%=node['bcpc']['protocol']['keystone']%>
+identity_uri = <%=node['bcpc']['protocol']['keystone']%>://<%=node['bcpc']['management']['vip']%>:35357
 auth_version = v2.0
 admin_tenant_name = <%=node['bcpc']['admin_tenant']%>
 admin_user = <%=get_config('keystone-admin-user')%>
 admin_password = <%=get_config('keystone-admin-password')%>
-admin_token = <%=get_config('keystone-admin-token')%>
+#admin_token = <%=get_config('keystone-admin-token')%>
 signing_dir = /var/lib/cinder
 
 <% node['bcpc']['ceph']['enabled_pools'].each do |type| -%>

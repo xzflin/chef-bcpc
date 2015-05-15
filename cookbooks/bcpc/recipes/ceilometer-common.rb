@@ -34,4 +34,8 @@ template "/etc/ceilometer/ceilometer.conf" do
     owner "ceilometer"
     group "ceilometer"
     mode 00600
+    variables({
+      :servers => get_head_nodes,
+      :rabbit_hosts_shuffle_rng => Random.new(IPAddr.new(node['bcpc']['management']['ip']).to_i),
+    })
 end

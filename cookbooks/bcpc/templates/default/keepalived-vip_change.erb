@@ -26,6 +26,6 @@ service zabbix-agent restart
 service pdns restart
 
 # Restart the openstack services that connect to the VIP
-for i in keystone glance-api glance-registry cinder-api cinder-scheduler cinder-volume nova-api nova-cert nova-compute nova-conductor nova-consoleauth nova-network nova-novncproxy nova-scheduler; do
+for i in apache2 glance-api glance-registry cinder-api cinder-scheduler cinder-volume nova-api nova-cert nova-compute nova-conductor nova-consoleauth nova-network nova-novncproxy nova-scheduler; do
 	service $i restart
 done

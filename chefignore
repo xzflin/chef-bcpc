@@ -8,8 +8,8 @@
 *.sw[a-z]
 
 # Binary files from build_bins.sh
-#cookbooks/bcpc/files/default/bins/**
-*chef-server.deb
-*chef-client.deb
 *.box
 *.vdi
+*/chef-client-bootstrap.deb
+*/chef-server.deb
+*/chef-client.deb

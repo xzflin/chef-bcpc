@@ -21,6 +21,7 @@
 
 # This recipe installs OS packages which are required by all node types.
 
+package 'patch'
 package 'sshpass'  # GitHub #112 -- required for nodessh.sh 
 
 # Remove spurious logging failures from this package

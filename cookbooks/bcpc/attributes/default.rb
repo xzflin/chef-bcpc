@@ -7,7 +7,7 @@ default['bcpc']['country'] = "US"
 default['bcpc']['state'] = "NY"
 default['bcpc']['location'] = "New York"
 default['bcpc']['organization'] = "Bloomberg"
-default['bcpc']['openstack_release'] = "icehouse"
+default['bcpc']['openstack_release'] = "kilo"
 # Can be "updates" or "proposed"
 default['bcpc']['openstack_branch'] = "proposed"
 # Should be kvm (or qemu if testing in VMs that don't support VT-x)
@@ -22,6 +22,18 @@ default['bcpc']['region_name'] = node.chef_environment
 default['bcpc']['domain_name'] = "bcpc.example.com"
 # Key if Cobalt+VMS is to be used
 default['bcpc']['vms_key'] = nil
+
+###########################################
+#
+# Package versions
+#
+###########################################
+default['bcpc']['elasticsearch']['version'] = '1.5.1'
+default['bcpc']['ceph']['version'] = '0.80.9-0ubuntu0.14.04.2'
+default['bcpc']['erlang']['version'] = '1:17.5'
+default['bcpc']['haproxy']['version'] = '1.5.12-1ppa1~trusty'
+default['bcpc']['kibana']['version'] = '4.0.2'
+default['bcpc']['rabbitmq']['version'] = '3.5.2-1'
 
 ###########################################
 #
@@ -52,10 +64,6 @@ default['bcpc']['enabled']['radosgw_cache'] = false
 default['bcpc']['enabled']['tpm'] = false
 # This will block VMs from talking to the management network
 default['bcpc']['enabled']['secure_fixed_networks'] = true
-
-# This can be either 'sql' or 'ldap' to either store identities
-# in the mysql DB or the LDAP server
-default['bcpc']['keystone']['backend'] = 'ldap'
 
 # If radosgw_cache is enabled, default to 20MB max file size
 default['bcpc']['radosgw']['cache_max_file_size'] = 20000000
@@ -160,20 +168,17 @@ default['bcpc']['dns_servers'] = ["8.8.8.8", "8.8.4.4"]
 #  Repos for things we rely on
 #
 ###########################################
-default['bcpc']['repos']['ceph'] = "http://www.ceph.com/debian-firefly"
-default['bcpc']['repos']['ceph-extras'] = "http://www.ceph.com/packages/ceph-extras/debian"
-default['bcpc']['repos']['ceph-el6-x86_64'] = "http://ceph.com/rpm-dumpling/el6/x86_64"
-default['bcpc']['repos']['ceph-el6-noarch'] = "http://ceph.com/rpm-dumpling/el6/noarch"
 default['bcpc']['repos']['rabbitmq'] = "http://www.rabbitmq.com/debian"
 default['bcpc']['repos']['mysql'] = "http://repo.percona.com/apt"
 default['bcpc']['repos']['haproxy'] = "http://ppa.launchpad.net/vbernat/haproxy-1.5/ubuntu"
 default['bcpc']['repos']['openstack'] = "http://ubuntu-cloud.archive.canonical.com/ubuntu"
 default['bcpc']['repos']['hwraid'] = "http://hwraid.le-vert.net/ubuntu"
+# there is no trusty repo for fluentd from this provider
+#default['bcpc']['repos']['fluentd'] = "http://packages.treasure-data.com/#{node['lsb']['codename']}"
 default['bcpc']['repos']['fluentd'] = "http://packages.treasure-data.com/precise"
-default['bcpc']['repos']['ceph-apache'] = "http://gitbuilder.ceph.com/apache2-deb-precise-x86_64-basic/ref/master"
-default['bcpc']['repos']['ceph-fcgi'] = "http://gitbuilder.ceph.com/libapache-mod-fastcgi-deb-precise-x86_64-basic/ref/master"
 default['bcpc']['repos']['gridcentric'] = "http://downloads.gridcentric.com/packages/%s/%s/ubuntu"
 default['bcpc']['repos']['elasticsearch'] = "http://packages.elasticsearch.org/elasticsearch/1.5/debian"
+default['bcpc']['repos']['erlang'] = "http://packages.erlang-solutions.com/ubuntu"
 
 ###########################################
 #
@@ -188,9 +193,9 @@ default['bcpc']['repos']['elasticsearch'] = "http://packages.elasticsearch.org/e
 # For a complete list of Ubuntu mirrors, please see:
 # https://launchpad.net/ubuntu/+archivemirrors
 default['bcpc']['mirror']['ubuntu'] = "us.archive.ubuntu.com/ubuntu"
-default['bcpc']['mirror']['ubuntu-dist'] = ['precise']
+default['bcpc']['mirror']['ubuntu-dist'] = ['trusty']
 default['bcpc']['mirror']['ceph-dist'] = ['firefly']
-default['bcpc']['mirror']['os-dist'] = ['icehouse']
+default['bcpc']['mirror']['os-dist'] = ['kilo']
 default['bcpc']['mirror']['elasticsearch-dist'] = '1.5'
 
 ###########################################
@@ -222,6 +227,9 @@ default['bcpc']['ports']['apache']['radosgw_https'] = 443
 default['bcpc']['ports']['haproxy']['radosgw'] = 80
 default['bcpc']['ports']['haproxy']['radosgw_https'] = 443
 
+default['bcpc']['ports']['389ds']['local'] = 4389
+default['bcpc']['ports']['389ds']['floating'] = 389
+
 # Can be set to 'http' or 'https'
 default['bcpc']['protocol']['keystone'] = "https"
 default['bcpc']['protocol']['glance'] = "https"
@@ -229,9 +237,24 @@ default['bcpc']['protocol']['nova'] = "https"
 default['bcpc']['protocol']['cinder'] = "https"
 default['bcpc']['protocol']['heat'] = "https"
 
-# Hour for the cron job to run keystone_token_cleaner script which
-# runs `keystone-manage token_flush` to clean out stale tokens
-default['bcpc']['keystone_token_clean_hour'] = "2"
+###########################################
+#
+#  Keystone Settings
+#
+###########################################
+#
+# Eventlet server is deprecated in Kilo, so by default we
+# serve Keystone via Apache now.
+default['bcpc']['keystone']['eventlet_server'] = false
+# Turn caching via memcached on or off.
+default['bcpc']['keystone']['enable_caching'] = true
+# Enable debug logging (also caching debug logging).
+default['bcpc']['keystone']['debug'] = false
+# Enable verbose logging.
+default['bcpc']['keystone']['verbose'] = false
+# This can be either 'sql' or 'ldap' to either store identities
+# in the mysql DB or the LDAP server
+default['bcpc']['keystone']['backend'] = 'ldap'
 
 ###########################################
 #
@@ -291,27 +314,28 @@ default['bcpc']['cpupower']['governor'] = "ondemand"
 
 ###########################################
 #
-# Elasticsearch settings
-#
-###########################################
-#
-# Package version to pin to
-default['bcpc']['elasticsearch']['version'] = '1.5.1'
-
-###########################################
-#
-# Kibana settings
-#
-###########################################
-#
-# Package version to pin to
-default['bcpc']['kibana']['version'] = '4.0.2'
-
-###########################################
-#
 # Graphite settings
 #
 ###########################################
+#
+# Default retention rates
+# http://graphite.readthedocs.org/en/latest/config-carbon.html#storage-schemas-conf
+default['bcpc']['graphite']['retention'] = '60s:1d'
+#
+###########################################
+#
+# defaults for the bcpc.bootstrap settings
+#
+###########################################
+#
+# A value of nil means to let the Ubuntu installer work it out - it
+# will try to find the nearest one. However the selected mirror is
+# often slow.
+default['bcpc']['bootstrap']['mirror'] = nil
+#
+# if you do specify a mirror, you can adjust the file path that comes
+# after the hostname in the URL here
+default['bcpc']['bootstrap']['mirror_path'] = "/ubuntu"
 #
 # Default retention rates
 # http://graphite.readthedocs.org/en/latest/config-carbon.html#storage-schemas-conf

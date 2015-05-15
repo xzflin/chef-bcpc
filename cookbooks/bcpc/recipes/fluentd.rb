@@ -23,7 +23,8 @@ if node['bcpc']['enabled']['logging'] then
 
     apt_repository "fluentd" do
         uri node['bcpc']['repos']['fluentd']
-        distribution node['lsb']['codename']
+        #distribution node['lsb']['codename']
+        distribution "precise"
         components ["contrib"]
         key "fluentd.key"
     end

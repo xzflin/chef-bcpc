@@ -20,6 +20,7 @@ fi
 # Bootstrap VM Defaults (these need to be exported for Vagrant's Vagrantfile)
 export BOOTSTRAP_VM_MEM=1536
 export BOOTSTRAP_VM_CPUs=1
+export BOOTSTRAP_VM_VRAM=16
 # Use this if you intend to make an apt-mirror in this VM (see the
 # instructions on using an apt-mirror towards the end of bootstrap.md)
 # -- Vagrant VMs do not use this size --
@@ -28,9 +29,11 @@ export BOOTSTRAP_VM_CPUs=1
 # Cluster VM Defaults
 CLUSTER_VM_MEM=2560
 CLUSTER_VM_CPUs=2
+CLUSTER_VM_VRAM=16
 CLUSTER_VM_DRIVE_SIZE=20480
 
-VBOX_DIR="`dirname ${BASH_SOURCE[0]}`/vbox"
+BASE_DIR=`dirname ${BASH_SOURCE[0]}`
+VBOX_DIR="$BASE_DIR/vbox"
 P="$(cd $VBOX_DIR ; /bin/pwd)" || exit
 
 # from EVW packer branch
@@ -63,22 +66,22 @@ function download_VM_files {
       fi
   fi
 
-  ISO=ubuntu-12.04-mini.iso
+  ISO=ubuntu-14.04-mini.iso
 
-  # Grab the Ubuntu 12.04 installer image
+  # Grab the Ubuntu installer image
   if [[ ! -f  $ISO ]]; then
       if [[ -f $CACHEDIR/$ISO ]]; then
 	  cp $CACHEDIR/$ISO .
       else
-     #$CURL -o ubuntu-12.04-mini.iso http://archive.ubuntu.com/ubuntu/dists/precise/main/installer-amd64/current/images/netboot/mini.iso
-	  $CURL -o $ISO http://archive.ubuntu.com/ubuntu/dists/precise-updates/main/installer-amd64/current/images/raring-netboot/mini.iso
+	  #$CURL -o $ISO http://archive.ubuntu.com/ubuntu/dists/trusty/main/installer-amd64/current/images/netboot/mini.iso
+	  $CURL -o $ISO http://archive.ubuntu.com/ubuntu/dists/trusty-updates/main/installer-amd64/current/images/netboot/mini.iso
       fi
       if [[ -d $CACHEDIR && ! -f $CACHEDIR/$ISO ]]; then
 	  cp $ISO $CACHEDIR
       fi
   fi
 
-  BOX='precise-server-cloudimg-amd64-vagrant-disk1.box'
+  BOX='trusty-server-cloudimg-amd64-vagrant-disk1.box'
 
   # Can we create the bootstrap VM via Vagrant
   if hash vagrant 2> /dev/null ; then
@@ -87,7 +90,7 @@ function download_VM_files {
 	if [[ -f $CACHEDIR/$BOX ]]; then
 	    cp $CACHEDIR/$BOX .
 	else
-	    $CURL -o precise-server-cloudimg-amd64-vagrant-disk1.box http://cloud-images.ubuntu.com/vagrant/precise/current/precise-server-cloudimg-amd64-vagrant-disk1.box
+	    $CURL -o $BOX http://cloud-images.ubuntu.com/vagrant/trusty/current/$BOX
 	fi
 	if [[ -d $CACHEDIR && ! -f $CACHEDIR/$BOX ]]; then
 	    cp $BOX $CACHEDIR
@@ -215,6 +218,7 @@ function create_bootstrap_VM {
                 $VBM createvm --name $vm --ostype Ubuntu_64 --basefolder $P --register
                 $VBM modifyvm $vm --memory $BOOTSTRAP_VM_MEM
                 $VBM modifyvm $vm --cpus $BOOTSTRAP_VM_CPUs
+                $VBM modifyvm $vm --vram $BOOTSTRAP_VM_VRAM
                 $VBM storagectl $vm --name "SATA Controller" --add sata
                 $VBM storagectl $vm --name "IDE Controller" --add ide
                 # Create a number of hard disks
@@ -224,8 +228,8 @@ function create_bootstrap_VM {
                     $VBM storageattach $vm --storagectl "SATA Controller" --device 0 --port $port --type hdd --medium $P/$vm/$vm-$disk.vdi
                     port=$((port+1))
                 done
-                # Add the bootable mini ISO for installing Ubuntu 12.04
-                $VBM storageattach $vm --storagectl "IDE Controller" --device 0 --port 0 --type dvddrive --medium ubuntu-12.04-mini.iso
+                # Add the bootable mini ISO for installing Ubuntu ISO
+                $VBM storageattach $vm --storagectl "IDE Controller" --device 0 --port 0 --type dvddrive --medium $ISO
                 $VBM modifyvm $vm --boot1 disk
             fi
             # Add the network interfaces
@@ -259,6 +263,7 @@ function create_cluster_VMs {
           $VBM createvm --name $vm --ostype Ubuntu_64 --basefolder $P --register
           $VBM modifyvm $vm --memory $CLUSTER_VM_MEM
           $VBM modifyvm $vm --cpus $CLUSTER_VM_CPUs
+          $VBM modifyvm $vm --vram $CLUSTER_VM_VRAM
           $VBM storagectl $vm --name "SATA Controller" --add sata
           # Create a number of hard disks
           port=0
@@ -284,7 +289,6 @@ environment=${1-Test-Laptop}
 ip=${2-10.0.100.3}
   # VMs are now created - if we are using Vagrant, finish the install process.
   if hash vagrant 2> /dev/null ; then
-    pushd $P
     # N.B. As of Aug 2013, grub-pc gets confused and wants to prompt re: 3-way
     # merge.  Sigh.
     #vagrant ssh -c "sudo ucf -p /etc/default/grub"
@@ -295,14 +299,38 @@ ip=${2-10.0.100.3}
       if ! vagrant ssh -c "grep -z Acquire::http::Proxy /etc/apt/apt.conf"; then
         vagrant ssh -c "echo 'Acquire::http::Proxy \"$http_proxy\";' | sudo tee -a /etc/apt/apt.conf"
       fi
+
+      # write the proxy to a known absolute location on the filesystem so that it can be sourced by build_bins.sh (and maybe other things)
+      PROXY_INFO_SH="/home/vagrant/proxy_info.sh"
+      if ! vagrant ssh -c "test -f $PROXY_INFO_SH"; then
+        vagrant ssh -c "echo -e 'export http_proxy=$http_proxy\nexport https_proxy=$https_proxy' | sudo tee -a $PROXY_INFO_SH"
+       fi
+      CURLRC="/home/vagrant/.curlrc"
+      if ! vagrant ssh -c "test -f $CURLRC"; then
+        vagrant ssh -c "echo -e 'proxy = $http_proxy' | sudo tee -a $CURLRC"
+      fi
+      GITCONFIG="/home/vagrant/.gitconfig"
+      if ! vagrant ssh -c "test -f $GITCONFIG"; then
+        vagrant ssh -c "echo -e '[http]\nproxy = $http_proxy' | sudo tee -a $GITCONFIG"
+      fi
+
+      # copy any additional provided CA root certificates to the system store
+      # note that these certificates must follow the restrictions of update-ca-certificates (i.e., end in .crt and be PEM)
+      CUSTOM_BASE="custom"
+      CUSTOM_CA_DIR="/usr/share/ca-certificates/$CUSTOM_BASE"
+      for CERT in $(ls -1 $BASE_DIR/cacerts); do
+        vagrant ssh -c "sudo mkdir -p $CUSTOM_CA_DIR"
+        vagrant ssh -c "if [[ ! -f $CUSTOM_CA_DIR/$CERT ]]; then sudo cp /chef-bcpc-host/cacerts/$CERT $CUSTOM_CA_DIR/$CERT; fi"
+        vagrant ssh -c "echo $CUSTOM_BASE/$CERT | sudo tee -a /etc/ca-certificates.conf"
+      done
+      vagrant ssh -c "sudo /usr/sbin/update-ca-certificates"
     fi
-    popd
     echo "Bootstrap complete - setting up Chef server"
     echo "N.B. This may take approximately 30-45 minutes to complete."
     ./bootstrap_chef.sh --vagrant-remote $ip $environment
     ./enroll_cobbler.sh
   else
-      ./non_vagrant_boot.sh
+    ./non_vagrant_boot.sh
   fi
 }
 

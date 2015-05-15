@@ -46,26 +46,35 @@ end
     end
 end
 
-cookbook_file "/tmp/nova-libvirt.patch" do
-    source "nova-libvirt.patch"
+#  _   _  ____ _  __   __  ____   _  _____ ____ _   _
+# | | | |/ ___| | \ \ / / |  _ \ / \|_   _/ ___| | | |
+# | | | | |  _| |  \ V /  | |_) / _ \ | || |   | |_| |
+# | |_| | |_| | |___| |   |  __/ ___ \| || |___|  _  |
+#  \___/ \____|_____|_|   |_| /_/   \_\_| \____|_| |_|
+
+# this patch modifies cpuset behavior to allow launching instances on VirtualBox by
+# creating all libvirt domains on the last CPU core
+# DO NOT USE THIS IN PRODUCTION AND GET RID OF THIS AS SOON AS IT'S FIXED UPSTREAM
+cookbook_file "/tmp/nova-single-cpu.patch" do
+    source "nova-single-cpu.patch"
     owner "root"
     mode 00644
 end
 
-if node['bcpc']['nova']['live_migration_patch'] then
-    bash "patch-for-nova-live-migration" do
+if node['bcpc']['nova']['nova_single_cpu'] then
+    bash "patch-for-nova-single-cpu" do
        user "root"
        code <<-EOH
            cd /usr/lib/python2.7/dist-packages/nova
-           patch -p2 < /tmp/nova-libvirt.patch
+           patch -p1 < /tmp/nova-single-cpu.patch
            rv=$?
            if [ $rv -ne 0 ]; then
              echo "Error applying patch ($rv) - aborting!"
              exit $rv
            fi
-           cp /tmp/nova-libvirt.patch .
+           cp /tmp/nova-single-cpu.patch .
        EOH
-       not_if "test -f /usr/lib/python2.7/dist-packages/nova/nova-libvirt.patch"
+       not_if "test -f /usr/lib/python2.7/dist-packages/nova/nova-single-cpu.patch"
        notifies :restart, "service[nova-compute]", :immediately
     end
 end
@@ -119,24 +128,12 @@ template "/var/lib/nova/.ssh/config" do
     mode 00600
 end
 
-bash "enable-defaults-libvirt-bin" do
-    user "root"
-    code <<-EOH
-        sed --in-place '/^libvirtd_opts=/d' /etc/default/libvirt-bin
-        echo 'libvirtd_opts=\"-d -l\"' >> /etc/default/libvirt-bin
-    EOH
-    not_if "grep -e '^libvirtd_opts=\"-d -l\"' /etc/default/libvirt-bin"
-    notifies :restart, "service[libvirt-bin]", :delayed
-end
-
-bash "set-libvirt-bin-ulimit" do
-    user "root"
-    code <<-EOH
-        sed --in-place '/^ulimit/d' /etc/default/libvirt-bin
-        echo "ulimit -n #{node['bcpc']['libvirt-bin']['ulimit']['nofile']}" >> /etc/default/libvirt-bin
-    EOH
-    not_if "grep -e \"^ulimit -n #{node['bcpc']['libvirt-bin']['ulimit']['nofile']}$\" /etc/default/libvirt-bin"
-    notifies :restart, "service[libvirt-bin]", :delayed
+template "/etc/default/libvirt-bin" do
+  source "libvirt-bin-default.erb"
+  owner "root"
+  group "root"
+  mode 00644
+  notifies :restart, "service[libvirt-bin]", :delayed
 end
 
 template "/etc/libvirt/libvirtd.conf" do
@@ -149,6 +146,7 @@ end
 
 service "libvirt-bin" do
     action [:enable, :start]
+    restart_command "/etc/init.d/libvirt-bin restart"
 end
 
 template "/etc/nova/virsh-secret.xml" do
@@ -231,48 +229,6 @@ cron "restart-nova-kludge" do
   action :create
   command "/usr/local/bin/nova-service-restart-wrapper"
   minute '*/5'   # run this every 5 mins
-end
-
-cookbook_file "/tmp/metadata.patch" do
-    source "metadata.patch"
-    owner "root"
-    mode 0644
-end
-
-bash "patch-for-ip-hostnames-metadata" do
-    user "root"
-    code <<-EOH
-        cd /usr/lib/python2.7/dist-packages/nova/api/metadata/
-        patch < /tmp/metadata.patch
-        rv=$?
-        if [ $rv -ne 0 ]; then
-          echo "Error applying patch ($rv) - aborting!"
-          exit $rv
-        fi
-        cp /tmp/metadata.patch .
-    EOH
-    not_if "test -f /usr/lib/python2.7/dist-packages/nova/api/metadata/metadata.patch"
-end
-
-cookbook_file "/tmp/linux-net.patch" do
-    source "linux-net.patch"
-    owner "root"
-    mode 0644
-end
-
-bash "patch-for-ip-hostnames-networking" do
-    user "root"
-    code <<-EOH
-        cd /usr/lib/python2.7/dist-packages/nova/network/
-        patch < /tmp/linux-net.patch
-        rv=$?
-        if [ $rv -ne 0 ]; then
-          echo "Error applying patch ($rv) - aborting!"
-          exit $rv
-        fi
-        cp /tmp/linux-net.patch .
-    EOH
-    not_if "test -f /usr/lib/python2.7/dist-packages/nova/network/linux-net.patch"
 end
 
 include_recipe "bcpc::cobalt"

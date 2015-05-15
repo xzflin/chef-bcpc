@@ -24,7 +24,8 @@
 include_recipe "bcpc::apache2"
 
 package "radosgw" do
-    action :upgrade
+    action :install
+    version node['bcpc']['ceph']['version']
 end
 
 package "python-boto"
@@ -86,7 +87,7 @@ end
     bash "update-rgw-buckets-#{pg}" do
         user "root"
         code "ceph osd pool set .rgw.buckets #{pg} #{rgw_optimal_pg}"
-        not_if "((`ceph osd pool get .rgw.buckets #{pg} | awk '{print $2}'` >= #{rgw_optimal_pg}))"
+        only_if { %x[ceph osd pool get .rgw.buckets #{pg} | awk '{print $2}'].to_i < rgw_optimal_pg }
         notifies :run, "bash[wait-for-pgs-creating]", :immediately
     end
 end
@@ -99,7 +100,7 @@ file "/var/www/s3gw.fcgi" do
     notifies :restart, "service[radosgw-all]", :immediately
 end
 
-template "/etc/apache2/sites-available/radosgw" do
+template "/etc/apache2/sites-available/radosgw.conf" do
     source "apache-radosgw.conf.erb"
     owner "root"
     group "root"

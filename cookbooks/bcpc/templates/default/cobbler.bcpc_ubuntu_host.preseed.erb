@@ -69,9 +69,6 @@ d-i     mirror/http/proxy string <%= @node['bcpc']['bootstrap']['proxy'] %>
 <% if @node['bcpc']['bootstrap']['mirror'].nil? %>
 d-i     apt-setup/security_host string security.ubuntu.com
 d-i     apt-setup/security_path string /ubuntu
-d-i     apt-setup/local0/comment string OpsCode Repo
-d-i     apt-setup/local0/repository string \
-          deb http://apt.opscode.com/chef precise-0.10 main
 <% else %>
 d-i     mirror/country string manual
 d-i     mirror/http/hostname string    <%= @node['bcpc']['bootstrap']['mirror'] %>
@@ -109,4 +106,5 @@ d-i     preseed/late_command string true && \
         wget "http://$http_server:$http_port/cblr/svc/op/nopxe/system/$system_name" -O /dev/null ;\
         in-target env no_proxy=$http_server wget "http://$http_server:$http_port/cobbler/pub/scripts/get-ssh-keys" -O /root/get-ssh-keys ;\
         in-target chmod 0755 /root/get-ssh-keys ; in-target install -d -m0600 /root/.ssh ;\
-        in-target env no_proxy=$http_server /root/get-ssh-keys root -o /root/.ssh/authorized_keys
+        in-target env no_proxy=$http_server /root/get-ssh-keys root -o /root/.ssh/authorized_keys ;\
+        echo -e "\n<%=@bootstrap_node['bcpc']['bootstrap'] && @bootstrap_node['bcpc']['bootstrap']['server']%>\t<%=@bootstrap_node['fqdn']%>\n" >> /target/etc/hosts

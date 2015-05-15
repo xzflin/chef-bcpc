@@ -27,6 +27,13 @@ ruby_block "initialize-rabbitmq-config" do
     end
 end
 
+apt_repository "erlang" do
+    uri node['bcpc']['repos']['erlang']
+    distribution node['lsb']['codename']
+    components ["contrib"]
+    key "erlang.key"
+end
+
 apt_repository "rabbitmq" do
     uri node['bcpc']['repos']['rabbitmq']
     distribution 'testing'
@@ -34,8 +41,42 @@ apt_repository "rabbitmq" do
     key "rabbitmq.key"
 end
 
+%w{erlang-asn1
+   erlang-base
+   erlang-corba
+   erlang-crypto
+   erlang-diameter
+   erlang-edoc
+   erlang-eldap
+   erlang-erl-docgen
+   erlang-eunit
+   erlang-ic
+   erlang-inets
+   erlang-inviso
+   erlang-mnesia
+   erlang-nox
+   erlang-odbc
+   erlang-os-mon
+   erlang-parsetools
+   erlang-percept
+   erlang-public-key
+   erlang-runtime-tools
+   erlang-snmp
+   erlang-ssh
+   erlang-ssl
+   erlang-syntax-tools
+   erlang-tools
+   erlang-webtool
+   erlang-xmerl}.each do |erlang_package|
+  package erlang_package do
+    action :install
+    version node['bcpc']['erlang']['version']
+  end
+end
+
 package "rabbitmq-server" do
-    action :upgrade
+    action :install
+    version node['bcpc']['rabbitmq']['version']
     notifies :stop, "service[rabbitmq-server]", :immediately
 end
 
@@ -114,7 +155,7 @@ end
 bash "set-rabbitmq-ha-policy" do
     min_quorum = get_head_nodes.length/2 + 1
     code <<-EOH
-        rabbitmqctl set_policy HA '^(?!(amq\.|[a-f0-9]{32})).*' '{"ha-mode": "exactly", "ha-params": #{min_quorum}}'
+        rabbitmqctl set_policy HA '^(?!(amq\.|[a-f0-9]{32})).*' '{"ha-mode": "all"}'
     EOH
 end
 
@@ -125,10 +166,6 @@ template "/usr/local/bin/rabbitmqcheck" do
     group "root"
 end
 
-package "xinetd" do
-    action :upgrade
-end
-
 bash "add-amqpchk-to-etc-services" do
     user "root"
     code <<-EOH
@@ -137,16 +174,14 @@ bash "add-amqpchk-to-etc-services" do
     not_if "grep amqpchk /etc/services"
 end
 
+include_recipe "bcpc::xinetd"
+
 template "/etc/xinetd.d/amqpchk" do
     source "xinetd-amqpchk.erb"
     owner "root"
     group "root"
     mode 00440
     notifies :restart, "service[xinetd]", :immediately
-end
-
-service "xinetd" do
-    action [:enable, :start]
 end
 
 ruby_block "reap-dead-rabbitmq-servers" do

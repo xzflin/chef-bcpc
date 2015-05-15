@@ -1,0 +1,16 @@
+#!/opt/chef/embedded/bin/ruby
+#!/usr/bin/env ruby
+#
+# Gets the root key from chef data bag
+
+require 'chef'
+
+env = case ARGV[0]
+        when nil then 'Test-Laptop'
+        else ARGV[0]
+      end
+
+Chef::Config.from_file("#{ENV['HOME']}/chef-bcpc/.chef/knife.rb")
+item = Chef::DataBagItem.load('configs',env)
+exit! 1 if item['ssh-private-key'].nil?
+puts item['ssh-private-key']

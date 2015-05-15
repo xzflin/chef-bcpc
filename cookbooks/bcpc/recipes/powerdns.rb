@@ -216,14 +216,16 @@ end
     end
   end
 
-  # this file is added by the pdns-server package and will conflict with
+  # these files are added by the pdns-server package and will conflict with
   # our config file
-  file "/etc/powerdns/pdns.d/pdns.local.gmysql.conf" do
-    action :delete
-    notifies :restart, "service[pdns]", :delayed
+  %w{/etc/powerdns/bindbackend.conf /etc/powerdns/pdns.d/pdns.local.gmysql /etc/powerdns/pdns.d/pdns.local.conf /etc/powerdns/pdns.d/pdns.simplebind.conf}.each do |pdns_file|
+    file pdns_file do
+      action :delete
+      notifies :restart, "service[pdns]", :delayed
+    end
   end
 
-  template "/etc/powerdns/pdns.d/pdns.local.gmysql" do
+  template "/etc/powerdns/pdns.d/pdns.local.gmysql.conf" do
     source "pdns.local.gmysql.erb"
     owner "pdns"
     group "root"

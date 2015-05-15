@@ -1,8 +1,7 @@
-#
 # Cookbook Name:: bcpc
-# Recipe:: mysql-packages
+# Recipe:: xinetd
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,16 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-include_recipe "bcpc::default"
-
-apt_repository "percona" do
-    uri node['bcpc']['repos']['mysql']
-    distribution node['lsb']['codename']
-    components ["main"]
-    key "percona-release.key"
+package "xinetd" do
+    action :upgrade
 end
 
-package "percona-xtradb-cluster-server" do
-    action :upgrade
+service "xinetd" do
+    action [:enable, :start]
+    provider Chef::Provider::Service::Init::Debian
+    supports :status => true, :restart => true
 end

@@ -28,4 +28,5 @@ template "/etc/haproxy/haproxy.cfg" do
         :all_servers => get_ceph_osd_nodes
     )
     notifies :restart, "service[haproxy]", :immediately
+    notifies :restart, "service[xinetd]", :immediately
 end

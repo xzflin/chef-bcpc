@@ -47,6 +47,10 @@ template "/etc/glance/glance-api.conf" do
     owner "glance"
     group "glance"
     mode 00600
+    variables({
+      :servers => get_head_nodes,
+      :rabbit_hosts_shuffle_rng => Random.new(IPAddr.new(node['bcpc']['management']['ip']).to_i),
+    })
     notifies :restart, "service[glance-api]", :delayed
     notifies :restart, "service[glance-registry]", :delayed
 end
@@ -127,7 +131,7 @@ end
         user "root"
         optimal = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['images']['replicas']*node['bcpc']['ceph']['images']['portion']/100)
         code "ceph osd pool set #{node['bcpc']['ceph']['images']['name']} #{pg} #{optimal}"
-        not_if "((`ceph osd pool get #{node['bcpc']['ceph']['images']['name']} #{pg} | awk '{print $2}'` >= #{optimal}))"
+        only_if { %x[ceph osd pool get #{node['bcpc']['ceph']['images']['name']} #{pg} | awk '{print $2}'].to_i < optimal }
         notifies :run, "bash[wait-for-pgs-creating]", :immediately
     end
 end
@@ -149,5 +153,5 @@ bash "glance-cirros-image" do
         qemu-img convert -f qcow2 -O raw /tmp/cirros-0.3.2-x86_64-disk.img /tmp/cirros-0.3.2-x86_64-disk.raw
         glance image-create --name='Cirros 0.3.2 x86_64' --is-public=True --container-format=bare --disk-format=raw --file /tmp/cirros-0.3.2-x86_64-disk.raw
     EOH
-    only_if ". /root/adminrc; glance image-show 'Cirros 0.3.2 x86_64' 2>&1 | grep -e '^No image'"
+    not_if ". /root/adminrc; glance image-list | grep 'Cirros 0.3.2 x86_64'"
 end

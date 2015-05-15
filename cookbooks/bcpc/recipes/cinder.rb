@@ -47,9 +47,13 @@ template "/etc/cinder/cinder.conf" do
     owner "cinder"
     group "cinder"
     mode 00600
-    notifies :restart, "service[cinder-api]", :delayed
-    notifies :restart, "service[cinder-volume]", :delayed
-    notifies :restart, "service[cinder-scheduler]", :delayed
+    variables({
+      :servers => get_head_nodes,
+      :rabbit_hosts_shuffle_rng => Random.new(IPAddr.new(node['bcpc']['management']['ip']).to_i),
+    })
+    notifies :restart, "service[cinder-api]", :immediately
+    notifies :restart, "service[cinder-volume]", :immediately
+    notifies :restart, "service[cinder-scheduler]", :immediately
 end
 
 ruby_block "cinder-database-creation" do
@@ -73,6 +77,12 @@ bash "cinder-database-sync" do
     notifies :restart, "service[cinder-api]", :immediately
     notifies :restart, "service[cinder-volume]", :immediately
     notifies :restart, "service[cinder-scheduler]", :immediately
+end
+
+# this is a synchronization resource that polls Cinder until it stops returning 503s
+bash "wait-for-cinder-to-become-operational" do
+    code ". /root/adminrc; until cinder list >/dev/null 2>&1; do sleep 1; done"
+    timeout 120
 end
 
 node['bcpc']['ceph']['enabled_pools'].each do |type|
@@ -102,7 +112,7 @@ node['bcpc']['ceph']['enabled_pools'].each do |type|
             user "root"
             optimal = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['volumes']['replicas']*node['bcpc']['ceph']['volumes']['portion']/100/node['bcpc']['ceph']['enabled_pools'].length)
             code "ceph osd pool set #{node['bcpc']['ceph']['volumes']['name']}-#{type} #{pg} #{optimal}"
-            not_if "((`ceph osd pool get #{node['bcpc']['ceph']['volumes']['name']}-#{type} #{pg} | awk '{print $2}'` >= #{optimal}))"
+            only_if { %x[ceph osd pool get #{node['bcpc']['ceph']['volumes']['name']}-#{type} #{pg} | awk '{print $2}'].to_i < optimal }
             notifies :run, "bash[wait-for-pgs-creating]", :immediately
         end
     end

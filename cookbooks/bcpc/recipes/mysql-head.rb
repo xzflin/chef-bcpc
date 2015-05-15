@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-include_recipe "bcpc::mysql-packages"
+include_recipe "bcpc::packages-mysql"
 
 ruby_block "initialize-mysql-config" do
     block do
@@ -54,7 +54,7 @@ template "/etc/mysql/debian.cnf" do
         :root_user_key => "mysql-root-user",
         :root_pass_key => "mysql-root-password"
     )
-    notifies :restart, "service[mysql]", :delayed
+    notifies :reload, "service[mysql]", :immediately
 end
 
 if node['bcpc']['mysql-head']['max_connections'] == 0 then

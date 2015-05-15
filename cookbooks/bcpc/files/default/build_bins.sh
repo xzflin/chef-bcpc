@@ -63,8 +63,16 @@ VER_KIBANA=4.0.2
 VER_DIAMOND=f33aa2f75c6ea2dfbbc659766fe581e5bfe2476d
 VER_ESPLUGIN=9c032b7c628d8da7745fbb1939dcd2db52629943
 
-if [[ -f ./proxy_setup.sh ]]; then
-  . ./proxy_setup.sh
+PROXY_INFO_FILE="/home/vagrant/proxy_info.sh"
+if [[ -f $PROXY_INFO_FILE ]]; then
+  . $PROXY_INFO_FILE
+fi
+
+# define calling gem with a proxy if necessary
+if [[ -z $http_proxy ]]; then
+    GEM_PROXY=""
+else
+    GEM_PROXY="-p $http_proxy"
 fi
 
 
@@ -99,16 +107,24 @@ mkdir -p $DIR/bins
 pushd $DIR/bins/
 
 # Install tools needed for packaging
-apt-get -y install git rubygems make pbuilder python-mock python-configobj python-support cdbs python-all-dev python-stdeb libmysqlclient-dev libldap2-dev
+apt-get -y install git ruby-dev make pbuilder python-mock python-configobj python-support cdbs python-all-dev python-stdeb libmysqlclient-dev libldap2-dev
 if [ -z `gem list --local fpm | grep fpm | cut -f1 -d" "` ]; then
-  gem install fpm --no-ri --no-rdoc
+  gem install $GEM_PROXY fpm --no-ri --no-rdoc
 fi
 
 # Fetch chef client and server debs
-CHEF_CLIENT_URL=https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/12.04/x86_64/chef_11.14.6-1_amd64.deb
-CHEF_SERVER_URL=https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/12.04/x86_64/chef-server_11.0.12-1.ubuntu.12.04_amd64.deb
+CHEF_CLIENT_URL=https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/13.04/x86_64/chef_12.2.1-1_amd64.deb
+CHEF_CLIENT_BOOTSTRAP_URL=$CHEF_CLIENT_URL
+#TODO: maybe unstable url...?
+# this URL requires curl -L because it will redirect
+CHEF_SERVER_URL=https://web-dl.packagecloud.io/chef/stable/packages/ubuntu/trusty/chef-server-core_12.0.7-1_amd64.deb
+
 if [ ! -f chef-client.deb ]; then
    ccurl  ${CHEF_CLIENT_URL} chef-client.deb
+fi
+
+if [ ! -f chef-client-bootstrap.deb ]; then
+   $CURL -o chef-client-bootstrap.deb ${CHEF_CLIENT_BOOTSTRAP_URL}
 fi
 
 if [ ! -f chef-server.deb ]; then
@@ -138,7 +154,7 @@ for i in elasticsearch tail-multiline tail-ex record-reformer rewrite; do
         else
             VERS=""
         fi
-        gem fetch fluent-plugin-${i} ${VERS}
+        gem fetch $GEM_PROXY fluent-plugin-${i} ${VERS}
         mv fluent-plugin-${i}-*.gem fluent-plugin-${i}.gem
     fi
     FILES="fluent-plugin-${i}.gem $FILES"
@@ -150,24 +166,22 @@ if [ ! -f cirros-0.3.2-x86_64-disk.img ]; then
 fi
 FILES="cirros-0.3.2-x86_64-disk.img $FILES"
 
-# Grab the Ubuntu 12.04 installer image
-if [ ! -f ubuntu-12.04-mini.iso ]; then
-    # Download this ISO to get the latest kernel/X LTS stack installer
-    #$CURL -o ubuntu-12.04-mini.iso http://archive.ubuntu.com/ubuntu/dists/precise-updates/main/installer-amd64/current/images/raring-netboot/mini.iso
-    ccurl  http://archive.ubuntu.com/ubuntu/dists/precise/main/installer-amd64/current/images/netboot/mini.iso ubuntu-12.04-mini.iso
+# Grab the Ubuntu 14.04 installer image
+if [ ! -f ubuntu-14.04-mini.iso ]; then
+    $CURL -o ubuntu-14.04-mini.iso http://archive.ubuntu.com/ubuntu/dists/trusty-updates/main/installer-amd64/current/images/netboot/mini.iso
 fi
-FILES="ubuntu-12.04-mini.iso $FILES"
+FILES="ubuntu-14.04-mini.iso $FILES"
 
-# Grab the CentOS 6 PXE boot images
-if [ ! -f centos-6-initrd.img ]; then
-    ccurl  http://mirror.net.cen.ct.gov/centos/6/os/x86_64/images/pxeboot/initrd.img centos-6-initrd.img
-fi
-FILES="centos-6-initrd.img $FILES"
-
-if [ ! -f centos-6-vmlinuz ]; then
-    ccurl  http://mirror.net.cen.ct.gov/centos/6/os/x86_64/images/pxeboot/vmlinuz centos-6-vmlinuz
-fi
-FILES="centos-6-vmlinuz $FILES"
+## Grab the CentOS 6 PXE boot images
+#if [ ! -f centos-6-initrd.img ]; then
+#    ccurl  http://mirror.net.cen.ct.gov/centos/6/os/x86_64/images/pxeboot/initrd.img centos-6-initrd.img
+#fi
+#FILES="centos-6-initrd.img $FILES"
+#
+#if [ ! -f centos-6-vmlinuz ]; then
+#    ccurl  http://mirror.net.cen.ct.gov/centos/6/os/x86_64/images/pxeboot/vmlinuz centos-6-vmlinuz
+#fi
+#FILES="centos-6-vmlinuz $FILES"
 
 # Make the diamond package
 if [ ! -f diamond.deb ]; then
@@ -238,11 +252,11 @@ if [ ! -f zabbix-agent.tar.gz ] || [ ! -f zabbix-server.tar.gz ]; then
 fi
 FILES="zabbix-agent.tar.gz zabbix-server.tar.gz $FILES"
 
-# Get some python libs 
-if [ ! -f python-requests-aws_0.1.5_all.deb ]; then
-    fpm -s python -t deb -v 0.1.5 requests-aws
-fi
-FILES="python-requests-aws_0.1.5_all.deb $FILES"
+## Get some python libs
+#if [ ! -f python-requests-aws_0.1.6_all.deb ]; then
+#    fpm -s python -t deb -v 0.1.6 requests-aws
+#fi
+#FILES="python-requests-aws_0.1.6_all.deb $FILES"
 
 
 popd

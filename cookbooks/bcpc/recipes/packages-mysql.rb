@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: bcpc
-# Recipe:: ceph-apt
+# Recipe:: packages-mysql
 #
 # Copyright 2013, Bloomberg Finance L.P.
 #
@@ -17,30 +17,15 @@
 # limitations under the License.
 #
 
-apt_repository "ceph" do
-    uri node['bcpc']['repos']['ceph']
+include_recipe "bcpc::default"
+
+apt_repository "percona" do
+    uri node['bcpc']['repos']['mysql']
     distribution node['lsb']['codename']
     components ["main"]
-    key "ceph-release.key"
+    key "percona-release.key"
 end
 
-apt_repository "ceph-extras" do
-    uri node['bcpc']['repos']['ceph-extras']
-    distribution node['lsb']['codename']
-    components ["main"]
-    key "ceph-release.key"
-end
-
-apt_repository "ceph-fcgi" do
-    uri node['bcpc']['repos']['ceph-fcgi']
-    distribution node['lsb']['codename']
-    components ["main"]
-    key "ceph-autobuild.key"
-end
-
-apt_repository "ceph-apache" do
-    uri node['bcpc']['repos']['ceph-apache']
-    distribution node['lsb']['codename']
-    components ["main"]
-    key "ceph-autobuild.key"
+package "percona-xtradb-cluster-56" do
+    action :upgrade
 end

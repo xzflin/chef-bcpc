@@ -31,11 +31,6 @@ defaults
   timeout client 30m
   timeout server 30m
 
-listen memcached <%=node['bcpc']['management']['vip']%>:11211
-  mode tcp
-  option tcpka
-  server myself 127.0.0.1:11211
-
 listen mysql-galera <%=node['bcpc']['management']['vip']%>:3306
   timeout client 24h
   timeout server 24h
@@ -48,19 +43,7 @@ listen mysql-galera <%=node['bcpc']['management']['vip']%>:3306
   <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:3306 check port 3307 inter 5s rise 1 fall 1 observe layer4 backup" %>
 <% end -%>
 
-listen rabbitmq-amqp <%=node['bcpc']['management']['vip']%>:5672
-  timeout client 24h
-  timeout server 24h
-  mode tcp
-  balance leastconn
-  option tcplog
-  option tcpka
-  option httpchk
-<% @servers.each do |server| -%>
-  <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:5672 check port 5673 inter 5s rise 1 fall 1 observe layer4" %>
-<% end -%>
-
-listen ldap-389ds <%=node['bcpc']['management']['vip']%>:389
+listen ldap-389ds <%=node['bcpc']['management']['vip']%>:<%=node['bcpc']['ports']['389ds']['floating']%>
   timeout client 1h
   timeout server 1h
   mode tcp
@@ -68,7 +51,7 @@ listen ldap-389ds <%=node['bcpc']['management']['vip']%>:389
   option tcplog
   option tcpka
 <% @servers.each do |server| -%>
-  <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:389 check inter 5s rise 1 fall 1 observe layer4" %>
+  <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:#{server['bcpc']['ports']['389ds']['local']} check inter 5s rise 1 fall 1 observe layer4" %>
 <% end -%>
 
 listen keystone-api
