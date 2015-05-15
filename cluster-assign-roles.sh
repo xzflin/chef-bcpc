@@ -63,7 +63,8 @@ for HEAD in $HEADS; do
     echo $PASSWD | sudo knife bootstrap -E $ENVIRONMENT $HEAD -x ubuntu  -P $PASSWD --sudo
     IDX=`echo $HEAD | tr '.' '-'`
     FQDN=${FQDNS["$IDX"]}
-    ./make-admin.sh $FQDN
+    knife actor map
+    knife group add actor admins $FQDN
     knife node run_list add $FQDN 'role[BCPC-Headnode]'
     SSHCMD="./nodessh.sh $ENVIRONMENT $HEAD"
     $SSHCMD "/home/ubuntu/finish-head.sh" sudo  

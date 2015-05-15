@@ -1,8 +1,8 @@
 #
 # Cookbook Name:: bcpc
-# Recipe:: mysql-packages
+# Recipe:: packages-openstack
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,15 +17,13 @@
 # limitations under the License.
 #
 
-include_recipe "bcpc::default"
-
-apt_repository "percona" do
-    uri node['bcpc']['repos']['mysql']
-    distribution node['lsb']['codename']
-    components ["main"]
-    key "percona-release.key"
+package "ubuntu-cloud-keyring" do
+  action :upgrade
 end
 
-package "percona-xtradb-cluster-56" do
-    action :upgrade
+apt_repository "openstack" do
+  uri node['bcpc']['repos']['openstack']
+  distribution "#{node['lsb']['codename']}-#{node['bcpc']['openstack_branch']}/#{node['bcpc']['openstack_release']}"
+  components ["main"]
+  key "ubuntu-cloud.key"
 end

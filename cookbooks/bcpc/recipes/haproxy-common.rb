@@ -34,7 +34,8 @@ apt_repository "haproxy" do
 end
 
 package "haproxy" do
-    action :upgrade
+    action :install
+    version node['bcpc']['haproxy']['version']
 end
 
 bash "enable-defaults-haproxy" do

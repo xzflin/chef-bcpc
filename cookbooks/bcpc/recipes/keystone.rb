@@ -19,6 +19,7 @@
 
 include_recipe "bcpc::mysql-head"
 include_recipe "bcpc::openstack"
+include_recipe "bcpc::apache2"
 
 ruby_block "initialize-keystone-config" do
     block do
@@ -38,10 +39,13 @@ ruby_block "initialize-keystone-config" do
     end
 end
 
-%w{keystone memcached}.each do |pkg|
-    package pkg do
-        action :upgrade
-    end
+package 'keystone' do
+    action :upgrade
+end
+
+# do not run or try to start standalone keystone service since it is now served by WSGI
+service "keystone" do
+    action [:disable, :stop]
 end
 
 template "/etc/keystone/keystone.conf" do
@@ -49,7 +53,11 @@ template "/etc/keystone/keystone.conf" do
     owner "keystone"
     group "keystone"
     mode 00600
-    notifies :restart, "service[keystone]", :delayed
+    variables({
+      :servers => get_head_nodes,
+      :rabbit_hosts_shuffle_rng => Random.new(IPAddr.new(node['bcpc']['management']['ip']).to_i),
+    })
+    notifies :restart, "service[apache2]", :delayed
 end
 
 template "/etc/keystone/default_catalog.templates" do
@@ -57,7 +65,7 @@ template "/etc/keystone/default_catalog.templates" do
     owner "keystone"
     group "keystone"
     mode 00644
-    notifies :restart, "service[keystone]", :delayed
+    notifies :restart, "service[apache2]", :delayed
 end
 
 template "/etc/keystone/cert.pem" do
@@ -65,7 +73,7 @@ template "/etc/keystone/cert.pem" do
     owner "keystone"
     group "keystone"
     mode 00644
-    notifies :restart, "service[keystone]", :delayed
+    notifies :restart, "service[apache2]", :delayed
 end
 
 template "/etc/keystone/key.pem" do
@@ -73,7 +81,7 @@ template "/etc/keystone/key.pem" do
     owner "keystone"
     group "keystone"
     mode 00600
-    notifies :restart, "service[keystone]", :delayed
+    notifies :restart, "service[apache2]", :delayed
 end
 
 template "/root/adminrc" do
@@ -90,9 +98,37 @@ template "/root/keystonerc" do
     mode 00600
 end
 
-service "keystone" do
-    action [:enable, :start]
-    restart_command "service keystone restart; sleep 5"
+# configure WSGI
+
+# /var/www created by apache2 package, /var/www/cgi-bin created in bcpc::apache2
+wsgi_keystone_dir = "/var/www/cgi-bin/keystone"
+directory wsgi_keystone_dir do
+  action :create
+  owner  "root"
+  group  "root"
+  mode   00755
+end
+
+%w{main admin}.each do |wsgi_link|
+  link ::File.join(wsgi_keystone_dir, wsgi_link) do
+    action :create
+    to     "/usr/share/keystone/wsgi.py"
+  end
+end
+
+template "/etc/apache2/sites-available/wsgi-keystone.conf" do
+  source   "apache-wsgi-keystone.conf.erb"
+  owner    "root"
+  group    "root"
+  mode     00644
+  notifies :reload, "service[apache2]", :immediately
+end
+
+bash "a2ensite-enable-wsgi-keystone" do
+  user     "root"
+  code     "a2ensite wsgi-keystone"
+  not_if   "test -r /etc/apache2/sites-enabled/wsgi-keystone.conf"
+  notifies :reload, "service[apache2]", :immediately
 end
 
 ruby_block "keystone-database-creation" do
@@ -113,7 +149,14 @@ bash "keystone-database-sync" do
     action :nothing
     user "root"
     code "keystone-manage db_sync"
-    notifies :restart, "service[keystone]", :immediately
+    notifies :restart, "service[apache2]", :immediately
+end
+
+# this is a synchronization resource that polls Keystone on the VIP to verify that it's not returning 503s,
+# if something above has restarted Apache and Keystone isn't ready to play yet
+bash "wait-for-keystone-to-become-operational" do
+  code ". /root/keystonerc; until keystone user-list >/dev/null 2>&1; do sleep 1; done"
+  timeout 30
 end
 
 bash "keystone-create-users-tenants" do

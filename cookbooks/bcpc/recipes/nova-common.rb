@@ -16,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+require 'ipaddr'
 
 include_recipe "bcpc::openstack"
 
@@ -40,7 +41,10 @@ template "/etc/nova/nova.conf" do
     owner "nova"
     group "nova"
     mode 00600
-    variables(:servers => get_head_nodes)
+    variables({
+      :servers => get_head_nodes,
+      :rabbit_hosts_shuffle_rng => Random.new(IPAddr.new(node['bcpc']['management']['ip']).to_i),
+    })
 end
 
 template "/etc/nova/api-paste.ini" do

@@ -107,7 +107,7 @@ if node['bcpc']['enabled']['metrics'] then
         notifies :restart, "service[carbon-relay]", :delayed
     end
 
-    template "/etc/apache2/sites-available/graphite-web" do
+    template "/etc/apache2/sites-available/graphite-web.conf" do
         source "apache-graphite-web.conf.erb"
         owner "root"
         group "root"

@@ -17,15 +17,10 @@
 # limitations under the License.
 #
 
+include_recipe "bcpc::packages-openstack"
+
 if platform?("debian", "ubuntu")
     include_recipe "bcpc::networking"
-end
-
-case node['platform']
-when "centos", "redhat", "fedora", "suse", "amazon", "scientific"
-    include_recipe "bcpc::ceph-yum"
-when "debian", "ubuntu"
-    include_recipe "bcpc::ceph-apt"
 end
 
 cookbook_file "/usr/local/bin/apt-pkg-check-version" do
@@ -41,9 +36,10 @@ bash "check-ceph-version" do
 	EOH
 end
 
-%w{ceph python-ceph}.each do |pkg|
+%w{librados2 librbd1 libcephfs1 python-ceph ceph-common ceph}.each do |pkg|
     package pkg do
-        action :upgrade
+        action :install
+        version node['bcpc']['ceph']['version']
     end
 end
 

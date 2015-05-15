@@ -17,19 +17,7 @@
 # limitations under the License.
 #
 
-include_recipe "bcpc::ceph-apt"
-
-package "apache2" do
-    action :upgrade
-    version "2.2.22-1ubuntu1-inktank1"
-end
-
-package "libapache2-mod-fastcgi" do
-    action :upgrade
-    version "2.4.7~0910052141-1-inktank2"
-end
-
-%w{libapache2-mod-wsgi libapache2-mod-python libapache2-mod-php5}.each do |pkg|
+%w{apache2 libapache2-mod-fastcgi libapache2-mod-wsgi libapache2-mod-python libapache2-mod-php5}.each do |pkg|
     package pkg do
         action :upgrade
     end
@@ -73,4 +61,11 @@ template "/var/www/html/index.html" do
     group "root"
     mode 00644
     variables ({ :cookbook_version => run_context.cookbook_collection[cookbook_name].metadata.version })
+end
+
+directory "/var/www/cgi-bin" do
+  action :create
+  owner  "root"
+  group  "root"
+  mode   00755
 end

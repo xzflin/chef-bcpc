@@ -49,7 +49,7 @@ if [[ -f cluster.txt ]]; then
 		MATCH="$HOSTNAME"
 		ACTIONSTRING="adding $HOSTNAME.$DOMAIN ($IPADDR,$MACADDR) to cobbler..."
 		echo $ACTIONSTRING | tee -a $TRANSCRIPT
-		sudo cobbler system add --name=$HOSTNAME --hostname=$HOSTNAME.$DOMAIN --profile=bcpc_host --ip-address=$IPADDR --mac=$MACADDR
+		sudo cobbler system add --name=$HOSTNAME --hostname=$HOSTNAME.$DOMAIN --profile=bcpc_host --ip-address=$IPADDR --mac=$MACADDR --interface=eth0
 	    fi
 	elif [[ $1 == remove ]]; then
 		if [[ -z "$EXACTHOST" || "$EXACTHOST" = "$HOSTNAME" || "$EXACTHOST" = "$ROLE" ]]; then

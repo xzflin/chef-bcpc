@@ -60,6 +60,7 @@ end
 template "/var/lib/cobbler/kickstarts/bcpc_ubuntu_host.preseed" do
     source "cobbler.bcpc_ubuntu_host.preseed.erb"
     mode 00644
+    variables(:bootstrap_node => get_bootstrap_node)
 end
 
 cookbook_file "/tmp/ubuntu-14.04-mini.iso" do

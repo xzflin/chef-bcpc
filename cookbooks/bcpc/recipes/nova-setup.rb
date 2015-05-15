@@ -43,7 +43,7 @@ bash "nova-fixed-add" do
     user "root"
     code <<-EOH
         . /root/adminrc
-        nova-manage network create --label fixed --fixed_range_v4=#{node['bcpc']['fixed']['cidr']} --num_networks=#{node['bcpc']['fixed']['num_networks']} --multi_host=T --network_size=#{node['bcpc']['fixed']['network_size']} --vlan_start=#{node['bcpc']['fixed']['vlan_start']}
+        nova-manage network create --label fixed --fixed_range_v4=#{node['bcpc']['fixed']['cidr']} --num_networks=#{node['bcpc']['fixed']['num_networks']} --multi_host=T --network_size=#{node['bcpc']['fixed']['network_size']} --vlan_start=#{node['bcpc']['fixed']['vlan_start']} --bridge_interface=#{node['bcpc']['fixed']['vlan_interface']}
     EOH
     only_if ". /root/adminrc; nova-manage network list | grep \"No networks found\""
 end
