@@ -1,4 +1,4 @@
-#!/bin/bash
+ #!/bin/bash
 #
 # Script to help making a cluster definition file (cluster.txt) from
 # the current VMs known by VirtualBox. This is intended to be run on
@@ -12,39 +12,34 @@
 source ./virtualbox_env.sh
 
 if [[ -z "$1" ]]; then
-	echo "Usage: $0 domain (environment)"
-	exit
+        echo "Usage: $0 domain (environment)"
+        exit
 fi
 
 DOMAIN="$1"
 ENVIRONMENT="$2"
 
 function getvminfo {
-
+    
     HOSTNAME="$1"
 
-	# extract the first mac address for this VM
-	MAC1=`$VBM showvminfo $HOSTNAME | grep "NIC 1" | grep MAC | awk '{print $4}' | awk '{print substr($0, 1, length() -1)}'`
-	# add the customary colons in
-	MAC1=`echo $MAC1 | sed -e 's/^\([0-9A-Fa-f]\{2\}\)/\1_/'  \
-		-e 's/_\([0-9A-Fa-f]\{2\}\)/:\1_/' \
-		-e 's/_\([0-9A-Fa-f]\{2\}\)/:\1_/' \
-		-e 's/_\([0-9A-Fa-f]\{2\}\)/:\1_/' \
-		-e 's/_\([0-9A-Fa-f]\{2\}\)/:\1_/' \
-		-e 's/_\([0-9A-Fa-f]\{2\}\)/:\1/'`
-	# now get the IP address
-	PROPERTY=`$VBM guestproperty get $HOSTNAME "/VirtualBox/GuestInfo/Net/0/V4/IP"`
-	if [[ "$PROPERTY" = "No value set!" ]]; then
-	    echo "$VM not booted yet" >&2
-	    IP="IP unavailable - has this VM been booted?"
-	else
-	    IP=`echo $PROPERTY | awk '{print $2}'`
-	fi
-
-	# there's no IP address for the ILO for VMs, instead use
-	# VirtualBox's graphical console
-	ILOIPADDR="-"
-
+    # extract the first mac address for this VM
+    MAC1=`$VBM showvminfo $HOSTNAME --machinereadable | grep macaddress1 | tr -d \" | tr = " " | awk '{print $2}'`
+    # add the customary colons in
+    MAC1=`echo $MAC1 | sed -e 's/^\([0-9A-Fa-f]\{2\}\)/\1_/'  \
+        -e 's/_\([0-9A-Fa-f]\{2\}\)/:\1_/' \
+        -e 's/_\([0-9A-Fa-f]\{2\}\)/:\1_/' \
+        -e 's/_\([0-9A-Fa-f]\{2\}\)/:\1_/' \
+        -e 's/_\([0-9A-Fa-f]\{2\}\)/:\1_/' \
+        -e 's/_\([0-9A-Fa-f]\{2\}\)/:\1/'`
+    
+    IP=`sshpass -p ubuntu ssh ubuntu@10.0.100.3 "arp | grep -i $MAC1 | cut -f1 -d\" \""`
+    
+    
+    # there's no IP address for the ILO for VMs, instead use
+    # VirtualBox's graphical console
+    ILOIPADDR="-"
+    
     # We can deduce roles only for the standard pattern recommended
     # for the Test-Laptop sample virtual machine cluster build
     if [[ "$ENVIRONMENT" = "Test-Laptop" ]]; then
@@ -60,21 +55,21 @@ function getvminfo {
             ROLE="unknown"
         fi
     fi
-	echo "$HOSTNAME $MAC1 $IP $ILOIPADDR $DOMAIN $ROLE"
+    echo "$HOSTNAME $MAC1 $IP $ILOIPADDR $DOMAIN $ROLE"
 }
 
 if [[ -f cluster.txt ]]; then
-	echo "Found cluster.txt. Saved as cluster.txt.save$$"
-	mv cluster.txt cluster.txt.save$$
-	touch cluster.txt
+    echo "Found cluster.txt. Saved as cluster.txt.save$$"
+    mv cluster.txt cluster.txt.save$$
+    touch cluster.txt
 fi
 
 VMLIST=`$VBM list vms`
 for V in $VMLIST; do
-	if [[ ! "$V" =~ "{" ]]; then
-		VM=`echo "$V" | awk '{print substr($0, 2, length() -2)}'`
-		getvminfo $VM >> cluster.txt
-	fi
+    if [[ ! "$V" =~ "{" ]]; then
+        VM=`echo "$V" | awk '{print substr($0, 2, length() -2)}'`
+        getvminfo $VM >> cluster.txt
+    fi
 done
 echo "end" >> cluster.txt
 if [[ "$ENVIRONMENT" = "Test-Laptop" ]]; then
