@@ -18,7 +18,7 @@ if [[ -z "$CURL" ]]; then
 fi
 
 # Bootstrap VM Defaults (these need to be exported for Vagrant's Vagrantfile)
-export BOOTSTRAP_VM_MEM=1536
+export BOOTSTRAP_VM_MEM=2048
 export BOOTSTRAP_VM_CPUs=1
 export BOOTSTRAP_VM_VRAM=16
 # Use this if you intend to make an apt-mirror in this VM (see the
