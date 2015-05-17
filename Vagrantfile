@@ -6,17 +6,23 @@
 # See http://www.vagrantup.com/ for info on Vagrant.
 
 $local_environment = "Test-Laptop"
-$local_mirror = nil
-#$local_mirror = "10.0.100.4"
+$local_mirror = ENV["BOOTSTRAP_APT_MIRROR"]
 
 if $local_mirror.nil?
   $repos_script = <<EOH
 EOH
 else
+  puts "Configuring inline provisioner with local apt mirror for bootstrap"
   $repos_script = <<EOH
-    sed -i s/archive.ubuntu.com/#{$local_mirror}/g /etc/apt/sources.list
-    sed -i s/security.ubuntu.com/#{$local_mirror}/g /etc/apt/sources.list
-    sed -i s/^deb-src/\#deb-src/g /etc/apt/sources.list
+#!/bin/bash
+hash -r
+install -d -m0755 -g adm /var/log/vagrant
+exec &>>/var/log/vagrant/provision.log
+date --rfc-3339=s
+set -x
+sed -i s/archive.ubuntu.com/#{$local_mirror}/g /etc/apt/sources.list
+sed -i s/security.ubuntu.com/#{$local_mirror}/g /etc/apt/sources.list
+sed -i s/^deb-src/\#deb-src/g /etc/apt/sources.list
 EOH
 end
 
