@@ -121,6 +121,15 @@ default['bcpc']['ceph']['rebalance'] = false
 
 ###########################################
 #
+# RabbitMQ settings
+#
+###########################################
+# if changing this setting, you will need to reset Mnesia
+# on all RabbitMQ nodes in the cluster
+default['bcpc']['rabbitmq']['durable_queues'] = false
+
+###########################################
+#
 #  Network settings for the cluster
 #
 ###########################################

@@ -164,7 +164,7 @@ rabbit_password = <%=get_config('rabbitmq-password')%>
 rabbit_virtual_host = /
 rabbit_notification_exchange = glance
 rabbit_notification_topic = notifications
-amqp_durable_queues = False
+amqp_durable_queues = <%=node['bcpc']['rabbitmq']['durable_queues']%>
 
 # =============== Database Options =================================
 

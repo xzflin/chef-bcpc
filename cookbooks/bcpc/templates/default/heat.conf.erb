@@ -391,7 +391,7 @@ host=<%=node['hostname']%>
 
 # Use durable queues in amqp. (boolean value)
 # Deprecated group/name - [DEFAULT]/rabbit_durable_queues
-amqp_durable_queues=True
+amqp_durable_queues=<%=node['bcpc']['rabbitmq']['durable_queues']%>
 
 # Auto-delete queues in amqp. (boolean value)
 #amqp_auto_delete=false
