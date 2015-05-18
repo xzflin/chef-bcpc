@@ -13,3 +13,8 @@
 */chef-client-bootstrap.deb
 */chef-server.deb
 */chef-client.deb
+
+# IntelliJ
+*.iml
+.idea/
+
