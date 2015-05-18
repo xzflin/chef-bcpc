@@ -247,7 +247,7 @@ default['bcpc']['nova']['reserved_host_memory_mb'] = 1024
 default['bcpc']['nova']['cpu_allocation_ratio'] = 2.0
 # "workers" parameters in nova are set to number of CPUs
 # available by default. This provides an override.
-default['bcpc']['nova']['workers'] = 2
+default['bcpc']['nova']['workers'] = 5
 # Patch toggle for https://github.com/bloomberg/chef-bcpc/pull/493
 default['bcpc']['nova']['live_migration_patch'] = false
 ###########################################
