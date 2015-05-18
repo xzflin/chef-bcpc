@@ -25,6 +25,9 @@ export BOOTSTRAP_VM_VRAM=16
 # instructions on using an apt-mirror towards the end of bootstrap.md)
 # -- Vagrant VMs do not use this size --
 #BOOTSTRAP_VM_DRIVE_SIZE=120480
+# Use this if you intend to use an apt-mirror as a source during bootstrap
+# server bring-up. Note this is an address, not url
+#export BOOTSTRAP_APT_MIRROR=10.0.100.2
 
 # Cluster VM Defaults
 CLUSTER_VM_MEM=2560
@@ -296,7 +299,7 @@ ip=${2-10.0.100.3}
     vagrant ssh -c "test -f /etc/default/grub.ucf-dist && sudo mv /etc/default/grub.ucf-dist /etc/default/grub" || true
     # Duplicate what d-i's apt-setup generators/50mirror does when set in preseed
     if [ -n "$http_proxy" ]; then
-      if ! vagrant ssh -c "grep -z Acquire::http::Proxy /etc/apt/apt.conf"; then
+      if ! vagrant ssh -c "grep -z '^Acquire::http::Proxy ' /etc/apt/apt.conf"; then
         vagrant ssh -c "echo 'Acquire::http::Proxy \"$http_proxy\";' | sudo tee -a /etc/apt/apt.conf"
       fi
 

@@ -6,17 +6,25 @@
 # See http://www.vagrantup.com/ for info on Vagrant.
 
 $local_environment = "Test-Laptop"
-$local_mirror = nil
-#$local_mirror = "10.0.100.4"
+$local_mirror = ENV["BOOTSTRAP_APT_MIRROR"]
 
 if $local_mirror.nil?
   $repos_script = <<EOH
 EOH
 else
   $repos_script = <<EOH
-    sed -i s/archive.ubuntu.com/#{$local_mirror}/g /etc/apt/sources.list
-    sed -i s/security.ubuntu.com/#{$local_mirror}/g /etc/apt/sources.list
-    sed -i s/^deb-src/\#deb-src/g /etc/apt/sources.list
+#!/bin/bash
+hash -r
+install -d -m0755 -g adm /var/log/vagrant
+exec &>>/var/log/vagrant/provision.log
+date --rfc-3339=s
+set -x
+sed -i s/archive.ubuntu.com/#{$local_mirror}/g /etc/apt/sources.list
+sed -i s/security.ubuntu.com/#{$local_mirror}/g /etc/apt/sources.list
+sed -i s/^deb-src/\#deb-src/g /etc/apt/sources.list
+touch /etc/apt/apt.conf
+echo 'Acquire::http::Proxy::#{$local_mirror.split(':')[0]} "DIRECT";' >> /etc/apt/apt.conf
+apt-get update
 EOH
 end
 
@@ -31,8 +39,16 @@ Vagrant.configure("2") do |config|
 
     bootstrap.vm.synced_folder "../", "/chef-bcpc-host"
 
+    # fix no-tty error
+    bootstrap.vm.provision "fix-no-tty", type: "shell" do |s|
+      s.privileged = false
+      s.inline = "sudo sed -i '/tty/!s/mesg n/tty -s \\&\\& mesg n/' /root/.profile"
+    end
+
     # set up repositories
-    bootstrap.vm.provision :shell, :inline => $repos_script
+    bootstrap.vm.provision "configure-repositories", type: "shell" do |s|
+      s.inline = $repos_script
+    end
 
     # since we are creating the server and the validation keys on this new
     # machine itself, we can't use Vagrant's built-in chef provisioning.
