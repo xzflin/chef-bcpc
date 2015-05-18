@@ -12,7 +12,6 @@ if $local_mirror.nil?
   $repos_script = <<EOH
 EOH
 else
-  puts "Configuring inline provisioner with local apt mirror for bootstrap"
   $repos_script = <<EOH
 #!/bin/bash
 hash -r
@@ -23,6 +22,9 @@ set -x
 sed -i s/archive.ubuntu.com/#{$local_mirror}/g /etc/apt/sources.list
 sed -i s/security.ubuntu.com/#{$local_mirror}/g /etc/apt/sources.list
 sed -i s/^deb-src/\#deb-src/g /etc/apt/sources.list
+touch /etc/apt/apt.conf
+echo 'Acquire::http::Proxy::#{$local_mirror.split(':')[0]} "DIRECT";' >> /etc/apt/apt.conf
+apt-get update
 EOH
 end
 
@@ -37,8 +39,16 @@ Vagrant.configure("2") do |config|
 
     bootstrap.vm.synced_folder "../", "/chef-bcpc-host"
 
+    # fix no-tty error
+    bootstrap.vm.provision "fix-no-tty", type: "shell" do |s|
+      s.privileged = false
+      s.inline = "sudo sed -i '/tty/!s/mesg n/tty -s \\&\\& mesg n/' /root/.profile"
+    end
+
     # set up repositories
-    bootstrap.vm.provision :shell, :inline => $repos_script
+    bootstrap.vm.provision "configure-repositories", type: "shell" do |s|
+      s.inline = $repos_script
+    end
 
     # since we are creating the server and the validation keys on this new
     # machine itself, we can't use Vagrant's built-in chef provisioning.
