@@ -54,6 +54,8 @@ default['bcpc']['enabled']['host_firewall'] = true
 default['bcpc']['enabled']['encrypt_data_bag'] = false
 # This will enable auto-upgrades on all nodes (not recommended for stability)
 default['bcpc']['enabled']['apt_upgrade'] = false
+# This will enable running apt-get update at the start of every Chef run
+default['bcpc']['enabled']['always_update_package_lists'] = true
 # This will enable the extra healthchecks for keepalived (VIP management)
 default['bcpc']['enabled']['keepalived_checks'] = true
 # This will enable the networking test scripts
