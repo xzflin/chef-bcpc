@@ -273,7 +273,8 @@ default['bcpc']['nova']['cpu_allocation_ratio'] = 2.0
 default['bcpc']['nova']['workers'] = 5
 # Patch toggle for https://github.com/bloomberg/chef-bcpc/pull/493
 default['bcpc']['nova']['live_migration_patch'] = false
-
+# Nova debug toggle
+default['bcpc']['nova']['debug'] = false
 ###########################################
 #
 # Routemon settings
