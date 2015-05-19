@@ -36,7 +36,7 @@ if node['bcpc']['enabled']['dns']
 
   ruby_block "powerdns-load-fixed-records" do
     block do
-      system "mysql -uroot -p#{get_config('mysql-root-password')} #{node['bcpc']['dbname']['pdns']} < #{fixed_records_file}"
+      system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot #{node['bcpc']['dbname']['pdns']} < #{fixed_records_file}"
     end
   end
 
