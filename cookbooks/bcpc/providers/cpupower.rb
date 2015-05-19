@@ -29,7 +29,7 @@ action :set do
   ondemand_tunable_dir = ::File.join(base_cpu_dir, 'cpufreq', 'ondemand')
 
   unless ::File.exists?(cpu0_gov_file)
-    Chef::Log.warn("\nCurrent platform hardware/OS combination does not support CPU scaling governors")
+    Chef::Log.warn("Current platform hardware/OS combination does not support CPU scaling governors")
     next
   end
 
@@ -41,7 +41,7 @@ action :set do
     current_governor = ::File.read(cpu0_gov_file).chomp
     unconverged_resources.push('governor') if current_governor != @new_resource.governor
   rescue Errno::ENOENT
-    Chef::Log.warn("\nThis system is misconfigured and is missing a scaling governor at #{cpu0_gov_file}, please configure the power profile in the BIOS for OS control")
+    Chef::Log.warn("This system is misconfigured and is missing a scaling governor at #{cpu0_gov_file}, please configure the power profile in the BIOS for OS control")
   end
 
   sampling_rate_min_val = nil
@@ -60,7 +60,7 @@ action :set do
           current_tunable = ::File.read(tunable_path).chomp.to_i
           unconverged_resources.push(ondemand_tunable) if current_tunable != tunable
         rescue Error::ENOENT
-          Chef::Log.warn("\nThis system is misconfigured and is missing the ondemand scaling governor tunable #{tunable_file_name}")
+          Chef::Log.warn("This system is misconfigured and is missing the ondemand scaling governor tunable #{tunable_file_name}")
         end
       end
     end
@@ -69,7 +69,7 @@ action :set do
     srm_file = ::File.join(ondemand_tunable_dir, 'sampling_rate_min')
     sampling_rate_min_val = ::File.read(srm_file).to_i if ::File.exists?(srm_file)
   else
-    Chef::Log.warn("\nThis system is misconfigured and is missing the directory for ondemand tunables (#{ondemand_tunable_dir})")
+    Chef::Log.warn("This system is misconfigured and is missing the directory for ondemand tunables (#{ondemand_tunable_dir})")
   end
 
   Chef::Log.debug("Converging #{unconverged_resources.join(', ')}")
@@ -96,7 +96,7 @@ action :set do
           governor.write @new_resource.governor
         end
       rescue Errno::ENOENT
-        Chef::Log.warn("\nThis system is misconfigured and is missing a scaling governor at #{cpu_governor_path}, please configure the power profile in the BIOS for OS control")
+        Chef::Log.warn("This system is misconfigured and is missing a scaling governor at #{cpu_governor_path}, please configure the power profile in the BIOS for OS control")
       end
     end
   end
@@ -128,7 +128,7 @@ action :set do
               f.write(tunable.to_s)
             end
           rescue Errno::ENOENT
-            Chef::Log.warn("\nThis system is misconfigured and is missing the ondemand scaling governor tunable #{tunable_file_name}")
+            Chef::Log.warn("This system is misconfigured and is missing the ondemand scaling governor tunable #{tunable_file_name}")
           end # begin
         end # converge_by
       end # unless
