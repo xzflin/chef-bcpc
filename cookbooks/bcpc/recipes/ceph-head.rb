@@ -42,11 +42,18 @@ end
 
 ruby_block "wait-for-mon-quorum" do
     block do
+        clock = 0
+        sleep_time = 2
+        timeout = 120
         status = { 'state' => '' }
-        while not %w{leader peon}.include?(status['state']) do
-            puts "Waiting for ceph-mon to get quorum..."
+        until %w{leader peon}.include?(status['state']) do
+            if clock >= timeout
+              fail "Exceeded quorum wait timeout of #{timeout} seconds, check Ceph status with ceph -s and ceph health detail" 
+            end
+            Chef::Log.warn("Waiting for ceph-mon to get quorum...")
             status = JSON.parse(%x[ceph --admin-daemon /var/run/ceph/ceph-mon.#{node['hostname']}.asok mon_status])
-            sleep 2 if not %w{leader peon}.include?(status['state'])
+            clock += sleep_time
+            sleep sleep_time unless %w{leader peon}.include?(status['state'])
         end
     end
 end
