@@ -182,23 +182,19 @@ end
 
 ruby_block "keystone-create-test-tenants" do
     block do
-        system ". /root/keystonerc; . /root/adminrc; keystone user-get #{get_config('keystone-test-user')} 2>&1 | grep -e '^No user'"
-        if $?.success? then
-            %x[ . /root/adminrc
-                export KEYSTONE_ADMIN_TENANT_ID=`keystone tenant-get "#{node['bcpc']['admin_tenant']}" | grep " id " | awk '{print $4}'`
-                keystone user-create --name #{get_config('keystone-test-user')} --tenant-id $KEYSTONE_ADMIN_TENANT_ID --pass  #{get_config('keystone-test-password')} --enabled true
-            ]
-        end
+        %x[ . /root/adminrc
+            export KEYSTONE_ADMIN_TENANT_ID=`keystone tenant-get "#{node['bcpc']['admin_tenant']}" | grep " id " | awk '{print $4}'`
+            keystone user-create --name #{get_config('keystone-test-user')} --tenant-id $KEYSTONE_ADMIN_TENANT_ID --pass  #{get_config('keystone-test-password')} --enabled true
+        ]
     end
+    only_if { system ". /root/keystonerc; . /root/adminrc; keystone user-get #{get_config('keystone-test-user')} 2>&1 | grep -e '^No user' >/dev/null" }
 end
 
 ruby_block "keystone-add-test-admin-role" do
     block do
-        system ". /root/keystonerc; . /root/adminrc; keystone user-role-list --user #{get_config('keystone-test-user')} --tenant '#{node['bcpc']['admin_tenant']}' 2>&1 | grep '#{node['bcpc']['admin_role']}'"
-        if not $?.success? then
-            %x[ . /root/adminrc
-                keystone user-role-add --user #{get_config('keystone-test-user')} --role '#{node['bcpc']['admin_role']}' --tenant '#{node['bcpc']['admin_tenant']}'
-            ]
-        end
+        %x[ . /root/adminrc
+            keystone user-role-add --user #{get_config('keystone-test-user')} --role '#{node['bcpc']['admin_role']}' --tenant '#{node['bcpc']['admin_tenant']}'
+        ]
     end
+    not_if { system ". /root/keystonerc; . /root/adminrc; keystone user-role-list --user #{get_config('keystone-test-user')} --tenant '#{node['bcpc']['admin_tenant']}' 2>&1 | grep '#{node['bcpc']['admin_role']}' >/dev/null" }
 end
