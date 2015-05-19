@@ -352,7 +352,7 @@ servers = <%=@servers.map{|x| x['bcpc']['management']['ip'] + ":11211"}.join(','
 #allow_insecure_clients = false
 
 [oslo_messaging_qpid]
-#amqp_durable_queues = false
+#amqp_durable_queues = <%=node['bcpc']['rabbitmq']['durable_queues']%>
 #amqp_auto_delete = false
 #rpc_conn_pool_size = 30
 #qpid_hostname = localhost
@@ -368,7 +368,7 @@ servers = <%=@servers.map{|x| x['bcpc']['management']['ip'] + ":11211"}.join(','
 #qpid_topology_version = 1
 
 [oslo_messaging_rabbit]
-#amqp_durable_queues = false
+#amqp_durable_queues = <%=node['bcpc']['rabbitmq']['durable_queues']%>
 #amqp_auto_delete = false
 #rpc_conn_pool_size = 30
 #kombu_ssl_version =
