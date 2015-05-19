@@ -30,7 +30,7 @@ default['bcpc']['vms_key'] = nil
 ###########################################
 default['bcpc']['elasticsearch']['version'] = '1.5.1'
 default['bcpc']['ceph']['version'] = '0.80.9-0ubuntu0.14.04.2'
-default['bcpc']['erlang']['version'] = '1:17.5'
+default['bcpc']['erlang']['version'] = '1:17.5.3'
 default['bcpc']['haproxy']['version'] = '1.5.12-1ppa1~trusty'
 default['bcpc']['kibana']['version'] = '4.0.2'
 default['bcpc']['rabbitmq']['version'] = '3.5.2-1'
@@ -54,6 +54,8 @@ default['bcpc']['enabled']['host_firewall'] = true
 default['bcpc']['enabled']['encrypt_data_bag'] = false
 # This will enable auto-upgrades on all nodes (not recommended for stability)
 default['bcpc']['enabled']['apt_upgrade'] = false
+# This will enable running apt-get update at the start of every Chef run
+default['bcpc']['enabled']['always_update_package_lists'] = true
 # This will enable the extra healthchecks for keepalived (VIP management)
 default['bcpc']['enabled']['keepalived_checks'] = true
 # This will enable the networking test scripts

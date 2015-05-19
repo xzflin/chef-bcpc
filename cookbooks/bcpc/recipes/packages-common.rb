@@ -36,3 +36,11 @@ if node['bcpc']['enabled']['apt_upgrade'] then
         code "DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" upgrade"
     end
 end
+
+# run apt-get update at the start of every Chef run if so configured
+if node['bcpc']['enabled']['always_update_package_lists'] then
+    bash "run-apt-get-update" do
+        user "root"
+        code "DEBIAN_FRONTEND=noninteractive apt-get update"
+    end
+end
