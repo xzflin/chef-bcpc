@@ -286,7 +286,7 @@ if [ ! -f rally-pip.tar.gz ] || [ ! -f rally-bin.tar.gz ]; then
     fpm -s python -t deb -f -v 6.1.1 pip
 
     # We don't need the newest version installed here at this time but if we need other pip options then we may.
-    # dpkg -i python-pip_6.1.1_all.deb
+    dpkg -i python-pip_6.1.1_all.deb
 
     # We install rally and a few other items here. Since fpm does not resolve dependencies but only lists them, we
     # have to force an install and then tar up the dist-packages and local/bin
