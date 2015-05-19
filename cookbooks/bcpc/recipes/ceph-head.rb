@@ -38,6 +38,11 @@ ruby_block "add-ceph-mon-hints" do
                 "add_bootstrap_peer_hint #{server['bcpc']['storage']['ip']}:6789"
         end
     end
+    # not_if checks to see if all head node IPs are in the mon list
+    not_if {
+      mon_list = %x[ceph mon stat]
+      get_head_nodes.collect{ |x| x['bcpc']['storage']['ip'] }.map{ |ip| mon_list.include? ip }.uniq == [true]
+    }
 end
 
 ruby_block "wait-for-mon-quorum" do
