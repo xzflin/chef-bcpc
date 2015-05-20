@@ -205,7 +205,6 @@ end
       :floating_vip              => node['bcpc']['floating']['vip'],
       :management_vip            => node['bcpc']['management']['vip'],
       :management_monitoring_vip => node['bcpc']['management']['monitoring']['vip'],
-      :update_timestamp          => get_config('powerdns-update-timestamp'),
       :reverse_fixed_zone        => (node['bcpc']['fixed']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['fixed']['cidr'])),
       :reverse_float_zone        => (node['bcpc']['floating']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['floating']['cidr'])),
     })
