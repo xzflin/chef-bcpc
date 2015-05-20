@@ -24,6 +24,7 @@ if node['bcpc']['enabled']['dns'] then
     block do
       make_config('mysql-pdns-user', "pdns")
       make_config('mysql-pdns-password', secure_password)
+      make_config('powerdns-update-timestamp', Time.now.to_i)
     end
   end
 
@@ -204,7 +205,7 @@ end
       :floating_vip              => node['bcpc']['floating']['vip'],
       :management_vip            => node['bcpc']['management']['vip'],
       :management_monitoring_vip => node['bcpc']['management']['monitoring']['vip'],
-      :update_timestamp          => Time.now.to_i,
+      :update_timestamp          => get_config('powerdns-update-timestamp'),
       :reverse_fixed_zone        => (node['bcpc']['fixed']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['fixed']['cidr'])),
       :reverse_float_zone        => (node['bcpc']['floating']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['floating']['cidr'])),
     })
