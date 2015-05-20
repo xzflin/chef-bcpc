@@ -8,7 +8,7 @@
 $local_environment = "Test-Laptop"
 $local_mirror = ENV["BOOTSTRAP_APT_MIRROR"]
 
-if $local_mirror.nil?
+if $local_mirror.nil? or $local_mirror.empty?
   $repos_script = <<EOH
 EOH
 else
@@ -70,13 +70,15 @@ Vagrant.configure("2") do |config|
   #config.vm.box_url = "http://cloud-images.ubuntu.com/precise/current/precise-server-cloudimg-amd64-vagrant-disk1.box"
   config.vm.box_url = "trusty-server-cloudimg-amd64-vagrant-disk1.box"
 
-  memory = ( ENV["BOOTSTRAP_VM_MEM"] or "1536" )
-  cpus = ( ENV["BOOTSTRAP_VM_CPUs"] or "1" )
+  memory = ( ENV["BOOTSTRAP_VM_MEM"] or "2048" )
+  cpus = ( ENV["BOOTSTRAP_VM_CPUS"] or "1" )
+  vram = ( ENV["BOOTSTRAP_VM_VRAM"] or "16" )
 
   config.vm.provider :virtualbox do |vb|
      vb.name = "bcpc-bootstrap"
      vb.customize ["modifyvm", :id, "--nictype2", "82543GC"]
      vb.customize ["modifyvm", :id, "--memory", memory]
+     vb.customize ["modifyvm", :id, "--vram", vram]
      vb.customize ["modifyvm", :id, "--cpus", cpus]
      vb.customize ["modifyvm", :id, "--largepages", "on"]
      vb.customize ["modifyvm", :id, "--nestedpaging", "on"]

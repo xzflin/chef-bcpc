@@ -1,0 +1,23 @@
+# Place any environment variables you want to override for virtualized cluster creation in here.
+
+# Sets an optional address:port to be used as an apt mirror instead of the defaults.
+# export BOOTSTRAP_APT_MIRROR=10.0.100.2:8080
+
+# Sets the amount of memory (in MB) given to the bootstrap VM.
+# export BOOTSTRAP_VM_MEM=2048
+
+# Sets the number of vCPUs given to the bootstrap VM.
+# export BOOTSTRAP_VM_CPUS=1
+
+# Sets the size of the boot disk for the bootstrap VM.
+# export BOOTSTRAP_VM_DRIVE_SIZE=20480
+
+# Sets the amount of memory given to cluster VMs.
+# export CLUSTER_VM_MEM=2560
+
+# Sets the number of vCPUs given to cluster VMs.
+# export CLUSTER_VM_CPUS=2
+
+# Sets the amount of video RAM (in MB) given to cluster VMs.
+# export CLUSTER_VM_DRIVE_SIZE=20480
+
