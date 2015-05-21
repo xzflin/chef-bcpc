@@ -125,6 +125,12 @@ def get_bootstrap_node
     results.first
 end
 
+# shuffles a list of servers deterministically to avoid stacking all connections up on a single node
+# (e.g., RabbitMQ, where OpenStack will pile on to the first server in the list)
+def get_shuffled_servers(server_list)
+  server_list.shuffle(random: Random.new(IPAddr.new(node['bcpc']['management']['ip']).to_i))
+end
+
 def get_cached_head_node_names
     headnodes = []
     begin

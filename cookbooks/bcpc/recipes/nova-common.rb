@@ -41,10 +41,7 @@ template "/etc/nova/nova.conf" do
     owner "nova"
     group "nova"
     mode 00600
-    variables({
-      :servers => get_head_nodes,
-      :rabbit_hosts_shuffle_rng => Random.new(IPAddr.new(node['bcpc']['management']['ip']).to_i),
-    })
+    variables(:servers => get_head_nodes)
 end
 
 template "/etc/nova/api-paste.ini" do
