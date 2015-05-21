@@ -161,10 +161,10 @@ for i in elasticsearch tail-multiline tail-ex record-reformer rewrite; do
 done
 
 # Fetch the cirros image for testing
-if [ ! -f cirros-0.3.2-x86_64-disk.img ]; then
-    ccurl http://download.cirros-cloud.net/0.3.2/cirros-0.3.2-x86_64-disk.img
+if [ ! -f cirros-0.3.4-x86_64-disk.img ]; then
+    ccurl http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img
 fi
-FILES="cirros-0.3.2-x86_64-disk.img $FILES"
+FILES="cirros-0.3.4-x86_64-disk.img $FILES"
 
 # Grab the Ubuntu 14.04 installer image
 if [ ! -f ubuntu-14.04-mini.iso ]; then

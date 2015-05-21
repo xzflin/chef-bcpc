@@ -133,8 +133,8 @@ end
     end
 end
 
-cookbook_file "/tmp/cirros-0.3.2-x86_64-disk.img" do
-    source "bins/cirros-0.3.2-x86_64-disk.img"
+cookbook_file "/tmp/cirros-0.3.4-x86_64-disk.img" do
+    source "bins/cirros-0.3.4-x86_64-disk.img"
     owner "root"
     mode 00444
 end
@@ -147,8 +147,8 @@ bash "glance-cirros-image" do
     user "root"
     code <<-EOH
         . /root/adminrc
-        qemu-img convert -f qcow2 -O raw /tmp/cirros-0.3.2-x86_64-disk.img /tmp/cirros-0.3.2-x86_64-disk.raw
-        glance image-create --name='Cirros 0.3.2 x86_64' --is-public=True --container-format=bare --disk-format=raw --file /tmp/cirros-0.3.2-x86_64-disk.raw
+        qemu-img convert -f qcow2 -O raw /tmp/cirros-0.3.4-x86_64-disk.img /tmp/cirros-0.3.4-x86_64-disk.raw
+        glance image-create --name='Cirros 0.3.4 x86_64' --is-public=True --container-format=bare --disk-format=raw --file /tmp/cirros-0.3.4-x86_64-disk.raw
     EOH
-    not_if ". /root/adminrc; glance image-list | grep 'Cirros 0.3.2 x86_64'"
+    not_if ". /root/adminrc; glance image-list | grep 'Cirros 0.3.4 x86_64'"
 end

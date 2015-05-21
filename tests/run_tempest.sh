@@ -128,7 +128,7 @@ configDir = {
               "admin_tenant_name": "AdminTenant",
               "admin_password": "${keystone_admin_pass}"},
  "image": {"region": "$ENVIRONMENT",
-           "http_image": "http://${BOOTSTRAP}:8080/cirros-0.3.0-x86_64-disk.img"},
+           "http_image": "http://${BOOTSTRAP}:8080/cirros-0.3.4-x86_64-disk.img"},
  "input-scenario": {"image_regex": '[["^[Cc]irros.*$","^[Uu]buntu.*"]]',
                     "flavor_regex": "^m1.tiny",
                     "ssh_user_regex": '[["^.*[Cc]irros.*$", "ubuntu"]]'},
