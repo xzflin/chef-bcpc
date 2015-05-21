@@ -4,6 +4,7 @@
 *.iml
 id_rsa
 secret_file
+vbox_override.sh
 cacerts/
 cookbooks/apt/
 cookbooks/chef-solo-search/
