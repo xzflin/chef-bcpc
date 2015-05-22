@@ -265,7 +265,7 @@ default['bcpc']['keystone']['debug'] = false
 default['bcpc']['keystone']['verbose'] = false
 # This can be either 'sql' or 'ldap' to either store identities
 # in the mysql DB or the LDAP server
-default['bcpc']['keystone']['backend'] = 'ldap'
+default['bcpc']['keystone']['backend'] = 'sql'
 
 ###########################################
 #
