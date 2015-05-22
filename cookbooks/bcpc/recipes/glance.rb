@@ -81,16 +81,16 @@ end
 
 ruby_block "glance-database-creation" do
     block do
-        if not system "mysql -uroot -p#{get_config('mysql-root-password')} -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['glance']}\"'|grep \"#{node['bcpc']['dbname']['glance']}\"" then
-            %x[ mysql -uroot -p#{get_config('mysql-root-password')} -e "CREATE DATABASE #{node['bcpc']['dbname']['glance']};"
-                mysql -uroot -p#{get_config('mysql-root-password')} -e "GRANT ALL ON #{node['bcpc']['dbname']['glance']}.* TO '#{get_config('mysql-glance-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-glance-password')}';"
-                mysql -uroot -p#{get_config('mysql-root-password')} -e "GRANT ALL ON #{node['bcpc']['dbname']['glance']}.* TO '#{get_config('mysql-glance-user')}'@'localhost' IDENTIFIED BY '#{get_config('mysql-glance-password')}';"
-                mysql -uroot -p#{get_config('mysql-root-password')} -e "FLUSH PRIVILEGES;"
-            ]
-            self.notifies :run, "bash[glance-database-sync]", :immediately
-            self.resolve_notification_references
-        end
+        %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
+            mysql -uroot -e "CREATE DATABASE #{node['bcpc']['dbname']['glance']};"
+            mysql -uroot -e "GRANT ALL ON #{node['bcpc']['dbname']['glance']}.* TO '#{get_config('mysql-glance-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-glance-password')}';"
+            mysql -uroot -e "GRANT ALL ON #{node['bcpc']['dbname']['glance']}.* TO '#{get_config('mysql-glance-user')}'@'localhost' IDENTIFIED BY '#{get_config('mysql-glance-password')}';"
+            mysql -uroot -e "FLUSH PRIVILEGES;"
+        ]
+        self.notifies :run, "bash[glance-database-sync]", :immediately
+        self.resolve_notification_references
     end
+    not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['glance']}\"'|grep \"#{node['bcpc']['dbname']['glance']}\" >/dev/null" }
 end
 
 bash "glance-database-sync" do
