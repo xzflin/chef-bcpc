@@ -5,6 +5,8 @@
 # Chef server.
 # See http://www.vagrantup.com/ for info on Vagrant.
 
+Vagrant.require_version ">= 1.7.0"
+
 $local_environment = "Test-Laptop"
 $local_mirror = ENV["BOOTSTRAP_APT_MIRROR"]
 
