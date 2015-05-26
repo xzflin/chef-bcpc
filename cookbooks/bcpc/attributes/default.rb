@@ -33,7 +33,7 @@ default['bcpc']['ceph']['version'] = '0.80.9-0ubuntu0.14.04.2'
 default['bcpc']['erlang']['version'] = '1:17.5.3'
 default['bcpc']['haproxy']['version'] = '1.5.12-1ppa1~trusty'
 default['bcpc']['kibana']['version'] = '4.0.2'
-default['bcpc']['rabbitmq']['version'] = '3.5.2-1'
+default['bcpc']['rabbitmq']['version'] = '3.5.3-1'
 
 ###########################################
 #
@@ -238,9 +238,6 @@ default['bcpc']['ports']['apache']['radosgw_https'] = 443
 default['bcpc']['ports']['haproxy']['radosgw'] = 80
 default['bcpc']['ports']['haproxy']['radosgw_https'] = 443
 
-default['bcpc']['ports']['389ds']['local'] = 4389
-default['bcpc']['ports']['389ds']['floating'] = 389
-
 # Can be set to 'http' or 'https'
 default['bcpc']['protocol']['keystone'] = "https"
 default['bcpc']['protocol']['glance'] = "https"
@@ -266,6 +263,10 @@ default['bcpc']['keystone']['verbose'] = false
 # This can be either 'sql' or 'ldap' to either store identities
 # in the mysql DB or the LDAP server
 default['bcpc']['keystone']['backend'] = 'sql'
+default['bcpc']['ldap']['admin_user'] = nil
+default['bcpc']['ldap']['admin_pass'] = nil
+default['bcpc']['ldap']['config'] = {}
+
 
 ###########################################
 #
