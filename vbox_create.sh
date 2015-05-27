@@ -219,7 +219,7 @@ function create_bootstrap_VM {
                 $VBM createvm --name $vm --ostype Ubuntu_64 --basefolder $P --register
                 $VBM modifyvm $vm --memory $BOOTSTRAP_VM_MEM
                 $VBM modifyvm $vm --cpus $BOOTSTRAP_VM_CPUS
-                $VBM modifyvm $vm --vram $BOOTSTRAP_VM_VRAM
+                $VBM modifyvm $vm --vram 16
                 $VBM storagectl $vm --name "SATA Controller" --add sata
                 $VBM storagectl $vm --name "IDE Controller" --add ide
                 # Create a number of hard disks
