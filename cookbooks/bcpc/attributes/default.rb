@@ -391,7 +391,7 @@ default['bcpc']['rally']['user'] = 'ubuntu'
 #
 ###########################################
 
-default['bcpc']['flavors']['deleted'] = ["m1.tiny", "m1.small", "m1.medium", "m1.large", "m1.xlarge"]
+default['bcpc']['flavors']['deleted'] = []
 default['bcpc']['flavors']['enabled'] = { 
   "b1.tiny" => { "vcpus" => 1,
                  "disk_gb" => 0}
