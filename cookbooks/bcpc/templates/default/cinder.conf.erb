@@ -42,6 +42,11 @@ enabled_backends=<%= node['bcpc']['ceph']['enabled_pools'].map {|type| type.upca
 #control_exchange = cinder
 #notification_driver = cinder.openstack.common.notifier.rpc_notifier
 
+# Quotas
+<% node['bcpc']['cinder']['quota'].each do | key, value| %>
+quota_<%=key%> = <%= value %>
+<% end %>
+
 [oslo_messaging_rabbit]
 # Rabbit message queue settings
 #rabbit_host=<%=node['bcpc']['management']['vip']%>
