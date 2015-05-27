@@ -384,3 +384,19 @@ default['bcpc']['bootstrap']['mirror_path'] = "/ubuntu"
 # Package versions
 # None needed at this time
 default['bcpc']['rally']['user'] = 'ubuntu'
+
+
+###########################################
+#
+# Openstack Flavors
+#
+###########################################
+
+default['bcpc']['flavors']['deleted'] = ["m1.tiny", "m1.small", "m1.medium", "m1.large", "m1.xlarge"]
+default['bcpc']['flavors']['enabled'] = { 
+  "b1.tiny" => { "vcpus" => 1,
+                 "disk_gb" => 0}
+}
+                 
+                                         
+
