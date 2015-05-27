@@ -253,10 +253,10 @@ fi
 FILES="zabbix-agent.tar.gz zabbix-server.tar.gz $FILES"
 
 ## Get some python libs
-#if [ ! -f python-requests-aws_0.1.6_all.deb ]; then
-#    fpm -s python -t deb -v 0.1.6 requests-aws
-#fi
-#FILES="python-requests-aws_0.1.6_all.deb $FILES"
+if [ ! -f python-requests-aws_0.1.6_all.deb ]; then
+    fpm -s python -t deb -v 0.1.6 requests-aws
+fi
+FILES="python-requests-aws_0.1.6_all.deb $FILES"
 
 # Rally has a number of dependencies. Some of the dependencies are in apt by default but some are not. Those that
 # are not are built here.

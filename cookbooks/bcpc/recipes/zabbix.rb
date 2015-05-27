@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: bcpc
-# Recipe:: zabbix-head
+# Recipe:: zabbix
 #
 # Copyright 2013, Bloomberg Finance L.P.
 #
@@ -19,8 +19,7 @@
 
 if node['bcpc']['enabled']['monitoring'] then
 
-    include_recipe "bcpc::mysql-head"
-    include_recipe "bcpc::horizon"
+    include_recipe "bcpc::mysql-monitoring"
     include_recipe "bcpc::apache2"
 
     ruby_block "initialize-zabbix-config" do
@@ -78,30 +77,26 @@ if node['bcpc']['enabled']['monitoring'] then
 
     ruby_block "zabbix-database-creation" do
         block do
-            if not system "mysql -uroot -p#{get_config('mysql-root-password')} -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['zabbix']}\"'|grep \"#{node['bcpc']['dbname']['zabbix']}\"" then
-                %x[ mysql -uroot -p#{get_config('mysql-root-password')} -e "CREATE DATABASE #{node['bcpc']['dbname']['zabbix']} CHARACTER SET UTF8;"
-                    mysql -uroot -p#{get_config('mysql-root-password')} -e "GRANT ALL ON #{node['bcpc']['dbname']['zabbix']}.* TO '#{get_config('mysql-zabbix-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-zabbix-password')}';"
-                    mysql -uroot -p#{get_config('mysql-root-password')} -e "GRANT ALL ON #{node['bcpc']['dbname']['zabbix']}.* TO '#{get_config('mysql-zabbix-user')}'@'localhost' IDENTIFIED BY '#{get_config('mysql-zabbix-password')}';"
-                    mysql -uroot -p#{get_config('mysql-root-password')} -e "FLUSH PRIVILEGES;"
-                    mysql -uroot -p#{get_config('mysql-root-password')} #{node['bcpc']['dbname']['zabbix']} < /usr/local/share/zabbix/schema.sql
-                    mysql -uroot -p#{get_config('mysql-root-password')} #{node['bcpc']['dbname']['zabbix']} < /usr/local/share/zabbix/images.sql
-                    mysql -uroot -p#{get_config('mysql-root-password')} #{node['bcpc']['dbname']['zabbix']} < /usr/local/share/zabbix/data.sql
+            if not system "mysql -uroot -p#{get_config('mysql-monitoring-root-password')} -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['zabbix']}\"'|grep \"#{node['bcpc']['dbname']['zabbix']}\"" then
+                %x[ mysql -uroot -p#{get_config('mysql-monitoring-root-password')} -e "CREATE DATABASE #{node['bcpc']['dbname']['zabbix']} CHARACTER SET UTF8;"
+                    mysql -uroot -p#{get_config('mysql-monitoring-root-password')} -e "GRANT ALL ON #{node['bcpc']['dbname']['zabbix']}.* TO '#{get_config('mysql-zabbix-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-zabbix-password')}';"
+                    mysql -uroot -p#{get_config('mysql-monitoring-root-password')} -e "GRANT ALL ON #{node['bcpc']['dbname']['zabbix']}.* TO '#{get_config('mysql-zabbix-user')}'@'localhost' IDENTIFIED BY '#{get_config('mysql-zabbix-password')}';"
+                    mysql -uroot -p#{get_config('mysql-monitoring-root-password')} -e "FLUSH PRIVILEGES;"
+                    mysql -uroot -p#{get_config('mysql-monitoring-root-password')} #{node['bcpc']['dbname']['zabbix']} < /usr/local/share/zabbix/schema.sql
+                    mysql -uroot -p#{get_config('mysql-monitoring-root-password')} #{node['bcpc']['dbname']['zabbix']} < /usr/local/share/zabbix/images.sql
+                    mysql -uroot -p#{get_config('mysql-monitoring-root-password')} #{node['bcpc']['dbname']['zabbix']} < /usr/local/share/zabbix/data.sql
                     HASH=`echo -n "#{get_config('zabbix-admin-password')}" | md5sum | awk '{print $1}'`
-                    mysql -uroot -p#{get_config('mysql-root-password')} #{node['bcpc']['dbname']['zabbix']} -e "UPDATE users SET passwd=\\"$HASH\\" WHERE alias=\\"#{get_config('zabbix-admin-user')}\\";"
+                    mysql -uroot -p#{get_config('mysql-monitoring-root-password')} #{node['bcpc']['dbname']['zabbix']} -e "UPDATE users SET passwd=\\"$HASH\\" WHERE alias=\\"#{get_config('zabbix-admin-user')}\\";"
                     HASH=`echo -n "#{get_config('zabbix-guest-password')}" | md5sum | awk '{print $1}'`
-                    mysql -uroot -p#{get_config('mysql-root-password')} #{node['bcpc']['dbname']['zabbix']} -e "UPDATE users SET passwd=\\"$HASH\\" WHERE alias=\\"#{get_config('zabbix-guest-user')}\\";"
+                    mysql -uroot -p#{get_config('mysql-monitoring-root-password')} #{node['bcpc']['dbname']['zabbix']} -e "UPDATE users SET passwd=\\"$HASH\\" WHERE alias=\\"#{get_config('zabbix-guest-user')}\\";"
                 ]
             end
         end
     end
 
     service "zabbix-server" do
-        if is_vip?
-            action [:enable, :start]
-        else
-            action :stop
-        end
-        restart_command "if_vip restart zabbix-server"
+        action [:enable, :start]
+        restart_command "if_monitoring_vip restart zabbix-server"
         provider Chef::Provider::Service::Upstart
     end
 
@@ -132,7 +127,7 @@ if node['bcpc']['enabled']['monitoring'] then
         notifies :restart, "service[apache2]", :delayed
     end
 
-    template "/etc/apache2/sites-available/zabbix-web" do
+    template "/etc/apache2/sites-available/zabbix-web.conf" do
         source "apache-zabbix-web.conf.erb"
         owner "root"
         group "root"
@@ -160,35 +155,6 @@ if node['bcpc']['enabled']['monitoring'] then
         block do
             system "/usr/local/share/zabbix/zabbix-api-auto-discovery"
         end
-    end
-
-    include_recipe "bcpc::zabbix-work"
-
-    template "/usr/local/etc/zabbix_agentd.conf.d/zabbix-openstack.conf" do
-        source "zabbix_openstack.conf.erb"
-        owner node['bcpc']['zabbix']['user']
-        group "root"
-        mode 00600
-        notifies :restart, "service[zabbix-agent]", :immediately
-    end
-
-    cookbook_file "/tmp/python-requests-aws_0.1.5_all.deb" do
-        source "bins/python-requests-aws_0.1.5_all.deb"
-        owner "root"
-        mode 00444
-    end
-
-    package "requests-aws" do
-        provider Chef::Provider::Package::Dpkg
-        source "/tmp/python-requests-aws_0.1.5_all.deb"
-        action :install
-    end
-
-    template "/usr/local/bin/zabbix_bucket_stats" do
-        source "zabbix_bucket_stats.erb"
-        owner "root"
-        group "root"
-        mode "00755"
     end
 
 end
