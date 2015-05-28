@@ -286,6 +286,8 @@ default['bcpc']['nova']['workers'] = 5
 default['bcpc']['nova']['live_migration_patch'] = false
 # Nova debug toggle
 default['bcpc']['nova']['debug'] = false
+# Nova scheduler default filters
+default['bcpc']['nova']['scheduler_default_filters'] = ['AggregateInstanceExtraSpecsFilter', 'AvailabilityZoneFilter', 'RamFilter', 'ComputeFilter', 'DifferentHostFilter', 'SameHostFilter']
 ###########################################
 #
 # Routemon settings

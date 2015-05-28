@@ -40,6 +40,7 @@ osapi_compute_extension=cobalt.nova.osapi.cobalt_extension.Cobalt_extension
 
 # Nova Scheduler
 scheduler_driver=nova.scheduler.filter_scheduler.FilterScheduler
+scheduler_default_filters=<%=node['bcpc']['nova']['scheduler_default_filters'].join(',')%>
 ram_allocation_ratio=<%=node['bcpc']['nova']['ram_allocation_ratio']%>
 reserved_host_memory_mb=<%=node['bcpc']['nova']['reserved_host_memory_mb']%>
 cpu_allocation_ratio=<%=node['bcpc']['nova']['cpu_allocation_ratio']%>
