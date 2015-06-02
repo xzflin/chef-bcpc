@@ -59,12 +59,12 @@ knife data bag show configs "${ENVIRONMENT}" >> "${DATABAG_BACKUP}"
 echo "Databag configs for ${ENVIRONMENT} dumped to ${DATABAG_BACKUP}"
 
 echo "Deleting data bag configs..."
-knife data bag delete configs
+knife data bag delete --yes configs
 
 echo "Removing clients and nodes..."
 for CLIENT in $CLUSTER_MEMBERS; do
-    knife client delete "${CLIENT}.${BOOTSTRAP_DOMAIN}"
-    knife node   delete "${CLIENT}.${BOOTSTRAP_DOMAIN}"
+    knife client delete --yes "${CLIENT}.${BOOTSTRAP_DOMAIN}"
+    knife node   delete --yes "${CLIENT}.${BOOTSTRAP_DOMAIN}"
 done
 
 echo "reload knife data..."
