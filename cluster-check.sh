@@ -139,6 +139,13 @@ if [[ -f cluster.txt ]]; then
             vtrace "Root fileystem size = $ROOTSIZE ($ROOTGIGS GB) "
         fi
         
+        if [[ -z `$SSH "ip route show table main | grep default"` ]]; then
+            echo "$HOST no default route in table main !!WARNING!!"
+            BADHOSTS="$BADHOSTS $HOST"
+        else
+            vtrace "$HOST has a default (main) route"
+            MA=$[MA + 1]
+        fi
         if [[ -z `$SSH "ip route show table mgmt | grep default"` ]]; then
             echo "$HOST no mgmt default route !!WARNING!!"
             BADHOSTS="$BADHOSTS $HOST"
@@ -222,7 +229,7 @@ if [[ -f cluster.txt ]]; then
         vftrace "$HOST %20s %s\n" "$SERVICE" "$STAT"
         
         # Finally, check well-known BCPC services run out of upstart
-        for SERVICE in glance-api glance-registry cinder-scheduler cinder-volume cinder-api nova-api nova-novncproxy nova-scheduler nova-consoleauth nova-cert nova-conductor nova-compute nova-network haproxy apache2 routemon tpm; do
+        for SERVICE in keystone glance-api glance-registry cinder-scheduler cinder-volume cinder-api nova-api nova-novncproxy nova-scheduler nova-consoleauth nova-cert nova-conductor nova-compute nova-network haproxy apache2 routemon tpm; do
             STAT=`$SSH "service $SERVICE status 2>&1"`
             if [[ ! "$STAT" =~ "unrecognized" ]]; then
                 
@@ -270,7 +277,7 @@ if [[ -f cluster.txt ]]; then
 else
     echo "Warning 'cluster.txt' not found"
 fi
-echo "$ENVIRONMENT cluster summary: $UP hosts up. $MG hosts with default mgmt route. $SG hosts with default storage route"
+echo "$ENVIRONMENT cluster summary: $UP hosts up. $MA hosts with default main route. $MG hosts with default mgmt route. $SG hosts with default storage route"
 BADHOSTS=`echo $BADHOSTS | uniq | sort`
 if [[ ! -z "$BADHOSTS" ]]; then
     echo "Bad hosts $BADHOSTS - definite issues on these"
