@@ -81,13 +81,13 @@ def search_nodes(key, value)
     if key == "recipe"
         results = search(:node, "recipes:bcpc\\:\\:#{value} AND chef_environment:#{node.chef_environment}")
         results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
-        if not results.include?(node) and node.run_list.expand.recipes.include?("bcpc::#{value}")
+        if not results.include?(node) and node.run_list.expand(node.chef_environment).recipes.include?("bcpc::#{value}")
             results.push(node)
         end
     elsif key == "role"
         results = search(:node, "#{key}:#{value} AND chef_environment:#{node.chef_environment}")
         results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
-        if not results.include?(node) and node.run_list.expand.roles.include?(value)
+        if not results.include?(node) and node.run_list.expand(node.chef_environment).roles.include?(value)
             results.push(node)
         end
     else
