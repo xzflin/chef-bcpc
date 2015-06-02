@@ -407,3 +407,12 @@ default['bcpc']['bootstrap']['mirror_path'] = "/ubuntu"
 # Package versions
 # None needed at this time
 default['bcpc']['rally']['user'] = 'ubuntu'
+
+###########################################
+#
+# Openstack Flavors
+#
+###########################################
+
+default['bcpc']['flavors']['deleted'] = []
+default['bcpc']['flavors']['enabled'] = {}
