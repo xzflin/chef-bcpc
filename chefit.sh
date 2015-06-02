@@ -24,19 +24,25 @@ if [[ -z "$CHEF" ]]; then
     $SCPCMD finish-head.sh    /home/ubuntu
 
     if [[ -n "$(source proxy_setup.sh >/dev/null; echo $PROXY)" ]]; then
-	PROXY=$(source proxy_setup.sh >/dev/null; echo $PROXY)
-	echo "setting up .wgetrc's to $PROXY"
-	$SSHCMD "echo \"http_proxy = http://$PROXY\" > .wgetrc"
+	    PROXY=$(source proxy_setup.sh >/dev/null; echo $PROXY)
+	    echo "setting up .wgetrc's to $PROXY"
+	    $SSHCMD "echo \"http_proxy = http://$PROXY\" > .wgetrc"
+
+        # possibly set up a proxy for apt too
+        if [[ -n "$APTPROXY" ]]; then
+	        echo "Acquire::http::Proxy \"http://${APTPROXY}\";" > /tmp/apt.conf
+	        $SCPCMD /tmp/apt.conf /tmp
+	        $SSHCMD "mv /tmp/apt.conf /etc/apt/apt.conf" sudo
+        fi
+
+        echo "setup chef"
+        $SSHCMD  "/home/ubuntu/install-chef.sh" sudo
+    else
+        echo "Chef is installed as $CHEF"
     fi
 
-    echo "setup chef"
-    $SSHCMD  "/home/ubuntu/install-chef.sh" sudo
-else
-    echo "Chef is installed as $CHEF"
-fi
-
-echo "zap disks"
-$SSHCMD "/home/ubuntu/zap-ceph-disks.sh" sudo
+    echo "zap disks"
+    $SSHCMD "/home/ubuntu/zap-ceph-disks.sh" sudo
 
 echo "temporarily adjust system time to avoid time skew related failures"
 GOODDATE=`date`
