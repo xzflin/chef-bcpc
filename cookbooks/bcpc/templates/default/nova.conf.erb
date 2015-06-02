@@ -132,6 +132,11 @@ ec2_private_dns_show_ip=True
 ca_file = /etc/ssl/certs/ssl-bcpc.pem
 cinder_ca_certificates_file = /etc/ssl/certs/ssl-bcpc.pem
 
+# Quotas
+<% node['bcpc']['nova']['quota'].each do | key, value| %>
+quota_<%=key%> = <%= value %>
+<% end %>
+
 [oslo_concurrency]
 lock_path=/var/lock/nova
 

@@ -288,6 +288,27 @@ default['bcpc']['nova']['live_migration_patch'] = false
 default['bcpc']['nova']['debug'] = false
 # Nova scheduler default filters
 default['bcpc']['nova']['scheduler_default_filters'] = ['AggregateInstanceExtraSpecsFilter', 'AvailabilityZoneFilter', 'RamFilter', 'ComputeFilter', 'DifferentHostFilter', 'SameHostFilter']
+
+default['bcpc']['nova']['quota'] = {
+  "cores" => 4,
+  "floating_ips" => 10,
+  "gigabytes"=> 1000,
+  "instances" => 10,
+  "ram" => 51200
+}
+
+###########################################
+#
+#  Cinder Settings
+#
+###########################################
+default['bcpc']['cinder']['quota'] = {
+  "volumes" => 10,
+  "quota_snapshots" => 10,
+  "consistencygroups" => 10,
+  "gigabytes" => 1000
+}
+
 ###########################################
 #
 # Routemon settings
