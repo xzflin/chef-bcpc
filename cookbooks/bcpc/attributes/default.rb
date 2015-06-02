@@ -288,7 +288,6 @@ default['bcpc']['nova']['live_migration_patch'] = false
 default['bcpc']['nova']['debug'] = false
 # Nova scheduler default filters
 default['bcpc']['nova']['scheduler_default_filters'] = ['AggregateInstanceExtraSpecsFilter', 'AvailabilityZoneFilter', 'RamFilter', 'ComputeFilter', 'DifferentHostFilter', 'SameHostFilter']
-
 default['bcpc']['nova']['quota'] = {
   "cores" => 4,
   "floating_ips" => 10,
@@ -296,6 +295,10 @@ default['bcpc']['nova']['quota'] = {
   "instances" => 10,
   "ram" => 51200
 }
+# load a custom vendor driver, 
+# e.g. "nova.api.metadata.bcpc_metadata.BcpcMetadata", 
+# comment out to use default
+#default['bcpc']['vendordata_driver'] = "nova.api.metadata.bcpc_metadata.BcpcMetadata"
 
 ###########################################
 #
