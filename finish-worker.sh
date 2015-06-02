@@ -7,4 +7,4 @@
 #
 #service glance-api       restart
 #service glance-registry  restart
-#chef-client
+chef-client
