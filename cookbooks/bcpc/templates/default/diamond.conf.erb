@@ -234,7 +234,15 @@ innodb = True
 enabled = True
 host=<%=node['bcpc']['management']['ip']%>:55672
 password=<%=get_config('rabbitmq-password')%>
-
+<% if @servers.length > 1 -%>
+cluster = True
+<% end -%>
+<% if not node['bcpc']['diamond']['collectors']['rabbitmq']['queues_ignored'].nil? -%>
+queues_ignored = <%=node['bcpc']['diamond']['collectors']['rabbitmq']['queues_ignored']%>
+<% end -%>
+<% if not node['bcpc']['diamond']['collectors']['rabbitmq']['queues'].nil? -%>
+queues = <%=node['bcpc']['diamond']['collectors']['rabbitmq']['queues']%>
+<% end -%>
 <% end -%>
 
 ################################################################################
