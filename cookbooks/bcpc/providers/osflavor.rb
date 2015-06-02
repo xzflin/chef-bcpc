@@ -51,6 +51,7 @@ action :create do
                                       "--ephemeral=#{@new_resource.ephemeral_gb}",
                                       "--swap=#{@new_resource.swap_gb}",
                                       "--vcpus=#{@new_resource.vcpus}", 
+                                      "--id=#{@new_resource.flavor_id}",
                                       "#{ispub}"
                                       )
 

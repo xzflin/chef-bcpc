@@ -24,7 +24,7 @@ node['bcpc']['flavors']['enabled'].each do |name, flavor|
     ephemeral_gb flavor['ephemeral_gb']
     swap_gb flavor['swap_gb']
     is_public flavor['is_public']
-    
+    flavor_id flavor['id']
   end
 end 
 

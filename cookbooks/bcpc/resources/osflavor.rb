@@ -22,7 +22,7 @@ actions :create, :delete
 default_action :create
 
 attribute :name, :name_attribute => true, :kind_of => String, :required => true
-attribute :id, :kind_of => Fixnum, :required => false
+attribute :flavor_id, :kind_of => String, :required => false, :default => "auto"
 attribute :memory_mb, :kind_of => Fixnum, :required => false, :default => 512
 attribute :disk_gb, :kind_of => Fixnum, :required => false, :default => 5
 attribute :ephemeral_gb, :kind_of => Fixnum, :required => false, :default => 0
