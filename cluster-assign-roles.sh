@@ -15,7 +15,6 @@
 # - A node may be excluded by setting its role to something other than
 #   "head" or "work" in cluster.txt. For example "done" might be
 #   useful for nodes that have been completed
-
 set -e
 if [[ -z "$1" ]]; then
     echo "Usage : $0 environment (hostname)"
@@ -51,8 +50,7 @@ echo "heads : $HEADS"
 echo "workers : $WORKERS"
 
 PASSWD=`knife data bag show configs $ENVIRONMENT | grep "cobbler-root-password:" | awk ' {print $2}'`
-
-# Head nodes use an unbundled initialisation - chef is installed from
+# All nodes now use an unbundled initialisation - chef is installed from
 # a .deb (allowing disconnected working) and then the node is
 # bootstrapped with no role to start, and then it is made admin, and
 # then the role is assigned, finally chef-client is run
@@ -69,13 +67,17 @@ for HEAD in $HEADS; do
     SSHCMD="./nodessh.sh $ENVIRONMENT $HEAD"
     $SSHCMD "/home/ubuntu/finish-head.sh" sudo  
 done
-# Work nodes are simpler than head nodes. After installation of Chef
-# we can let knife bootstrap do the rest.
+# As of R5, we seem to need to use the two-step bootstrap for work nodes too
 for WORKER in $WORKERS; do
     MATCH=$WORKER
     echo "About to bootstrap worker worker $WORKER..."
     ./chefit.sh $WORKER $ENVIRONMENT
-    echo $PASSWD | sudo knife bootstrap -E $ENVIRONMENT -r 'role[BCPC-Worknode]' $WORKER -x ubuntu -P $PASSWD --sudo
+    echo $PASSWD | sudo knife bootstrap -E $ENVIRONMENT $WORKER -x ubuntu -P $PASSWD --sudo
+    IDX=`echo $WORKER | tr '.' '-'`
+    FQDN=${FQDNS["$IDX"]}
+    knife actor map
+    knife group add actor admins $FQDN
+    knife node run_list add $FQDN 'role[BCPC-Worknode]'
     SSHCMD="./nodessh.sh $ENVIRONMENT $WORKER"
     $SSHCMD "/home/ubuntu/finish-worker.sh" sudo    
 done
