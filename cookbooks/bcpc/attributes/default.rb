@@ -365,6 +365,17 @@ default['bcpc']['graphite']['retention'] = '60s:1d'
 #
 ###########################################
 #
+# Diamond settings
+#
+###########################################
+#
+# List of queue names separated by whitespace to report on. If nil, report all.
+default['bcpc']['diamond']['collectors']['rabbitmq']['queues'] = nil
+# Regular expression or list of queues to not report on.
+# If not nil, this overrides "queues".
+default['bcpc']['diamond']['collectors']['rabbitmq']['queues_ignored'] = '.*'
+###########################################
+#
 # defaults for the bcpc.bootstrap settings
 #
 ###########################################

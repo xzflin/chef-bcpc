@@ -59,8 +59,7 @@ filecheck() {
 
 # Define the appropriate version of each binary to grab/build
 VER_KIBANA=4.0.2
-# newer versions of Diamond depend upon dh-python which isn't in precise/12.04
-VER_DIAMOND=f33aa2f75c6ea2dfbbc659766fe581e5bfe2476d
+VER_DIAMOND=2c0de81281a6750cf06fac760c081f89a088bca4
 VER_ESPLUGIN=9c032b7c628d8da7745fbb1939dcd2db52629943
 
 PROXY_INFO_FILE="/home/vagrant/proxy_info.sh"
@@ -185,7 +184,7 @@ FILES="ubuntu-14.04-mini.iso $FILES"
 
 # Make the diamond package
 if [ ! -f diamond.deb ]; then
-    git clone https://github.com/BrightcoveOS/Diamond.git
+    git clone https://github.com/python-diamond/Diamond.git
     cd Diamond
     git checkout $VER_DIAMOND
     make builddeb
