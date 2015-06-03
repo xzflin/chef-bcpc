@@ -65,7 +65,12 @@ VER_ESPLUGIN=9c032b7c628d8da7745fbb1939dcd2db52629943
 PROXY_INFO_FILE="/home/vagrant/proxy_info.sh"
 if [[ -f $PROXY_INFO_FILE ]]; then
   . $PROXY_INFO_FILE
+elif [[ -f $HOME/chef-bcpc/proxy_setup.sh ]]
+then
+  . $HOME/chef-bcpc/proxy_setup.sh
 fi
+
+
 
 # define calling gem with a proxy if necessary
 if [[ -z $http_proxy ]]; then

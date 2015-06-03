@@ -8,6 +8,10 @@
 # hypervisor. Change to reflect your real proxy info
 #export PROXY="10.0.100.2:3128"
 
+# define APTPROXY if your apt mirror is accessed via the proxy
+# do not define if it's local (e.g. on the bootstrap node as per the apache-mirror recipe).
+#export APTPROXY=$PROXY
+
 export CURL='curl'
 if [ -n "$PROXY" ]; then
     
