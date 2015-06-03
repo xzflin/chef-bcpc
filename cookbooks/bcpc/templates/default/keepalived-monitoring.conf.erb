@@ -51,4 +51,7 @@ vrrp_instance VI1_<%=@group_name%> {
     auth_type PASS
     auth_pass <%=get_config(@password_key)%>
   }
+  notify_backup "/sbin/initctl emit --no-wait vip_lost"
+  notify_fault "/sbin/initctl emit --no-wait vip_lost"
+  notify_master "/sbin/initctl emit --no-wait vip_won"
 }

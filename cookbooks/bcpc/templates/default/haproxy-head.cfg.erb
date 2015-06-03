@@ -171,8 +171,6 @@ frontend https
   use_backend horizon-backend if url_horizon_static
   acl url_rabbitmq path_beg /rabbitmq
   use_backend rabbitmq-web-backend if url_rabbitmq
-  acl url_zabbix path_beg /zabbix
-  use_backend zabbix-backend if url_zabbix
   default_backend http-backend
 
 backend http-backend
@@ -198,15 +196,6 @@ backend rabbitmq-web-backend
   reqrep ^([^\ :]*)\ /rabbitmq/(.*) \1\ /\2
 <% @servers.each do |server| -%>
   <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:55672 check inter 5s rise 1 fall 1" %>
-<% end -%>
-
-backend zabbix-backend
-  balance source
-  option httpchk GET /
-  http-check expect status 200
-  reqrep ^([^\ :]*)\ /zabbix/(.*) \1\ /\2
-<% @servers.each do |server| -%>
-  <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:7777 check inter 5s rise 1 fall 1" %>
 <% end -%>
 
 frontend radosgw-http
