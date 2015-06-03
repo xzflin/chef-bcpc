@@ -43,17 +43,6 @@ listen mysql-galera <%=node['bcpc']['management']['vip']%>:3306
   <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:3306 check port 3307 inter 5s rise 1 fall 1 observe layer4 backup" %>
 <% end -%>
 
-listen ldap-389ds <%=node['bcpc']['management']['vip']%>:<%=node['bcpc']['ports']['389ds']['floating']%>
-  timeout client 1h
-  timeout server 1h
-  mode tcp
-  balance leastconn
-  option tcplog
-  option tcpka
-<% @servers.each do |server| -%>
-  <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:#{server['bcpc']['ports']['389ds']['local']} check inter 5s rise 1 fall 1 observe layer4" %>
-<% end -%>
-
 listen keystone-api
   bind <%=node['bcpc']['management']['vip']%>:5000 <%= (node['bcpc']['protocol']['keystone'] == 'https') ? "ssl crt /etc/haproxy/haproxy.pem" : "" %>
   balance source

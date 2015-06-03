@@ -17,7 +17,6 @@
       "recipe[bcpc::powerdns]",
       "recipe[bcpc::rabbitmq]",
       "recipe[bcpc::powerdns]",
-      "recipe[bcpc::389ds]",
       "recipe[bcpc::memcached]",
       "recipe[bcpc::haproxy-head]",
       "recipe[bcpc::keepalived-head]",

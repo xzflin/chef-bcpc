@@ -238,9 +238,6 @@ default['bcpc']['ports']['apache']['radosgw_https'] = 443
 default['bcpc']['ports']['haproxy']['radosgw'] = 80
 default['bcpc']['ports']['haproxy']['radosgw_https'] = 443
 
-default['bcpc']['ports']['389ds']['local'] = 4389
-default['bcpc']['ports']['389ds']['floating'] = 389
-
 # Can be set to 'http' or 'https'
 default['bcpc']['protocol']['keystone'] = "https"
 default['bcpc']['protocol']['glance'] = "https"
@@ -265,7 +262,11 @@ default['bcpc']['keystone']['debug'] = false
 default['bcpc']['keystone']['verbose'] = false
 # This can be either 'sql' or 'ldap' to either store identities
 # in the mysql DB or the LDAP server
-default['bcpc']['keystone']['backend'] = 'ldap'
+default['bcpc']['keystone']['backend'] = 'sql'
+default['bcpc']['ldap']['admin_user'] = nil
+default['bcpc']['ldap']['admin_pass'] = nil
+default['bcpc']['ldap']['config'] = {}
+
 
 ###########################################
 #

@@ -71,7 +71,7 @@ verbose = false
 #control_exchange = keystone
 
 [assignment]
-#driver = <None>
+driver = keystone.assignment.backends.sql.Assignment
 
 [auth]
 #methods = external,password,token,oauth1
@@ -226,89 +226,9 @@ backends = keystone.common.kvs.backends.memcached
 #default_lock_timeout = 5
 
 [ldap]
-url=ldap://<%=@node["bcpc"]["management"]["vip"]%>
-user=<%=get_config('389ds-rootdn-user')%>
-password=<%=get_config('389ds-rootdn-password')%>
-suffix=<%= node['bcpc']['domain_name'].split('.').collect{|x| 'dc='+x }.join(',') %>
-query_scope=sub
-#use_dumb_member = false
-#dumb_member = cn=dumb,dc=nonexistent
-#allow_subtree_delete = false
-#page_size = 0
-#alias_dereferencing = default
-#debug_level = <None>
-#chase_referrals = <None>
-user_tree_dn=ou=People,<%= node['bcpc']['domain_name'].split('.').collect { |x| 'dc='+x }.join(',') %>
-#user_filter = <None>
-#user_objectclass = inetOrgPerson
-#user_id_attribute = cn
-#user_name_attribute = sn
-#user_mail_attribute = mail
-#user_pass_attribute = userPassword
-#user_enabled_attribute = enabled
-#user_enabled_invert = false
-#user_enabled_mask = 0
-#user_enabled_default = True
-#user_attribute_ignore = default_project_id,tenants
-#user_default_project_id_attribute = <None>
-#user_allow_create = true
-#user_allow_update = true
-#user_allow_delete = true
-user_enabled_emulation = true
-user_enabled_emulation_dn=cn=OpenStack Users,ou=Groups,<%= node['bcpc']['domain_name'].split('.').collect{|x| 'dc='+x }.join(',') %>
-#user_additional_attribute_mapping =
-project_tree_dn=ou=Tenants,<%= node['bcpc']['domain_name'].split('.').collect{|x| 'dc='+x }.join(',') %>
-#project_filter = <None>
-#project_objectclass = groupOfNames
-#project_id_attribute = cn
-#project_member_attribute = member
-#project_name_attribute = ou
-#project_desc_attribute = description
-#project_enabled_attribute = enabled
-#project_domain_id_attribute = businessCategory
-#project_attribute_ignore =
-#project_allow_create = true
-#project_allow_update = true
-#project_allow_delete = true
-project_enabled_emulation = true
-project_enabled_emulation_dn=cn=OpenStack Tenants,ou=Groups,<%= node['bcpc']['domain_name'].split('.').collect{|x| 'dc='+x }.join(',') %>
-#project_additional_attribute_mapping =
-role_tree_dn=ou=Roles,<%= node['bcpc']['domain_name'].split('.').collect{|x| 'dc='+x }.join(',') %>
-#role_filter = <None>
-#role_objectclass = organizationalRole
-#role_id_attribute = cn
-#role_name_attribute = ou
-#role_member_attribute = roleOccupant
-#role_attribute_ignore =
-#role_allow_create = true
-#role_allow_update = true
-#role_allow_delete = true
-#role_additional_attribute_mapping =
-group_tree_dn=ou=Groups,<%= node['bcpc']['domain_name'].split('.').collect{|x| 'dc='+x }.join(',') %>
-#group_filter = <None>
-#group_objectclass = groupOfNames
-#group_id_attribute = cn
-#group_name_attribute = ou
-#group_member_attribute = member
-#group_desc_attribute = description
-#group_attribute_ignore =
-#group_allow_create = true
-#group_allow_update = true
-#group_allow_delete = true
-#group_additional_attribute_mapping =
-#tls_cacertfile = <None>
-#tls_cacertdir = <None>
-#use_tls = false
-#tls_req_cert = demand
-#use_pool = false
-#pool_size = 10
-#pool_retry_max = 3
-#pool_retry_delay = 0.1
-#pool_connection_timeout = -1
-#pool_connection_lifetime = 600
-#use_auth_pool = false
-#auth_pool_size = 100
-#auth_pool_connection_lifetime = 60
+<% node['bcpc']['ldap']['config'].sort.each do |k, v| %>
+<%= k %> = <%= v %>
+<% end %>
 
 [matchmaker_redis]
 #host = 127.0.0.1
@@ -428,7 +348,7 @@ caching = false
 #cache_time = 3600
 
 [role]
-#driver = <None>
+driver =  keystone.assignment.role_backends.sql.Role
 <% if node['bcpc']['keystone']['enable_caching'] %>
 caching = true
 <% else %>

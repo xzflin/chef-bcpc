@@ -121,7 +121,6 @@ BCPC Services
 
 BCPC currently relies upon a number of open-source packages:
 
- - [389 Directory Server](http://directory.fedoraproject.org/)
  - [Apache HTTP Server](http://httpd.apache.org/)
  - [Ceph](http://ceph.com/)
  - [Chef](http://www.opscode.com/chef/)
