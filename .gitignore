@@ -1,10 +1,11 @@
 .rake_test_cache
 .chef/
 .idea/
+.vagrant/
 *.iml
 id_rsa
 secret_file
-vbox_override.sh
+bootstrap/config/bootstrap_config.sh
 cacerts/
 cookbooks/apt/
 cookbooks/chef-solo-search/
@@ -13,5 +14,6 @@ cookbooks/ntp/
 cookbooks/ubuntu/
 cookbooks/yum/
 environments/*
+vbox_override.sh
 .*.sw*
 *~

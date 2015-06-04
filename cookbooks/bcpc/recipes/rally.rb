@@ -58,14 +58,16 @@ cookbook_file "/tmp/rally.tar.gz" do
     mode 00444
 end
 
-cookbook_file "/tmp/python-pip_6.1.1_all.deb" do
-    source "bins/python-pip_6.1.1_all.deb"
+pip_version = node['bcpc']['use_bootstrap_v2'] ? '7.0.3' : '6.1.1'
+
+cookbook_file "/tmp/python-pip_#{pip_version}_all.deb" do
+    source "bins/python-pip_#{pip_version}_all.deb"
     owner "root"
     mode 00444
 end
 
 dpkg_package "python-pip" do
-    source "/tmp/python-pip_6.1.1_all.deb"
+    source "/tmp/python-pip_#{pip_version}_all.deb"
     action :install
 end
 
@@ -76,7 +78,7 @@ bash "rally-pip-bin" do
         tar xvf /tmp/rally-bin.tar.gz -C /usr/local/bin .
         #easy_install -H None -f /usr/local/lib/python2.7/dist-packages rally
     EOH
-    not_if "test -d /usr/local/lib/python2.7/dist-packages/rally-0.0.3-py2.7.egg"
+    not_if "test -d /usr/local/lib/python2.7/dist-packages/rally-0.0.4-py2.7.egg"
 end
 
 # Make sure these directories are present
