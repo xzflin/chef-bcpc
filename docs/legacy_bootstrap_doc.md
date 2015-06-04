@@ -8,12 +8,12 @@ bcpc-vm2, bcpc-vm3, etc.) can be PXE-booted with a valid image and then
 chef-ified with minimal effort.
 
 If you have Vagrant and VirtualBox installed, you can use our included
-Vagrantfile and an Ubuntu 12.04 box file to provision a bootstrap node that is
+Vagrantfile and an Ubuntu 14.04 box file to provision a bootstrap node that is
 able to act as the provisioning server with minimal interaction.
 
 If you do not wish to use Vagrant or have a bare metal installation and wish to
 do a manual install of the bootstrap node, you can use our bootstrap_chef.sh
-scripts to bring a bare Ubuntu 12.04 image up as a provisioning server.
+scripts to bring a bare Ubuntu 14.04 image up as a provisioning server.
 
 Once the bootstrap node is provisioned, then you can PXE-boot the other virtual
 machines and enroll them in the cluster as head and worker nodes as you deem
@@ -26,12 +26,7 @@ document.
 About hypervisor hosts
 ======================
 
-chef-bcpc has been successfully tested on Ubuntu 12.04, Mac OS X
-10.7.5 and Windows 7. On Windows, in addition to VirtualBox you need a
-working bash interpreter and rsync available in your PATH. More
-information about using chef-bcpc on Windows is provided in [Using
-Windows as your
-Hypervisor](https://github.com/bloomberg/chef-bcpc/blob/master/windows.md)
+chef-bcpc has been successfully tested on Ubuntu 14.04 and OS X.
 
 About proxies
 =============
@@ -99,44 +94,6 @@ In our testing, VirtualBox guest SMP makes performance significantly worse, so
 it is recommended that you keep one CPU per VM.  You may also find that 2GB is
 not enough for a BCPC-Headnode and wish to tweak the amount of RAM given to
 any head node VM.
-
-Additionally, there is some EXPERIMENTAL support (likely to be deprecated in a future release) for a one-touch build process. In the meantime, simply run
-```
-$ ./vbox_init
-```
-and it should build the entire cluster for you. Beware that this will blow away all of your existing VMs and attempt a clean build. YMMV.
-
-bcpc-bootstrap creation with Vagrant
-====================================
-
-If vagrant is locally installed, we utilize the
-[vagrant box images from Canonical](http://cloud-images.ubuntu.com/vagrant/)
-to provision the bcpc-bootstrap node.
-
-If you have a [local repository mirror](#setting-up-a-private-repos-mirror),
-you can alter the Vagrantfile to use it when provisioning:
-
-```
-$local_mirror = "10.0.100.4"
-```
-
-You can log in to your bcpc-bootstrap node from the hypervisor via:
-
-```
-$ vagrant ssh
-```
-
-After the automatic Vagrant provisioning is complete, this is a good time to
-take a snapshot of your bootstrap node:
-
-```
-$ VBoxManage snapshot bcpc-bootstrap take initial-install
-```
-
-Please note that the 3 bcpc-vm nodes are enrolled in cobbler on the bootstrap
-node at the end of ``vbox_create.sh``.
-
-Please continue to [Imaging BCPC Nodes](#imaging-bcpc-nodes).
 
 bcpc-bootstrap creation without Vagrant
 =======================================
