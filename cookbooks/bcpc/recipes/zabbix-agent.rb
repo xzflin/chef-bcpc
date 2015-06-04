@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: bcpc
-# Recipe:: zabbix-work
+# Recipe:: zabbix-agent
 #
 # Copyright 2013, Bloomberg Finance L.P.
 #
@@ -68,6 +68,7 @@ if node['bcpc']['enabled']['monitoring'] then
         owner node['bcpc']['zabbix']['user']
         group "root"
         mode 00600
+        variables(:mysql_servers => search_nodes("recipe", "mysql-common"))
         notifies :restart, "service[zabbix-agent]", :delayed
     end
 
@@ -76,10 +77,40 @@ if node['bcpc']['enabled']['monitoring'] then
         action [:enable, :start]
     end
 
+    template "/usr/local/etc/zabbix_agentd.conf.d/zabbix-openstack.conf" do
+        source "zabbix_openstack.conf.erb"
+        owner node['bcpc']['zabbix']['user']
+        group "root"
+        mode 00600
+        only_if do get_cached_head_node_names.include?(node['hostname']) end
+        notifies :restart, "service[zabbix-agent]", :immediately
+    end
+
+    cookbook_file "/tmp/python-requests-aws_0.1.6_all.deb" do
+        source "bins/python-requests-aws_0.1.6_all.deb"
+        owner "root"
+        mode 00444
+    end
+
+    package "requests-aws" do
+        provider Chef::Provider::Package::Dpkg
+        source "/tmp/python-requests-aws_0.1.6_all.deb"
+        action :install
+    end
+
+    template "/usr/local/bin/zabbix_bucket_stats" do
+        source "zabbix_bucket_stats.erb"
+        owner "root"
+        group "root"
+        mode "00755"
+        only_if do get_cached_head_node_names.include?(node['hostname']) end
+    end
+
     cookbook_file "/usr/local/bin/zabbix_discover_buckets" do
         source "zabbix_discover_buckets"
         owner "root"
         mode "00755"
+        only_if do get_cached_head_node_names.include?(node['hostname']) end
     end
 
 end

@@ -100,6 +100,12 @@ it is recommended that you keep one CPU per VM.  You may also find that 2GB is
 not enough for a BCPC-Headnode and wish to tweak the amount of RAM given to
 any head node VM.
 
+Additionally, there is some EXPERIMENTAL support (likely to be deprecated in a future release) for a one-touch build process. In the meantime, simply run
+```
+$ ./vbox_init
+```
+and it should build the entire cluster for you. Beware that this will blow away all of your existing VMs and attempt a clean build. YMMV.
+
 bcpc-bootstrap creation with Vagrant
 ====================================
 

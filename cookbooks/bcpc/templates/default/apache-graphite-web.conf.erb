@@ -22,13 +22,13 @@ Listen <%=node['bcpc']['management']['ip']%>:8888
     # file in this directory that you can safely use, just copy it to graphite.wgsi
     WSGIScriptAlias / /opt/graphite/conf/graphite.wsgi
     <Directory /opt/graphite/conf/>
-        Order deny,allow
-        Allow from all
+        Require all granted
     </Directory>
 
     Alias /content/ /opt/graphite/webapp/content/
     <Location "/content/">
         SetHandler None
+        Require all granted
     </Location>
 
     # XXX In order for the django admin site media to work you
@@ -38,6 +38,7 @@ Listen <%=node['bcpc']['management']['ip']%>:8888
     Alias /media/ "/usr/lib/python2.7/dist-packages/django/contrib/admin/media/"
     <Location "/media/">
         SetHandler None
+        Require all granted
     </Location>
 
 </VirtualHost>

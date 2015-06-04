@@ -156,7 +156,7 @@ lock_path = /var/lock/glance/
 # Configuration options if sending notifications via rabbitmq (these are
 # the defaults)
 #rabbit_host = <%=node['bcpc']['management']['vip']%>
-rabbit_hosts=<%=@servers.map{|x| x['bcpc']['management']['ip'] + ":5672"}.shuffle(random: @rabbit_hosts_shuffle_rng).join(',')%>
+rabbit_hosts=<%=get_shuffled_servers(@servers).map{|x| x['bcpc']['management']['ip'] + ":5672"}.join(',')%>
 rabbit_port = 5672
 rabbit_use_ssl = false
 rabbit_userid = guest
@@ -164,7 +164,7 @@ rabbit_password = <%=get_config('rabbitmq-password')%>
 rabbit_virtual_host = /
 rabbit_notification_exchange = glance
 rabbit_notification_topic = notifications
-amqp_durable_queues = False
+amqp_durable_queues = <%=node['bcpc']['rabbitmq']['durable_queues']%>
 
 # =============== Database Options =================================
 

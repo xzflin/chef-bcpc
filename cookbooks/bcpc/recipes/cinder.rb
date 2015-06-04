@@ -47,10 +47,7 @@ template "/etc/cinder/cinder.conf" do
     owner "cinder"
     group "cinder"
     mode 00600
-    variables({
-      :servers => get_head_nodes,
-      :rabbit_hosts_shuffle_rng => Random.new(IPAddr.new(node['bcpc']['management']['ip']).to_i),
-    })
+    variables(:servers => get_head_nodes)
     notifies :restart, "service[cinder-api]", :immediately
     notifies :restart, "service[cinder-volume]", :immediately
     notifies :restart, "service[cinder-scheduler]", :immediately
@@ -58,17 +55,18 @@ end
 
 ruby_block "cinder-database-creation" do
     block do
-        if not system "mysql -uroot -p#{get_config('mysql-root-password')} -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['cinder']}\"'|grep \"#{node['bcpc']['dbname']['cinder']}\"" then
-            %x[ mysql -uroot -p#{get_config('mysql-root-password')} -e "CREATE DATABASE #{node['bcpc']['dbname']['cinder']};"
-                mysql -uroot -p#{get_config('mysql-root-password')} -e "GRANT ALL ON #{node['bcpc']['dbname']['cinder']}.* TO '#{get_config('mysql-cinder-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-cinder-password')}';"
-                mysql -uroot -p#{get_config('mysql-root-password')} -e "GRANT ALL ON #{node['bcpc']['dbname']['cinder']}.* TO '#{get_config('mysql-cinder-user')}'@'localhost' IDENTIFIED BY '#{get_config('mysql-cinder-password')}';"
-                mysql -uroot -p#{get_config('mysql-root-password')} -e "FLUSH PRIVILEGES;"
-            ]
-            self.notifies :run, "bash[cinder-database-sync]", :immediately
-            self.resolve_notification_references
-        end
+        %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
+            mysql -uroot -e "CREATE DATABASE #{node['bcpc']['dbname']['cinder']};"
+            mysql -uroot -e "GRANT ALL ON #{node['bcpc']['dbname']['cinder']}.* TO '#{get_config('mysql-cinder-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-cinder-password')}';"
+            mysql -uroot -e "GRANT ALL ON #{node['bcpc']['dbname']['cinder']}.* TO '#{get_config('mysql-cinder-user')}'@'localhost' IDENTIFIED BY '#{get_config('mysql-cinder-password')}';"
+            mysql -uroot -e "FLUSH PRIVILEGES;"
+        ]
+        self.notifies :run, "bash[cinder-database-sync]", :immediately
+        self.resolve_notification_references
     end
+    not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['cinder']}\"'|grep \"#{node['bcpc']['dbname']['cinder']}\" >/dev/null" }
 end
+
 
 bash "cinder-database-sync" do
     action :nothing

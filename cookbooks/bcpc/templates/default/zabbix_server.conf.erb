@@ -32,7 +32,7 @@
 #
 # Mandatory: no
 # Default:
-SourceIP=<%=node['bcpc']['management']['vip']%>
+SourceIP=<%=node['bcpc']['management']['monitoring']['vip']%>
 
 ### Option: LogFile
 #   Name of log file.
@@ -80,7 +80,7 @@ LogFile=/var/log/zabbix/zabbix_server.log
 #
 # Mandatory: no
 # Default:
-DBHost=<%=node['bcpc']['management']['vip']%>
+DBHost=<%=node['bcpc']['management']['monitoring']['vip']%>
 
 ### Option: DBName
 #   Database name.
@@ -233,7 +233,7 @@ DBPassword=<%=get_config('mysql-zabbix-password')%>
 #
 # Mandatory: no
 # Default:
-ListenIP=<%=node['bcpc']['management']['vip']%>
+ListenIP=<%=node['bcpc']['management']['monitoring']['vip']%>
 
 ### Option: HousekeepingFrequency
 #   How often Zabbix will perform housekeeping procedure (in hours).

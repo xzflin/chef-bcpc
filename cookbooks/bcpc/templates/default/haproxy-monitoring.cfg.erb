@@ -58,6 +58,8 @@ frontend https
   use_backend kibana-backend if url_kibana
   acl url_elasticsearch path_beg /elasticsearch
   use_backend elasticsearch-backend if url_elasticsearch
+  acl url_zabbix path_beg /zabbix
+  use_backend zabbix-backend if url_zabbix
 
 backend graphite-web-backend
   balance source
@@ -70,7 +72,7 @@ backend graphite-web-backend
 
 backend kibana-backend
   balance source
-  option httpchk GET /
+  option httpchk HEAD /elasticsearch/ HTTP/1.1\r\nHost: <%=node['bcpc']['management']['monitoring']['vip']%>
   http-check expect status 200
   reqrep ^([^\ :]*)\ /kibana/(.*) \1\ /\2
 <% @servers.each do |server| -%>
@@ -84,6 +86,15 @@ backend elasticsearch-backend
   reqrep ^([^\ :]*)\ /elasticsearch/(.*) \1\ /\2
 <% @servers.each do |server| -%>
   <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:9200 check inter 5s rise 1 fall 1" %>
+<% end -%>
+
+backend zabbix-backend
+  balance source
+  option httpchk GET /
+  http-check expect status 200
+  reqrep ^([^\ :]*)\ /zabbix/(.*) \1\ /\2
+<% @servers.each do |server| -%>
+  <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:7777 check inter 5s rise 1 fall 1" %>
 <% end -%>
 
 # This is temporary until graphite supports being served under /graphite
@@ -116,5 +127,6 @@ listen elasticsearch <%=node['bcpc']['management']['monitoring']['vip']%>:9200
   option httpchk GET /
   http-check expect status 200
 <% @servers.each do |server| -%>
- <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:9200 check inter 5s rise 1 fall 1" %>
+  <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:9200 check inter 5s rise 1 fall 1" %>
 <% end -%>
+

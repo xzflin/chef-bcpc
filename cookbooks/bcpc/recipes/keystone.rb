@@ -26,8 +26,8 @@ ruby_block "initialize-keystone-config" do
         make_config('mysql-keystone-user', "keystone")
         make_config('mysql-keystone-password', secure_password)
         make_config('keystone-admin-token', secure_password)
-        make_config('keystone-admin-user', "admin")
-        make_config('keystone-admin-password', secure_password)
+        make_config('keystone-admin-user',  node["bcpc"]["ldap"]["admin_user"] || "admin")
+        make_config('keystone-admin-password',node["bcpc"]["ldap"]["admin_pass"]  ||  secure_password)
         begin
             get_config('keystone-pki-certificate')
         rescue
@@ -53,10 +53,7 @@ template "/etc/keystone/keystone.conf" do
     owner "keystone"
     group "keystone"
     mode 00600
-    variables({
-      :servers => get_head_nodes,
-      :rabbit_hosts_shuffle_rng => Random.new(IPAddr.new(node['bcpc']['management']['ip']).to_i),
-    })
+    variables(:servers => get_head_nodes)
     notifies :restart, "service[apache2]", :delayed
 end
 
@@ -133,16 +130,16 @@ end
 
 ruby_block "keystone-database-creation" do
     block do
-        if not system "mysql -uroot -p#{get_config('mysql-root-password')} -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['keystone']}\"'|grep \"#{node['bcpc']['dbname']['keystone']}\"" then
-            %x[ mysql -uroot -p#{get_config('mysql-root-password')} -e "CREATE DATABASE #{node['bcpc']['dbname']['keystone']};"
-                mysql -uroot -p#{get_config('mysql-root-password')} -e "GRANT ALL ON #{node['bcpc']['dbname']['keystone']}.* TO '#{get_config('mysql-keystone-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-keystone-password')}';"
-                mysql -uroot -p#{get_config('mysql-root-password')} -e "GRANT ALL ON #{node['bcpc']['dbname']['keystone']}.* TO '#{get_config('mysql-keystone-user')}'@'localhost' IDENTIFIED BY '#{get_config('mysql-keystone-password')}';"
-                mysql -uroot -p#{get_config('mysql-root-password')} -e "FLUSH PRIVILEGES;"
-            ]
-            self.notifies :run, "bash[keystone-database-sync]", :immediately
-            self.resolve_notification_references
-        end
+        %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
+            mysql -uroot -e "CREATE DATABASE #{node['bcpc']['dbname']['keystone']};"
+            mysql -uroot -e "GRANT ALL ON #{node['bcpc']['dbname']['keystone']}.* TO '#{get_config('mysql-keystone-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-keystone-password')}';"
+            mysql -uroot -e "GRANT ALL ON #{node['bcpc']['dbname']['keystone']}.* TO '#{get_config('mysql-keystone-user')}'@'localhost' IDENTIFIED BY '#{get_config('mysql-keystone-password')}';"
+            mysql -uroot -e "FLUSH PRIVILEGES;"
+        ]
+        self.notifies :run, "bash[keystone-database-sync]", :immediately
+        self.resolve_notification_references
     end
+    not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['keystone']}\"'|grep \"#{node['bcpc']['dbname']['keystone']}\" >/dev/null" }
 end
 
 bash "keystone-database-sync" do
@@ -159,46 +156,57 @@ bash "wait-for-keystone-to-become-operational" do
   timeout 30
 end
 
-bash "keystone-create-users-tenants" do
+
+
+bash "keystone-create-admin-user" do
     user "root"
     code <<-EOH
         . /root/adminrc
         . /root/keystonerc
-        export KEYSTONE_ADMIN_TENANT_ID=`keystone tenant-create --name "#{node['bcpc']['admin_tenant']}" --description "Admin services" | grep " id " | awk '{print $4}'`
-        export KEYSTONE_ROLE_ADMIN_ID=`keystone role-create --name "#{node['bcpc']['admin_role']}" | grep " id " | awk '{print $4}'`
-        export KEYSTONE_ADMIN_LOGIN_ID=`keystone user-create --name "$OS_USERNAME" --tenant_id $KEYSTONE_ADMIN_TENANT_ID --pass "$OS_PASSWORD" --email "#{node['bcpc']['admin_email']}" --enabled true | grep " id " | awk '{print $4}'`
-        keystone user-role-add --user_id $KEYSTONE_ADMIN_LOGIN_ID --role_id $KEYSTONE_ROLE_ADMIN_ID --tenant_id $KEYSTONE_ADMIN_TENANT_ID
+       keystone user-create --name "$OS_USERNAME" --pass "$OS_PASSWORD"  --enabled true
     EOH
-    only_if ". /root/keystonerc; . /root/adminrc; keystone user-get $OS_USERNAME 2>&1 | grep -e '^No user'"
+    not_if ". /root/keystonerc; . /root/adminrc; keystone user-get $OS_USERNAME"
 end
 
 
-ruby_block "initialize-keystone-test-config" do
-    block do
-        make_config('keystone-test-user', "tester")
-        make_config('keystone-test-password', secure_password)
-    end
+bash "keystone-create-admin-tenant" do
+    user "root"
+    code <<-EOH
+        . /root/adminrc
+        . /root/keystonerc
+        keystone tenant-create --name "#{node['bcpc']['admin_tenant']}" --description "Admin services" 
+    EOH
+    not_if ". /root/keystonerc; . /root/adminrc; keystone tenant-get '#{node['bcpc']['admin_tenant']}'"
 end
 
-ruby_block "keystone-create-test-tenants" do
-    block do
-        system ". /root/keystonerc; . /root/adminrc; keystone user-get #{get_config('keystone-test-user')} 2>&1 | grep -e '^No user'"
-        if $?.success? then
-            %x[ . /root/adminrc
-                export KEYSTONE_ADMIN_TENANT_ID=`keystone tenant-get "#{node['bcpc']['admin_tenant']}" | grep " id " | awk '{print $4}'`
-                keystone user-create --name #{get_config('keystone-test-user')} --tenant-id $KEYSTONE_ADMIN_TENANT_ID --pass  #{get_config('keystone-test-password')} --enabled true
-            ]
-        end
-    end
+bash "keystone-create-admin-role" do
+    user "root"
+    code <<-EOH
+        . /root/adminrc
+        . /root/keystonerc
+        keystone role-create --name "#{node['bcpc']['admin_role']}" 
+    EOH
+    not_if ". /root/keystonerc; . /root/adminrc; keystone role-get '#{node['bcpc']['admin_role']}'"
 end
 
-ruby_block "keystone-add-test-admin-role" do
-    block do
-        system ". /root/keystonerc; . /root/adminrc; keystone user-role-list --user #{get_config('keystone-test-user')} --tenant '#{node['bcpc']['admin_tenant']}' 2>&1 | grep '#{node['bcpc']['admin_role']}'"
-        if not $?.success? then
-            %x[ . /root/adminrc
-                keystone user-role-add --user #{get_config('keystone-test-user')} --role '#{node['bcpc']['admin_role']}' --tenant '#{node['bcpc']['admin_tenant']}'
-            ]
-        end
-    end
+
+bash "keystone-create-member-role" do
+    user "root"
+    code <<-EOH
+        . /root/adminrc
+        . /root/keystonerc
+        keystone role-create --name "#{node['bcpc']['member_role']}" 
+    EOH
+    not_if ". /root/keystonerc; . /root/adminrc; keystone role-get '#{node['bcpc']['member_role']}'"
+end
+
+
+bash "keystone-create-admin-user-role" do
+    user "root"
+    code <<-EOH
+        . /root/adminrc
+        . /root/keystonerc
+        keystone user-role-add --user  "$OS_USERNAME"  --role "#{node['bcpc']['admin_role']}" --tenant "#{node['bcpc']['admin_tenant']}" 
+    EOH
+    not_if ". /root/keystonerc; . /root/adminrc; keystone user-role-list --user  $OS_USERNAME  --tenant '#{node['bcpc']['admin_tenant']}'   | grep '#{node['bcpc']['admin_role']}'"
 end

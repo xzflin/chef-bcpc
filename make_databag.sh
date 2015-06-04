@@ -36,12 +36,6 @@ File.open("/tmp/openssl.cnf", 'w') {|f| f.write(ssl_conf)}
 %>
 {
     "id": "<%="#{node['bcpc']['region_name']}"%>",
-    "389ds-admin-password": "<%="#{secure_password}"%>",
-    "389ds-admin-user": "admin",
-    "389ds-replication-password": "<%="#{secure_password}"%>",
-    "389ds-replication-user": "cn=Replication Manager",
-    "389ds-rootdn-password": "<%="#{secure_password}"%>",
-    "389ds-rootdn-user": "cn=Directory Manager",
     "ceilometer-secret": "<%="#{secure_password}"%>",
     "ceph-fs-uuid": "<%="#{%x[uuidgen].strip.downcase}"%>",
     "ceph-mon-key": "<%="#{ceph_keygen}"%>",

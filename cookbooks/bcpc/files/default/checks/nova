@@ -76,7 +76,7 @@ class TestNovaCompute(object):
             if server.name == self.instance_name:
                 self._delete_server(server)
 
-        image_name = self.config.get("image_name", "Cirros 0.3.2*")
+        image_name = self.config.get("image_name", "Cirros 0.3.4*")
         images = [ i for i in self.client.images.list() if i.name is not None and glob.fnmatch.fnmatch(i.name, image_name) ]
         if len(images)==0:
             raise Exception("Found %d images called %s"  %(len(images), image_name))

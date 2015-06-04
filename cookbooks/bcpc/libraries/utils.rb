@@ -29,7 +29,7 @@ end
 
 def init_config
     if not Chef::DataBag.list.key?('configs')
-        puts "************ Creating data_bag \"configs\""
+        Chef::Log.info("************ Creating data_bag \"configs\"")
         bag = Chef::DataBag.new
         bag.name("configs")
         bag.save
@@ -37,14 +37,14 @@ def init_config
     begin
         $dbi = Chef::DataBagItem.load('configs', node.chef_environment)
         $edbi = Chef::EncryptedDataBagItem.load('configs', node.chef_environment) if node['bcpc']['enabled']['encrypt_data_bag']
-        puts "============ Loaded existing data_bag_item \"configs/#{node.chef_environment}\""
+        Chef::Log.info("============ Loaded existing data_bag_item \"configs/#{node.chef_environment}\"")
     rescue
         $dbi = Chef::DataBagItem.new
         $dbi.data_bag('configs')
         $dbi.raw_data = { 'id' => node.chef_environment }
         $dbi.save
         $edbi = Chef::EncryptedDataBagItem.load('configs', node.chef_environment) if node['bcpc']['enabled']['encrypt_data_bag']
-        puts "++++++++++++ Created new data_bag_item \"configs/#{node.chef_environment}\""
+        Chef::Log.info("++++++++++++ Created new data_bag_item \"configs/#{node.chef_environment}\"")
     end
 end
 
@@ -54,24 +54,24 @@ def make_config(key, value)
         $dbi[key] = (node['bcpc']['enabled']['encrypt_data_bag']) ? Chef::EncryptedDataBagItem.encrypt_value(value, Chef::EncryptedDataBagItem.load_secret) : value
         $dbi.save
         $edbi = Chef::EncryptedDataBagItem.load('configs', node.chef_environment) if node['bcpc']['enabled']['encrypt_data_bag']
-        puts "++++++++++++ Creating new item with key \"#{key}\""
+        Chef::Log.info("++++++++++++ Creating new item with key \"#{key}\"")
         return value
     else
-        puts "============ Loaded existing item with key \"#{key}\""
+        Chef::Log.info("============ Loaded existing item with key \"#{key}\"")
         return (node['bcpc']['enabled']['encrypt_data_bag']) ? $edbi[key] : $dbi[key]
     end
 end
 
 def config_defined(key)
     init_config if $dbi.nil?
-    puts "------------ Checking if key \"#{key}\" is defined"
+    Chef::Log.info("------------ Checking if key \"#{key}\" is defined")
     result = (node['bcpc']['enabled']['encrypt_data_bag']) ? $edbi[key] : $dbi[key]
     return !result.nil?
 end
 
 def get_config(key)
     init_config if $dbi.nil?
-    puts "------------ Fetching value for key \"#{key}\""
+    Chef::Log.info("------------ Fetching value for key \"#{key}\"")
     result = (node['bcpc']['enabled']['encrypt_data_bag']) ? $edbi[key] : $dbi[key]
     raise "No config found for get_config(#{key})!!!" if result.nil?
     return result
@@ -80,13 +80,20 @@ end
 def search_nodes(key, value)
     if key == "recipe"
         results = search(:node, "recipes:bcpc\\:\\:#{value} AND chef_environment:#{node.chef_environment}")
+        results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
+        if not results.include?(node) and node.run_list.expand(node.chef_environment).recipes.include?("bcpc::#{value}")
+            results.push(node)
+        end
     elsif key == "role"
-        results = search(:node, "roles:#{value} AND chef_environment:#{node.chef_environment}")
+        results = search(:node, "#{key}:#{value} AND chef_environment:#{node.chef_environment}")
+        results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
+        if not results.include?(node) and node.run_list.expand(node.chef_environment).roles.include?(value)
+            results.push(node)
+        end
     else
         raise("Invalid search key: #{key}")
     end
 
-    results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
     return results.sort! { |a, b| a['hostname'] <=> b['hostname'] }
 end
 
@@ -123,6 +130,12 @@ def get_bootstrap_node
     results = search(:node, "role:BCPC-Bootstrap AND chef_environment:#{node.chef_environment}")
     raise 'There is not exactly one bootstrap node found.' if results.size != 1
     results.first
+end
+
+# shuffles a list of servers deterministically to avoid stacking all connections up on a single node
+# (e.g., RabbitMQ, where OpenStack will pile on to the first server in the list)
+def get_shuffled_servers(server_list)
+  server_list.shuffle(random: Random.new(IPAddr.new(node['bcpc']['management']['ip']).to_i))
 end
 
 def get_cached_head_node_names

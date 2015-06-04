@@ -59,14 +59,18 @@ filecheck() {
 
 # Define the appropriate version of each binary to grab/build
 VER_KIBANA=4.0.2
-# newer versions of Diamond depend upon dh-python which isn't in precise/12.04
-VER_DIAMOND=f33aa2f75c6ea2dfbbc659766fe581e5bfe2476d
+VER_DIAMOND=2c0de81281a6750cf06fac760c081f89a088bca4
 VER_ESPLUGIN=9c032b7c628d8da7745fbb1939dcd2db52629943
 
 PROXY_INFO_FILE="/home/vagrant/proxy_info.sh"
 if [[ -f $PROXY_INFO_FILE ]]; then
   . $PROXY_INFO_FILE
+elif [[ -f $HOME/chef-bcpc/proxy_setup.sh ]]
+then
+  . $HOME/chef-bcpc/proxy_setup.sh
 fi
+
+
 
 # define calling gem with a proxy if necessary
 if [[ -z $http_proxy ]]; then
@@ -161,10 +165,10 @@ for i in elasticsearch tail-multiline tail-ex record-reformer rewrite; do
 done
 
 # Fetch the cirros image for testing
-if [ ! -f cirros-0.3.2-x86_64-disk.img ]; then
-    ccurl http://download.cirros-cloud.net/0.3.2/cirros-0.3.2-x86_64-disk.img
+if [ ! -f cirros-0.3.4-x86_64-disk.img ]; then
+    ccurl http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img
 fi
-FILES="cirros-0.3.2-x86_64-disk.img $FILES"
+FILES="cirros-0.3.4-x86_64-disk.img $FILES"
 
 # Grab the Ubuntu 14.04 installer image
 if [ ! -f ubuntu-14.04-mini.iso ]; then
@@ -185,7 +189,7 @@ FILES="ubuntu-14.04-mini.iso $FILES"
 
 # Make the diamond package
 if [ ! -f diamond.deb ]; then
-    git clone https://github.com/BrightcoveOS/Diamond.git
+    git clone https://github.com/python-diamond/Diamond.git
     cd Diamond
     git checkout $VER_DIAMOND
     make builddeb
@@ -253,10 +257,55 @@ fi
 FILES="zabbix-agent.tar.gz zabbix-server.tar.gz $FILES"
 
 ## Get some python libs
-#if [ ! -f python-requests-aws_0.1.6_all.deb ]; then
-#    fpm -s python -t deb -v 0.1.6 requests-aws
-#fi
-#FILES="python-requests-aws_0.1.6_all.deb $FILES"
+if [ ! -f python-requests-aws_0.1.6_all.deb ]; then
+    fpm -s python -t deb -v 0.1.6 requests-aws
+fi
+FILES="python-requests-aws_0.1.6_all.deb $FILES"
 
+# Rally has a number of dependencies. Some of the dependencies are in apt by default but some are not. Those that
+# are not are built here.
+RALLY_VER="0.0.4"
+
+# We build a package for rally here but we also get the tar file of the source because it includes the samples
+# directory that we want and we need a good place to run our tests from.
+
+if [ ! -f rally.tar.gz ]; then
+    ccurl https://pypi.python.org/packages/source/r/rally/rally-${RALLY_VER}.tar.gz
+    tar xvf rally-${RALLY_VER}.tar.gz
+    tar zcf rally.tar.gz -C rally-${RALLY_VER}/ .
+    rm rally-${RALLY_VER}.tar.gz
+fi
+
+if [ ! -f rally-pip.tar.gz ] || [ ! -f rally-bin.tar.gz ]; then
+    # Rally has a very large number of version specific dependencies!!
+    # The latest version of PIP is installed instead of the distro version. We don't want this to block to exit on error
+    # so it is changed here and reset at the end. Several apt packages must be present since easy_install builds
+    # some of the dependencies.
+    # Note: Once we fully switch to trusty/kilo then we should not have to patch this (hopefully).
+    echo "Processing Rally setup..."
+    set +x
+    apt-get -y install libxml2-dev libxslt1-dev libpq-dev build-essential libssl-dev libffi-dev python-dev python-pip
+
+    # Note: This will create a pip package with the newest version
+    fpm -s python -t deb -f -v 6.1.1 pip
+
+    # We don't need the newest version installed here at this time but if we need other pip options then we may.
+    dpkg -i python-pip_6.1.1_all.deb
+
+    # We install rally and a few other items here. Since fpm does not resolve dependencies but only lists them, we
+    # have to force an install and then tar up the dist-packages and local/bin
+    pip install rally --default-timeout 60 -I
+    pip install python-openstackclient --default-timeout 60
+    pip install -U argparse
+    pip install -U setuptools
+
+    tar zcf rally-pip.tar.gz -C /usr/local/lib/python2.7/dist-packages .
+    tar zcf rally-bin.tar.gz --exclude="fpm" --exclude="ruby*" -C /usr/local/bin .
+    set -x
+fi
+
+FILES="rally.tar.gz rally-pip.tar.gz rally-bin.tar.gz python-pip_6.1.1_all.deb $FILES"
+
+# End of Rally
 
 popd

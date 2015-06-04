@@ -166,14 +166,12 @@ end
 
 ruby_block 'load-virsh-keys' do
     block do
-        if not system "virsh secret-list | grep -i #{get_config('libvirt-secret-uuid')}" then
-            %x[ ADMIN_KEY=`ceph --name mon. --keyring /etc/ceph/ceph.mon.keyring auth get-or-create-key client.admin`
-                virsh secret-define --file /etc/nova/virsh-secret.xml
-                virsh secret-set-value --secret #{get_config('libvirt-secret-uuid')} \
-                    --base64 "$ADMIN_KEY"
-            ]
-        end
+        %x[ ADMIN_KEY=`ceph --name mon. --keyring /etc/ceph/ceph.mon.keyring auth get-or-create-key client.admin`
+            virsh secret-define --file /etc/nova/virsh-secret.xml
+            virsh secret-set-value --secret #{get_config('libvirt-secret-uuid')} --base64 "$ADMIN_KEY"
+        ]
     end
+    not_if { system "virsh secret-list | grep -i #{get_config('libvirt-secret-uuid')} >/dev/null" }
 end
 
 bash "remove-default-virsh-net" do
@@ -212,23 +210,16 @@ if node['bcpc']['virt_type'] == "kvm" then
     end
 end
 
-cookbook_file "/usr/local/bin/nova-service-restart" do
-  source "nova-service-restart"
-  owner "root"
-  mode "00755"
-end
-
-template "/usr/local/bin/nova-service-restart-wrapper" do
-    source "nova-service-restart-wrapper.erb"
-    owner "root"
-    group "root"
-    mode 00700
-end
-
 cron "restart-nova-kludge" do
-  action :create
-  command "/usr/local/bin/nova-service-restart-wrapper"
-  minute '*/5'   # run this every 5 mins
+  action :delete
+end
+
+file "/usr/local/bin/nova-service-restart" do
+  action :delete
+end
+
+file "/usr/local/bin/nova-service-restart-wrapper" do
+  action :delete
 end
 
 include_recipe "bcpc::cobalt"

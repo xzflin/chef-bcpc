@@ -306,7 +306,7 @@ sqlite_db=ceilometer.sqlite
 #
 
 # Use durable queues in amqp. (boolean value)
-amqp_durable_queues=True
+amqp_durable_queues=<%=node['bcpc']['rabbitmq']['durable_queues']%>
 
 # Auto-delete queues in amqp. (boolean value)
 #amqp_auto_delete=false
@@ -340,7 +340,7 @@ amqp_durable_queues=True
 #rabbit_port=5672
 
 # RabbitMQ HA cluster host:port pairs (list value)
-rabbit_hosts=<%=@servers.map{|x| x['bcpc']['management']['ip'] + ":5672"}.shuffle(random: @rabbit_hosts_shuffle_rng).join(',')%>
+rabbit_hosts=<%=get_shuffled_servers(@servers).map{|x| x['bcpc']['management']['ip'] + ":5672"}.join(',')%>
 
 # connect over SSL for RabbitMQ (boolean value)
 #rabbit_use_ssl=false

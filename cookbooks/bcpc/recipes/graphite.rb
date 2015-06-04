@@ -152,16 +152,16 @@ if node['bcpc']['enabled']['metrics'] then
 
     ruby_block "graphite-database-creation" do
         block do
-            if not system "mysql -uroot -p#{get_config('mysql-monitoring-root-password')} -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['graphite']}\"'|grep \"#{node['bcpc']['dbname']['graphite']}\"" then
-                %x[ mysql -uroot -p#{get_config('mysql-monitoring-root-password')} -e "CREATE DATABASE #{node['bcpc']['dbname']['graphite']};"
-                    mysql -uroot -p#{get_config('mysql-monitoring-root-password')} -e "GRANT ALL ON #{node['bcpc']['dbname']['graphite']}.* TO '#{get_config('mysql-graphite-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-graphite-password')}';"
-                    mysql -uroot -p#{get_config('mysql-monitoring-root-password')} -e "GRANT ALL ON #{node['bcpc']['dbname']['graphite']}.* TO '#{get_config('mysql-graphite-user')}'@'localhost' IDENTIFIED BY '#{get_config('mysql-graphite-password')}';"
-                    mysql -uroot -p#{get_config('mysql-monitoring-root-password')} -e "FLUSH PRIVILEGES;"
-                ]
-                self.notifies :run, "bash[graphite-database-sync]", :immediately
-                self.resolve_notification_references
-            end
+            %x[ export MYSQL_PWD=#{get_config('mysql-monitoring-root-password')};
+                mysql -uroot -e "CREATE DATABASE #{node['bcpc']['dbname']['graphite']};"
+                mysql -uroot -e "GRANT ALL ON #{node['bcpc']['dbname']['graphite']}.* TO '#{get_config('mysql-graphite-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-graphite-password')}';"
+                mysql -uroot -e "GRANT ALL ON #{node['bcpc']['dbname']['graphite']}.* TO '#{get_config('mysql-graphite-user')}'@'localhost' IDENTIFIED BY '#{get_config('mysql-graphite-password')}';"
+                mysql -uroot -e "FLUSH PRIVILEGES;"
+            ]
+            self.notifies :run, "bash[graphite-database-sync]", :immediately
+            self.resolve_notification_references
         end
+        not_if { system "MYSQL_PWD=#{get_config('mysql-monitoring-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['graphite']}\"'|grep \"#{node['bcpc']['dbname']['graphite']}\" >/dev/null" }
     end
 
     bash "graphite-database-sync" do

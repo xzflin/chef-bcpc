@@ -30,10 +30,10 @@ default['bcpc']['vms_key'] = nil
 ###########################################
 default['bcpc']['elasticsearch']['version'] = '1.5.1'
 default['bcpc']['ceph']['version'] = '0.80.9-0ubuntu0.14.04.2'
-default['bcpc']['erlang']['version'] = '1:17.5'
+default['bcpc']['erlang']['version'] = '1:17.5.3'
 default['bcpc']['haproxy']['version'] = '1.5.12-1ppa1~trusty'
 default['bcpc']['kibana']['version'] = '4.0.2'
-default['bcpc']['rabbitmq']['version'] = '3.5.2-1'
+default['bcpc']['rabbitmq']['version'] = '3.5.3-1'
 
 ###########################################
 #
@@ -54,6 +54,8 @@ default['bcpc']['enabled']['host_firewall'] = true
 default['bcpc']['enabled']['encrypt_data_bag'] = false
 # This will enable auto-upgrades on all nodes (not recommended for stability)
 default['bcpc']['enabled']['apt_upgrade'] = false
+# This will enable running apt-get update at the start of every Chef run
+default['bcpc']['enabled']['always_update_package_lists'] = true
 # This will enable the extra healthchecks for keepalived (VIP management)
 default['bcpc']['enabled']['keepalived_checks'] = true
 # This will enable the networking test scripts
@@ -118,6 +120,15 @@ default['bcpc']['ceph']['hdd']['ruleset'] = 2
 # ceph rebalance and keep things operational. 
 # See wiki for further details. 
 default['bcpc']['ceph']['rebalance'] = false
+
+###########################################
+#
+# RabbitMQ settings
+#
+###########################################
+# if changing this setting, you will need to reset Mnesia
+# on all RabbitMQ nodes in the cluster
+default['bcpc']['rabbitmq']['durable_queues'] = true
 
 ###########################################
 #
@@ -227,9 +238,6 @@ default['bcpc']['ports']['apache']['radosgw_https'] = 443
 default['bcpc']['ports']['haproxy']['radosgw'] = 80
 default['bcpc']['ports']['haproxy']['radosgw_https'] = 443
 
-default['bcpc']['ports']['389ds']['local'] = 4389
-default['bcpc']['ports']['389ds']['floating'] = 389
-
 # Can be set to 'http' or 'https'
 default['bcpc']['protocol']['keystone'] = "https"
 default['bcpc']['protocol']['glance'] = "https"
@@ -254,7 +262,11 @@ default['bcpc']['keystone']['debug'] = false
 default['bcpc']['keystone']['verbose'] = false
 # This can be either 'sql' or 'ldap' to either store identities
 # in the mysql DB or the LDAP server
-default['bcpc']['keystone']['backend'] = 'ldap'
+default['bcpc']['keystone']['backend'] = 'sql'
+default['bcpc']['ldap']['admin_user'] = nil
+default['bcpc']['ldap']['admin_pass'] = nil
+default['bcpc']['ldap']['config'] = {}
+
 
 ###########################################
 #
@@ -270,9 +282,37 @@ default['bcpc']['nova']['reserved_host_memory_mb'] = 1024
 default['bcpc']['nova']['cpu_allocation_ratio'] = 2.0
 # "workers" parameters in nova are set to number of CPUs
 # available by default. This provides an override.
-default['bcpc']['nova']['workers'] = 2
+default['bcpc']['nova']['workers'] = 5
 # Patch toggle for https://github.com/bloomberg/chef-bcpc/pull/493
 default['bcpc']['nova']['live_migration_patch'] = false
+# Nova debug toggle
+default['bcpc']['nova']['debug'] = false
+# Nova scheduler default filters
+default['bcpc']['nova']['scheduler_default_filters'] = ['AggregateInstanceExtraSpecsFilter', 'AvailabilityZoneFilter', 'RamFilter', 'ComputeFilter', 'DifferentHostFilter', 'SameHostFilter']
+default['bcpc']['nova']['quota'] = {
+  "cores" => 4,
+  "floating_ips" => 10,
+  "gigabytes"=> 1000,
+  "instances" => 10,
+  "ram" => 51200
+}
+# load a custom vendor driver, 
+# e.g. "nova.api.metadata.bcpc_metadata.BcpcMetadata", 
+# comment out to use default
+#default['bcpc']['vendordata_driver'] = "nova.api.metadata.bcpc_metadata.BcpcMetadata"
+
+###########################################
+#
+#  Cinder Settings
+#
+###########################################
+default['bcpc']['cinder']['quota'] = {
+  "volumes" => 10,
+  "quota_snapshots" => 10,
+  "consistencygroups" => 10,
+  "gigabytes" => 1000
+}
+
 ###########################################
 #
 # Routemon settings
@@ -304,13 +344,14 @@ default['bcpc']['mysql-head']['max_connections'] = 0
 ###########################################
 #
 # Available options: conservative, ondemand, userspace, powersave, performance
-# Different states (cribbed from https://wiki.archlinux.org/index.php/CPU_frequency_scaling):
-# - ondemand: Dynamically switch between CPU(s) available if at 95% cpu load
-# - performance: Run the cpu at max frequency
-# - conservative: Dynamically switch between CPU(s) available if at 75% load
-# - powersave: Run the cpu at the minimum frequency
-# - userspace: Run the cpu at user specified frequencies
+# Review documentation at https://www.kernel.org/doc/Documentation/cpu-freq/governors.txt
 default['bcpc']['cpupower']['governor'] = "ondemand"
+default['bcpc']['cpupower']['ondemand_ignore_nice_load'] = nil
+default['bcpc']['cpupower']['ondemand_io_is_busy'] = nil
+default['bcpc']['cpupower']['ondemand_powersave_bias'] = nil
+default['bcpc']['cpupower']['ondemand_sampling_down_factor'] = nil
+default['bcpc']['cpupower']['ondemand_sampling_rate'] = nil
+default['bcpc']['cpupower']['ondemand_up_threshold'] = nil
 
 ###########################################
 #
@@ -322,6 +363,17 @@ default['bcpc']['cpupower']['governor'] = "ondemand"
 # http://graphite.readthedocs.org/en/latest/config-carbon.html#storage-schemas-conf
 default['bcpc']['graphite']['retention'] = '60s:1d'
 #
+###########################################
+#
+# Diamond settings
+#
+###########################################
+#
+# List of queue names separated by whitespace to report on. If nil, report all.
+default['bcpc']['diamond']['collectors']['rabbitmq']['queues'] = nil
+# Regular expression or list of queues to not report on.
+# If not nil, this overrides "queues".
+default['bcpc']['diamond']['collectors']['rabbitmq']['queues_ignored'] = '.*'
 ###########################################
 #
 # defaults for the bcpc.bootstrap settings
@@ -360,3 +412,22 @@ default['bcpc']['bootstrap']['mirror_path'] = "/ubuntu"
 # non-standard path
 #default['bcpc']['bootstrap']['mirror']      = "mirror.cc.columbia.edu"
 #default['bcpc']['bootstrap']['mirror_path'] = "/pub/linux/ubuntu/archive"
+
+###########################################
+#
+# Rally settings
+#
+###########################################
+#
+# Package versions
+# None needed at this time
+default['bcpc']['rally']['user'] = 'ubuntu'
+
+###########################################
+#
+# Openstack Flavors
+#
+###########################################
+
+default['bcpc']['flavors']['deleted'] = []
+default['bcpc']['flavors']['enabled'] = {}

@@ -47,10 +47,7 @@ template "/etc/glance/glance-api.conf" do
     owner "glance"
     group "glance"
     mode 00600
-    variables({
-      :servers => get_head_nodes,
-      :rabbit_hosts_shuffle_rng => Random.new(IPAddr.new(node['bcpc']['management']['ip']).to_i),
-    })
+    variables(:servers => get_head_nodes)
     notifies :restart, "service[glance-api]", :delayed
     notifies :restart, "service[glance-registry]", :delayed
 end
@@ -84,16 +81,16 @@ end
 
 ruby_block "glance-database-creation" do
     block do
-        if not system "mysql -uroot -p#{get_config('mysql-root-password')} -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['glance']}\"'|grep \"#{node['bcpc']['dbname']['glance']}\"" then
-            %x[ mysql -uroot -p#{get_config('mysql-root-password')} -e "CREATE DATABASE #{node['bcpc']['dbname']['glance']};"
-                mysql -uroot -p#{get_config('mysql-root-password')} -e "GRANT ALL ON #{node['bcpc']['dbname']['glance']}.* TO '#{get_config('mysql-glance-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-glance-password')}';"
-                mysql -uroot -p#{get_config('mysql-root-password')} -e "GRANT ALL ON #{node['bcpc']['dbname']['glance']}.* TO '#{get_config('mysql-glance-user')}'@'localhost' IDENTIFIED BY '#{get_config('mysql-glance-password')}';"
-                mysql -uroot -p#{get_config('mysql-root-password')} -e "FLUSH PRIVILEGES;"
-            ]
-            self.notifies :run, "bash[glance-database-sync]", :immediately
-            self.resolve_notification_references
-        end
+        %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
+            mysql -uroot -e "CREATE DATABASE #{node['bcpc']['dbname']['glance']};"
+            mysql -uroot -e "GRANT ALL ON #{node['bcpc']['dbname']['glance']}.* TO '#{get_config('mysql-glance-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-glance-password')}';"
+            mysql -uroot -e "GRANT ALL ON #{node['bcpc']['dbname']['glance']}.* TO '#{get_config('mysql-glance-user')}'@'localhost' IDENTIFIED BY '#{get_config('mysql-glance-password')}';"
+            mysql -uroot -e "FLUSH PRIVILEGES;"
+        ]
+        self.notifies :run, "bash[glance-database-sync]", :immediately
+        self.resolve_notification_references
     end
+    not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['glance']}\"'|grep \"#{node['bcpc']['dbname']['glance']}\" >/dev/null" }
 end
 
 bash "glance-database-sync" do
@@ -136,8 +133,8 @@ end
     end
 end
 
-cookbook_file "/tmp/cirros-0.3.2-x86_64-disk.img" do
-    source "bins/cirros-0.3.2-x86_64-disk.img"
+cookbook_file "/tmp/cirros-0.3.4-x86_64-disk.img" do
+    source "bins/cirros-0.3.4-x86_64-disk.img"
     owner "root"
     mode 00444
 end
@@ -150,8 +147,8 @@ bash "glance-cirros-image" do
     user "root"
     code <<-EOH
         . /root/adminrc
-        qemu-img convert -f qcow2 -O raw /tmp/cirros-0.3.2-x86_64-disk.img /tmp/cirros-0.3.2-x86_64-disk.raw
-        glance image-create --name='Cirros 0.3.2 x86_64' --is-public=True --container-format=bare --disk-format=raw --file /tmp/cirros-0.3.2-x86_64-disk.raw
+        qemu-img convert -f qcow2 -O raw /tmp/cirros-0.3.4-x86_64-disk.img /tmp/cirros-0.3.4-x86_64-disk.raw
+        glance image-create --name='Cirros 0.3.4 x86_64' --is-public=True --container-format=bare --disk-format=raw --file /tmp/cirros-0.3.4-x86_64-disk.raw
     EOH
-    not_if ". /root/adminrc; glance image-list | grep 'Cirros 0.3.2 x86_64'"
+    not_if ". /root/adminrc; glance image-list | grep 'Cirros 0.3.4 x86_64'"
 end

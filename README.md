@@ -79,7 +79,13 @@ in bootstrap.md):
 10.0.100.11 [2013-05-18T13:23:11-04:00] FATAL: Net::HTTPServerException: ruby_block[initialize-ssh-keys] (bcpc::networking line 22) had an error: Net::HTTPServerException: 403 "Forbidden"
 ```
 
-To enroll a server as a worker node:
+To enroll a server as a worker node, there are two methods:
+
+* If you prefer to use passwordless authentication. (The Imaging process will install a bootstrap-specific SSH key that will be later overwritten during the node configuration process):
+```
+ $ knife bootstrap -E Test-Laptop -r "role[BCPC-Worknode]" -x root -i ~/.ssh/id_rsa.bcpc <IPAddress>
+```
+* If you prefer to use passwords:
 
 ```
  $ knife bootstrap -E Test-Laptop -r "role[BCPC-Worknode]" -x ubuntu --sudo <IPAddress>
@@ -121,7 +127,6 @@ BCPC Services
 
 BCPC currently relies upon a number of open-source packages:
 
- - [389 Directory Server](http://directory.fedoraproject.org/)
  - [Apache HTTP Server](http://httpd.apache.org/)
  - [Ceph](http://ceph.com/)
  - [Chef](http://www.opscode.com/chef/)

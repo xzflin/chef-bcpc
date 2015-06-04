@@ -1,7 +1,13 @@
 #!/bin/bash -e
 
+#### NOTE TO SELF SO I DON'T FORGET LATER: you can pass the name of an environment JSON file to this script
+# (e.g., test-custom instead of Test-Laptop) to build using that one
+
 # bash imports
 source ./virtualbox_env.sh
+if [[ -f ./vbox_override.sh ]]; then
+    source ./vbox_override.sh
+fi
 
 if [[ "$OSTYPE" == msys || "$OSTYPE" == cygwin ]]; then
   WIN=TRUE
@@ -18,19 +24,14 @@ if [[ -z "$CURL" ]]; then
 fi
 
 # Bootstrap VM Defaults (these need to be exported for Vagrant's Vagrantfile)
-export BOOTSTRAP_VM_MEM=1536
-export BOOTSTRAP_VM_CPUs=1
-export BOOTSTRAP_VM_VRAM=16
-# Use this if you intend to make an apt-mirror in this VM (see the
-# instructions on using an apt-mirror towards the end of bootstrap.md)
-# -- Vagrant VMs do not use this size --
-#BOOTSTRAP_VM_DRIVE_SIZE=120480
-
-# Cluster VM Defaults
-CLUSTER_VM_MEM=2560
-CLUSTER_VM_CPUs=2
-CLUSTER_VM_VRAM=16
-CLUSTER_VM_DRIVE_SIZE=20480
+# DO NOT EDIT THESE HERE, INSTEAD EDIT THEM IN vbox_override.sh
+export BOOTSTRAP_APT_MIRROR=${BOOTSTRAP_APT_MIRROR:-}
+export BOOTSTRAP_VM_MEM=${BOOTSTRAP_VM_MEM:-2048}
+export BOOTSTRAP_VM_CPUS=${BOOTSTRAP_VM_CPUS:-1}
+export BOOTSTRAP_VM_DRIVE_SIZE=${BOOTSTRAP_VM_DRIVE_SIZE:-20480}
+export CLUSTER_VM_MEM=${CLUSTER_VM_MEM:-2560}
+export CLUSTER_VM_CPUS=${CLUSTER_VM_CPUS:-2}
+export CLUSTER_VM_DRIVE_SIZE=${CLUSTER_VM_DRIVE_SIZE:-20480}
 
 BASE_DIR=`dirname ${BASH_SOURCE[0]}`
 VBOX_DIR="$BASE_DIR/vbox"
@@ -217,14 +218,14 @@ function create_bootstrap_VM {
             else
                 $VBM createvm --name $vm --ostype Ubuntu_64 --basefolder $P --register
                 $VBM modifyvm $vm --memory $BOOTSTRAP_VM_MEM
-                $VBM modifyvm $vm --cpus $BOOTSTRAP_VM_CPUs
-                $VBM modifyvm $vm --vram $BOOTSTRAP_VM_VRAM
+                $VBM modifyvm $vm --cpus $BOOTSTRAP_VM_CPUS
+                $VBM modifyvm $vm --vram 16
                 $VBM storagectl $vm --name "SATA Controller" --add sata
                 $VBM storagectl $vm --name "IDE Controller" --add ide
                 # Create a number of hard disks
                 port=0
                 for disk in a; do
-                    $VBM createhd --filename $P/$vm/$vm-$disk.vdi --size ${BOOTSTRAP_VM_DRIVE_SIZE-20480}
+                    $VBM createhd --filename $P/$vm/$vm-$disk.vdi --size $BOOTSTRAP_VM_DRIVE_SIZE
                     $VBM storageattach $vm --storagectl "SATA Controller" --device 0 --port $port --type hdd --medium $P/$vm/$vm-$disk.vdi
                     port=$((port+1))
                 done
@@ -262,8 +263,8 @@ function create_cluster_VMs {
       if ! $VBM list vms | grep "^\"${vm}\"" ; then
           $VBM createvm --name $vm --ostype Ubuntu_64 --basefolder $P --register
           $VBM modifyvm $vm --memory $CLUSTER_VM_MEM
-          $VBM modifyvm $vm --cpus $CLUSTER_VM_CPUs
-          $VBM modifyvm $vm --vram $CLUSTER_VM_VRAM
+          $VBM modifyvm $vm --cpus $CLUSTER_VM_CPUS
+          $VBM modifyvm $vm --vram 16
           $VBM storagectl $vm --name "SATA Controller" --add sata
           # Create a number of hard disks
           port=0
@@ -296,7 +297,7 @@ ip=${2-10.0.100.3}
     vagrant ssh -c "test -f /etc/default/grub.ucf-dist && sudo mv /etc/default/grub.ucf-dist /etc/default/grub" || true
     # Duplicate what d-i's apt-setup generators/50mirror does when set in preseed
     if [ -n "$http_proxy" ]; then
-      if ! vagrant ssh -c "grep -z Acquire::http::Proxy /etc/apt/apt.conf"; then
+      if ! vagrant ssh -c "grep -z '^Acquire::http::Proxy ' /etc/apt/apt.conf"; then
         vagrant ssh -c "echo 'Acquire::http::Proxy \"$http_proxy\";' | sudo tee -a /etc/apt/apt.conf"
       fi
 

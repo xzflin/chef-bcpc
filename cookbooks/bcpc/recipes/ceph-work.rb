@@ -80,16 +80,8 @@ ruby_block "reap-ceph-disks-from-dead-servers" do
     end
 end
 
-execute "cephfs-in-fstab" do
-    command <<-EOH
-        echo "-- /mnt fuse.ceph-fuse rw,nosuid,nodev,noexec,noatime,noauto 0 2" >> /etc/fstab
-    EOH
-    not_if "cat /etc/fstab | grep ceph-fuse"
-end
-
-execute "cephfs-mount-fs" do
-    command <<-EOH
-        mount -a
-    EOH
-    not_if "mount | grep ceph-fuse"
+# this resource is to clean up leftovers from the CephFS resources that used to be here
+bash "clean-up-cephfs-mountpoint" do
+  code "sed -i 's/^-- \\/mnt fuse\\.ceph-fuse rw,nosuid,nodev,noexec,noatime,noauto 0 2$//g' /etc/fstab"
+  only_if { system "grep -q -e '^-- \\/mnt fuse\\.ceph-fuse rw,nosuid,nodev,noexec,noatime,noauto 0 2$' /etc/fstab" }
 end
