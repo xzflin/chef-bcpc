@@ -211,7 +211,7 @@ function create_bootstrap_VM {
             # (virtualbox exported machine image), for example as
             # built by
             # https://github.com/ericvw/chef-bcpc/tree/packer/bootstrap
-            #ARCHIVED_BOOTSTRAP=~/bcpc-cache/packer-bcpc-bootstrap_ubuntu-12.04-amd64.ova
+            #ARCHIVED_BOOTSTRAP=~/bcpc-cache/packer-bcpc-bootstrap_ubuntu-14.04.2-amd64.ova
 
             if [[ -n "$ARCHIVED_BOOTSTRAP" && -f "$ARCHIVED_BOOTSTRAP" ]]; then
                 vbm_import "$ARCHIVED_BOOTSTRAP" bcpc-bootstrap
