@@ -29,7 +29,7 @@ default['bcpc']['vms_key'] = nil
 #
 ###########################################
 default['bcpc']['elasticsearch']['version'] = '1.5.1'
-default['bcpc']['ceph']['version'] = '0.80.9-0ubuntu0.14.04.2'
+default['bcpc']['ceph']['version'] = '0.94.1-1trusty'
 default['bcpc']['erlang']['version'] = '1:17.5.3'
 default['bcpc']['haproxy']['version'] = '1.5.12-1ppa1~trusty'
 default['bcpc']['kibana']['version'] = '4.0.2'
@@ -205,7 +205,7 @@ default['bcpc']['repos']['erlang'] = "http://packages.erlang-solutions.com/ubunt
 # https://launchpad.net/ubuntu/+archivemirrors
 default['bcpc']['mirror']['ubuntu'] = "us.archive.ubuntu.com/ubuntu"
 default['bcpc']['mirror']['ubuntu-dist'] = ['trusty']
-default['bcpc']['mirror']['ceph-dist'] = ['firefly']
+default['bcpc']['mirror']['ceph-dist'] = ['hammer']
 default['bcpc']['mirror']['os-dist'] = ['kilo']
 default['bcpc']['mirror']['elasticsearch-dist'] = '1.5'
 
@@ -233,8 +233,8 @@ default['bcpc']['admin_email'] = "admin@localhost.com"
 default['bcpc']['zabbix']['user'] = "zabbix"
 default['bcpc']['zabbix']['group'] = "adm"
 
-default['bcpc']['ports']['apache']['radosgw'] = 80
-default['bcpc']['ports']['apache']['radosgw_https'] = 443
+#default['bcpc']['ports']['apache']['radosgw'] = 80
+#default['bcpc']['ports']['apache']['radosgw_https'] = 443
 default['bcpc']['ports']['haproxy']['radosgw'] = 80
 default['bcpc']['ports']['haproxy']['radosgw_https'] = 443
 
