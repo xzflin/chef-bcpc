@@ -13,7 +13,7 @@
         "<enter>"
       ],
       "boot_wait": "5s",
-      "disk_size": 20480,
+      "disk_size": 30480,
       "format": "ova",
       "guest_additions_path": "VBoxGuestAdditions-{{ .Version }}.iso",
       "guest_os_type": "Ubuntu_64",
