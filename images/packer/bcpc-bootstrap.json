@@ -38,7 +38,13 @@
         ["modifyvm", "{{.Name}}", "--nic4", "intnet"],
         ["modifyvm", "{{.Name}}", "--intnet2", "bcpc-management"],
         ["modifyvm", "{{.Name}}", "--intnet3", "bcpc-storage"],
-        ["modifyvm", "{{.Name}}", "--intnet4", "bcpc-float"]
+        ["modifyvm", "{{.Name}}", "--intnet4", "bcpc-float"],
+        ["modifyvm", "{{.Name}}", "--largepages", "on"],
+        ["modifyvm", "{{.Name}}", "--vtxvpid", "on"],
+        ["modifyvm", "{{.Name}}", "--hwvirtex", "on"],
+        ["modifyvm", "{{.Name}}", "--nestedpaging", "on"],
+        ["modifyvm", "{{.Name}}", "--ioapic", "off"],
+        ["modifyvm", "{{.Name}}", "--nictype1", "virtio"]
       ],
       "vm_name": "packer-{{user `hostname`}}_ubuntu-14.04.2-amd64"
     }
