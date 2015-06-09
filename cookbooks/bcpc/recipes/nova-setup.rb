@@ -51,6 +51,14 @@ bash "patch-for-nova-network-dhcp-server" do
     notifies :restart, "service[nova-api]", :immediately
 end
 
+# this is a synchronization resource that polls Keystone on the VIP to verify that it's not returning 503s,
+# if something above has restarted Apache and Keystone isn't ready to play yet
+bash "wait-for-keystone-to-become-operational" do
+  code ". /root/keystonerc; until keystone user-list >/dev/null 2>&1; do sleep 1; done"
+  timeout 30
+end
+
+
 bash "nova-default-secgroup" do
     user "root"
     code <<-EOH
