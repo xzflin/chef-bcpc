@@ -13,13 +13,13 @@
         "<enter>"
       ],
       "boot_wait": "5s",
-      "disk_size": 20480,
+      "disk_size": 30480,
       "format": "ova",
       "guest_additions_path": "VBoxGuestAdditions-{{ .Version }}.iso",
       "guest_os_type": "Ubuntu_64",
       "hard_drive_interface": "sata",
       "http_directory": "http",
-      "iso_checksum": "305492bfa21195b3c26b05d3568ac43ab4540053a36f448188f274c4773c4267",
+      "iso_checksum": "e6804a11bb7eae47a09d196a755921ed6e1af3a79acf033b067646c618487a59",
       "iso_checksum_type": "sha256",
       "iso_url": "http://archive.ubuntu.com/ubuntu/dists/trusty-updates/main/installer-amd64/current/images/netboot/mini.iso",
       "output_directory": "../build/virtualbox/bcpc-bootstrap",
@@ -38,15 +38,21 @@
         ["modifyvm", "{{.Name}}", "--nic4", "intnet"],
         ["modifyvm", "{{.Name}}", "--intnet2", "bcpc-management"],
         ["modifyvm", "{{.Name}}", "--intnet3", "bcpc-storage"],
-        ["modifyvm", "{{.Name}}", "--intnet4", "bcpc-float"]
+        ["modifyvm", "{{.Name}}", "--intnet4", "bcpc-float"],
+        ["modifyvm", "{{.Name}}", "--largepages", "on"],
+        ["modifyvm", "{{.Name}}", "--vtxvpid", "on"],
+        ["modifyvm", "{{.Name}}", "--hwvirtex", "on"],
+        ["modifyvm", "{{.Name}}", "--nestedpaging", "on"],
+        ["modifyvm", "{{.Name}}", "--ioapic", "off"],
+        ["modifyvm", "{{.Name}}", "--nictype1", "virtio"]
       ],
       "vm_name": "packer-{{user `hostname`}}_ubuntu-14.04.2-amd64"
     }
   ],
   "provisioners": [
     {
-      "destination": "id_rsa.pub",
-      "source": "files/id_rsa.pub",
+      "destination": "bootstrap_chef.id_rsa.pub",
+      "source": "files/bootstrap_chef.id_rsa.pub",
       "type": "file"
     },
     {
