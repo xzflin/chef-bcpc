@@ -81,6 +81,13 @@ template "/etc/keystone/key.pem" do
     notifies :restart, "service[apache2]", :delayed
 end
 
+template "/etc/keystone/policy.json" do
+    source "keystone-policy.json.erb"
+    owner "keystone"
+    group "keystone"
+    mode 00600
+end
+
 template "/root/adminrc" do
     source "adminrc.erb"
     owner "root"
