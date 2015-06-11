@@ -121,6 +121,10 @@ default['bcpc']['ceph']['hdd']['ruleset'] = 2
 # See wiki for further details. 
 default['bcpc']['ceph']['rebalance'] = false
 
+# Set the default niceness of Ceph OSD and monitor processes
+default['bcpc']['ceph']['osd_niceness'] = -10
+default['bcpc']['ceph']['mon_niceness'] = -10
+
 ###########################################
 #
 # RabbitMQ settings
