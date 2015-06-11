@@ -40,18 +40,53 @@ if node['bcpc']['enabled']['logging'] then
         only_if "grep -e '^USER=td-agent' /etc/init.d/td-agent"
         notifies :restart, "service[td-agent]", :delayed
     end
+    
+    if node['bcpc']['use_bootstrap_v2']
+      fluentd_gems = %w{
+        msgpack-0.5.11
+        thread_safe-0.3.5
+        tzinfo-1.2.2
+        tzinfo-data-1.2015.4
+        cool.io-1.3.1
+        http_parser.rb-0.6.0
+        sigdump-0.2.3
+        string-scrub-0.0.5
+        uuidtools-2.1.5
+        yajl-ruby-1.2.1
+        fluentd-0.12.11
+        fluent-mixin-config-placeholders-0.3.0
+        fluent-plugin-elasticsearch-0.2.0
+        fluent-plugin-record-reformer-0.6.3
+        fluent-plugin-rewrite-0.0.12
+        fluent-plugin-tail-ex-0.1.1
+        fluent-plugin-tail-multiline-0.1.5
+      }
+    
+      fluentd_gems.each do |pkg|
+        cookbook_file "/tmp/#{pkg}.gem" do
+          source "bins/#{pkg}.gem"
+          owner "root"
+          mode 00444
+        end
 
-    %w{elasticsearch tail-multiline tail-ex record-reformer rewrite}.each do |pkg|
-        cookbook_file "/tmp/fluent-plugin-#{pkg}.gem" do
-            source "bins/fluent-plugin-#{pkg}.gem"
-            owner "root"
-            mode 00444
+        bash "install-#{pkg}" do
+          code "/usr/lib/fluent/ruby/bin/fluent-gem install --local --no-ri --no-rdoc /tmp/#{pkg}.gem"
+          not_if "/usr/lib/fluent/ruby/bin/fluent-gem list --local --no-versions | grep #{pkg}$"
         end
-        bash "install-fluent-plugin-#{pkg}" do
-            code "/usr/lib/fluent/ruby/bin/fluent-gem install --local --no-ri --no-rdoc /tmp/fluent-plugin-#{pkg}.gem"
-            not_if "/usr/lib/fluent/ruby/bin/fluent-gem list --local --no-versions | grep fluent-plugin-#{pkg}$"
-        end
-    end
+      end
+    else
+      %w{elasticsearch tail-multiline tail-ex record-reformer rewrite}.each do |pkg|
+          cookbook_file "/tmp/fluent-plugin-#{pkg}.gem" do
+              source "bins/fluent-plugin-#{pkg}.gem"
+              owner "root"
+              mode 00444
+          end
+          bash "install-fluent-plugin-#{pkg}" do
+              code "/usr/lib/fluent/ruby/bin/fluent-gem install --local --no-ri --no-rdoc /tmp/fluent-plugin-#{pkg}.gem"
+              not_if "/usr/lib/fluent/ruby/bin/fluent-gem list --local --no-versions | grep fluent-plugin-#{pkg}$"
+          end
+      end
+    end # if node['bcpc']['use_bootstrap_v2']
 
     cookbook_file "/tmp/fluentd.patch" do
         source "fluentd.patch"
