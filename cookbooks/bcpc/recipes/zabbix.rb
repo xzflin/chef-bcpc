@@ -191,7 +191,10 @@ if node['bcpc']['enabled']['monitoring'] then
 
     ruby_block "zabbix-api-auto-discovery-register" do
         block do
-           system "/usr/local/share/zabbix/zabbix-api-auto-discovery"
+            # Ensures no proxy is ever used locally
+            %x[export no_proxy="#{node['bcpc']['management']['monitoring']['vip']}";
+               /usr/local/share/zabbix/zabbix-api-auto-discovery
+            ]
         end
     end
 

@@ -4,57 +4,147 @@ import requests
 import json
 
 headers = {'content-type': 'application/json'}
+roles = ['BCPC-Headnode', 'BCPC-Worknode', 'BCPC-Monitoring']
 
 login_api = {
     "jsonrpc": "2.0", "method": "user.login",
     "params": {
-      "user": "<%=get_config('zabbix-admin-user')%>",
-      "password": "<%=get_config('zabbix-admin-password')%>"
+        "user": "<%=get_config('zabbix-admin-user')%>",
+        "password": "<%=get_config('zabbix-admin-password')%>"
     },
     "id": 1 }
 
-status = requests.post("http://<%=node['bcpc']['management']['ip']%>:7777/api_jsonrpc.php", data=json.dumps(login_api), verify=False, headers=headers)
+status = requests.post("https://<%=node['bcpc']['management']['monitoring']['vip']%>/zabbix/api_jsonrpc.php", data=json.dumps(login_api), verify=False, headers=headers)
 api_login = status.json()['result']
 
-exists_api = {
-   "jsonrpc": "2.0",
-   "method": "action.exists",
-   "params": {
-     "name": "Auto registration BCPC servers."
-   },
-   "auth": api_login,
-   "id": 1 }
+for role in roles:
+    # Determine if action exists
+    exists_api = {
+        "jsonrpc": "2.0",
+        "method": "action.exists",
+        "params": {
+            "name": role + " auto registration"
+        },
+        "auth": api_login,
+        "id": 1 }
 
-status = requests.post("http://<%=node['bcpc']['management']['ip']%>:7777/api_jsonrpc.php", data=json.dumps(exists_api), verify=False, headers=headers)
+    status = requests.post("https://<%=node['bcpc']['management']['monitoring']['vip']%>/zabbix/api_jsonrpc.php", data=json.dumps(exists_api), verify=False, headers=headers)
 
-if not status.json()['result']:
-  create_api = {
-     "jsonrpc": "2.0",
-     "method": "action.create",
-     "params": {
-       "name": "Auto registration BCPC servers.",
-       "eventsource": 2,
-       "status": 0,
-       "esc_period": 0,
-       "evaltype": 0,
-       "operations": [
-         {
-           "esc_step_from": 1,
-           "esc_period": 0,
-           "optemplate": [ { "templateid": "10001" } ],
-           "operationtype": 6,
-           "esc_step_to": 1
-         },
-         {
-           "esc_step_from": 1,
-           "esc_period": 0,
-           "opgroup": [ { "operationid": "1", "groupid": "5" } ],
-           "operationtype": 4,
-           "esc_step_to": 1
-         }
-       ]
-     },
-     "auth": api_login,
-     "id": 1
-   }
-  status = requests.post("http://<%=node['bcpc']['management']['ip']%>:7777/api_jsonrpc.php", data=json.dumps(create_api), verify=False, headers=headers)
+    if not status.json()['result']:
+        # Determine if template exists
+        template_api = {
+            "jsonrpc": "2.0",
+            "method": "template.get",
+            "params": {
+                "filter": {
+                    "host": [
+                        role
+                    ]
+                }
+            },
+            "auth": api_login,
+            "id": 1
+        }
+        response = requests.post("https://<%=node['bcpc']['management']['monitoring']['vip']%>/zabbix/api_jsonrpc.php", data=json.dumps(template_api), verify=False, headers=headers)
+        if not response.json()['result']:
+            raise Exception("Missing template: " + role)
+        templateid = response.json()['result'][0]['templateid']
+
+        # Determine if hostgroup exists
+        hostgroup_api = {
+            "jsonrpc": "2.0",
+            "method": "hostgroup.get",
+            "params": {
+                "filter": {
+                    "name": [
+                        role
+                    ]
+                }
+            },
+            "auth": api_login,
+            "id": 1
+        }
+        response = requests.post("https://<%=node['bcpc']['management']['monitoring']['vip']%>/zabbix/api_jsonrpc.php", data=json.dumps(hostgroup_api), verify=False, headers=headers)
+        if not response.json()['result']:
+            raise Exception("Missing hostgroup: " + role)
+        hostgroupid = response.json()['result'][0]['groupid']
+
+        # If required template and hostgroup exist, create discovery action
+        create_api = {
+            "jsonrpc": "2.0",
+            "method": "action.create",
+            "params": {
+                "name": role + " auto registration",
+                "eventsource": 2,
+                "status": 0,
+                "esc_period": 0,
+                "evaltype": 0,
+                "conditions": [
+                    {
+                        "conditiontype": 24,
+                        "operator": 2,
+                        "value": role
+                    }
+                ],
+                "operations": [
+                    {
+                        "esc_step_from": 1,
+                        "esc_period": 0,
+                        "optemplate": [ { "templateid": templateid } ],
+                        "operationtype": 6,
+                        "esc_step_to": 1
+                    },
+                    {
+                        "esc_step_from": 1,
+                        "esc_period": 0,
+                        "opgroup": [ { "operationid": "1", "groupid": hostgroupid } ],
+                        "operationtype": 4,
+                        "esc_step_to": 1
+                    }
+                ]
+            },
+            "auth": api_login,
+            "id": 1
+        }
+
+        status = requests.post("https://<%=node['bcpc']['management']['monitoring']['vip']%>/zabbix/api_jsonrpc.php", data=json.dumps(create_api), verify=False, headers=headers)
+        if not status.json()['result']:
+            raise Exception("Unable to create discovery action: " + role)
+
+# Create discovery rules
+for drule in <%=node['bcpc']['zabbix']['discovery']['ip_ranges']%>:
+    drule_exists_api = {
+        "jsonrpc": "2.0",
+        "method": "drule.exists",
+        "params": {
+            "name": drule
+        },
+        "auth": api_login,
+        "id": 1
+    }
+
+    response = requests.post("https://<%=node['bcpc']['management']['monitoring']['vip']%>/zabbix/api_jsonrpc.php", data=json.dumps(drule_exists_api), verify=False, headers=headers)
+    if not response.json()['result']:
+        drule_create_api = {
+            "jsonrpc": "2.0",
+            "method": "drule.create",
+            "params": {
+                "name": drule,
+                "iprange": drule,
+                "delay": <%=node['bcpc']['zabbix']['discovery']['delay']%>,
+                "dchecks": [
+                    {
+                        "type": "9",
+                        "key_": "system.uname",
+                        "ports": "10050",
+                        "uniq": "0"
+                    }
+                ]
+            },
+            "auth": api_login,
+            "id": 1
+        }
+        status = requests.post("https://<%=node['bcpc']['management']['monitoring']['vip']%>/zabbix/api_jsonrpc.php", data=json.dumps(drule_create_api), verify=False, headers=headers)
+        if not status.json()['result']:
+            raise Exception("Unable to create discovery rule: " + drule)
+
