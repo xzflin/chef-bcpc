@@ -29,7 +29,10 @@ default['bcpc']['vms_key'] = nil
 #
 ###########################################
 default['bcpc']['elasticsearch']['version'] = '1.5.1'
-default['bcpc']['ceph']['version'] = '0.94.1-1trusty'
+default['bcpc']['ceph']['version'] = '0.94.2-1trusty'
+default['bcpc']['ceph']['version_number'] = '0.94.2'
+# Ceph.com version number '0.94.2-1trusty'
+# Ubuntu cloud version number '0.94.1-0ubuntu1~cloud0'
 default['bcpc']['erlang']['version'] = '1:17.5.3'
 default['bcpc']['haproxy']['version'] = '1.5.12-1ppa1~trusty'
 default['bcpc']['kibana']['version'] = '4.0.2'
@@ -60,7 +63,7 @@ default['bcpc']['enabled']['always_update_package_lists'] = true
 default['bcpc']['enabled']['keepalived_checks'] = true
 # This will enable the networking test scripts
 default['bcpc']['enabled']['network_tests'] = true
-# This will enable httpd disk caching for radosgw
+# This will enable httpd disk caching for radosgw in apache
 default['bcpc']['enabled']['radosgw_cache'] = false
 # This will enable using TPM-based hwrngd
 default['bcpc']['enabled']['tpm'] = false
@@ -88,22 +91,37 @@ default['bcpc']['fixed']['vlan_interface'] = node['bcpc']['floating']['interface
 #  Ceph settings for the cluster
 #
 ###########################################
+# Trusty is not available at this time for ceph-extras
+default['bcpc']['ceph']['extras']['dist'] = "precise"
+# To use apache instead of civetweb, make the following value anything but 'civetweb'
+default['bcpc']['ceph']['frontend'] = "civetweb"
 default['bcpc']['ceph']['chooseleaf'] = "rack"
 default['bcpc']['ceph']['pgp_auto_adjust'] = false
+# Need to review...
 default['bcpc']['ceph']['pgs_per_node'] = 1024
+# Journal size could be 10GB or higher in some cases
+default['bcpc']['ceph']['journal_size'] = 2048
 # The 'portion' parameters should add up to ~100 across all pools
-default['bcpc']['ceph']['default']['replicas'] = 2
+default['bcpc']['ceph']['default']['replicas'] = 3
 default['bcpc']['ceph']['default']['type'] = 'hdd'
 default['bcpc']['ceph']['rgw']['replicas'] = 3
 default['bcpc']['ceph']['rgw']['portion'] = 33
 default['bcpc']['ceph']['rgw']['type'] = 'hdd'
 default['bcpc']['ceph']['images']['replicas'] = 3
 default['bcpc']['ceph']['images']['portion'] = 33
-default['bcpc']['ceph']['images']['type'] = 'ssd'
+# Set images to hdd instead of sdd
+default['bcpc']['ceph']['images']['type'] = 'hdd'
 default['bcpc']['ceph']['images']['name'] = "images"
 default['bcpc']['ceph']['volumes']['replicas'] = 3
 default['bcpc']['ceph']['volumes']['portion'] = 33
 default['bcpc']['ceph']['volumes']['name'] = "volumes"
+# Created a new pool for VMs and set type to ssd
+default['bcpc']['ceph']['vms']['replicas'] = 3
+default['bcpc']['ceph']['vms']['portion'] = 33
+default['bcpc']['ceph']['vms']['type'] = 'ssd'
+default['bcpc']['ceph']['vms']['name'] = "vms"
+
+# Begin cobalt - not used in cluster
 default['bcpc']['ceph']['vms_disk']['replicas'] = 3
 default['bcpc']['ceph']['vms_disk']['portion'] = 10
 default['bcpc']['ceph']['vms_disk']['type'] = 'ssd'
@@ -112,6 +130,7 @@ default['bcpc']['ceph']['vms_mem']['replicas'] = 3
 default['bcpc']['ceph']['vms_mem']['portion'] = 10
 default['bcpc']['ceph']['vms_mem']['type'] = 'ssd'
 default['bcpc']['ceph']['vms_mem']['name'] = "vmsmem"
+# End cobalt
 default['bcpc']['ceph']['ssd']['ruleset'] = 1
 default['bcpc']['ceph']['hdd']['ruleset'] = 2
 
@@ -190,6 +209,7 @@ default['bcpc']['repos']['fluentd'] = "http://packages.treasure-data.com/precise
 default['bcpc']['repos']['gridcentric'] = "http://downloads.gridcentric.com/packages/%s/%s/ubuntu"
 default['bcpc']['repos']['elasticsearch'] = "http://packages.elasticsearch.org/elasticsearch/1.5/debian"
 default['bcpc']['repos']['erlang'] = "http://packages.erlang-solutions.com/ubuntu"
+default['bcpc']['repos']['ceph'] = "http://ceph.com/debian-hammer"
 
 ###########################################
 #
@@ -233,8 +253,14 @@ default['bcpc']['admin_email'] = "admin@localhost.com"
 default['bcpc']['zabbix']['user'] = "zabbix"
 default['bcpc']['zabbix']['group'] = "adm"
 
-#default['bcpc']['ports']['apache']['radosgw'] = 80
-#default['bcpc']['ports']['apache']['radosgw_https'] = 443
+# General ports for both Apache and Civetweb (no ssl for civetweb at this time)
+default['bcpc']['ports']['radosgw'] = 8088
+default['bcpc']['ports']['radosgw_https'] = 443
+default['bcpc']['ports']['civetweb']['radosgw'] = 8088
+# Apache - Leave until Apache is removed
+default['bcpc']['ports']['apache']['radosgw'] = 80
+default['bcpc']['ports']['apache']['radosgw_https'] = 443
+
 default['bcpc']['ports']['haproxy']['radosgw'] = 80
 default['bcpc']['ports']['haproxy']['radosgw_https'] = 443
 

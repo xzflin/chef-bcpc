@@ -2,7 +2,7 @@
 # Cookbook Name:: bcpc
 # Recipe:: ceph-mon
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -111,36 +111,38 @@ bash "set-ceph-crush-tunables" do
     EOH
 end
 
-directory "/var/lib/ceph/mds/ceph-#{node['hostname']}" do
-    user "root"
-    group "root"
-    mode 00755
-end
+# Remove MDS in a later pull request... Wait_for_pg_create uses mdmap so it will need to change...
+#directory "/var/lib/ceph/mds/ceph-#{node['hostname']}" do
+#    user "root"
+#    group "root"
+#    mode 00755
+#end
 
-bash "initialize-ceph-mds-config" do
-    code <<-EOH
-        ceph --name mon. --keyring /var/lib/ceph/mon/ceph-#{node['hostname']}/keyring \
-            auth get-or-create-key mds.#{node['hostname']} \
-            mon 'allow *' \
-            osd 'allow *' \
-            mds 'allow' > /dev/null
-    EOH
-end
+#bash "initialize-ceph-mds-config" do
+#    code <<-EOH
+#        ceph --name mon. --keyring /var/lib/ceph/mon/ceph-#{node['hostname']}/keyring \
+#            auth get-or-create-key mds.#{node['hostname']} \
+#            mon 'allow *' \
+#            osd 'allow *' \
+#            mds 'allow' > /dev/null
+#    EOH
+#end
 
-bash "write-mds-#{node['hostname']}-key" do
-    code <<-EOH
-        MDS_KEY=`ceph --name mon. --keyring /var/lib/ceph/mon/ceph-#{node['hostname']}/keyring auth get-or-create-key mds.#{node['hostname']}`
-        ceph-authtool "/var/lib/ceph/mds/ceph-#{node['hostname']}/keyring" \
-            --create-keyring \
-            --name=mds.#{node['hostname']} \
-            --add-key="$MDS_KEY"
-    EOH
-    not_if "test -f /var/lib/ceph/mds/ceph-#{node['hostname']}/keyring"
-end
+#bash "write-mds-#{node['hostname']}-key" do
+#    code <<-EOH
+#        MDS_KEY=`ceph --name mon. --keyring /var/lib/ceph/mon/ceph-#{node['hostname']}/keyring auth get-or-create-key mds.#{node['hostname']}`
+#        ceph-authtool "/var/lib/ceph/mds/ceph-#{node['hostname']}/keyring" \
+#            --create-keyring \
+#            --name=mds.#{node['hostname']} \
+#            --add-key="$MDS_KEY"
+#    EOH
+#    not_if "test -f /var/lib/ceph/mds/ceph-#{node['hostname']}/keyring"
+#end
 
-execute "ceph-mds-start" do
-    command "initctl emit ceph-mds id='#{node['hostname']}'"
-end
+#execute "ceph-mds-start" do
+#    command "initctl emit ceph-mds id='#{node['hostname']}'"
+#end
+# End MDS block
 
 template "/tmp/crush-map-additions.txt" do
     source "ceph-crush.erb"
@@ -168,9 +170,29 @@ bash "ceph-add-crush-rules" do
     not_if "grep ssd /tmp/crush-map.txt"
 end
 
+# Beginning in Hammer these two are not automatically created
+vms_optimal_pg = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['vms']['replicas']*node['bcpc']['ceph']['vms']['portion']/100)
+
+# Create the VMs pool and any others that may need creating
+vms_rule = (node['bcpc']['ceph']['vms']['type'] == "ssd") ? node['bcpc']['ceph']['ssd']['ruleset'] : node['bcpc']['ceph']['hdd']['ruleset']
+
+bash "create-rados-pool-#{node['bcpc']['ceph']['vms']['name']}" do
+    user "root"
+    code <<-EOH
+        ceph osd pool create #{node['bcpc']['ceph']['vms']['name']} #{vms_optimal_pg}
+        ceph osd pool set #{node['bcpc']['ceph']['vms']['name']} crush_ruleset #{vms_rule}
+        sleep 15
+    EOH
+    not_if "rados lspools | grep ^#{node['bcpc']['ceph']['vms']['name']}$"
+end
+#     notifies :run, "bash[wait-for-pgs-creating]", :immediately
+
+
+# Commented out 'data' and 'metadata' since the number of pools can impact pgs
+# data metadata - removed from loop below - After firefly data and metadata are no longer default pools
 if get_head_nodes.length == 1; then
     rule = (node['bcpc']['ceph']['default']['type'] == "ssd") ? node['bcpc']['ceph']['ssd']['ruleset'] : node['bcpc']['ceph']['hdd']['ruleset']
-    %w{data metadata rbd}.each do |pool|
+    ["rbd"].each do |pool|
         bash "move-#{pool}-rados-pool" do
             user "root"
             code "ceph osd pool set #{pool} crush_ruleset #{rule}"
@@ -183,7 +205,8 @@ if replicas < 1; then
     replicas = 1
 end
 
-%w{data metadata rbd}.each do |pool|
+# data metadata - removed from list since they are no longer created by default in ceph
+["rbd", node['bcpc']['ceph']['vms']['name']].each do |pool|
     bash "set-#{pool}-rados-pool-replicas" do
         user "root"
         code "ceph osd pool set #{pool} size #{replicas}"
@@ -191,7 +214,8 @@ end
     end
 end
 
-%w{mon mds}.each do |svc|
+# mds is only used by CephFS so need for it here at this time but will remain until mds is removed
+%w{mon}.each do |svc|
     %w{done upstart}.each do |name|
         file "/var/lib/ceph/#{svc}/ceph-#{node['hostname']}/#{name}" do
             owner "root"
