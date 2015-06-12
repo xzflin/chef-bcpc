@@ -76,6 +76,8 @@ DATABASES = {
 
 # Default OpenStack Dashboard configuration.
 HORIZON_CONFIG = {
+    # overrides module is in /usr/local/bcpc-horizon
+    'customization_module': 'bcpc.overrides',
     'simple_ip_management' : False,	
     'user_home': 'openstack_dashboard.views.get_user_home',
     'ajax_queue_limit': 10,

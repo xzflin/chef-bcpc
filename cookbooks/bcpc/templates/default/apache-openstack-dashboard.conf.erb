@@ -10,7 +10,7 @@ Listen <%=node['bcpc']['management']['ip']%>:9999
     ServerName "openstack.<%=node['bcpc']['domain_name']%>"
 
     WSGIScriptAlias /horizon /usr/share/openstack-dashboard/openstack_dashboard/wsgi/django.wsgi
-    WSGIDaemonProcess horizon user=www-data group=www-data processes=3 threads=10
+    WSGIDaemonProcess horizon user=www-data group=www-data processes=3 threads=10 python-path=/usr/local/bcpc-horizon
     WSGIProcessGroup horizon
     Alias /static /usr/share/openstack-dashboard/openstack_dashboard/static/
     <Directory /usr/share/openstack-dashboard/openstack_dashboard/wsgi>

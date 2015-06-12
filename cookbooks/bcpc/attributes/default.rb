@@ -245,6 +245,17 @@ default['bcpc']['protocol']['nova'] = "https"
 default['bcpc']['protocol']['cinder'] = "https"
 default['bcpc']['protocol']['heat'] = "https"
 
+
+###########################################
+#
+#  Horizon Settings
+#
+###########################################
+#
+# List panels to remove from the Horizon interface here
+# (if the last panel in a group is removed, the group will also be removed)
+default['bcpc']['horizon']['disable_panels'] = ['containers']
+
 ###########################################
 #
 #  Keystone Settings
