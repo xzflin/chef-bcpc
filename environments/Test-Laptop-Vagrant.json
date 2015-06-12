@@ -22,8 +22,7 @@
       },
       "nova" : {
         "ram_allocation_ratio" : "20.0",
-        "cpu_allocation_ratio": "20.0",
-        "nova_single_cpu": true
+        "cpu_allocation_ratio": "20.0"
       },
       "domain_name" : "bcpc.example.com",
       "management": {
