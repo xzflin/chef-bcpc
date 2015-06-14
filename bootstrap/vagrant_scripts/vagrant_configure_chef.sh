@@ -47,20 +47,19 @@ do_on_node bootstrap "mkdir -p \$HOME/.chef && echo -e \"chef_server_url 'https:
 do_on_node bootstrap "$KNIFE ssl fetch"
 do_on_node bootstrap "$KNIFE bootstrap -x vagrant -P vagrant --sudo 10.0.100.3"
 
-# install and bootstrap Chef on cluster nodes
-for vm in vm1 vm2 vm3; do
-  do_on_node $vm "sudo dpkg -i \$(find /chef-bcpc-files/ -name chef_\*deb -not -name \*downloaded | tail -1)"
-done
-do_on_node bootstrap "$KNIFE bootstrap -x vagrant -P vagrant --sudo 10.0.100.11"
-do_on_node bootstrap "$KNIFE bootstrap -x vagrant -P vagrant --sudo 10.0.100.12"
-do_on_node bootstrap "$KNIFE bootstrap -x vagrant -P vagrant --sudo 10.0.100.13"
+# Initialize VM lists
+vms="vm1 vm2 vm3"
+if [ $MONITORING_NODES -gt 0 ]; then
+  i=1
+  while [ $i -le $MONITORING_NODES ]; do
+    mon_vm="vm`expr 3 + $i`"
+    mon_vms="$mon_vms $mon_vm"
+    i=`expr $i + 1`
+  done
+fi
 
-# install the knife-acl plugin into embedded knife and generate the actor map
+# install the knife-acl plugin into embedded knife
 do_on_node bootstrap "sudo /opt/opscode/embedded/bin/gem install /chef-bcpc-files/knife-acl-0.0.12.gem"
-do_on_node bootstrap "cd \$HOME && $KNIFE actor map"
-
-# using the actor map, set bootstrap and vm1 as admins so that they can write into the data bag
-do_on_node bootstrap "$KNIFE group add actor admins bcpc-bootstrap.$BOOTSTRAP_DOMAIN && $KNIFE group add actor admins bcpc-vm1.$BOOTSTRAP_DOMAIN"
 
 # rsync the Chef repository into the non-root user (vagrant)'s home directory
 do_on_node bootstrap "rsync -a /chef-bcpc-host/* \$HOME/chef-bcpc"
@@ -81,29 +80,61 @@ do_on_node bootstrap "$KNIFE cookbook upload apt bcpc chef-client cron logrotate
 do_on_node bootstrap "cd \$HOME/chef-bcpc/roles && $KNIFE role from file *.json"
 do_on_node bootstrap "cd \$HOME/chef-bcpc/environments && $KNIFE environment from file $BOOTSTRAP_CHEF_ENV.json"
 
+# install and bootstrap Chef on cluster nodes
+i=1
+for vm in $vms $mon_vms; do
+  do_on_node $vm "sudo dpkg -i \$(find /chef-bcpc-files/ -name chef_\*deb -not -name \*downloaded | tail -1)"
+  do_on_node bootstrap "$KNIFE bootstrap -x vagrant -P vagrant --sudo 10.0.100.1${i}"
+  i=`expr $i + 1`
+done
+
 # augment the previously configured nodes with our newly uploaded environments and roles
-for vm in bootstrap vm1 vm2 vm3; do
+for vm in bootstrap $vms $mon_vms; do
   do_on_node bootstrap "$KNIFE node environment set bcpc-$vm.$BOOTSTRAP_DOMAIN $BOOTSTRAP_CHEF_ENV"
 done
+
 do_on_node bootstrap "$KNIFE node run_list set bcpc-bootstrap.$BOOTSTRAP_DOMAIN 'role[BCPC-Bootstrap]'"
 do_on_node bootstrap "$KNIFE node run_list set bcpc-vm1.$BOOTSTRAP_DOMAIN 'role[BCPC-Headnode]'"
 do_on_node bootstrap "$KNIFE node run_list set bcpc-vm2.$BOOTSTRAP_DOMAIN 'role[BCPC-Worknode]'"
 do_on_node bootstrap "$KNIFE node run_list set bcpc-vm3.$BOOTSTRAP_DOMAIN 'role[BCPC-Worknode]'"
 
-# if configured to not automatically converge, exit now
+# generate actor map
+do_on_node bootstrap "cd \$HOME && $KNIFE actor map"
+# using the actor map, set bootstrap, vm1 and mon vms (if any) as admins so that they can write into the data bag
+do_on_node bootstrap "cd \$HOME && $KNIFE group add actor admins bcpc-bootstrap.$BOOTSTRAP_DOMAIN && $KNIFE group add actor admins bcpc-vm1.$BOOTSTRAP_DOMAIN"
+for vm in $mon_vms; do
+  do_on_node bootstrap "cd \$HOME && $KNIFE group add actor admins bcpc-$vm.$BOOTSTRAP_DOMAIN"
+done
+
+
+# Clustered monitoring setup (>1 mon VM) requires completely initialized node attributes for chef to run
+# on each node successfully. If we are not converging automatically, set run_list (for mon VMs) and exit.
+# Otherwise, each mon VM needs to complete chef run first before setting the next node's run_list.
 if [[ $BOOTSTRAP_CHEF_DO_CONVERGE -eq 0 ]]; then
+  for vm in $mon_vms; do
+    do_on_node bootstrap "$KNIFE node run_list set bcpc-$vm.$BOOTSTRAP_DOMAIN 'role[BCPC-Monitoring]'"
+  done
   echo "BOOTSTRAP_CHEF_DO_CONVERGE is set to 0, skipping automatic convergence."
   exit 0
 else
   # run Chef on each node
   do_on_node bootstrap "sudo chef-client"
-  do_on_node vm1 "sudo chef-client"
-  do_on_node vm2 "sudo chef-client"
-  do_on_node vm3 "sudo chef-client"
+  for vm in $vms; do
+    do_on_node $vm "sudo chef-client"
+  done
   # run on head node one last time to update HAProxy with work node IPs
   do_on_node vm1 "sudo chef-client"
   # HUP OpenStack services on each node to ensure everything's in a working state
-  for vm in vm1 vm2 vm3; do
+  for vm in $vms; do
     do_on_node $vm "sudo hup_openstack || true"
+  done
+  # Run chef on each mon VM before assigning next node for monitoring.
+  for vm in $mon_vms; do
+    do_on_node bootstrap "$KNIFE node run_list set bcpc-$vm.$BOOTSTRAP_DOMAIN 'role[BCPC-Monitoring]'"
+    do_on_node $vm "sudo chef-client"
+  done
+  # Run chef on each mon VM except the last node to update cluster components
+  for vm in $(echo $mon_vms | awk '{$NF=""}1'); do
+    do_on_node $vm "sudo chef-client"
   done
 fi

@@ -56,3 +56,7 @@
 # Sets the size of disks (in MB) given to cluster VMs.
 # export CLUSTER_VM_DRIVE_SIZE=20480
 
+# Sets the number of monitoring VMs to bootstrap. Please ensure you have
+# sufficient hardware resources to run these additional VMs.
+# Valid range is 0-3 (default 0).
+# export MONITORING_NODES=0
