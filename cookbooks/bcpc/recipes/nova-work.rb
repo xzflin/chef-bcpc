@@ -46,39 +46,6 @@ end
     end
 end
 
-#  _   _  ____ _  __   __  ____   _  _____ ____ _   _
-# | | | |/ ___| | \ \ / / |  _ \ / \|_   _/ ___| | | |
-# | | | | |  _| |  \ V /  | |_) / _ \ | || |   | |_| |
-# | |_| | |_| | |___| |   |  __/ ___ \| || |___|  _  |
-#  \___/ \____|_____|_|   |_| /_/   \_\_| \____|_| |_|
-
-# this patch modifies cpuset behavior to allow launching instances on VirtualBox by
-# creating all libvirt domains on the last CPU core
-# DO NOT USE THIS IN PRODUCTION AND GET RID OF THIS AS SOON AS IT'S FIXED UPSTREAM
-cookbook_file "/tmp/nova-single-cpu.patch" do
-    source "nova-single-cpu.patch"
-    owner "root"
-    mode 00644
-end
-
-if node['bcpc']['nova']['nova_single_cpu'] then
-    bash "patch-for-nova-single-cpu" do
-       user "root"
-       code <<-EOH
-           cd /usr/lib/python2.7/dist-packages/nova
-           patch -p1 < /tmp/nova-single-cpu.patch
-           rv=$?
-           if [ $rv -ne 0 ]; then
-             echo "Error applying patch ($rv) - aborting!"
-             exit $rv
-           fi
-           cp /tmp/nova-single-cpu.patch .
-       EOH
-       not_if "test -f /usr/lib/python2.7/dist-packages/nova/nova-single-cpu.patch"
-       notifies :restart, "service[nova-compute]", :immediately
-    end
-end
-
 template "/etc/nova/ssl-bcpc.pem" do
     source "ssl-bcpc.pem.erb"
     owner "nova"
