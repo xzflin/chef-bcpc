@@ -260,6 +260,10 @@ default['bcpc']['keystone']['enable_caching'] = true
 default['bcpc']['keystone']['debug'] = false
 # Enable verbose logging.
 default['bcpc']['keystone']['verbose'] = false
+# Set the timeout for how long we will wait for Keystone to become operational
+# before failing (configures timeout on the wait-for-keystone-to-be-operational
+# spinlock guard).
+default['bcpc']['keystone']['wait_for_keystone_timeout'] = 120
 # This can be either 'sql' or 'ldap' to either store identities
 # in the mysql DB or the LDAP server
 default['bcpc']['keystone']['backend'] = 'sql'
