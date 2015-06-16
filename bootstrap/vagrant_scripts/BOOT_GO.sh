@@ -50,6 +50,7 @@ export BOOTSTRAP_VM_DRIVE_SIZE=${BOOTSTRAP_VM_DRIVE_SIZE:-20480}
 export CLUSTER_VM_MEM=${CLUSTER_VM_MEM:-2560}
 export CLUSTER_VM_CPUS=${CLUSTER_VM_CPUS:-2}
 export CLUSTER_VM_DRIVE_SIZE=${CLUSTER_VM_DRIVE_SIZE:-20480}
+export MONITORING_NODES=${MONITORING_NODES:-0}
 
 # Perform preflight checks to validate environment sanity as much as possible.
 echo "Performing preflight environment validation..."
