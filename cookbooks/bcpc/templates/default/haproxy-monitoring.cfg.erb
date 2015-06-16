@@ -56,10 +56,16 @@ frontend https
   redirect code 301 prefix / append-slash if kibana_missing_slash
   acl url_kibana path_beg /kibana
   use_backend kibana-backend if url_kibana
+  acl host_kibana hdr_beg(Host) kibana.
+  use_backend kibana-backend if host_kibana
   acl url_elasticsearch path_beg /elasticsearch
   use_backend elasticsearch-backend if url_elasticsearch
   acl url_zabbix path_beg /zabbix
   use_backend zabbix-backend if url_zabbix
+  acl host_zabbix hdr_beg(Host) zabbix.
+  use_backend zabbix-backend if host_zabbix
+  acl host_graphite hdr_beg(Host) graphite.
+  use_backend graphite-web-backend if host_graphite
 
 backend graphite-web-backend
   balance source
