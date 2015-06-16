@@ -450,3 +450,12 @@ default['bcpc']['rally']['user'] = 'ubuntu'
 
 default['bcpc']['flavors']['deleted'] = []
 default['bcpc']['flavors']['enabled'] = {}
+###########################################
+#
+# Zabbix settings
+#
+###########################################
+#
+default['bcpc']['zabbix']['discovery']['delay'] = 600
+default['bcpc']['zabbix']['discovery']['ip_ranges'] = [node['bcpc']['management']['cidr']]
+
