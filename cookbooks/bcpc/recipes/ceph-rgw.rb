@@ -2,7 +2,7 @@
 # Cookbook Name:: bcpc
 # Recipe:: ceph-rgw
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -60,13 +60,13 @@ end
 
 rgw_optimal_pg = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['rgw']['replicas']*node['bcpc']['ceph']['rgw']['portion']/100)
 
-rgw_crush_ruleset = (node['bcpc']['ceph']['rgw']['type'] == "ssd") ? node['bcpc']['ceph']['ssd']['ruleset'] : node['bcpc']['ceph']['hdd']['ruleset']
+rgw_rule = (node['bcpc']['ceph']['rgw']['type'] == "ssd") ? node['bcpc']['ceph']['ssd']['ruleset'] : node['bcpc']['ceph']['hdd']['ruleset']
 
 %w{.rgw .rgw.control .rgw.gc .rgw.root .users.uid .users.email .users .usage .log .intent-log .rgw.buckets .rgw.buckets.index .rgw.buckets.extra}.each do |pool|
     bash "create-rados-pool-#{pool}" do
         code <<-EOH
             ceph osd pool create #{pool} #{rgw_optimal_pg}
-            ceph osd pool set #{pool} crush_ruleset #{rgw_crush_ruleset}
+            ceph osd pool set #{pool} crush_ruleset #{rgw_rule}
         EOH
         not_if "rados lspools | grep ^#{pool}$"
         notifies :run, "bash[wait-for-pgs-creating]", :immediately
@@ -92,6 +92,8 @@ end
     end
 end
 
+# Leaving apache portion in so that we can switch back if needed by removing 'rgw frontends...' statement
+# in ceph.conf and then restarting radosgw.
 file "/var/www/s3gw.fcgi" do
     owner "root"
     group "root"
@@ -114,7 +116,7 @@ bash "apache-enable-radosgw" do
     not_if "test -r /etc/apache2/sites-enabled/radosgw"
     notifies :restart, "service[apache2]", :immediately
 end
-
+# End apache configs
 
 service "radosgw-all" do
   provider Chef::Provider::Service::Upstart

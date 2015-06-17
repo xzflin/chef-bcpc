@@ -11,8 +11,7 @@
     cluster network = <%= @node["bcpc"]["storage"]["cidr"] %>
     keyring = /etc/ceph/$cluster.$name.keyring
     mon host = <%= @servers.map{|s| s["bcpc"]["storage"]["ip"] + ":6789"}.join(', ') %>
-    rgw socket path = /var/lib/ceph/radosgw/rgw_fcgi.sock
-<% if @node["bcpc"]["ceph"]["rebalance"] %> 
+<% if @node["bcpc"]["ceph"]["rebalance"] %>
     paxos_propose_interval = 60 
 <% end %>
 
@@ -20,30 +19,48 @@
     keyring = /var/lib/ceph/mon/$cluster-$id/keyring
     debug paxos = 0/5
 
-[mds]
-    keyring = /var/lib/ceph/mds/$cluster-$id/keyring
+# Not using CephFS but mds remains until it's removed at some later point.
+#[mds]
+#    keyring = /var/lib/ceph/mds/$cluster-$id/keyring
 
 [osd]
     keyring = /var/lib/ceph/osd/$cluster-$id/keyring
-    osd journal size = 1024
-    filestore_xattr_use_omap = true
-    osd_fs_type = xfs
-    osd_fs_mount_options_xfs = noexec,nodev,noatime,nodiratime,barrier=0,discard
-    osd_crush_update_on_start = false
-    osd_client_op_priority = 63 
+    osd journal size = <%=node['bcpc']['ceph']['journal_size']%>
+    filestore xattr use omap = true
+    osd mkfs type = xfs
+    osd mkfs options xfs = -f -i size=2048
+    osd mount options xfs = noexec,nodev,noatime,nodiratime,barrier=0,discard
+    osd crush update on start = false
+    osd client op priority = 63
 <% if @node["bcpc"]["ceph"]["rebalance"] %> 
-    osd_recovery_max_active = 1
-    osd_max_backfills  = 1
-    osd_op_threads = 10    
-    osd_recovery_op_priority = 1
-    osd_mon_report_interval_min = 30         
+    osd recovery max active = 1
+    osd max backfills  = 1
+    osd op threads = 10
+    osd recovery op priority = 1
+    osd mon report interval min = 30
 <% end %>
 
+[client]
+    rbd cache = true
+    rbd cache writethrough until flush = true
+    admin socket = /var/run/ceph/$cluster-$type.$id.$pid.$cctid.asok # must be writable by QEMU and allowed by SELinux or AppArmor
+    log file = /var/log/qemu/qemu-guest-$pid.log
+
 [client.radosgw.gateway]
+    host = <%=node['hostname']%>
     keyring = /var/lib/ceph/radosgw/$cluster-$id/keyring
     log file = /var/log/ceph/radosgw.log
+    rgw data = /var/lib/ceph/radosgw/$cluser-$id
     rgw enable ops log = false
     rgw enable usage log = false
+    rgw print continue = false
+    rgw socket path = /var/lib/ceph/radosgw/rgw.sock
+<% if @node['bcpc']['ceph']['frontend'] %>
+    rgw frontends = civetweb port=<%=node['bcpc']['ports']['civetweb']['radosgw']%>
+<% else %>
+    # For Apache
+    rgw socket path = /var/lib/ceph/radosgw/rgw_fcgi.sock
+<% end %>
     debug rgw = 0/0
 
 <% if config_defined('keystone-admin-token') %>

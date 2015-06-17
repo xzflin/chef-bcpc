@@ -87,7 +87,7 @@ volume_api_class=nova.volume.cinder.API
 
 # Always boot nova VMs from RBD
 libvirt_images_type=rbd
-libvirt_images_rbd_pool=<%=node['bcpc']['ceph']['images']['name']%>
+libvirt_images_rbd_pool=<%=node['bcpc']['ceph']['vms']['name']%>
 libvirt_images_rbd_ceph_conf=/etc/ceph/ceph.conf
 rbd_user=admin
 rbd_secret_uuid=<%=get_config('libvirt-secret-uuid')%>
