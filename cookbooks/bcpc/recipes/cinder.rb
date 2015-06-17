@@ -53,6 +53,13 @@ template "/etc/cinder/cinder.conf" do
     notifies :restart, "service[cinder-scheduler]", :immediately
 end
 
+template "/etc/cinder/policy.json" do
+    source "cinder-policy.json.erb"
+    owner "cinder"
+    group "cinder"
+    mode 00600
+end
+
 ruby_block "cinder-database-creation" do
     block do
         %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};

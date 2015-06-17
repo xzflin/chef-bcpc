@@ -52,7 +52,7 @@ template "/etc/nova/api-paste.ini" do
 end
 
 template "/etc/nova/policy.json" do
-    source "policy.json.erb"
+    source "nova-policy.json.erb"
     owner "nova"
     group "nova"
     mode 00600

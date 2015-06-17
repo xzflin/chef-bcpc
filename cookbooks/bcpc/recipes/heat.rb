@@ -51,6 +51,13 @@ template "/etc/heat/heat.conf" do
     notifies :restart, "service[heat-engine]", :delayed
 end
 
+template "/etc/heat/policy.json" do
+    source "heat-policy.json.erb"
+    owner "heat"
+    group "heat"
+    mode 00600
+end
+
 directory "/etc/heat/environment.d" do
     user "heat"
     group "heat"
