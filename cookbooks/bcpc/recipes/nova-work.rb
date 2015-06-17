@@ -40,42 +40,40 @@ service "nova-api" do
     restart_command "service nova-api restart; sleep 5"
 end
 
-%w{novnc pm-utils memcached sysfsutils}.each do |pkg|
-    package pkg do
-        action :upgrade
-    end
-end
-
 #  _   _  ____ _  __   __  ____   _  _____ ____ _   _
 # | | | |/ ___| | \ \ / / |  _ \ / \|_   _/ ___| | | |
 # | | | | |  _| |  \ V /  | |_) / _ \ | || |   | |_| |
 # | |_| | |_| | |___| |   |  __/ ___ \| || |___|  _  |
 #  \___/ \____|_____|_|   |_| /_/   \_\_| \____|_| |_|
-
-# this patch modifies cpuset behavior to allow launching instances on VirtualBox by
-# creating all libvirt domains on the last CPU core
-# DO NOT USE THIS IN PRODUCTION AND GET RID OF THIS AS SOON AS IT'S FIXED UPSTREAM
-cookbook_file "/tmp/nova-single-cpu.patch" do
-    source "nova-single-cpu.patch"
+# this patch resolves OpenStack issue #1456321 and BCPC issue #573 -
+# fixes DHCP server assignment so that each fixed IP subnet gets its gateway
+# address as its DHCP server by default instead of all subnets getting the
+# gateway of the lowest subnet
+cookbook_file "/tmp/nova-network-dhcp-server.patch" do
+    source "nova-network-dhcp-server.patch"
     owner "root"
     mode 00644
 end
 
-if node['bcpc']['nova']['nova_single_cpu'] then
-    bash "patch-for-nova-single-cpu" do
-       user "root"
-       code <<-EOH
-           cd /usr/lib/python2.7/dist-packages/nova
-           patch -p1 < /tmp/nova-single-cpu.patch
-           rv=$?
-           if [ $rv -ne 0 ]; then
-             echo "Error applying patch ($rv) - aborting!"
-             exit $rv
-           fi
-           cp /tmp/nova-single-cpu.patch .
-       EOH
-       not_if "test -f /usr/lib/python2.7/dist-packages/nova/nova-single-cpu.patch"
-       notifies :restart, "service[nova-compute]", :immediately
+bash "patch-for-nova-network-dhcp-server" do
+    user "root"
+    code <<-EOH
+       cd /usr/lib/python2.7/dist-packages
+       patch -p1 < /tmp/nova-network-dhcp-server.patch
+       rv=$?
+       if [ $rv -ne 0 ]; then
+         echo "Error applying patch ($rv) - aborting!"
+         exit $rv
+       fi
+       cp /tmp/nova-network-dhcp-server.patch .
+    EOH
+    not_if "test -f /usr/lib/python2.7/dist-packages/nova-network-dhcp-server.patch"
+    notifies :restart, "service[nova-api]", :immediately
+end
+
+%w{novnc pm-utils memcached sysfsutils}.each do |pkg|
+    package pkg do
+        action :upgrade
     end
 end
 

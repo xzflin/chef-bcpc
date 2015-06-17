@@ -121,6 +121,10 @@ default['bcpc']['ceph']['hdd']['ruleset'] = 2
 # See wiki for further details. 
 default['bcpc']['ceph']['rebalance'] = false
 
+# Set the default niceness of Ceph OSD and monitor processes
+default['bcpc']['ceph']['osd_niceness'] = -10
+default['bcpc']['ceph']['mon_niceness'] = -10
+
 ###########################################
 #
 # RabbitMQ settings
@@ -245,6 +249,17 @@ default['bcpc']['protocol']['nova'] = "https"
 default['bcpc']['protocol']['cinder'] = "https"
 default['bcpc']['protocol']['heat'] = "https"
 
+
+###########################################
+#
+#  Horizon Settings
+#
+###########################################
+#
+# List panels to remove from the Horizon interface here
+# (if the last panel in a group is removed, the group will also be removed)
+default['bcpc']['horizon']['disable_panels'] = ['containers']
+
 ###########################################
 #
 #  Keystone Settings
@@ -260,6 +275,10 @@ default['bcpc']['keystone']['enable_caching'] = true
 default['bcpc']['keystone']['debug'] = false
 # Enable verbose logging.
 default['bcpc']['keystone']['verbose'] = false
+# Set the timeout for how long we will wait for Keystone to become operational
+# before failing (configures timeout on the wait-for-keystone-to-be-operational
+# spinlock guard).
+default['bcpc']['keystone']['wait_for_keystone_timeout'] = 120
 # This can be either 'sql' or 'ldap' to either store identities
 # in the mysql DB or the LDAP server
 default['bcpc']['keystone']['backend'] = 'sql'
@@ -431,3 +450,12 @@ default['bcpc']['rally']['user'] = 'ubuntu'
 
 default['bcpc']['flavors']['deleted'] = []
 default['bcpc']['flavors']['enabled'] = {}
+###########################################
+#
+# Zabbix settings
+#
+###########################################
+#
+default['bcpc']['zabbix']['discovery']['delay'] = 600
+default['bcpc']['zabbix']['discovery']['ip_ranges'] = [node['bcpc']['management']['cidr']]
+

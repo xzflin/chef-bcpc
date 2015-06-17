@@ -189,6 +189,16 @@ Hostname=<%=node['hostname']%>
 
 ############ ADVANCED PARAMETERS #################
 
+### Option: HostMetadata
+#   Sets a metadata value for auto host registration.
+<% if node["roles"].include? "BCPC-Headnode" -%>
+HostMetadata=BCPC-Headnode
+<% elsif node["roles"].include? "BCPC-Monitoring" -%>
+HostMetadata=BCPC-Monitoring
+<% else -%>
+HostMetadata=BCPC-Worknode
+<% end -%>
+
 ### Option: Alias
 #   Sets an alias for parameter. It can be useful to substitute long and complex parameter name with a smaller and simpler one.
 #

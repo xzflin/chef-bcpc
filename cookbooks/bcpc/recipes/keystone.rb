@@ -153,7 +153,7 @@ end
 # if something above has restarted Apache and Keystone isn't ready to play yet
 bash "wait-for-keystone-to-become-operational" do
   code ". /root/keystonerc; until keystone user-list >/dev/null 2>&1; do sleep 1; done"
-  timeout 30
+  timeout node['bcpc']['keystone']['wait_for_keystone_timeout']
 end
 
 

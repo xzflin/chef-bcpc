@@ -27,6 +27,19 @@ bash 'ceph-mon-mkfs' do
     not_if "test -f /var/lib/ceph/mon/ceph-#{node['hostname']}/keyring"
 end
 
+template '/etc/init/ceph-mon-renice.conf' do
+  source 'ceph-upstart.ceph-mon-renice.conf.erb'
+  mode 00644
+  notifies :restart, "service[ceph-mon-renice]", :immediately
+end
+
+service 'ceph-mon-renice' do
+  provider Chef::Provider::Service::Upstart
+  action [:enable, :start]
+  restart_command 'service ceph-mon-renice restart'
+end
+
+
 execute "ceph-mon-start" do
     command "initctl emit ceph-mon id='#{node['hostname']}'"
 end

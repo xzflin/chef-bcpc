@@ -65,6 +65,22 @@ bash "patch-for-horizon-swift-content-length" do
     notifies :restart, "service[apache2]", :delayed
 end
 
+# this adds a way to override and customize Horizon's behavior
+horizon_customize_dir = ::File.join('/', 'usr', 'local', 'bcpc-horizon', 'bcpc')
+directory horizon_customize_dir do
+  action    :create
+  recursive true
+end
+
+file ::File.join(horizon_customize_dir, '__init__.py') do
+  action :create
+end
+
+template ::File.join(horizon_customize_dir, 'overrides.py') do
+  source   'horizon.overrides.py.erb'
+  notifies :restart, "service[apache2]", :delayed
+end
+
 package "cobalt-horizon" do
     only_if { not node["bcpc"]["vms_key"].nil? }
     action :upgrade
@@ -76,7 +92,7 @@ package "openstack-dashboard-ubuntu-theme" do
     notifies :run, "bash[dpkg-reconfigure-openstack-dashboard]", :delayed
 end
 
-# This maybe better served by a2disconf
+# This may be better served by a2disconf
 file "/etc/apache2/conf-enabled/openstack-dashboard.conf" do
     action :delete
     notifies :restart, "service[apache2]", :delayed

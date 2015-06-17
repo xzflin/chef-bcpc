@@ -80,6 +80,18 @@ ruby_block "reap-ceph-disks-from-dead-servers" do
     end
 end
 
+template '/etc/init/ceph-osd-renice.conf' do
+  source 'ceph-upstart.ceph-osd-renice.conf.erb'
+  mode 00644
+  notifies :restart, "service[ceph-osd-renice]", :immediately
+end
+
+service 'ceph-osd-renice' do
+  provider Chef::Provider::Service::Upstart
+  action [:enable, :start]
+  restart_command 'service ceph-osd-renice restart'
+end
+
 # this resource is to clean up leftovers from the CephFS resources that used to be here
 bash "clean-up-cephfs-mountpoint" do
   code "sed -i 's/^-- \\/mnt fuse\\.ceph-fuse rw,nosuid,nodev,noexec,noatime,noauto 0 2$//g' /etc/fstab"
