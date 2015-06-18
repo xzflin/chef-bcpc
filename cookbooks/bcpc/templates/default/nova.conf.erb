@@ -74,9 +74,7 @@ dhcp_domain=<%=node['bcpc']['domain_name']%>
 default_availability_zone=<%=node['bcpc']['region_name']%>
 
 # Nova Compute settings
-connection_type=libvirt
-libvirt_type=<%=node['bcpc']['virt_type']%>
-libvirt_use_virtio_for_bridges=True
+compute_driver=libvirt.LibvirtDriver
 use_cow_images=True
 #snapshot_image_format=qcow2
 #start_guests_on_host_boot=True
@@ -84,19 +82,6 @@ use_cow_images=True
 
 # Nova Volume settings
 volume_api_class=nova.volume.cinder.API
-
-# Always boot nova VMs from RBD
-libvirt_images_type=rbd
-libvirt_images_rbd_pool=<%=node['bcpc']['ceph']['vms']['name']%>
-libvirt_images_rbd_ceph_conf=/etc/ceph/ceph.conf
-rbd_user=admin
-rbd_secret_uuid=<%=get_config('libvirt-secret-uuid')%>
-# do not allow libvirt to try to inject into the local partition
-libvirt_inject_password=false
-libvirt_inject_key=false
-libvirt_inject_partition=-2
-# Set flags for libvirt live migration
-libvirt_live_migration_flag="VIR_MIGRATE_UNDEFINE_SOURCE,VIR_MIGRATE_PEER2PEER,VIR_MIGRATE_LIVE,VIR_MIGRATE_PERSIST_DEST,VIR_MIGRATE_TUNNELLED"
 
 # Nova VNC settings
 ssl_only=True
@@ -176,3 +161,20 @@ workers=<%=node['bcpc']['nova']['workers']%>
 [glance]
 api_servers=<%=node['bcpc']['protocol']['glance']%>://<%=node['bcpc']['management']['vip']%>:9292
 api_insecure=True
+
+[libvirt]
+# Always boot nova VMs from RBD
+images_type=rbd
+images_rbd_pool=<%=node['bcpc']['ceph']['vms']['name']%>
+images_rbd_ceph_conf=/etc/ceph/ceph.conf
+rbd_user=admin
+rbd_secret_uuid=<%=get_config('libvirt-secret-uuid')%>
+disk_cachemodes="network=writeback"
+# do not allow libvirt to try to inject into the local partition
+inject_password=false
+inject_key=false
+inject_partition=-2
+# Set flags for libvirt live migration
+live_migration_flag="VIR_MIGRATE_UNDEFINE_SOURCE,VIR_MIGRATE_PEER2PEER,VIR_MIGRATE_LIVE,VIR_MIGRATE_PERSIST_DEST,VIR_MIGRATE_TUNNELLED"
+virt_type=<%=node['bcpc']['virt_type']%>
+use_virtio_for_bridges=True
