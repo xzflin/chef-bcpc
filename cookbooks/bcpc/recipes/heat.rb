@@ -56,6 +56,7 @@ template "/etc/heat/policy.json" do
     owner "heat"
     group "heat"
     mode 00600
+    variables(:policy => JSON.pretty_generate(node['bcpc']['heat']['policy']))
 end
 
 directory "/etc/heat/environment.d" do

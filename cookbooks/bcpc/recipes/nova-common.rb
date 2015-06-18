@@ -56,4 +56,5 @@ template "/etc/nova/policy.json" do
     owner "nova"
     group "nova"
     mode 00600
+    variables(:policy => JSON.pretty_generate(node['bcpc']['nova']['policy']))
 end

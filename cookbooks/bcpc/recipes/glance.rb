@@ -84,6 +84,7 @@ template "/etc/glance/policy.json" do
     owner "glance"
     group "glance"
     mode 00600
+    variables(:policy => JSON.pretty_generate(node['bcpc']['glance']['policy']))
 end
 
 ruby_block "glance-database-creation" do

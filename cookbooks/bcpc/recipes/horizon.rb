@@ -132,6 +132,7 @@ template "/usr/share/openstack-dashboard/openstack_dashboard/conf/cinder_policy.
     group "root"
     mode 00644
     notifies :restart, "service[apache2]", :delayed
+    variables(:policy => JSON.pretty_generate(node['bcpc']['cinder']['policy']))
 end
 
 template "/usr/share/openstack-dashboard/openstack_dashboard/conf/glance_policy.json" do
@@ -140,6 +141,7 @@ template "/usr/share/openstack-dashboard/openstack_dashboard/conf/glance_policy.
     group "root"
     mode 00644
     notifies :restart, "service[apache2]", :delayed
+    variables(:policy => JSON.pretty_generate(node['bcpc']['glance']['policy']))
 end
 
 template "/usr/share/openstack-dashboard/openstack_dashboard/conf/heat_policy.json" do
@@ -148,6 +150,7 @@ template "/usr/share/openstack-dashboard/openstack_dashboard/conf/heat_policy.js
     group "root"
     mode 00644
     notifies :restart, "service[apache2]", :delayed
+    variables(:policy => JSON.pretty_generate(node['bcpc']['heat']['policy']))
 end
 
 template "/usr/share/openstack-dashboard/openstack_dashboard/conf/keystone_policy.json" do
@@ -156,6 +159,7 @@ template "/usr/share/openstack-dashboard/openstack_dashboard/conf/keystone_polic
     group "root"
     mode 00644
     notifies :restart, "service[apache2]", :delayed
+    variables(:policy => JSON.pretty_generate(node['bcpc']['keystone']['policy']))
 end
 
 template "/usr/share/openstack-dashboard/openstack_dashboard/conf/nova_policy.json" do
@@ -164,6 +168,7 @@ template "/usr/share/openstack-dashboard/openstack_dashboard/conf/nova_policy.js
     group "root"
     mode 00644
     notifies :restart, "service[apache2]", :delayed
+    variables(:policy => JSON.pretty_generate(node['bcpc']['nova']['policy']))
 end
 
 ruby_block "horizon-database-creation" do

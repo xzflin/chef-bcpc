@@ -86,6 +86,7 @@ template "/etc/keystone/policy.json" do
     owner "keystone"
     group "keystone"
     mode 00600
+    variables(:policy => JSON.pretty_generate(node['bcpc']['keystone']['policy']))
 end
 
 template "/root/adminrc" do
