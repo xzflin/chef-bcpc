@@ -990,6 +990,9 @@ default['bcpc']['cpupower']['ondemand_up_threshold'] = nil
 #
 ###########################################
 #
+# Graphite Server FQDN
+default['bcpc']['graphite']['fqdn'] = "graphite.#{node['bcpc']['domain_name']}"
+#
 # Default retention rates
 # http://graphite.readthedocs.org/en/latest/config-carbon.html#storage-schemas-conf
 default['bcpc']['graphite']['retention'] = '60s:1d'
@@ -1023,6 +1026,7 @@ default['bcpc']['bootstrap']['mirror_path'] = "/ubuntu"
 # Default retention rates
 # http://graphite.readthedocs.org/en/latest/config-carbon.html#storage-schemas-conf
 default['bcpc']['graphite']['retention'] = '60s:1d'
+
 #
 ###########################################
 #
@@ -1070,4 +1074,12 @@ default['bcpc']['flavors']['enabled'] = {}
 #
 default['bcpc']['zabbix']['discovery']['delay'] = 600
 default['bcpc']['zabbix']['discovery']['ip_ranges'] = [node['bcpc']['management']['cidr']]
-
+default['bcpc']['zabbix']['fqdn'] = "zabbix.#{node['bcpc']['domain_name']}"
+###########################################
+#
+# Kibana settings
+#
+###########################################
+#
+# Kibana Server FQDN
+default['bcpc']['kibana']['fqdn'] = "kibana.#{node['bcpc']['domain_name']}"
