@@ -4,9 +4,10 @@ set -e
 # This script must be invoked from the root of the repository (e.g., as
 # bootstrap/common_scripts/common_build_bins.sh).
 
-FILES_ROOT=/chef-bcpc-files
+if [[ -z $FILES_ROOT ]]; then FILES_ROOT=/chef-bcpc-files; fi
+if [[ -z $BUILD_DEST ]]; then BUILD_DEST=cookbooks/bcpc/files/default/bins; fi
 
-pushd cookbooks/bcpc/files/default
+pushd $BUILD_DEST
 # Define the appropriate version of each binary to grab/build
 VER_KIBANA=4.0.2
 VER_PIP=7.0.3
@@ -19,7 +20,6 @@ VER_GRAPHITE_WEB=0.9.13
 VER_DIAMOND=f33aa2f75c6ea2dfbbc659766fe581e5bfe2476d
 VER_ESPLUGIN=9c032b7c628d8da7745fbb1939dcd2db52629943
 
-pushd bins
 # Install tools needed for packaging
 apt-get -y install git ruby-dev make pbuilder python-mock python-configobj python-support cdbs python-all-dev python-stdeb libmysqlclient-dev libldap2-dev libxml2-dev libxslt1-dev libpq-dev build-essential libssl-dev libffi-dev python-dev python-pip
 
@@ -165,6 +165,11 @@ if [ ! -f rally-pip.tar.gz ] || [ ! -f rally-bin.tar.gz ]; then
   # We install rally and a few other items here. Since fpm does not resolve dependencies but only lists them, we
   # have to force an install and then tar up the dist-packages and local/bin
   PIP_INSTALL="pip install --no-cache-dir --disable-pip-version-check --no-index -f $FILES_ROOT/rally"
+  # this kludge is to prevent easy_install from trying to go out to PyPI:
+  # rally calls setuptools.setup_requires(), which uses easy_install to
+  # install any packages listed there; this forces easy_install to use
+  # the same mechanism as we are telling pip to use in $PIP_INSTALL
+  echo -e "[easy_install]\nallow_hosts = ''\nfind_links = file://$FILES_ROOT/rally/" > $HOME/.pydistutils.cfg
   $PIP_INSTALL --default-timeout 60 -I rally 
   $PIP_INSTALL --default-timeout 60 python-openstackclient
   $PIP_INSTALL -U argparse
@@ -177,5 +182,4 @@ fi
 FILES="rally.tar.gz rally-pip.tar.gz rally-bin.tar.gz python-pip_${VER_PIP}_all.deb $FILES"
 
 # End of Rally
-popd # bins
-popd # cookbooks/bcpc/files/default
+popd # $BUILD_DEST 

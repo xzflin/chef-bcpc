@@ -1,6 +1,7 @@
 # INSERT THIS FRAGMENT UNDER ['override_attributes']['bcpc']
 
 "repos": {
+  "ceph": "http://10.0.100.2:8080/ceph",
   "elasticsearch": "http://10.0.100.2:8080/elasticsearch",
   "erlang": "http://10.0.100.2:8080/erlang",
   "fluentd": "http://10.0.100.2:8080/fluentd",

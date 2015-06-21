@@ -3,7 +3,7 @@ Frequently asked questions
 
 Can I do a build without being connected to the Internet?
 ---
-Unfortunately, due to an issue with **setuptools** (a popular Python module used for installing packages), it is not possible at the moment to do a build from scratch without Internet access. Specifically, **setuptools** tries to reach out to PyPI (a Python package repository) to obtain a list of dependencies for a package. Once this is resolved, if you have all apt repositories mirrored and can provide local DNS/NTP resolution from the host computer, it should indeed be possible to do a fully disconnected build.
+Yes! Please read the [Disconnected Build Guide](https://github.com/bloomberg/chef-bcpc/blob/master/docs/disconnected_build_guide.md) for information on how to build a BCPC cluster without access to the Internet.
 
 Can I use VMware instead of VirtualBox for a local cluster?
 ---
