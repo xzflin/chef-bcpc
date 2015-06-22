@@ -35,8 +35,6 @@ unless $additional_cacerts_dir.nil? or $additional_cacerts_dir.empty?
       raise "Certificate #{File.join($additional_cacerts_dir, f)} is not a valid PEM certificate, aborting."
     end
   end
-end
-unless $update_ca_certificates_script.empty?
   $update_ca_certificates_script << <<-EOH
     update-ca-certificates
   EOH
