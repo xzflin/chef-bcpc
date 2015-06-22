@@ -102,11 +102,11 @@ memcache_servers = <%=@servers.map{|x| x['bcpc']['management']['ip'] + ":11211"}
 <% else %>
 #memcache_servers =
 <% end %>
-#memcache_dead_retry = 300
-#memcache_socket_timeout = 3
+memcache_dead_retry = 60
+memcache_socket_timeout = 1
 #memcache_pool_maxsize = 10
 #memcache_pool_unused_timeout = 60
-#memcache_pool_connection_get_timeout = 10
+memcache_pool_connection_get_timeout = 1
 
 [catalog]
 #template_file = default_catalog.templates

@@ -29,7 +29,10 @@ default['bcpc']['vms_key'] = nil
 #
 ###########################################
 default['bcpc']['elasticsearch']['version'] = '1.5.1'
-default['bcpc']['ceph']['version'] = '0.80.9-0ubuntu0.14.04.2'
+default['bcpc']['ceph']['version'] = '0.94.2-1trusty'
+default['bcpc']['ceph']['version_number'] = '0.94.2'
+# Ceph.com version number '0.94.2-1trusty'
+# Ubuntu cloud version number '0.94.1-0ubuntu1~cloud0'
 default['bcpc']['erlang']['version'] = '1:17.5.3'
 default['bcpc']['haproxy']['version'] = '1.5.12-1ppa1~trusty'
 default['bcpc']['kibana']['version'] = '4.0.2'
@@ -60,7 +63,7 @@ default['bcpc']['enabled']['always_update_package_lists'] = true
 default['bcpc']['enabled']['keepalived_checks'] = true
 # This will enable the networking test scripts
 default['bcpc']['enabled']['network_tests'] = true
-# This will enable httpd disk caching for radosgw
+# This will enable httpd disk caching for radosgw in apache
 default['bcpc']['enabled']['radosgw_cache'] = false
 # This will enable using TPM-based hwrngd
 default['bcpc']['enabled']['tpm'] = false
@@ -88,22 +91,37 @@ default['bcpc']['fixed']['vlan_interface'] = node['bcpc']['floating']['interface
 #  Ceph settings for the cluster
 #
 ###########################################
+# Trusty is not available at this time for ceph-extras
+default['bcpc']['ceph']['extras']['dist'] = "precise"
+# To use apache instead of civetweb, make the following value anything but 'civetweb'
+default['bcpc']['ceph']['frontend'] = "civetweb"
 default['bcpc']['ceph']['chooseleaf'] = "rack"
 default['bcpc']['ceph']['pgp_auto_adjust'] = false
+# Need to review...
 default['bcpc']['ceph']['pgs_per_node'] = 1024
+# Journal size could be 10GB or higher in some cases
+default['bcpc']['ceph']['journal_size'] = 2048
 # The 'portion' parameters should add up to ~100 across all pools
-default['bcpc']['ceph']['default']['replicas'] = 2
+default['bcpc']['ceph']['default']['replicas'] = 3
 default['bcpc']['ceph']['default']['type'] = 'hdd'
 default['bcpc']['ceph']['rgw']['replicas'] = 3
 default['bcpc']['ceph']['rgw']['portion'] = 33
 default['bcpc']['ceph']['rgw']['type'] = 'hdd'
 default['bcpc']['ceph']['images']['replicas'] = 3
 default['bcpc']['ceph']['images']['portion'] = 33
-default['bcpc']['ceph']['images']['type'] = 'ssd'
+# Set images to hdd instead of sdd
+default['bcpc']['ceph']['images']['type'] = 'hdd'
 default['bcpc']['ceph']['images']['name'] = "images"
 default['bcpc']['ceph']['volumes']['replicas'] = 3
 default['bcpc']['ceph']['volumes']['portion'] = 33
 default['bcpc']['ceph']['volumes']['name'] = "volumes"
+# Created a new pool for VMs and set type to ssd
+default['bcpc']['ceph']['vms']['replicas'] = 3
+default['bcpc']['ceph']['vms']['portion'] = 33
+default['bcpc']['ceph']['vms']['type'] = 'ssd'
+default['bcpc']['ceph']['vms']['name'] = "vms"
+
+# Begin cobalt - not used in cluster
 default['bcpc']['ceph']['vms_disk']['replicas'] = 3
 default['bcpc']['ceph']['vms_disk']['portion'] = 10
 default['bcpc']['ceph']['vms_disk']['type'] = 'ssd'
@@ -112,6 +130,7 @@ default['bcpc']['ceph']['vms_mem']['replicas'] = 3
 default['bcpc']['ceph']['vms_mem']['portion'] = 10
 default['bcpc']['ceph']['vms_mem']['type'] = 'ssd'
 default['bcpc']['ceph']['vms_mem']['name'] = "vmsmem"
+# End cobalt
 default['bcpc']['ceph']['ssd']['ruleset'] = 1
 default['bcpc']['ceph']['hdd']['ruleset'] = 2
 
@@ -194,6 +213,7 @@ default['bcpc']['repos']['fluentd'] = "http://packages.treasure-data.com/precise
 default['bcpc']['repos']['gridcentric'] = "http://downloads.gridcentric.com/packages/%s/%s/ubuntu"
 default['bcpc']['repos']['elasticsearch'] = "http://packages.elasticsearch.org/elasticsearch/1.5/debian"
 default['bcpc']['repos']['erlang'] = "http://packages.erlang-solutions.com/ubuntu"
+default['bcpc']['repos']['ceph'] = "http://ceph.com/debian-hammer"
 
 ###########################################
 #
@@ -209,7 +229,7 @@ default['bcpc']['repos']['erlang'] = "http://packages.erlang-solutions.com/ubunt
 # https://launchpad.net/ubuntu/+archivemirrors
 default['bcpc']['mirror']['ubuntu'] = "us.archive.ubuntu.com/ubuntu"
 default['bcpc']['mirror']['ubuntu-dist'] = ['trusty']
-default['bcpc']['mirror']['ceph-dist'] = ['firefly']
+default['bcpc']['mirror']['ceph-dist'] = ['hammer']
 default['bcpc']['mirror']['os-dist'] = ['kilo']
 default['bcpc']['mirror']['elasticsearch-dist'] = '1.5'
 
@@ -237,8 +257,14 @@ default['bcpc']['admin_email'] = "admin@localhost.com"
 default['bcpc']['zabbix']['user'] = "zabbix"
 default['bcpc']['zabbix']['group'] = "adm"
 
+# General ports for both Apache and Civetweb (no ssl for civetweb at this time)
+default['bcpc']['ports']['radosgw'] = 8088
+default['bcpc']['ports']['radosgw_https'] = 443
+default['bcpc']['ports']['civetweb']['radosgw'] = 8088
+# Apache - Leave until Apache is removed
 default['bcpc']['ports']['apache']['radosgw'] = 80
 default['bcpc']['ports']['apache']['radosgw_https'] = 443
+
 default['bcpc']['ports']['haproxy']['radosgw'] = 80
 default['bcpc']['ports']['haproxy']['radosgw_https'] = 443
 
@@ -286,6 +312,194 @@ default['bcpc']['ldap']['admin_user'] = nil
 default['bcpc']['ldap']['admin_pass'] = nil
 default['bcpc']['ldap']['config'] = {}
 
+###########################################
+#
+#  Keystone policy Settings
+#
+###########################################
+default['bcpc']['keystone']['policy'] = {
+  "admin_required" => "role:admin or is_admin:1",
+  "service_role" => "role:service",
+  "service_or_admin" => "rule:admin_required or rule:service_role",
+  "owner" => "user_id:%(user_id)s",
+  "admin_or_owner" => "rule:admin_required or rule:owner",
+  "token_subject" => "user_id:%(target.token.user_id)s",
+  "admin_or_token_subject" => "rule:admin_required or rule:token_subject",
+
+  "default" => "rule:admin_required",
+
+  "identity:get_region" => "",
+  "identity:list_regions" => "",
+  "identity:create_region" => "rule:admin_required",
+  "identity:update_region" => "rule:admin_required",
+  "identity:delete_region" => "rule:admin_required",
+
+  "identity:get_service" => "rule:admin_required",
+  "identity:list_services" => "rule:admin_required",
+  "identity:create_service" => "rule:admin_required",
+  "identity:update_service" => "rule:admin_required",
+  "identity:delete_service" => "rule:admin_required",
+
+  "identity:get_endpoint" => "rule:admin_required",
+  "identity:list_endpoints" => "rule:admin_required",
+  "identity:create_endpoint" => "rule:admin_required",
+  "identity:update_endpoint" => "rule:admin_required",
+  "identity:delete_endpoint" => "rule:admin_required",
+
+  "identity:get_domain" => "rule:admin_required",
+  "identity:list_domains" => "rule:admin_required",
+  "identity:create_domain" => "rule:admin_required",
+  "identity:update_domain" => "rule:admin_required",
+  "identity:delete_domain" => "rule:admin_required",
+
+  "identity:get_project" => "rule:admin_required",
+  "identity:list_projects" => "rule:admin_required",
+  "identity:list_user_projects" => "rule:admin_or_owner",
+  "identity:create_project" => "rule:admin_required",
+  "identity:update_project" => "rule:admin_required",
+  "identity:delete_project" => "rule:admin_required",
+
+  "identity:get_user" => "rule:admin_required",
+  "identity:list_users" => "rule:admin_required",
+  "identity:create_user" => "rule:admin_required",
+  "identity:update_user" => "rule:admin_required",
+  "identity:delete_user" => "rule:admin_required",
+  "identity:change_password" => "rule:admin_or_owner",
+
+  "identity:get_group" => "rule:admin_required",
+  "identity:list_groups" => "rule:admin_required",
+  "identity:list_groups_for_user" => "rule:admin_or_owner",
+  "identity:create_group" => "rule:admin_required",
+  "identity:update_group" => "rule:admin_required",
+  "identity:delete_group" => "rule:admin_required",
+  "identity:list_users_in_group" => "rule:admin_required",
+  "identity:remove_user_from_group" => "rule:admin_required",
+  "identity:check_user_in_group" => "rule:admin_required",
+  "identity:add_user_to_group" => "rule:admin_required",
+
+  "identity:get_credential" => "rule:admin_required",
+  "identity:list_credentials" => "rule:admin_required",
+  "identity:create_credential" => "rule:admin_required",
+  "identity:update_credential" => "rule:admin_required",
+  "identity:delete_credential" => "rule:admin_required",
+
+  "identity:ec2_get_credential" => "rule:admin_required or (rule:owner and user_id:%(target.credential.user_id)s)",
+  "identity:ec2_list_credentials" => "rule:admin_or_owner",
+  "identity:ec2_create_credential" => "rule:admin_or_owner",
+  "identity:ec2_delete_credential" => "rule:admin_required or (rule:owner and user_id:%(target.credential.user_id)s)",
+
+  "identity:get_role" => "rule:admin_required",
+  "identity:list_roles" => "rule:admin_required",
+  "identity:create_role" => "rule:admin_required",
+  "identity:update_role" => "rule:admin_required",
+  "identity:delete_role" => "rule:admin_required",
+
+  "identity:check_grant" => "rule:admin_required",
+  "identity:list_grants" => "rule:admin_required",
+  "identity:create_grant" => "rule:admin_required",
+  "identity:revoke_grant" => "rule:admin_required",
+
+  "identity:list_role_assignments" => "rule:admin_required",
+
+  "identity:get_policy" => "rule:admin_required",
+  "identity:list_policies" => "rule:admin_required",
+  "identity:create_policy" => "rule:admin_required",
+  "identity:update_policy" => "rule:admin_required",
+  "identity:delete_policy" => "rule:admin_required",
+
+  "identity:check_token" => "rule:admin_required",
+  "identity:validate_token" => "rule:service_or_admin",
+  "identity:validate_token_head" => "rule:service_or_admin",
+  "identity:revocation_list" => "rule:service_or_admin",
+  "identity:revoke_token" => "rule:admin_or_token_subject",
+
+  "identity:create_trust" => "user_id:%(trust.trustor_user_id)s",
+  "identity:get_trust" => "rule:admin_or_owner",
+  "identity:list_trusts" => "",
+  "identity:list_roles_for_trust" => "",
+  "identity:get_role_for_trust" => "",
+  "identity:delete_trust" => "",
+
+  "identity:create_consumer" => "rule:admin_required",
+  "identity:get_consumer" => "rule:admin_required",
+  "identity:list_consumers" => "rule:admin_required",
+  "identity:delete_consumer" => "rule:admin_required",
+  "identity:update_consumer" => "rule:admin_required",
+
+  "identity:authorize_request_token" => "rule:admin_required",
+  "identity:list_access_token_roles" => "rule:admin_required",
+  "identity:get_access_token_role" => "rule:admin_required",
+  "identity:list_access_tokens" => "rule:admin_required",
+  "identity:get_access_token" => "rule:admin_required",
+  "identity:delete_access_token" => "rule:admin_required",
+
+  "identity:list_projects_for_endpoint" => "rule:admin_required",
+  "identity:add_endpoint_to_project" => "rule:admin_required",
+  "identity:check_endpoint_in_project" => "rule:admin_required",
+  "identity:list_endpoints_for_project" => "rule:admin_required",
+  "identity:remove_endpoint_from_project" => "rule:admin_required",
+
+  "identity:create_endpoint_group" => "rule:admin_required",
+  "identity:list_endpoint_groups" => "rule:admin_required",
+  "identity:get_endpoint_group" => "rule:admin_required",
+  "identity:update_endpoint_group" => "rule:admin_required",
+  "identity:delete_endpoint_group" => "rule:admin_required",
+  "identity:list_projects_associated_with_endpoint_group" => "rule:admin_required",
+  "identity:list_endpoints_associated_with_endpoint_group" => "rule:admin_required",
+  "identity:get_endpoint_group_in_project" => "rule:admin_required",
+  "identity:add_endpoint_group_to_project" => "rule:admin_required",
+  "identity:remove_endpoint_group_from_project" => "rule:admin_required",
+
+  "identity:create_identity_provider" => "rule:admin_required",
+  "identity:list_identity_providers" => "rule:admin_required",
+  "identity:get_identity_providers" => "rule:admin_required",
+  "identity:update_identity_provider" => "rule:admin_required",
+  "identity:delete_identity_provider" => "rule:admin_required",
+
+  "identity:create_protocol" => "rule:admin_required",
+  "identity:update_protocol" => "rule:admin_required",
+  "identity:get_protocol" => "rule:admin_required",
+  "identity:list_protocols" => "rule:admin_required",
+  "identity:delete_protocol" => "rule:admin_required",
+
+  "identity:create_mapping" => "rule:admin_required",
+  "identity:get_mapping" => "rule:admin_required",
+  "identity:list_mappings" => "rule:admin_required",
+  "identity:delete_mapping" => "rule:admin_required",
+  "identity:update_mapping" => "rule:admin_required",
+
+  "identity:create_service_provider" => "rule:admin_required",
+  "identity:list_service_providers" => "rule:admin_required",
+  "identity:get_service_provider" => "rule:admin_required",
+  "identity:update_service_provider" => "rule:admin_required",
+  "identity:delete_service_provider" => "rule:admin_required",
+
+  "identity:get_auth_catalog" => "",
+  "identity:get_auth_projects" => "",
+  "identity:get_auth_domains" => "",
+
+  "identity:list_projects_for_groups" => "",
+  "identity:list_domains_for_groups" => "",
+
+  "identity:list_revoke_events" => "",
+
+  "identity:create_policy_association_for_endpoint" => "rule:admin_required",
+  "identity:check_policy_association_for_endpoint" => "rule:admin_required",
+  "identity:delete_policy_association_for_endpoint" => "rule:admin_required",
+  "identity:create_policy_association_for_service" => "rule:admin_required",
+  "identity:check_policy_association_for_service" => "rule:admin_required",
+  "identity:delete_policy_association_for_service" => "rule:admin_required",
+  "identity:create_policy_association_for_region_and_service" => "rule:admin_required",
+  "identity:check_policy_association_for_region_and_service" => "rule:admin_required",
+  "identity:delete_policy_association_for_region_and_service" => "rule:admin_required",
+  "identity:get_policy_for_endpoint" => "rule:admin_required",
+  "identity:list_endpoints_for_policy" => "rule:admin_required",
+
+  "identity:create_domain_config" => "rule:admin_required",
+  "identity:get_domain_config" => "rule:admin_required",
+  "identity:update_domain_config" => "rule:admin_required",
+  "identity:delete_domain_config" => "rule:admin_required"
+}
 
 ###########################################
 #
@@ -322,6 +536,168 @@ default['bcpc']['nova']['quota'] = {
 
 ###########################################
 #
+#  Nova policy Settings
+#
+###########################################
+default['bcpc']['nova']['policy'] = {
+  "context_is_admin" => "role:admin",
+  "admin_or_owner" => "is_admin:True or project_id:%(project_id)s",
+  "default" => "rule:admin_or_owner",
+
+  "compute:create" => "",
+  "compute:create:attach_network" => "",
+  "compute:create:attach_volume" => "",
+  "compute:create:forced_host" => "is_admin:True",
+  "compute:get_all" => "",
+  "compute:get_all_tenants" => "",
+
+  "admin_api" => "is_admin:True",
+  "compute_extension:accounts" => "rule:admin_api",
+  "compute_extension:admin_actions" => "rule:admin_api",
+  "compute_extension:admin_actions:pause" => "rule:admin_or_owner",
+  "compute_extension:admin_actions:unpause" => "rule:admin_or_owner",
+  "compute_extension:admin_actions:suspend" => "rule:admin_or_owner",
+  "compute_extension:admin_actions:resume" => "rule:admin_or_owner",
+  "compute_extension:admin_actions:lock" => "rule:admin_api",
+  "compute_extension:admin_actions:unlock" => "rule:admin_api",
+  "compute_extension:admin_actions:resetNetwork" => "rule:admin_api",
+  "compute_extension:admin_actions:injectNetworkInfo" => "rule:admin_api",
+  "compute_extension:admin_actions:createBackup" => "rule:admin_or_owner",
+  "compute_extension:admin_actions:migrateLive" => "rule:admin_api",
+  "compute_extension:admin_actions:resetState" => "rule:admin_api",
+  "compute_extension:admin_actions:migrate" => "rule:admin_api",
+  "compute_extension:aggregates" => "rule:admin_api",
+  "compute_extension:agents" => "rule:admin_api",
+  "compute_extension:attach_interfaces" => "",
+  "compute_extension:baremetal_nodes" => "rule:admin_api",
+  "compute_extension:cells" => "rule:admin_api",
+  "compute_extension:certificates" => "",
+  "compute_extension:cloudpipe" => "rule:admin_api",
+  "compute_extension:cloudpipe_update" => "rule:admin_api",
+  "compute_extension:console_output" => "",
+  "compute_extension:consoles" => "",
+  "compute_extension:coverage_ext" => "rule:admin_api",
+  "compute_extension:createserverext" => "",
+  "compute_extension:deferred_delete" => "",
+  "compute_extension:disk_config" => "",
+  "compute_extension:evacuate" => "rule:admin_api",
+  "compute_extension:extended_server_attributes" => "",
+  "compute_extension:extended_status" => "",
+  "compute_extension:extended_availability_zone" => "",
+  "compute_extension:extended_ips" => "",
+  "compute_extension:fixed_ips" => "rule:admin_api",
+  "compute_extension:flavor_access" => "",
+  "compute_extension:flavor_disabled" => "",
+  "compute_extension:flavor_rxtx" => "",
+  "compute_extension:flavor_swap" => "",
+  "compute_extension:flavorextradata" => "",
+  "compute_extension:flavorextraspecs:index" => "",
+  "compute_extension:flavorextraspecs:show" => "",
+  "compute_extension:flavorextraspecs:create" => "rule:admin_api",
+  "compute_extension:flavorextraspecs:update" => "rule:admin_api",
+  "compute_extension:flavorextraspecs:delete" => "rule:admin_api",
+  "compute_extension:flavormanage" => "rule:admin_api",
+  "compute_extension:floating_ip_dns" => "",
+  "compute_extension:floating_ip_pools" => "",
+  "compute_extension:floating_ips" => "",
+  "compute_extension:floating_ips_bulk" => "rule:admin_api",
+  "compute_extension:fping" => "",
+  "compute_extension:fping:all_tenants" => "rule:admin_api",
+  "compute_extension:hide_server_addresses" => "is_admin:False",
+  "compute_extension:hosts" => "rule:admin_api",
+  "compute_extension:hypervisors" => "rule:admin_api",
+  "compute_extension:image_size" => "",
+  "compute_extension:instance_actions" => "",
+  "compute_extension:instance_actions:events" => "rule:admin_api",
+  "compute_extension:instance_usage_audit_log" => "rule:admin_api",
+  "compute_extension:keypairs" => "",
+  "compute_extension:multinic" => "",
+  "compute_extension:networks" => "rule:admin_api",
+  "compute_extension:networks:view" => "",
+  "compute_extension:networks_associate" => "rule:admin_api",
+  "compute_extension:quotas:show" => "",
+  "compute_extension:quotas:update" => "rule:admin_api",
+  "compute_extension:quota_classes" => "",
+  "compute_extension:rescue" => "",
+  "compute_extension:security_group_default_rules" => "rule:admin_api",
+  "compute_extension:security_groups" => "",
+  "compute_extension:server_diagnostics" => "rule:admin_api",
+  "compute_extension:server_password" => "",
+  "compute_extension:services" => "rule:admin_api",
+  "compute_extension:simple_tenant_usage:show" => "rule:admin_or_owner",
+  "compute_extension:simple_tenant_usage:list" => "rule:admin_api",
+  "compute_extension:users" => "rule:admin_api",
+  "compute_extension:virtual_interfaces" => "",
+  "compute_extension:virtual_storage_arrays" => "",
+  "compute_extension:volumes" => "",
+  "compute_extension:volume_attachments:index" => "",
+  "compute_extension:volume_attachments:show" => "",
+  "compute_extension:volume_attachments:create" => "",
+  "compute_extension:volume_attachments:delete" => "",
+  "compute_extension:volumetypes" => "",
+  "compute_extension:availability_zone:list" => "",
+  "compute_extension:availability_zone:detail" => "rule:admin_api",
+
+  "volume:create" => "",
+  "volume:get_all" => "",
+  "volume:get_volume_metadata" => "",
+  "volume:get_snapshot" => "",
+  "volume:get_all_snapshots" => "",
+
+  "volume_extension:types_manage" => "rule:admin_api",
+  "volume_extension:types_extra_specs" => "rule:admin_api",
+  "volume_extension:volume_admin_actions:reset_status" => "rule:admin_api",
+  "volume_extension:snapshot_admin_actions:reset_status" => "rule:admin_api",
+  "volume_extension:volume_admin_actions:force_delete" => "rule:admin_api",
+
+  "network:get_all" => "",
+  "network:get" => "",
+  "network:create" => "",
+  "network:delete" => "",
+  "network:associate" => "",
+  "network:disassociate" => "",
+  "network:get_vifs_by_instance" => "",
+  "network:allocate_for_instance" => "",
+  "network:deallocate_for_instance" => "",
+  "network:validate_networks" => "",
+  "network:get_instance_uuids_by_ip_filter" => "",
+  "network:get_instance_id_by_floating_address" => "",
+  "network:setup_networks_on_host" => "",
+  "network:get_backdoor_port" => "",
+
+  "network:get_floating_ip" => "",
+  "network:get_floating_ip_pools" => "",
+  "network:get_floating_ip_by_address" => "",
+  "network:get_floating_ips_by_project" => "",
+  "network:get_floating_ips_by_fixed_address" => "",
+  "network:allocate_floating_ip" => "",
+  "network:deallocate_floating_ip" => "",
+  "network:associate_floating_ip" => "",
+  "network:disassociate_floating_ip" => "",
+  "network:release_floating_ip" => "",
+  "network:migrate_instance_start" => "",
+  "network:migrate_instance_finish" => "",
+
+  "network:get_fixed_ip" => "",
+  "network:get_fixed_ip_by_address" => "",
+  "network:add_fixed_ip_to_instance" => "",
+  "network:remove_fixed_ip_from_instance" => "",
+  "network:add_network_to_project" => "",
+  "network:get_instance_nw_info" => "",
+
+  "network:get_dns_domains" => "",
+  "network:add_dns_entry" => "",
+  "network:modify_dns_entry" => "",
+  "network:delete_dns_entry" => "",
+  "network:get_dns_entries_by_address" => "",
+  "network:get_dns_entries_by_name" => "",
+  "network:create_private_dns_domain" => "",
+  "network:create_public_dns_domain" => "",
+  "network:delete_dns_domain" => ""
+}
+
+###########################################
+#
 #  Cinder Settings
 #
 ###########################################
@@ -330,6 +706,242 @@ default['bcpc']['cinder']['quota'] = {
   "quota_snapshots" => 10,
   "consistencygroups" => 10,
   "gigabytes" => 1000
+}
+
+###########################################
+#
+#  Cinder policy Settings
+#
+###########################################
+default['bcpc']['cinder']['policy'] = {
+  "context_is_admin" => "role:admin",
+  "admin_or_owner" => "is_admin:True or project_id:%(project_id)s",
+  "default" => "rule:admin_or_owner",
+
+  "admin_api" => "is_admin:True",
+
+  "volume:create" => "",
+  "volume:delete" => "",
+  "volume:get" => "",
+  "volume:get_all" => "",
+  "volume:get_volume_metadata" => "",
+  "volume:get_volume_admin_metadata" => "rule:admin_api",
+  "volume:delete_volume_admin_metadata" => "rule:admin_api",
+  "volume:update_volume_admin_metadata" => "rule:admin_api",
+  "volume:get_snapshot" => "",
+  "volume:get_all_snapshots" => "",
+  "volume:extend" => "",
+  "volume:update_readonly_flag" => "",
+  "volume:retype" => "",
+
+  "volume_extension:types_manage" => "rule:admin_api",
+  "volume_extension:types_extra_specs" => "rule:admin_api",
+  "volume_extension:volume_type_access" => "",
+  "volume_extension:volume_type_access:addProjectAccess" => "rule:admin_api",
+  "volume_extension:volume_type_access:removeProjectAccess" => "rule:admin_api",
+  "volume_extension:volume_type_encryption" => "rule:admin_api",
+  "volume_extension:volume_encryption_metadata" => "rule:admin_or_owner",
+  "volume_extension:extended_snapshot_attributes" => "",
+  "volume_extension:volume_image_metadata" => "",
+
+  "volume_extension:quotas:show" => "",
+  "volume_extension:quotas:update" => "rule:admin_api",
+  "volume_extension:quota_classes" => "",
+
+  "volume_extension:volume_admin_actions:reset_status" => "rule:admin_api",
+  "volume_extension:snapshot_admin_actions:reset_status" => "rule:admin_api",
+  "volume_extension:backup_admin_actions:reset_status" => "rule:admin_api",
+  "volume_extension:volume_admin_actions:force_delete" => "rule:admin_api",
+  "volume_extension:volume_admin_actions:force_detach" => "rule:admin_api",
+  "volume_extension:snapshot_admin_actions:force_delete" => "rule:admin_api",
+  "volume_extension:volume_admin_actions:migrate_volume" => "rule:admin_api",
+  "volume_extension:volume_admin_actions:migrate_volume_completion" => "rule:admin_api",
+
+  "volume_extension:volume_host_attribute" => "rule:admin_api",
+  "volume_extension:volume_tenant_attribute" => "rule:admin_or_owner",
+  "volume_extension:volume_mig_status_attribute" => "rule:admin_api",
+  "volume_extension:hosts" => "rule:admin_api",
+  "volume_extension:services" => "rule:admin_api",
+
+  "volume_extension:volume_manage" => "rule:admin_api",
+  "volume_extension:volume_unmanage" => "rule:admin_api",
+
+  "volume:services" => "rule:admin_api",
+
+  "volume:create_transfer" => "",
+  "volume:accept_transfer" => "",
+  "volume:delete_transfer" => "",
+  "volume:get_all_transfers" => "",
+
+  "volume_extension:replication:promote" => "rule:admin_api",
+  "volume_extension:replication:reenable" => "rule:admin_api",
+
+  "backup:create" => "",
+  "backup:delete" => "",
+  "backup:get" => "",
+  "backup:get_all" => "",
+  "backup:restore" => "",
+  "backup:backup-import" => "rule:admin_api",
+  "backup:backup-export" => "rule:admin_api",
+
+  "snapshot_extension:snapshot_actions:update_snapshot_status" => "",
+
+  "consistencygroup:create" => "group:nobody",
+  "consistencygroup:delete" => "group:nobody",
+  "consistencygroup:update" => "group:nobody",
+  "consistencygroup:get" => "group:nobody",
+  "consistencygroup:get_all" => "group:nobody",
+
+  "consistencygroup:create_cgsnapshot" => "group:nobody",
+  "consistencygroup:delete_cgsnapshot" => "group:nobody",
+  "consistencygroup:get_cgsnapshot" => "group:nobody",
+  "consistencygroup:get_all_cgsnapshots" => "group:nobody",
+
+  "scheduler_extension:scheduler_stats:get_pools" => "rule:admin_api"
+}
+
+###########################################
+#
+#  Glance policy Settings
+#
+###########################################
+default['bcpc']['glance']['policy'] = {
+  "context_is_admin" => "role:admin",
+  "default" => "",
+
+  "add_image" => "",
+  "delete_image" => "",
+  "get_image" => "",
+  "get_images" => "",
+  "modify_image" => "",
+  "publicize_image" => "role:admin",
+  "copy_from" => "",
+
+  "download_image" => "",
+  "upload_image" => "",
+
+  "delete_image_location" => "",
+  "get_image_location" => "",
+  "set_image_location" => "",
+
+  "add_member" => "",
+  "delete_member" => "",
+  "get_member" => "",
+  "get_members" => "",
+  "modify_member" => "",
+
+  "manage_image_cache" => "role:admin",
+
+  "get_task" => "",
+  "get_tasks" => "",
+  "add_task" => "",
+  "modify_task" => "",
+
+  "deactivate" => "",
+  "reactivate" => "",
+
+  "get_metadef_namespace" => "",
+  "get_metadef_namespaces" => "",
+  "modify_metadef_namespace" => "",
+  "add_metadef_namespace" => "",
+
+  "get_metadef_object" => "",
+  "get_metadef_objects" => "",
+  "modify_metadef_object" => "",
+  "add_metadef_object" => "",
+
+  "list_metadef_resource_types" => "",
+  "get_metadef_resource_type" => "",
+  "add_metadef_resource_type_association" => "",
+
+  "get_metadef_property" => "",
+  "get_metadef_properties" => "",
+  "modify_metadef_property" => "",
+  "add_metadef_property" => "",
+
+  "get_metadef_tag" => "",
+  "get_metadef_tags" => "",
+  "modify_metadef_tag" => "",
+  "add_metadef_tag" => "",
+  "add_metadef_tags" => ""
+}
+
+###########################################
+#
+#  Heat policy Settings
+#
+###########################################
+default['bcpc']['heat']['policy'] = {
+  "deny_stack_user" => "not role:heat_stack_user",
+  "deny_everybody" => "!",
+
+  "cloudformation:ListStacks" => "rule:deny_stack_user",
+  "cloudformation:CreateStack" => "rule:deny_stack_user",
+  "cloudformation:DescribeStacks" => "rule:deny_stack_user",
+  "cloudformation:DeleteStack" => "rule:deny_stack_user",
+  "cloudformation:UpdateStack" => "rule:deny_stack_user",
+  "cloudformation:CancelUpdateStack" => "rule:deny_stack_user",
+  "cloudformation:DescribeStackEvents" => "rule:deny_stack_user",
+  "cloudformation:ValidateTemplate" => "rule:deny_stack_user",
+  "cloudformation:GetTemplate" => "rule:deny_stack_user",
+  "cloudformation:EstimateTemplateCost" => "rule:deny_stack_user",
+  "cloudformation:DescribeStackResource" => "",
+  "cloudformation:DescribeStackResources" => "rule:deny_stack_user",
+  "cloudformation:ListStackResources" => "rule:deny_stack_user",
+
+  "cloudwatch:DeleteAlarms" => "rule:deny_stack_user",
+  "cloudwatch:DescribeAlarmHistory" => "rule:deny_stack_user",
+  "cloudwatch:DescribeAlarms" => "rule:deny_stack_user",
+  "cloudwatch:DescribeAlarmsForMetric" => "rule:deny_stack_user",
+  "cloudwatch:DisableAlarmActions" => "rule:deny_stack_user",
+  "cloudwatch:EnableAlarmActions" => "rule:deny_stack_user",
+  "cloudwatch:GetMetricStatistics" => "rule:deny_stack_user",
+  "cloudwatch:ListMetrics" => "rule:deny_stack_user",
+  "cloudwatch:PutMetricAlarm" => "rule:deny_stack_user",
+  "cloudwatch:PutMetricData" => "",
+  "cloudwatch:SetAlarmState" => "rule:deny_stack_user",
+
+  "actions:action" => "rule:deny_stack_user",
+  "build_info:build_info" => "rule:deny_stack_user",
+  "events:index" => "rule:deny_stack_user",
+  "events:show" => "rule:deny_stack_user",
+  "resource:index" => "rule:deny_stack_user",
+  "resource:metadata" => "",
+  "resource:signal" => "",
+  "resource:show" => "rule:deny_stack_user",
+  "stacks:abandon" => "rule:deny_stack_user",
+  "stacks:create" => "rule:deny_stack_user",
+  "stacks:delete" => "rule:deny_stack_user",
+  "stacks:detail" => "rule:deny_stack_user",
+  "stacks:generate_template" => "rule:deny_stack_user",
+  "stacks:global_index" => "rule:deny_everybody",
+  "stacks:index" => "rule:deny_stack_user",
+  "stacks:list_resource_types" => "rule:deny_stack_user",
+  "stacks:lookup" => "",
+  "stacks:preview" => "rule:deny_stack_user",
+  "stacks:resource_schema" => "rule:deny_stack_user",
+  "stacks:show" => "rule:deny_stack_user",
+  "stacks:template" => "rule:deny_stack_user",
+  "stacks:update" => "rule:deny_stack_user",
+  "stacks:update_patch" => "rule:deny_stack_user",
+  "stacks:validate_template" => "rule:deny_stack_user",
+  "stacks:snapshot" => "rule:deny_stack_user",
+  "stacks:show_snapshot" => "rule:deny_stack_user",
+  "stacks:delete_snapshot" => "rule:deny_stack_user",
+  "stacks:list_snapshots" => "rule:deny_stack_user",
+  "stacks:restore_snapshot" => "rule:deny_stack_user",
+
+  "software_configs:create" => "rule:deny_stack_user",
+  "software_configs:show" => "rule:deny_stack_user",
+  "software_configs:delete" => "rule:deny_stack_user",
+  "software_deployments:index" => "rule:deny_stack_user",
+  "software_deployments:create" => "rule:deny_stack_user",
+  "software_deployments:show" => "rule:deny_stack_user",
+  "software_deployments:update" => "rule:deny_stack_user",
+  "software_deployments:delete" => "rule:deny_stack_user",
+  "software_deployments:metadata" => "",
+
+  "service:index" => "rule:context_is_admin"
 }
 
 ###########################################
@@ -378,6 +990,9 @@ default['bcpc']['cpupower']['ondemand_up_threshold'] = nil
 #
 ###########################################
 #
+# Graphite Server FQDN
+default['bcpc']['graphite']['fqdn'] = "graphite.#{node['bcpc']['domain_name']}"
+#
 # Default retention rates
 # http://graphite.readthedocs.org/en/latest/config-carbon.html#storage-schemas-conf
 default['bcpc']['graphite']['retention'] = '60s:1d'
@@ -411,6 +1026,7 @@ default['bcpc']['bootstrap']['mirror_path'] = "/ubuntu"
 # Default retention rates
 # http://graphite.readthedocs.org/en/latest/config-carbon.html#storage-schemas-conf
 default['bcpc']['graphite']['retention'] = '60s:1d'
+
 #
 ###########################################
 #
@@ -458,4 +1074,12 @@ default['bcpc']['flavors']['enabled'] = {}
 #
 default['bcpc']['zabbix']['discovery']['delay'] = 600
 default['bcpc']['zabbix']['discovery']['ip_ranges'] = [node['bcpc']['management']['cidr']]
-
+default['bcpc']['zabbix']['fqdn'] = "zabbix.#{node['bcpc']['domain_name']}"
+###########################################
+#
+# Kibana settings
+#
+###########################################
+#
+# Kibana Server FQDN
+default['bcpc']['kibana']['fqdn'] = "kibana.#{node['bcpc']['domain_name']}"

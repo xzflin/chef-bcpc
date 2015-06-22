@@ -2,7 +2,7 @@
 # Cookbook Name:: bcpc
 # Recipe:: ceph-common
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,6 +19,13 @@
 
 include_recipe "bcpc::packages-openstack"
 
+apt_repository "ceph" do
+  uri node['bcpc']['repos']['ceph']
+  distribution node['lsb']['codename']
+  components ["main"]
+  key "ceph-release.key"
+end
+
 if platform?("debian", "ubuntu")
     include_recipe "bcpc::networking"
 end
@@ -31,17 +38,19 @@ end
 
 bash "check-ceph-version" do
     code <<-EOH
-        /usr/local/bin/apt-pkg-check-version ceph 0.80
+        /usr/local/bin/apt-pkg-check-version ceph #{node['bcpc']['ceph']['version_number']}
         exit $?
 	EOH
 end
 
-%w{librados2 librbd1 libcephfs1 python-ceph ceph-common ceph}.each do |pkg|
+# Installing CephFS but not activating it
+%w{librados2 librbd1 libcephfs1 python-ceph ceph ceph-common ceph-fs-common ceph-mds}.each do |pkg|
     package pkg do
         action :install
         version node['bcpc']['ceph']['version']
     end
 end
+
 
 ruby_block "initialize-ceph-common-config" do
     block do
@@ -98,6 +107,7 @@ bcpc_cephconfig 'osd_mon_report_interval_min' do
   target "ceph-*"
 end
 
+# Script looks for mdsmap and if MDS is removed later then this script will need to be changed.
 bash "wait-for-pgs-creating" do
     action :nothing
     user "root"

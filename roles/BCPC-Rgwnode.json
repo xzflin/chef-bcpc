@@ -1,5 +1,5 @@
 {
-    "name": "BCPC-Worknode",
+    "name": "BCPC-Rgwnode",
     "default_attributes": {
     },
     "json_class": "Chef::Role",
@@ -11,16 +11,13 @@
       "recipe[bcpc::networking-link-test]",
       "recipe[bcpc::networking-gw-test]",
       "recipe[bcpc::networking-route-test]",
-      "recipe[bcpc::ceph-work]",
-      "role[BCPC-Rgwnode]",
-      "recipe[bcpc::nova-work]",
+      "recipe[bcpc::ceph-rgw]",
       "recipe[bcpc::diamond]",
       "recipe[bcpc::fluentd]",
       "recipe[bcpc::tpm]",
-      "recipe[bcpc::checks-work]",
       "recipe[bcpc::zabbix-agent]"
     ],
-    "description": "A functional compute node in a BCPC cluster",
+    "description": "A functional RGW node in a BCPC cluster",
     "chef_type": "role",
     "override_attributes": {
     }

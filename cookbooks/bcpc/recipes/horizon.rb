@@ -126,6 +126,46 @@ template "/etc/openstack-dashboard/local_settings.py" do
     notifies :restart, "service[apache2]", :delayed
 end
 
+template "/usr/share/openstack-dashboard/openstack_dashboard/conf/cinder_policy.json" do
+    source "cinder-policy.json.erb"
+    owner "root"
+    group "root"
+    mode 00644
+    notifies :restart, "service[apache2]", :delayed
+end
+
+template "/usr/share/openstack-dashboard/openstack_dashboard/conf/glance_policy.json" do
+    source "glance-policy.json.erb"
+    owner "root"
+    group "root"
+    mode 00644
+    notifies :restart, "service[apache2]", :delayed
+end
+
+template "/usr/share/openstack-dashboard/openstack_dashboard/conf/heat_policy.json" do
+    source "heat-policy.json.erb"
+    owner "root"
+    group "root"
+    mode 00644
+    notifies :restart, "service[apache2]", :delayed
+end
+
+template "/usr/share/openstack-dashboard/openstack_dashboard/conf/keystone_policy.json" do
+    source "keystone-policy.json.erb"
+    owner "root"
+    group "root"
+    mode 00644
+    notifies :restart, "service[apache2]", :delayed
+end
+
+template "/usr/share/openstack-dashboard/openstack_dashboard/conf/nova_policy.json" do
+    source "nova-policy.json.erb"
+    owner "root"
+    group "root"
+    mode 00644
+    notifies :restart, "service[apache2]", :delayed
+end
+
 ruby_block "horizon-database-creation" do
     block do
         %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};

@@ -79,6 +79,13 @@ template "/etc/glance/glance-cache.conf" do
     notifies :restart, "service[glance-registry]", :immediately
 end
 
+template "/etc/glance/policy.json" do
+    source "glance-policy.json.erb"
+    owner "glance"
+    group "glance"
+    mode 00600
+end
+
 ruby_block "glance-database-creation" do
     block do
         %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};

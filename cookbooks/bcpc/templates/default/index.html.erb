@@ -58,19 +58,19 @@
 				<label>Kibana</label>
 				<a href="https://<%=node['bcpc']['management']['monitoring']['vip']%>/kibana/">https://<%=node['bcpc']['management']['monitoring']['vip']%>/kibana/</a>
 				<br/><label>-</label>
-				<a href="https://kibana.<%=node['bcpc']['domain_name']%>">https://kibana.<%=node['bcpc']['domain_name']%></a>
+                <a href="https://<%=node['bcpc']['kibana']['fqdn']%>">https://<%=node['bcpc']['kibana']['fqdn']%></a>
 			</div>
 			<div class="block">
 				<label>Graphite</label>
 				<a href="https://<%=node['bcpc']['management']['monitoring']['vip']%>:8888">https://<%=node['bcpc']['management']['monitoring']['vip']%>:8888</a>
 				<br/><label>-</label>
-				<a href="https://graphite.<%=node['bcpc']['domain_name']%>">https://graphite.<%=node['bcpc']['domain_name']%></a>
+                <a href="https://<%=node['bcpc']['graphite']['fqdn']%>">https://<%=node['bcpc']['graphite']['fqdn']%></a>
 			</div>
 			<div class="block">
 				<label>Zabbix</label>
-				<a href="https://<%=node['bcpc']['management']['vip']%>/zabbix/">https://<%=node['bcpc']['management']['vip']%>/zabbix/</a>
+				<a href="https://<%=node['bcpc']['management']['monitoring']['vip']%>/zabbix/">https://<%=node['bcpc']['management']['monitoring']['vip']%>/zabbix/</a>
 				<br/><label>-</label>
-				<a href="https://zabbix.<%=node['bcpc']['domain_name']%>">https://zabbix.<%=node['bcpc']['domain_name']%></a>
+                <a href="https://<%=node['bcpc']['zabbix']['fqdn']%>">https://<%=node['bcpc']['zabbix']['fqdn']%></a>
 			</div>
 
 		<h3>API Endpoints</h3>
