@@ -18,27 +18,44 @@
 #
 
 if node['bcpc']['enabled']['monitoring'] then
-
     include_recipe "bcpc::default"
+    include_recipe "bcpc::packages-zabbix"
 
-    cookbook_file "/tmp/zabbix-agent.tar.gz" do
-        source "bins/zabbix-agent.tar.gz"
-        owner "root"
-        mode 00444
-    end
-
-    bash "install-zabbix-agent" do
+    # this script removes the old manually compiled Zabbix agent installation
+    # (being a bit lazy and assuming the presence of the old agent binary signals everything
+    # is still there)
+    bash "clean-up-old-zabbix-agent" do
         code <<-EOH
-            tar zxf /tmp/zabbix-agent.tar.gz -C /usr/local/
+          service zabbix-agent stop
+          rm -f /tmp/zabbix_agentd.pid
+          rm -f /usr/local/etc/zabbix_agent.conf
+          rm -f /usr/local/etc/zabbix_agentd.conf
+          rm -f /usr/local/sbin/zabbix_agent
+          rm -f /usr/local/sbin/zabbix_agentd
+          rm -f /usr/local/share/man/man1/zabbix_get.1
+          rm -f /usr/local/share/man/man1/zabbix_sender.1
+          rm -f /usr/local/share/man/man8/zabbix_agentd.8
+          rm -f /usr/local/bin/zabbix_get
+          rm -f /usr/local/bin/zabbix_sender
+          rm -rf /usr/local/etc/zabbix_agentd.conf.d
+          rm -rf /usr/local/etc/zabbix_agent.conf.d
+          rm -f /tmp/zabbix-agent.tar.gz
+          rm -f /etc/init/zabbix-agent.conf
         EOH
-        not_if "test -f /usr/local/sbin/zabbix_agentd"
+        only_if 'test -f /usr/local/sbin/zabbix_agentd'
     end
-
+  
     user node['bcpc']['zabbix']['user'] do
         shell "/bin/false"
         home "/var/log"
         gid node['bcpc']['zabbix']['group']
         system true
+    end
+    
+    %w{zabbix-agent zabbix-get zabbix-sender}.each do |zabbix_package|
+      package zabbix_package do
+        action :upgrade
+      end
     end
 
     directory "/var/log/zabbix" do
@@ -47,15 +64,7 @@ if node['bcpc']['enabled']['monitoring'] then
         mode 00755
     end
 
-    template "/etc/init/zabbix-agent.conf" do
-        source "upstart-zabbix-agent.conf.erb"
-        owner "root"
-        group "root"
-        mode 00644
-        notifies :restart, "service[zabbix-agent]", :delayed
-    end
-
-    template "/usr/local/etc/zabbix_agent.conf" do
+    template "/etc/zabbix/zabbix_agent.conf" do
         source "zabbix_agent.conf.erb"
         owner node['bcpc']['zabbix']['user']
         group "root"
@@ -63,7 +72,7 @@ if node['bcpc']['enabled']['monitoring'] then
         notifies :restart, "service[zabbix-agent]", :delayed
     end
 
-    template "/usr/local/etc/zabbix_agentd.conf" do
+    template "/etc/zabbix/zabbix_agentd.conf" do
         source "zabbix_agentd.conf.erb"
         owner node['bcpc']['zabbix']['user']
         group "root"
@@ -72,18 +81,28 @@ if node['bcpc']['enabled']['monitoring'] then
         notifies :restart, "service[zabbix-agent]", :delayed
     end
 
-    service "zabbix-agent" do
-        provider Chef::Provider::Service::Upstart
-        action [:enable, :start]
-    end
-
-    template "/usr/local/etc/zabbix_agentd.conf.d/zabbix-openstack.conf" do
+    template "/etc/zabbix/zabbix_agentd.d/zabbix-openstack.conf" do
         source "zabbix_openstack.conf.erb"
         owner node['bcpc']['zabbix']['user']
         group "root"
         mode 00600
         only_if do get_cached_head_node_names.include?(node['hostname']) end
         notifies :restart, "service[zabbix-agent]", :immediately
+    end
+
+    template "/etc/zabbix/zabbix_agentd.d/userparameter_mysql.conf" do
+        source "zabbix_agentd_userparameters_mysql.conf.erb"
+        owner node['bcpc']['zabbix']['user']
+        group "root"
+        mode 00600
+        only_if do get_cached_head_node_names.include?(node['hostname']) end
+        notifies :restart, "service[zabbix-agent]", :immediately
+    end
+
+    service "zabbix-agent" do
+        action [:enable, :start]
+        provider Chef::Provider::Service::Init::Debian
+        status_command "service zabbix-agent status"
     end
 
     cookbook_file "/tmp/python-requests-aws_0.1.6_all.deb" do
@@ -112,5 +131,4 @@ if node['bcpc']['enabled']['monitoring'] then
         mode "00755"
         only_if do get_cached_head_node_names.include?(node['hostname']) end
     end
-
 end

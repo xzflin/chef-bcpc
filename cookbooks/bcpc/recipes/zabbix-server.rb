@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: bcpc
-# Recipe:: zabbix
+# Recipe:: zabbix-server
 #
 # Copyright 2013, Bloomberg Finance L.P.
 #
@@ -18,9 +18,9 @@
 #
 
 if node['bcpc']['enabled']['monitoring'] then
-
     include_recipe "bcpc::mysql-monitoring"
     include_recipe "bcpc::apache2"
+    include_recipe "bcpc::packages-zabbix"
 
     ruby_block "initialize-zabbix-config" do
         block do
@@ -32,18 +32,22 @@ if node['bcpc']['enabled']['monitoring'] then
             make_config('zabbix-guest-password', secure_password)
         end
     end
-
-    cookbook_file "/tmp/zabbix-server.tar.gz" do
-        source "bins/zabbix-server.tar.gz"
-        owner "root"
-        mode 00444
-    end
-
-    bash "install-zabbix-server" do
+    
+    # this script removes the old manually compiled Zabbix server installation
+    # (being a bit lazy and assuming the presence of the old server binary signals everything
+    # is still there)
+    bash "clean-up-old-zabbix-server" do
         code <<-EOH
-            tar zxf /tmp/zabbix-server.tar.gz -C /usr/local/
+          service zabbix-server stop
+          rm -f /usr/local/etc/server.conf
+          rm -f /usr/local/sbin/zabbix_server
+          rm -f /usr/local/share/man/man8/zabbix_server.8
+          rm -rf /usr/local/share/zabbix
+          rm -rf /usr/local/etc/zabbix_server.conf.d
+          rm -f /tmp/zabbix-server.tar.gz
+          rm -f /etc/init/zabbix-server.conf
         EOH
-        not_if "test -f /usr/local/sbin/zabbix_server"
+        only_if 'test -f /usr/local/sbin/zabbix_server'
     end
 
     user node['bcpc']['zabbix']['user'] do
@@ -53,21 +57,22 @@ if node['bcpc']['enabled']['monitoring'] then
         system true
     end
 
+    %w{zabbix-server-mysql zabbix-frontend-php}.each do |zabbix_package|
+      package zabbix_package do
+        action :upgrade
+        # no-install-recommends used here because zabbix-server-mysql wants to remove
+        # Percona packages in favor of non-clustered Oracle MySQL otherwise
+        options "--no-install-recommends"
+      end
+    end
+
     directory "/var/log/zabbix" do
         user node['bcpc']['zabbix']['user']
         group node['bcpc']['zabbix']['group']
         mode 00755
     end
 
-    template "/etc/init/zabbix-server.conf" do
-        source "upstart-zabbix-server.conf.erb"
-        owner "root"
-        group "root"
-        mode 00644
-        notifies :restart, "service[zabbix-server]", :delayed
-    end
-
-    template "/usr/local/etc/zabbix_server.conf" do
+    template "/etc/zabbix/zabbix_server.conf" do
         source "zabbix_server.conf.erb"
         owner node['bcpc']['zabbix']['user']
         group "root"
@@ -82,9 +87,9 @@ if node['bcpc']['enabled']['monitoring'] then
                     mysql -uroot -p#{get_config('mysql-monitoring-root-password')} -e "GRANT ALL ON #{node['bcpc']['dbname']['zabbix']}.* TO '#{get_config('mysql-zabbix-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-zabbix-password')}';"
                     mysql -uroot -p#{get_config('mysql-monitoring-root-password')} -e "GRANT ALL ON #{node['bcpc']['dbname']['zabbix']}.* TO '#{get_config('mysql-zabbix-user')}'@'localhost' IDENTIFIED BY '#{get_config('mysql-zabbix-password')}';"
                     mysql -uroot -p#{get_config('mysql-monitoring-root-password')} -e "FLUSH PRIVILEGES;"
-                    mysql -uroot -p#{get_config('mysql-monitoring-root-password')} #{node['bcpc']['dbname']['zabbix']} < /usr/local/share/zabbix/schema.sql
-                    mysql -uroot -p#{get_config('mysql-monitoring-root-password')} #{node['bcpc']['dbname']['zabbix']} < /usr/local/share/zabbix/images.sql
-                    mysql -uroot -p#{get_config('mysql-monitoring-root-password')} #{node['bcpc']['dbname']['zabbix']} < /usr/local/share/zabbix/data.sql
+                    mysql -uroot -p#{get_config('mysql-monitoring-root-password')} #{node['bcpc']['dbname']['zabbix']} < /usr/share/zabbix-server-mysql/schema.sql
+                    mysql -uroot -p#{get_config('mysql-monitoring-root-password')} #{node['bcpc']['dbname']['zabbix']} < /usr/share/zabbix-server-mysql/images.sql
+                    mysql -uroot -p#{get_config('mysql-monitoring-root-password')} #{node['bcpc']['dbname']['zabbix']} < /usr/share/zabbix-server-mysql/data.sql
                     HASH=`echo -n "#{get_config('zabbix-admin-password')}" | md5sum | awk '{print $1}'`
                     mysql -uroot -p#{get_config('mysql-monitoring-root-password')} #{node['bcpc']['dbname']['zabbix']} -e "UPDATE users SET passwd=\\"$HASH\\" WHERE alias=\\"#{get_config('zabbix-admin-user')}\\";"
                     HASH=`echo -n "#{get_config('zabbix-guest-password')}" | md5sum | awk '{print $1}'`
@@ -96,8 +101,8 @@ if node['bcpc']['enabled']['monitoring'] then
 
     service "zabbix-server" do
         action [:enable, :start]
-        restart_command "if_monitoring_vip restart zabbix-server"
-        provider Chef::Provider::Service::Upstart
+        start_command "if_monitoring_vip service zabbix-server start"
+        restart_command "if_monitoring_vip service zabbix-server restart"
     end
 
     %w{traceroute php5-mysql php5-gd python-requests}.each do |pkg|
@@ -119,7 +124,7 @@ if node['bcpc']['enabled']['monitoring'] then
         notifies :restart, "service[apache2]", :delayed
     end
 
-    template "/usr/local/share/zabbix/php/conf/zabbix.conf.php" do
+    template "/etc/zabbix/web/zabbix.conf.php" do
         source "zabbix.conf.php.erb"
         user node['bcpc']['zabbix']['user']
         group "www-data"
@@ -182,7 +187,7 @@ if node['bcpc']['enabled']['monitoring'] then
         end
     end
 
-    template "/usr/local/share/zabbix/zabbix-api-auto-discovery" do
+    template "/usr/share/zabbix/zabbix-api-auto-discovery" do
         source "zabbix_api_auto_discovery.erb"
         owner "root"
         group "root"
@@ -193,9 +198,19 @@ if node['bcpc']['enabled']['monitoring'] then
         block do
             # Ensures no proxy is ever used locally
             %x[export no_proxy="#{node['bcpc']['management']['monitoring']['vip']}";
-               /usr/local/share/zabbix/zabbix-api-auto-discovery
+               /usr/share/zabbix/zabbix-api-auto-discovery
             ]
         end
     end
-
+    
+    # terminate the Zabbix server if this server doesn't hold the monitoring VIP
+    # (this is a safeguard to get out of a potential weird state immediately after
+    # migrating from compiled Zabbix to packaged Zabbix)
+    bash "stop-zabbix-server-if-not-monitoring-vip" do
+      code <<-EOH
+        if ! service zabbix-server status | grep -q stop/waiting; then 
+          if_not_monitoring_vip service zabbix-server stop
+        fi
+      EOH
+    end
 end
