@@ -51,7 +51,7 @@ frontend https
   stats hide-version
   stats realm Haproxy\ Statistics
   stats auth <%=get_config('haproxy-stats-user')%>:<%=get_config('haproxy-stats-password')%>
-  reqadd X-Forwarded-Protocol:\ https
+  reqadd X-Forwarded-Proto:\ https
   acl kibana_missing_slash path_reg ^/kibana[^/]*$
   redirect code 301 prefix / append-slash if kibana_missing_slash
   acl url_kibana path_beg /kibana
@@ -107,6 +107,7 @@ backend zabbix-backend
 frontend graphite-web
   bind <%="#{node['bcpc']['management']['monitoring']['vip']}:8888"%> ssl crt /etc/haproxy/haproxy.pem
   option tcplog
+  reqadd X-Forwarded-Proto:\ https
   default_backend graphite-web-backend
 
 listen graphite-carbon-relay-line <%=node['bcpc']['management']['monitoring']['vip']%>:2013
