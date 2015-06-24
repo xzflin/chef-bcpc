@@ -58,6 +58,7 @@ template "/etc/cinder/policy.json" do
     owner "cinder"
     group "cinder"
     mode 00600
+    variables(:policy => JSON.pretty_generate(node['bcpc']['cinder']['policy']))
 end
 
 ruby_block "cinder-database-creation" do
