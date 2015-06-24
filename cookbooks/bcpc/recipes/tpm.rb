@@ -2,7 +2,7 @@
 # Cookbook Name:: bcpc
 # Recipe:: tpm
 #
-# Copyright 2014, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,9 +20,20 @@ if node['bcpc']['enabled']['tpm'] then
 
   include_recipe "bcpc::default"
 
+  # this is the sort of thing that you wish didn't have to exist, but it does,
+  # because trousers has a broken postinst script
+  bash "work-around-broken-trousers-postinst" do
+    code <<-EOH
+      cd /tmp && apt-get download trousers
+      if [[ $? != 0 ]]; then exit 1; fi
+      TROUSERS_PKG=$(find . -maxdepth 1 -name trousers\*deb)
+      dpkg --unpack $TROUSERS_PKG
+      sed -i 's/pidof udevd/pidof systemd-udevd/g' /var/lib/dpkg/info/trousers.postinst
+      dpkg --configure trousers
+    EOH
+  end
   package "rng-tools"
   package "tpm-tools"
-  package "trousers"
 
   service "rng-tools" do
     action :stop
