@@ -182,3 +182,12 @@ inject_partition=-2
 live_migration_flag="VIR_MIGRATE_UNDEFINE_SOURCE,VIR_MIGRATE_PEER2PEER,VIR_MIGRATE_LIVE,VIR_MIGRATE_PERSIST_DEST,VIR_MIGRATE_TUNNELLED"
 virt_type=<%=node['bcpc']['virt_type']%>
 use_virtio_for_bridges=True
+
+
+<% unless node["bcpc"]["vendordata_config"].nil? %>
+[metadata]
+<% node['bcpc']['vendordata_config'].sort.each do |k, v| %>
+<%=k %>=<%=v %>
+<% end %>
+<% end %>
+
