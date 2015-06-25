@@ -41,33 +41,35 @@ apt_repository "rabbitmq" do
     key "rabbitmq.key"
 end
 
-%w{erlang-asn1
+%w{
    erlang-base
-   erlang-corba
+   erlang-syntax-tools
+   erlang-mnesia
+   erlang-runtime-tools
    erlang-crypto
+   erlang-asn1
+   erlang-public-key
+   erlang-ssl
+   erlang-inets
+   erlang-corba
    erlang-diameter
+   erlang-xmerl
    erlang-edoc
    erlang-eldap
    erlang-erl-docgen
    erlang-eunit
    erlang-ic
-   erlang-inets
    erlang-inviso
-   erlang-mnesia
-   erlang-nox
    erlang-odbc
+   erlang-snmp
    erlang-os-mon
    erlang-parsetools
    erlang-percept
-   erlang-public-key
-   erlang-runtime-tools
-   erlang-snmp
    erlang-ssh
-   erlang-ssl
-   erlang-syntax-tools
-   erlang-tools
    erlang-webtool
-   erlang-xmerl}.each do |erlang_package|
+   erlang-tools
+   erlang-nox
+}.each do |erlang_package|
   package erlang_package do
     action :install
     version node['bcpc']['erlang']['version']
