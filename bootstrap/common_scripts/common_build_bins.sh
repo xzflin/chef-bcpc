@@ -145,7 +145,8 @@ fi
 
 # TODO FOR erhudy: fix up these Rally packages to be built like the Graphite stuff
 
-if [ ! -f rally-pip.tar.gz ] || [ ! -f rally-bin.tar.gz ]; then
+# Also test for deb if migrating from 5.1.x
+if [ ! -f rally-pip.tar.gz ] || [ ! -f rally-bin.tar.gz ] || [ ! -f python-pip_${VER_PIP}_all.deb ]; then
   # Rally has a very large number of version specific dependencies!!
   # The latest version of PIP is installed instead of the distro version. We don't want this to block to exit on error
   # so it is changed here and reset at the end. Several apt packages must be present since easy_install builds
