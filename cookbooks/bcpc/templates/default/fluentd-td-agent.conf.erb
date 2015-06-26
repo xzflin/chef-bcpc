@@ -85,13 +85,13 @@
     path /var/log/cinder/cinder-api.log,/var/log/cinder/cinder-volume.log,/var/log/cinder/cinder-scheduler.log,/var/log/cinder/cinder-manage.log
     pos_file /var/log/td-agent/openstack-cinder.pos
     tag pre.openstack.cinder
-    format /^(?<time>[^ ]* [^ ]*)\s*(?<level>[^ ]*) \[(?<ident>[^ ]*)\] (?<message>.*)$/
+    format /^(?<time>[^ ]* [^ ]*)\s*(?<pid>([0-9]+)?)\s*(?<level>[a-zA-Z]*)\s*(?<ident>[^ ]*)\s*(\[.*\])?\s*(?<message>.*)$/
     time_format %Y-%m-%d %H:%M:%S
 </source>
 
 <source>
     type tail_multiline
-    path /var/log/glance/api.log,/var/log/glance/registry.log
+    path /var/log/glance/glance-api.log,/var/log/glance/glance-registry.log
     pos_file /var/log/td-agent/openstack-glance.pos
     tag pre.openstack.glance
     format /^(?<time>[^ ]* [^ ]*)\s*(?<pid>([0-9]+)?)\s*(?<level>[a-zA-Z]*)\s*(?<ident>[^ ]*)\s*(\[.*\])?\s*(?<message>.*)$/
