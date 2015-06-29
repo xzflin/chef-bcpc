@@ -65,6 +65,14 @@ if node['bcpc']['enabled']['monitoring'] then
         options "--no-install-recommends"
       end
     end
+    
+    # move the package's sysvinit startup script to another name
+    bash 'move-zabbix-server-mysql-startup-script' do
+      code <<-EOH
+        mv /etc/init.d/zabbix-server /etc/init.d/zabbix-server-sysvinit
+      EOH
+      not_if 'test -f /etc/init.d/zabbix-server-sysvinit'
+    end
 
     directory "/var/log/zabbix" do
         user node['bcpc']['zabbix']['user']
@@ -98,11 +106,26 @@ if node['bcpc']['enabled']['monitoring'] then
             end
         end
     end
+    
+    # Upstart job is maintained under a name different from the SysV init script 
+    # so that it continues to interact nicely with keepalived
+    template '/etc/init/zabbix-server.conf' do
+      source   'upstart-zabbix-server.conf.erb'
+      owner    'root'
+      group    'root'
+      notifies :restart, 'service[zabbix-server]', :delayed
+    end
 
-    service "zabbix-server" do
-        action [:enable, :start]
-        start_command "if_monitoring_vip service zabbix-server start"
-        restart_command "if_monitoring_vip service zabbix-server restart"
+    # disable the sysvinit version from automatic startup
+    service 'zabbix-server-sysvinit' do
+      action [:disable, :stop]
+    end
+
+    # do automatic service startup via the Upstart wrapper
+    service 'zabbix-server' do
+        action          [:enable, :start]
+        start_command   'service zabbix-server start'
+        restart_command 'service zabbix-server restart'
     end
 
     %w{traceroute php5-mysql php5-gd python-requests}.each do |pkg|
