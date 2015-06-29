@@ -2,7 +2,7 @@
 # Cookbook Name:: bcpc
 # Recipe:: zabbix-server
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,22 +39,21 @@ if node['bcpc']['enabled']['monitoring'] then
     bash "clean-up-old-zabbix-server" do
         code <<-EOH
           service zabbix-server stop
-          rm -f /usr/local/etc/server.conf
+          rm -f /usr/local/etc/zabbix_server.conf
           rm -f /usr/local/sbin/zabbix_server
           rm -f /usr/local/share/man/man8/zabbix_server.8
           rm -rf /usr/local/share/zabbix
           rm -rf /usr/local/etc/zabbix_server.conf.d
           rm -f /tmp/zabbix-server.tar.gz
           rm -f /etc/init/zabbix-server.conf
+          killall zabbix_server || true
         EOH
         only_if 'test -f /usr/local/sbin/zabbix_server'
     end
 
-    user node['bcpc']['zabbix']['user'] do
-        shell "/bin/false"
-        home "/var/log"
-        gid node['bcpc']['zabbix']['group']
-        system true
+    # Package is a soft dependency of zabbix-server
+    package "snmp-mibs-downloader" do
+        action :upgrade
     end
 
     %w{zabbix-server-mysql zabbix-frontend-php}.each do |zabbix_package|
@@ -66,26 +65,30 @@ if node['bcpc']['enabled']['monitoring'] then
       end
     end
     
-    # move the package's sysvinit startup script to another name
-    bash 'move-zabbix-server-mysql-startup-script' do
+    # terminate the Zabbix server if this server doesn't hold the monitoring VIP
+    # (this is a safeguard to get out of a potential weird state immediately after
+    # migrating from compiled Zabbix to packaged Zabbix)
+    bash "stop-zabbix-server-if-not-monitoring-vip" do
       code <<-EOH
-        mv /etc/init.d/zabbix-server /etc/init.d/zabbix-server-sysvinit
+        if_not_monitoring_vip service zabbix-server stop
       EOH
-      not_if 'test -f /etc/init.d/zabbix-server-sysvinit'
+      not_if "service zabbix-server status | grep -q stop/waiting"
     end
 
-    directory "/var/log/zabbix" do
-        user node['bcpc']['zabbix']['user']
-        group node['bcpc']['zabbix']['group']
-        mode 00755
+    # disable the sysvinit version from automatic startup
+    bash "stop-sysvinit-zabbix-server" do
+        code <<-EOH
+        /usr/sbin/update-rc.d -f zabbix-server remove
+        /etc/init.d/zabbix-server stop
+        EOH
     end
 
-    template "/etc/zabbix/zabbix_server.conf" do
-        source "zabbix_server.conf.erb"
-        owner node['bcpc']['zabbix']['user']
+    # make package-provided sysvinit script a stub to prevent accidental use
+    file "/etc/init.d/zabbix-server" do
+        content "exit 0"
+        user "root"
         group "root"
-        mode 00600
-        notifies :restart, "service[zabbix-server]", :delayed
+        mode "755"
     end
 
     ruby_block "zabbix-database-creation" do
@@ -106,26 +109,28 @@ if node['bcpc']['enabled']['monitoring'] then
             end
         end
     end
-    
-    # Upstart job is maintained under a name different from the SysV init script 
-    # so that it continues to interact nicely with keepalived
+
+    template "/etc/zabbix/zabbix_server.conf" do
+        source "zabbix_server.conf.erb"
+        owner node['bcpc']['zabbix']['user']
+        group "root"
+        mode 00600
+        notifies :restart, "service[zabbix-server]", :delayed
+    end
+
+    # Upstart job to replace sysvinit script. This allows nicer interaction with
+    # with keepalived. Upstart takes precedence if called by `service`.
     template '/etc/init/zabbix-server.conf' do
       source   'upstart-zabbix-server.conf.erb'
       owner    'root'
       group    'root'
-      notifies :restart, 'service[zabbix-server]', :delayed
-    end
-
-    # disable the sysvinit version from automatic startup
-    service 'zabbix-server-sysvinit' do
-      action [:disable, :stop]
+      notifies :restart, 'service[zabbix-server]', :immediately
     end
 
     # do automatic service startup via the Upstart wrapper
     service 'zabbix-server' do
-        action          [:enable, :start]
-        start_command   'service zabbix-server start'
-        restart_command 'service zabbix-server restart'
+        action   [:enable, :start]
+        provider Chef::Provider::Service::Upstart
     end
 
     %w{traceroute php5-mysql php5-gd python-requests}.each do |pkg|
@@ -224,16 +229,5 @@ if node['bcpc']['enabled']['monitoring'] then
                /usr/share/zabbix/zabbix-api-auto-discovery
             ]
         end
-    end
-    
-    # terminate the Zabbix server if this server doesn't hold the monitoring VIP
-    # (this is a safeguard to get out of a potential weird state immediately after
-    # migrating from compiled Zabbix to packaged Zabbix)
-    bash "stop-zabbix-server-if-not-monitoring-vip" do
-      code <<-EOH
-        if ! service zabbix-server status | grep -q stop/waiting; then 
-          if_not_monitoring_vip service zabbix-server stop
-        fi
-      EOH
     end
 end

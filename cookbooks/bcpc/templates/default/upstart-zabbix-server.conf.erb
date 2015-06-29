@@ -13,4 +13,4 @@ start on vip_won
 stop on (runlevel [016] or vip_lost)
 respawn
 expect daemon
-exec /etc/init.d/zabbix-server-sysvinit start
+exec /usr/sbin/zabbix_server

@@ -2,7 +2,7 @@
 # Cookbook Name:: bcpc
 # Recipe:: zabbix-agent
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -45,23 +45,10 @@ if node['bcpc']['enabled']['monitoring'] then
         only_if 'test -f /usr/local/sbin/zabbix_agentd'
     end
   
-    user node['bcpc']['zabbix']['user'] do
-        shell "/bin/false"
-        home "/var/log"
-        gid node['bcpc']['zabbix']['group']
-        system true
-    end
-    
     %w{zabbix-agent zabbix-get zabbix-sender}.each do |zabbix_package|
       package zabbix_package do
         action :upgrade
       end
-    end
-
-    directory "/var/log/zabbix" do
-        user node['bcpc']['zabbix']['user']
-        group node['bcpc']['zabbix']['group']
-        mode 00755
     end
 
     template "/etc/zabbix/zabbix_agent.conf" do
@@ -77,7 +64,6 @@ if node['bcpc']['enabled']['monitoring'] then
         owner node['bcpc']['zabbix']['user']
         group "root"
         mode 00600
-        variables(:mysql_servers => search_nodes("recipe", "mysql-common"))
         notifies :restart, "service[zabbix-agent]", :delayed
     end
 
@@ -95,7 +81,7 @@ if node['bcpc']['enabled']['monitoring'] then
         owner node['bcpc']['zabbix']['user']
         group "root"
         mode 00600
-        only_if do get_cached_head_node_names.include?(node['hostname']) end
+        only_if 'test -f /etc/mysql/debian.cnf'
         notifies :restart, "service[zabbix-agent]", :immediately
     end
 
