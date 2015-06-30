@@ -17,8 +17,23 @@
 # limitations under the License.
 #
 if node['bcpc']['enabled']['tpm'] then
-
   include_recipe "bcpc::default"
+  
+  package "linux-image-extra-virtual" # installs the TPM module if not already there
+  
+  bash "ensure-tpm_rng-module-is-loaded" do
+    code <<-EOH
+      modprobe tpm_rng
+    EOH
+    not_if "lsmod | grep -q tpm_rng"
+  end
+  
+  bash "ensure-tpm_rng-module-loads-on-boot" do
+    code <<-EOH
+      echo 'tpm_rng' >> /etc/modules
+    EOH
+    not_if "grep -q tpm_rng /etc/modules"
+  end
 
   # this is the sort of thing that you wish didn't have to exist, but it does,
   # because trousers has a broken postinst script
@@ -31,6 +46,7 @@ if node['bcpc']['enabled']['tpm'] then
       sed -i 's/pidof udevd/pidof systemd-udevd/g' /var/lib/dpkg/info/trousers.postinst
       dpkg --configure trousers
     EOH
+    only_if "dpkg -l trousers 2>&1 | grep -q 'no packages found'"
   end
   package "rng-tools"
   package "tpm-tools"
@@ -38,7 +54,6 @@ if node['bcpc']['enabled']['tpm'] then
   service "rng-tools" do
     action :stop
   end
-
 
   template "/etc/default/rng-tools" do
     source "rng-tools.erb"
