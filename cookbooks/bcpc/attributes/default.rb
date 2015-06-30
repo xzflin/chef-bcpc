@@ -1233,7 +1233,7 @@ default['bcpc']['graphite']['fqdn'] = "graphite.#{node['bcpc']['domain_name']}"
 # Default retention rates
 # http://graphite.readthedocs.org/en/latest/config-carbon.html#storage-schemas-conf
 default['bcpc']['graphite']['retention'] = '60s:1d'
-#
+
 ###########################################
 #
 # Diamond settings
@@ -1245,26 +1245,7 @@ default['bcpc']['diamond']['collectors']['rabbitmq']['queues'] = nil
 # Regular expression or list of queues to not report on.
 # If not nil, this overrides "queues".
 default['bcpc']['diamond']['collectors']['rabbitmq']['queues_ignored'] = '.*'
-###########################################
-#
-# defaults for the bcpc.bootstrap settings
-#
-###########################################
-#
-# A value of nil means to let the Ubuntu installer work it out - it
-# will try to find the nearest one. However the selected mirror is
-# often slow.
-default['bcpc']['bootstrap']['mirror'] = nil
-#
-# if you do specify a mirror, you can adjust the file path that comes
-# after the hostname in the URL here
-default['bcpc']['bootstrap']['mirror_path'] = "/ubuntu"
-#
-# Default retention rates
-# http://graphite.readthedocs.org/en/latest/config-carbon.html#storage-schemas-conf
-default['bcpc']['graphite']['retention'] = '60s:1d'
 
-#
 ###########################################
 #
 # defaults for the bcpc.bootstrap settings
