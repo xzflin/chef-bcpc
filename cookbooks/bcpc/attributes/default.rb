@@ -214,6 +214,7 @@ default['bcpc']['repos']['gridcentric'] = "http://downloads.gridcentric.com/pack
 default['bcpc']['repos']['elasticsearch'] = "http://packages.elasticsearch.org/elasticsearch/1.5/debian"
 default['bcpc']['repos']['erlang'] = "http://packages.erlang-solutions.com/ubuntu"
 default['bcpc']['repos']['ceph'] = "http://ceph.com/debian-hammer"
+default['bcpc']['repos']['zabbix'] = "http://repo.zabbix.com/zabbix/2.2/ubuntu"
 
 ###########################################
 #
@@ -253,7 +254,7 @@ default['bcpc']['admin_tenant'] = "AdminTenant"
 default['bcpc']['admin_role'] = "Admin"
 default['bcpc']['member_role'] = "Member"
 default['bcpc']['admin_email'] = "admin@localhost.com"
-
+ 
 default['bcpc']['zabbix']['user'] = "zabbix"
 default['bcpc']['zabbix']['group'] = "adm"
 

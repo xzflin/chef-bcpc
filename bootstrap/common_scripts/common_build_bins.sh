@@ -107,29 +107,6 @@ if [ ! -f python-carbon_${VER_GRAPHITE_CARBON}_all.deb ] || [ ! -f python-whispe
 fi
 FILES="python-carbon_${VER_GRAPHITE_CARBON}_all.deb python-whisper_${VER_GRAPHITE_WHISPER}_all.deb python-graphite-web_${VER_GRAPHITE_WEB}_all.deb $FILES"
 
-# Build the zabbix packages
-if [ ! -f zabbix-agent.tar.gz ] || [ ! -f zabbix-server.tar.gz ]; then
-  cp -v $FILES_ROOT/zabbix-2.2.2.tar.gz .
-  tar zxf zabbix-2.2.2.tar.gz
-  rm -rf /tmp/zabbix-install && mkdir -p /tmp/zabbix-install
-  cd zabbix-2.2.2
-  ./configure --prefix=/tmp/zabbix-install --enable-agent --with-ldap
-  make install
-  tar zcf zabbix-agent.tar.gz -C /tmp/zabbix-install .
-  rm -rf /tmp/zabbix-install && mkdir -p /tmp/zabbix-install
-  ./configure --prefix=/tmp/zabbix-install --enable-server --with-mysql --with-ldap
-  make install
-  cp -a frontends/php /tmp/zabbix-install/share/zabbix/
-  cp database/mysql/* /tmp/zabbix-install/share/zabbix/
-  tar zcf zabbix-server.tar.gz -C /tmp/zabbix-install .
-  rm -rf /tmp/zabbix-install
-  cd ..
-  cp zabbix-2.2.2/zabbix-agent.tar.gz .
-  cp zabbix-2.2.2/zabbix-server.tar.gz .
-  rm -rf zabbix-2.2.2 zabbix-2.2.2.tar.gz
-fi
-FILES="zabbix-agent.tar.gz zabbix-server.tar.gz $FILES"
-
 # Rally has a number of dependencies. Some of the dependencies are in apt by default but some are not. Those that
 # are not are built here.
 
