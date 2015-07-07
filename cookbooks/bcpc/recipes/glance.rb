@@ -2,7 +2,7 @@
 # Cookbook Name:: bcpc
 # Recipe:: glance
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,6 +41,29 @@ end
 service "glance-api" do
     restart_command "service glance-api restart; sleep 5"
 end
+
+cookbook_file "/tmp/glance-v2-null-description.patch" do
+  source "glance-v2-null-description.patch"
+  owner "root"
+  mode 0644
+end 
+
+bash "patch-backport-for-glance-v2-null-description" do
+  user "root"
+  code <<-EOH
+    cd /usr/lib/python2.7/dist-packages/
+    cp glance/schema.py glance/schema.py.prematch
+    patch -p1 < /tmp/glance-v2-null-description.patch
+    rv=$?
+    if [ $rv -ne 0 ]; then
+      echo "Error applying patch ($rv) - aborting!"
+      exit $rv
+    fi
+  EOH
+  not_if "grep -q 'THIS FILE PATCHED BY BCPC' /usr/lib/python2.7/dist-packages/glance/schema.py"
+  notifies :restart, "service[glance-api]", :immediately
+  notifies :restart, "service[glance-registry]", :immediately
+end 
 
 template "/etc/glance/glance-api.conf" do
     source "glance-api.conf.erb"
