@@ -1318,3 +1318,13 @@ default['bcpc']['zabbix']['fqdn'] = "zabbix.#{node['bcpc']['domain_name']}"
 #
 # Kibana Server FQDN
 default['bcpc']['kibana']['fqdn'] = "kibana.#{node['bcpc']['domain_name']}"
+###########################################
+#
+# Elasticsearch settings
+#
+###########################################
+#
+# Heap memory size
+default['bcpc']['elasticsearch']['heap_size'] = '256m'
+# Additional Java options
+default['bcpc']['elasticsearch']['java_opts'] = '-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -verbose:gc -Xloggc:/var/log/elasticsearch/gc.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=10m'
