@@ -147,10 +147,10 @@ fi
 FILES="kibana_${VER_KIBANA}_amd64.deb $FILES"
 
 # any pegged gem versions
-REV_elasticsearch="0.2.0"
+REV_elasticsearch="0.9.0"
 
 # Grab plugins for fluentd
-for i in elasticsearch tail-multiline tail-ex record-reformer rewrite; do
+for i in elasticsearch; do
     if [ ! -f fluent-plugin-${i}.gem ]; then
         PEG=REV_${i}
         if [[ ! -z ${!PEG} ]]; then

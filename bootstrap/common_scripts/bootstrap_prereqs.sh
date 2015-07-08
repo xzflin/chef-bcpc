@@ -73,12 +73,10 @@ for GEM in ${GEMS[@]}; do
 done
 
 # Pull needed gems for fluentd.
-GEMS=( cool.io-1.3.1 fluent-mixin-config-placeholders-0.3.0
-       fluent-plugin-elasticsearch-0.2.0 fluent-plugin-record-reformer-0.6.3
-       fluent-plugin-rewrite-0.0.12 fluent-plugin-tail-ex-0.1.1
-       fluent-plugin-tail-multiline-0.1.5 fluentd-0.12.11 http_parser.rb-0.6.0
-       msgpack-0.5.11 sigdump-0.2.3 string-scrub-0.0.5 thread_safe-0.3.5
-       tzinfo-1.2.2 tzinfo-data-1.2015.4 uuidtools-2.1.5 yajl-ruby-1.2.1 )
+GEMS=( excon-0.45.3
+       multi_json-1.11.2 multipart-post-2.0.0 faraday-0.9.1
+       elasticsearch-api-1.0.12 elasticsearch-transport-1.0.12
+       elasticsearch-1.0.12 fluent-plugin-elasticsearch-0.9.0 )
 mkdir -p $BOOTSTRAP_CACHE_DIR/fluentd_gems
 for GEM in ${GEMS[@]}; do
   download_file fluentd_gems/$GEM.gem https://rubygems.global.ssl.fastly.net/gems/$GEM.gem
