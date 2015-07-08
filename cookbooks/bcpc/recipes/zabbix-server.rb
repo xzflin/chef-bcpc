@@ -230,4 +230,56 @@ if node['bcpc']['enabled']['monitoring'] then
             ]
         end
     end
+
+    cookbook_file "/tmp/zabbix-mysql-partition-baseline.sql" do
+        source "zabbix-mysql-partition-baseline.sql"
+        owner "root"
+        mode 00644
+    end
+
+    template "/tmp/zabbix-mysql-partition-maintenance-all.sql" do
+        source "zabbix-mysql-partition-maintenance-all.sql.erb"
+        owner "root"
+        group "root"
+        mode 00644
+        variables(
+            :storage_retention => node['bcpc']['zabbix']['storage_retention']
+        )
+    end
+
+    # Create baseline stored procedures to setup partitioning
+    ruby_block "zabbix-partition-baseline-setup" do
+        block do
+            %x[ export MYSQL_PWD=#{get_config('mysql-zabbix-password')};
+                mysql -u#{get_config('mysql-zabbix-user')} #{node['bcpc']['dbname']['zabbix']} < /tmp/zabbix-mysql-partition-baseline.sql
+            ]
+        end
+        not_if { system "MYSQL_PWD=#{get_config('mysql-monitoring-root-password')} mysql -uroot -e 'SELECT name FROM mysql.proc WHERE db = \"#{node['bcpc']['dbname']['zabbix']}\" AND type = \"procedure\" AND name LIKE \"partition%\"' | grep -q partition >/dev/null" }
+    end
+
+    # Creates wrapper stored procedure to execute partitioning, then
+    # reconfigures Zabbix housekeeping to match partitioning setup
+    ruby_block "zabbix-mysql-partition-maintenance-all" do
+        block do
+            %x[ export MYSQL_PWD=#{get_config('mysql-zabbix-password')};
+                mysql -u#{get_config('mysql-zabbix-user')} #{node['bcpc']['dbname']['zabbix']} < /tmp/zabbix-mysql-partition-maintenance-all.sql
+            ]
+        end
+    end
+
+    template "/usr/local/bin/zabbix-mysql-partition-maintenance-all" do
+        source "zabbix-mysql-partition-maintenance-all-cron.erb"
+        owner "zabbix"
+        group "root"
+        mode "0750"
+    end
+
+    # Partitions need to be pre-extended, so running this as a daily crontab
+    cron 'partition-maintenance-all' do
+        minute '7'
+        hour '0'
+        user 'zabbix'
+        command "/usr/local/bin/zabbix-mysql-partition-maintenance-all >/dev/null 2>&1"
+    end
+
 end

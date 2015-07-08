@@ -1324,6 +1324,7 @@ default['bcpc']['flavors']['enabled'] = {}
 default['bcpc']['zabbix']['discovery']['delay'] = 600
 default['bcpc']['zabbix']['discovery']['ip_ranges'] = [node['bcpc']['management']['cidr']]
 default['bcpc']['zabbix']['fqdn'] = "zabbix.#{node['bcpc']['domain_name']}"
+default['bcpc']['zabbix']['storage_retention'] = 7
 ###########################################
 #
 # Kibana settings
