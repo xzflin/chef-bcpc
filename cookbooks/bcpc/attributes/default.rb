@@ -306,9 +306,23 @@ default['bcpc']['keystone']['verbose'] = false
 # before failing (configures timeout on the wait-for-keystone-to-be-operational
 # spinlock guard).
 default['bcpc']['keystone']['wait_for_keystone_timeout'] = 120
-# This can be either 'sql' or 'ldap' to either store identities
-# in the mysql DB or the LDAP server
-default['bcpc']['keystone']['backend'] = 'sql'
+# The driver section below allows either 'sql' or 'ldap' (or 'templated' for catalog)
+# Note that not all drivers may support SQL/LDAP, only tinker if you know what you're getting into
+default['bcpc']['keystone']['drivers']['assignment'] = 'sql'
+default['bcpc']['keystone']['drivers']['catalog'] = 'templated'
+default['bcpc']['keystone']['drivers']['credential'] = 'sql'
+default['bcpc']['keystone']['drivers']['domain_config'] = 'sql'
+default['bcpc']['keystone']['drivers']['endpoint_filter'] = 'sql'
+default['bcpc']['keystone']['drivers']['endpoint_policy'] = 'sql'
+default['bcpc']['keystone']['drivers']['federation'] = 'sql'
+default['bcpc']['keystone']['drivers']['identity'] = 'sql'
+default['bcpc']['keystone']['drivers']['identity_mapping'] = 'sql'
+default['bcpc']['keystone']['drivers']['oauth1'] = 'sql'
+default['bcpc']['keystone']['drivers']['policy'] = 'sql'
+default['bcpc']['keystone']['drivers']['revoke'] = 'sql'
+default['bcpc']['keystone']['drivers']['role'] = 'sql'
+default['bcpc']['keystone']['drivers']['trust'] = 'sql'
+# LDAP credentials used by Keystone
 default['bcpc']['ldap']['admin_user'] = nil
 default['bcpc']['ldap']['admin_pass'] = nil
 default['bcpc']['ldap']['config'] = {}
