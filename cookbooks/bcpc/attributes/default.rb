@@ -1251,7 +1251,14 @@ default['bcpc']['cpupower']['ondemand_powersave_bias'] = nil
 default['bcpc']['cpupower']['ondemand_sampling_down_factor'] = nil
 default['bcpc']['cpupower']['ondemand_sampling_rate'] = nil
 default['bcpc']['cpupower']['ondemand_up_threshold'] = nil
-
+###########################################
+#
+# General monitoring settings
+#
+###########################################
+#
+# List of monitoring clients external to cluster that we are monitoring
+default['bcpc']['monitoring']['external_clients'] = [] 
 ###########################################
 #
 # Graphite settings
