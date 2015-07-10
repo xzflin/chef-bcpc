@@ -1044,11 +1044,11 @@ default['bcpc']['cinder']['policy'] = {
   "volume_extension:replication:promote" => "rule:admin_api",
   "volume_extension:replication:reenable" => "rule:admin_api",
 
-  "backup:create" => "",
-  "backup:delete" => "",
+  "backup:create" => "role:admin",
+  "backup:delete" => "role:admin",
   "backup:get" => "",
   "backup:get_all" => "",
-  "backup:restore" => "",
+  "backup:restore" => "role:admin",
   "backup:backup-import" => "rule:admin_api",
   "backup:backup-export" => "rule:admin_api",
 
