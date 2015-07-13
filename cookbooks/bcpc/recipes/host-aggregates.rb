@@ -1,5 +1,5 @@
 # Cookbook Name:: bcpc
-# Recipe:: flavors
+# Recipe:: host-aggregates
 #
 # Copyright 2013, Bloomberg Finance L.P.
 #
@@ -16,15 +16,16 @@
 # limitations under the License.
 #
 
-node['bcpc']['flavors'].each do |name, flavor| 
-  bcpc_osflavor name do
-    memory_mb flavor['memory_mb'] 
-    disk_gb   flavor['disk_gb'] 
-    vcpus  flavor['vcpus'] 
-    ephemeral_gb flavor['ephemeral_gb']
-    swap_gb flavor['swap_gb']
-    is_public flavor['is_public'] or true
-    flavor_id flavor['id'] or "auto"
-    extra_specs flavor["extra_specs"]
+node['bcpc']['host_aggregates'].each do |name, properties| 
+  bcpc_host_aggregate name do
+    metadata properties
   end
 end 
+
+node['bcpc']['aggregate_membership'].each do |name| 
+    bcpc_host_aggregate name do
+        action :member 
+        zone  node['bcpc']['region_name']
+    end
+end 
+

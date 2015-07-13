@@ -4,24 +4,13 @@
     },
     "json_class": "Chef::Role",
     "run_list": [
-      "role[Basic]",
-      "recipe[bcpc]",
-      "recipe[bcpc::system]",
-      "recipe[bcpc::networking]",
-      "recipe[bcpc::networking-link-test]",
-      "recipe[bcpc::networking-gw-test]",
-      "recipe[bcpc::networking-route-test]",
-      "recipe[bcpc::ceph-work]",
-      "role[BCPC-Rgwnode]",
-      "recipe[bcpc::nova-work]",
-      "recipe[bcpc::diamond]",
-      "recipe[bcpc::fluentd]",
-      "recipe[bcpc::tpm]",
-      "recipe[bcpc::checks-work]",
-      "recipe[bcpc::zabbix-agent]"
+      "role[BCPC-Compute]"
     ],
     "description": "A functional compute node in a BCPC cluster",
     "chef_type": "role",
     "override_attributes": {
+      "bcpc" : {
+            "aggregate_membership" : ["general_compute"]
+      }
     }
 }

@@ -536,7 +536,8 @@ default['bcpc']['nova']['live_migration_patch'] = false
 # Nova debug toggle
 default['bcpc']['nova']['debug'] = false
 # Nova scheduler default filters
-default['bcpc']['nova']['scheduler_default_filters'] = ['AggregateInstanceExtraSpecsFilter', 'AvailabilityZoneFilter', 'RamFilter', 'ComputeFilter', 'DifferentHostFilter', 'SameHostFilter']
+default['bcpc']['nova']['scheduler_default_filters'] = ['AggregateInstanceExtraSpecsFilter', 'RetryFilter', 'AvailabilityZoneFilter', 'RamFilter', 'ComputeFilter', 'ComputeCapabilitiesFilter', 'ImagePropertiesFilter', 'ServerGroupAntiAffinityFilter', 'ServerGroupAffinityFilter']
+
 default['bcpc']['nova']['quota'] = {
   "cores" => 4,
   "floating_ips" => 10,
@@ -1313,8 +1314,38 @@ default['bcpc']['rally']['user'] = 'ubuntu'
 #
 ###########################################
 
-default['bcpc']['flavors']['deleted'] = []
-default['bcpc']['flavors']['enabled'] = {}
+default['bcpc']['flavors'] = {
+    "m1.tiny"  => {
+      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    },
+    "m1.small"  => {
+      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    },
+    "m1.medium"  => { 
+      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    },
+    "m1.large"  => {
+      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    },
+    "m1.xlarge"  => {
+      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"} 
+    }
+}
+
+###########################################
+#
+# Openstack Host Aggregates
+#
+###########################################
+
+default['bcpc']['host_aggregates'] = {
+    "general_compute" => {
+      "general_compute" => "yes"
+    }
+}
+
+default['bcpc']['aggregate_membership'] = []
+
 ###########################################
 #
 # Zabbix settings
