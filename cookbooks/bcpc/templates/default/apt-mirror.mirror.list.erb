@@ -62,9 +62,7 @@ deb-i386 http://ubuntu-cloud.archive.canonical.com/ubuntu precise-<%= @repo %>/<
 <% end %>
 <% end %>
 
-# no trusty packages yet (20140529)
-deb http://packages.treasure-data.com/precise precise contrib
-deb-i386 http://packages.treasure-data.com/precise precise contrib
+deb <%= @node['bcpc']['repos']['fluentd'] %> <%= @distro %> contrib
 
 <% end %>
 
