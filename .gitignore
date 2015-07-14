@@ -6,6 +6,7 @@
 id_rsa
 secret_file
 bootstrap/config/bootstrap_config.sh
+bootstrap/config/bootstrap_config.sh.overrides
 cacerts/
 cookbooks/apt/
 cookbooks/chef-solo-search/

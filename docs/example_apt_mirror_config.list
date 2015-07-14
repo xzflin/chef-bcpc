@@ -9,18 +9,16 @@ set nthreads          20
 set _tilde            0
 set unlink            1
 
-# versions that still use Precise (try to update them)
 # fluentd repository in BCPC
-deb http://packages.treasure-data.com/precise precise contrib
-deb-i386 http://packages.treasure-data.com/precise precise contrib
-clean http://packages.treasure-data.com/precise
+deb http://packages.treasuredata.com/2/ubuntu/trusty trusty contrib
+clean http://packages.treasuredata.com/2/ubuntu/trusty
 
-# Trusty versions
 # erlang repository in BCPC
 deb http://packages.erlang-solutions.com/ubuntu trusty contrib
 deb-i386 http://packages.erlang-solutions.com/ubuntu trusty contrib
 clean http://packages.erlang-solutions.com/ubuntu
 
+# hwraid repository in BCPC
 deb http://hwraid.le-vert.net/ubuntu precise main
 deb-i386 http://hwraid.le-vert.net/ubuntu precise main
 clean http://hwraid.le-vert.net/ubuntu
@@ -68,3 +66,6 @@ deb-i386 http://ubuntu-cloud.archive.canonical.com/ubuntu trusty-proposed/kilo m
 deb-i386 http://ubuntu-cloud.archive.canonical.com/ubuntu trusty-updates/kilo main
 clean http://ubuntu-cloud.archive.canonical.com/ubuntu
 
+# zabbix repository in BCPC
+deb http://repo.zabbix.com/zabbix/2.2/ubuntu/ trusty main
+clean http://repo.zabbix.com/zabbix/2.2/ubuntu/
