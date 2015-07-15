@@ -51,6 +51,12 @@ if node['bcpc']['enabled']['monitoring'] then
       end
     end
 
+    group "adm" do
+        action :modify
+        append true
+        members "zabbix"
+    end
+
     template "/etc/zabbix/zabbix_agent.conf" do
         source "zabbix_agent.conf.erb"
         owner node['bcpc']['zabbix']['user']
