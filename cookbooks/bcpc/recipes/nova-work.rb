@@ -266,5 +266,3 @@ bash "patch-for-ip-hostnames-networking" do
     notifies :restart, "service[nova-compute]", :immediately
     notifies :restart, "service[nova-network]", :immediately
 end 
-
-include_recipe "bcpc::cobalt"
