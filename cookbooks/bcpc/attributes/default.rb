@@ -20,8 +20,6 @@ default['bcpc']['libvirt-bin']['ulimit']['nofile'] = 4096
 default['bcpc']['region_name'] = node.chef_environment
 # Domain name for this cluster (used in many configs)
 default['bcpc']['domain_name'] = "bcpc.example.com"
-# Key if Cobalt+VMS is to be used
-default['bcpc']['vms_key'] = nil
 
 ###########################################
 #
@@ -120,17 +118,7 @@ default['bcpc']['ceph']['vms']['replicas'] = 3
 default['bcpc']['ceph']['vms']['portion'] = 33
 default['bcpc']['ceph']['vms']['type'] = 'ssd'
 default['bcpc']['ceph']['vms']['name'] = "vms"
-
-# Begin cobalt - not used in cluster
-default['bcpc']['ceph']['vms_disk']['replicas'] = 3
-default['bcpc']['ceph']['vms_disk']['portion'] = 10
-default['bcpc']['ceph']['vms_disk']['type'] = 'ssd'
-default['bcpc']['ceph']['vms_disk']['name'] = "vmsdisk"
-default['bcpc']['ceph']['vms_mem']['replicas'] = 3
-default['bcpc']['ceph']['vms_mem']['portion'] = 10
-default['bcpc']['ceph']['vms_mem']['type'] = 'ssd'
-default['bcpc']['ceph']['vms_mem']['name'] = "vmsmem"
-# End cobalt
+# Set up crush rulesets
 default['bcpc']['ceph']['ssd']['ruleset'] = 1
 default['bcpc']['ceph']['hdd']['ruleset'] = 2
 

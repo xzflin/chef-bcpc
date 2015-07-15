@@ -20,7 +20,6 @@
 include_recipe "bcpc::mysql-head"
 include_recipe "bcpc::openstack"
 include_recipe "bcpc::apache2"
-include_recipe "bcpc::cobalt"
 
 ruby_block "initialize-horizon-config" do
     block do
@@ -107,12 +106,6 @@ end
 template ::File.join(horizon_customize_dir, 'overrides.py') do
   source   'horizon.overrides.py.erb'
   notifies :restart, "service[apache2]", :delayed
-end
-
-package "cobalt-horizon" do
-    only_if { not node["bcpc"]["vms_key"].nil? }
-    action :upgrade
-    options "-o APT::Install-Recommends=0 -o Dpkg::Options::='--force-confnew'"
 end
 
 package "openstack-dashboard-ubuntu-theme" do

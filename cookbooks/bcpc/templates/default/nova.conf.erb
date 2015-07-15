@@ -33,10 +33,6 @@ enabled_apis=ec2,osapi_compute,metadata
 <% else -%>
 enabled_apis=metadata
 <% end %>
-<% if not node['bcpc']['vms_key'].nil? %>
-osapi_compute_extension=nova.api.openstack.compute.contrib.standard_extensions
-osapi_compute_extension=cobalt.nova.osapi.cobalt_extension.Cobalt_extension
-<% end %>
 <% if not node["bcpc"]["vendordata_driver"].nil? %>
 vendordata_driver = <%=node["bcpc"]["vendordata_driver"] %>
 <% end %>
