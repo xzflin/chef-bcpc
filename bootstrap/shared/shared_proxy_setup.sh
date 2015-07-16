@@ -1,5 +1,11 @@
 #!/bin/bash
 # Exit immediately if anything goes wrong, instead of making things worse.
+
+. $REPO_ROOT/bootstrap/shared/shared_functions.sh
+
+REQUIRED_VARS=( BOOTSTRAP_HTTP_PROXY BOOTSTRAP_HTTPS_PROXY )
+check_for_envvars ${REQUIRED_VARS[@]}
+
 set -e
 
 if [ ! -z "$BOOTSTRAP_HTTP_PROXY" ]; then

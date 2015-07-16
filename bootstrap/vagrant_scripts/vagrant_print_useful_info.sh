@@ -2,15 +2,10 @@
 # Exit immediately if anything goes wrong, instead of making things worse.
 set -e
 
-FAILED_ENVVAR_CHECK=0
+. $REPO_ROOT/bootstrap/shared/shared_functions.sh
+
 REQUIRED_VARS=( BOOTSTRAP_CHEF_ENV REPO_ROOT )
-for ENVVAR in ${REQUIRED_VARS[@]}; do
-  if [[ -z ${!ENVVAR} ]]; then
-    echo "Environment variable $ENVVAR must be set!" >&2
-    FAILED_ENVVAR_CHECK=1
-  fi
-done
-if [[ $FAILED_ENVVAR_CHECK != 0 ]]; then exit 1; fi
+check_for_envvars ${REQUIRED_VARS[@]}
 
 cd $REPO_ROOT/bootstrap/vagrant_scripts
 

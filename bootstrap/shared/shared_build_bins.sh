@@ -2,9 +2,16 @@
 set -e
 
 # This script must be invoked from the root of the repository (e.g., as
-# bootstrap/common_scripts/common_build_bins.sh).
+# bootstrap/shared/shared_build_bins.sh). It expects to run INSIDE the
+# bootstrap VM, so it does not have access to environment variables or bootstrap
+# functions. This script is invoked by shared/shared_configure_chef.sh.
 
-if [[ -z $FILES_ROOT ]]; then FILES_ROOT=/chef-bcpc-files; fi
+# FILECACHE_MOUNT_POINT is exported in shared/shared_configure_chef.sh when invoking
+# this script.
+if [[ -z $FILECACHE_MOUNT_POINT ]]; then
+  echo "FILECACHE_MOUNT_POINT must be set to proceed! Exiting." >&2
+  exit 1
+fi
 if [[ -z $BUILD_DEST ]]; then BUILD_DEST=cookbooks/bcpc/files/default/bins; fi
 
 pushd $BUILD_DEST
@@ -25,40 +32,40 @@ apt-get -y install git ruby-dev make pbuilder python-mock python-configobj pytho
 
 # install fpm and support gems
 if [ -z `gem list --local fpm | grep fpm | cut -f1 -d" "` ]; then
-  pushd $FILES_ROOT/fpm_gems/
+  pushd $FILECACHE_MOUNT_POINT/fpm_gems/
   gem install -l --no-ri --no-rdoc arr-pm-0.0.10.gem backports-3.6.4.gem cabin-0.7.1.gem childprocess-0.5.6.gem clamp-0.6.5.gem ffi-1.9.8.gem fpm-1.3.3.gem json-1.8.2.gem
   popd
 fi
 
 # Build kibana 4 deb
 if [ ! -f kibana_${VER_KIBANA}_amd64.deb ]; then
-  cp -v $FILES_ROOT/kibana-${VER_KIBANA}-linux-x64.tar.gz kibana-${VER_KIBANA}.tar.gz
+  cp -v $FILECACHE_MOUNT_POINT/kibana-${VER_KIBANA}-linux-x64.tar.gz kibana-${VER_KIBANA}.tar.gz
   tar -zxf kibana-${VER_KIBANA}.tar.gz
   fpm -s dir -t deb --prefix /opt/kibana -n kibana -v ${VER_KIBANA} -C kibana-${VER_KIBANA}-linux-x64
   rm -rf kibana-${VER_KIBANA}-linux-x64{,.tar.gz}
 fi
 FILES="kibana_${VER_KIBANA}_amd64.deb $FILES"
 
-# fluentd plugins and dependencies are fetched by bootstrap_prereqs.sh, just copy them
+# fluentd plugins and dependencies are fetched by shared_prereqs.sh, just copy them
 # in from the local cache and add them to $FILES
-cp $FILES_ROOT/fluentd_gems/*.gem .
-FILES="$(ls -1 $FILES_ROOT/fluentd_gems/*.gem | xargs) $FILES"
+cp $FILECACHE_MOUNT_POINT/fluentd_gems/*.gem .
+FILES="$(ls -1 $FILECACHE_MOUNT_POINT/fluentd_gems/*.gem | xargs) $FILES"
 
 # Fetch the cirros image for testing
 if [ ! -f cirros-0.3.4-x86_64-disk.img ]; then
-  cp -v $FILES_ROOT/cirros-0.3.4-x86_64-disk.img .
+  cp -v $FILECACHE_MOUNT_POINT/cirros-0.3.4-x86_64-disk.img .
 fi
 FILES="cirros-0.3.4-x86_64-disk.img $FILES"
 
 # Grab the Ubuntu 14.04 installer image
 if [ ! -f ubuntu-14.04-mini.iso ]; then
-  cp -v $FILES_ROOT/ubuntu-14.04-mini.iso ubuntu-14.04-mini.iso
+  cp -v $FILECACHE_MOUNT_POINT/ubuntu-14.04-mini.iso ubuntu-14.04-mini.iso
 fi
 FILES="ubuntu-14.04-mini.iso $FILES"
 
 # Make the diamond package
 if [ ! -f diamond.deb ]; then
-  cp -r $FILES_ROOT/diamond Diamond
+  cp -r $FILECACHE_MOUNT_POINT/diamond Diamond
   cd Diamond
   git checkout $VER_DIAMOND
   make builddeb
@@ -70,7 +77,7 @@ fi
 FILES="diamond.deb $FILES"
 
 if [ ! -f elasticsearch-plugins.tgz ]; then
-  cp -r $FILES_ROOT/elasticsearch-head .
+  cp -r $FILECACHE_MOUNT_POINT/elasticsearch-head .
   cd elasticsearch-head
   git archive --output ../elasticsearch-plugins.tgz --prefix head/_site/ $VER_ESPLUGIN
   cd ..
@@ -80,13 +87,13 @@ FILES="elasticsearch-plugins.tgz $FILES"
 
 # Fetch pyrabbit
 if [ ! -f pyrabbit-1.0.1.tar.gz ]; then
-  cp -v $FILES_ROOT/pyrabbit-1.0.1.tar.gz .
+  cp -v $FILECACHE_MOUNT_POINT/pyrabbit-1.0.1.tar.gz .
 fi
 FILES="pyrabbit-1.0.1.tar.gz $FILES"
 
 # Build requests-aws package
 if [ ! -f python-requests-aws_${VER_REQUESTS_AWS}_all.deb ]; then
-  cp -v $FILES_ROOT/requests-aws-${VER_REQUESTS_AWS}.tar.gz .
+  cp -v $FILECACHE_MOUNT_POINT/requests-aws-${VER_REQUESTS_AWS}.tar.gz .
   tar zxf requests-aws-${VER_REQUESTS_AWS}.tar.gz
   fpm -s python -t deb -f requests-aws-${VER_REQUESTS_AWS}/setup.py
   rm -rf requests-aws-${VER_REQUESTS_AWS}.tar.gz requests-aws-${VER_REQUESTS_AWS}
@@ -94,9 +101,9 @@ fi
 
 # Build graphite packages
 if [ ! -f python-carbon_${VER_GRAPHITE_CARBON}_all.deb ] || [ ! -f python-whisper_${VER_GRAPHITE_WHISPER}_all.deb ] || [ ! -f python-graphite-web_${VER_GRAPHITE_WEB}_all.deb ]; then
-  cp -v $FILES_ROOT/carbon-${VER_GRAPHITE_CARBON}.tar.gz .
-  cp -v $FILES_ROOT/whisper-${VER_GRAPHITE_WHISPER}.tar.gz .
-  cp -v $FILES_ROOT/graphite-web-${VER_GRAPHITE_WEB}.tar.gz .
+  cp -v $FILECACHE_MOUNT_POINT/carbon-${VER_GRAPHITE_CARBON}.tar.gz .
+  cp -v $FILECACHE_MOUNT_POINT/whisper-${VER_GRAPHITE_WHISPER}.tar.gz .
+  cp -v $FILECACHE_MOUNT_POINT/graphite-web-${VER_GRAPHITE_WEB}.tar.gz .
   tar zxf carbon-${VER_GRAPHITE_CARBON}.tar.gz
   tar zxf whisper-${VER_GRAPHITE_WHISPER}.tar.gz
   tar zxf graphite-web-${VER_GRAPHITE_WEB}.tar.gz
@@ -133,7 +140,7 @@ if [ ! -f rally-pip.tar.gz ] || [ ! -f rally-bin.tar.gz ] || [ ! -f python-pip_$
 
   # Create a deb for pip to replace really old upstream pip
   if [[ ! -f python-pip_${VER_PIP}_all.deb ]]; then
-    cp $FILES_ROOT/rally/pip-${VER_PIP}.tar.gz .
+    cp $FILECACHE_MOUNT_POINT/rally/pip-${VER_PIP}.tar.gz .
     tar xvzf pip-${VER_PIP}.tar.gz
     fpm -s python -t deb pip-${VER_PIP}/setup.py
     dpkg -i python-pip_${VER_PIP}_all.deb
@@ -142,12 +149,12 @@ if [ ! -f rally-pip.tar.gz ] || [ ! -f rally-bin.tar.gz ] || [ ! -f python-pip_$
 
   # We install rally and a few other items here. Since fpm does not resolve dependencies but only lists them, we
   # have to force an install and then tar up the dist-packages and local/bin
-  PIP_INSTALL="pip install --no-cache-dir --disable-pip-version-check --no-index -f $FILES_ROOT/rally"
+  PIP_INSTALL="pip install --no-cache-dir --disable-pip-version-check --no-index -f $FILECACHE_MOUNT_POINT/rally"
   # this kludge is to prevent easy_install from trying to go out to PyPI:
   # rally calls setuptools.setup_requires(), which uses easy_install to
   # install any packages listed there; this forces easy_install to use
   # the same mechanism as we are telling pip to use in $PIP_INSTALL
-  echo -e "[easy_install]\nallow_hosts = ''\nfind_links = file://$FILES_ROOT/rally/" > $HOME/.pydistutils.cfg
+  echo -e "[easy_install]\nallow_hosts = ''\nfind_links = file://$FILECACHE_MOUNT_POINT/rally/" > $HOME/.pydistutils.cfg
   $PIP_INSTALL --default-timeout 60 -I rally 
   $PIP_INSTALL --default-timeout 60 python-openstackclient
   $PIP_INSTALL -U argparse
