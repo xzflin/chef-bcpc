@@ -16,7 +16,7 @@ end
  template  "/usr/local/etc/checks/default.yml" do
    source "checks/default.yml.erb"
    owner "root"
-   group "root"
+   group "zabbix"
    mode 00640
  end
 
@@ -30,7 +30,7 @@ end
   template  "/usr/local/etc/checks/#{cc}.yml" do
     source "checks/#{cc}.yml.erb"
     owner "root"
-    group "root"
+    group "zabbix"
     mode 00640
   end
 
