@@ -108,8 +108,9 @@ sub fix_routes {
             myprint "Fixed. Remaining fixes: $fixes\n";
             $routedown = 0;
         } else {
-            myprint "Not fixed. Unknown behaviours, aborting fix attempts\n";
-            $fixes = 0;
+	    myprint("routemon: Network not fully up - terminating\n");
+	    sleep 10;
+	    exit 0;
         }
     } else {
         myprint "No fixes left\n";
