@@ -32,6 +32,11 @@ innodb_autoinc_lock_mode=2
 # This is a must for paralell applying
 innodb_locks_unsafe_for_binlog=1
 
+<% if @innodb_buffer_pool_size %>
+# Memory area where InnoDB caches table and index data. Default is 128M.
+innodb_buffer_pool_size=<%= @innodb_buffer_pool_size %>
+
+<% end %>
 # Less thrash on restarts by dumping and loading buffer pools
 innodb_buffer_pool_dump_at_shutdown=ON
 innodb_buffer_pool_load_at_startup=ON

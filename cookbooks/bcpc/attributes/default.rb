@@ -1246,6 +1246,8 @@ default['bcpc']['cpupower']['ondemand_up_threshold'] = nil
 #
 # List of monitoring clients external to cluster that we are monitoring
 default['bcpc']['monitoring']['external_clients'] = [] 
+# Monitoring database settings
+default['bcpc']['monitoring']['mysql']['innodb_buffer_pool_size'] = nil
 ###########################################
 #
 # Graphite settings
