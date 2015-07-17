@@ -45,7 +45,11 @@ fi
 
 BOOTSTRAP_CONFIG_DEFAULTS="$REPO_ROOT/bootstrap/config/bootstrap_config.sh.defaults"
 BOOTSTRAP_CONFIG_OVERRIDES="$REPO_ROOT/bootstrap/config/bootstrap_config.sh.overrides"
-if [[ -f $BOOTSTRAP_CONFIG_DEFAULTS ]]; then source $BOOTSTRAP_CONFIG_DEFAULTS; fi
+if [[ ! -f $BOOTSTRAP_CONFIG_DEFAULTS ]]; then
+  echo "Bootstrap configuration defaults are missing! Your repository is corrupt; please restore $REPO_ROOT/bootstrap/config/bootstrap_config.sh.overrides." >&2
+  exit 1
+fi
+source $BOOTSTRAP_CONFIG_DEFAULTS
 if [[ -f $BOOTSTRAP_CONFIG_OVERRIDES ]]; then source $BOOTSTRAP_CONFIG_OVERRIDES; fi
 
 # Perform preflight checks to validate environment sanity as much as possible.
@@ -81,4 +85,3 @@ $REPO_ROOT/bootstrap/shared/shared_configure_chef.sh
 
 # Dump out useful information for users.
 $REPO_ROOT/bootstrap/vagrant_scripts/vagrant_print_useful_info.sh
-
