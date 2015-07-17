@@ -13,7 +13,7 @@ Listen <%="#{node['bcpc']['floating']['ip']}:#{node['bcpc']['ports']['apache']['
 FastCgiExternalServer /var/www/s3gw.fcgi -socket /var/lib/ceph/radosgw/rgw_fcgi.sock -idle-timeout 60
 
 <VirtualHost  <%="#{node['bcpc']['floating']['ip']}:#{node['bcpc']['ports']['apache']['radosgw']}"%> >
-        ServerName <%="s3.#{node['bcpc']['domain_name']}"%>
+        ServerName <%="s3.#{node['bcpc']['cluster_domain']}"%>
         ServerAlias <%=node['hostname']%>
         ServerAlias <%="#{node['bcpc']['floating']['ip']}:#{node['bcpc']['ports']['apache']['radosgw']}"%>
         ServerAdmin <%=node['bcpc']['admin_email']%>
@@ -45,7 +45,7 @@ FastCgiExternalServer /var/www/s3gw.fcgi -socket /var/lib/ceph/radosgw/rgw_fcgi.
 NameVirtualHost <%="#{node['bcpc']['floating']['ip']}:#{node['bcpc']['ports']['apache']['radosgw_https']}"%>
 
 <VirtualHost  <%="#{node['bcpc']['floating']['ip']}:#{node['bcpc']['ports']['apache']['radosgw_https']}"%> >
-        ServerName <%="s3.#{node['bcpc']['domain_name']}"%>
+        ServerName <%="s3.#{node['bcpc']['cluster_domain']}"%>
         ServerAlias <%=node['hostname']%>
         ServerAlias <%="#{node['bcpc']['floating']['ip']}:#{node['bcpc']['ports']['apache']['radosgw_https']}"%>
         ServerAdmin <%=node['bcpc']['admin_email']%>

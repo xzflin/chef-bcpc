@@ -29,7 +29,7 @@ if node['bcpc']['enabled']['dns']
     mode 00644
     variables({
       :database_name      => node['bcpc']['dbname']['pdns'],
-      :domain_name        => node['bcpc']['domain_name'],
+      :cluster_domain        => node['bcpc']['cluster_domain'],
       :reverse_fixed_zone => (node['bcpc']['fixed']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['fixed']['cidr'])),
     })
   end

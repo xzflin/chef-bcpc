@@ -23,7 +23,7 @@ fi
 while read HOSTNAME MACADDR IPADDR ILOIPADDR DOMAIN ROLE; do
     if [[ "$ROLE" = "bootstrap" ]]; then
 	BOOTSTRAP_NODE="$HOSTNAME"
-	BOOTSTRAP_DOMAIN="$DOMAIN"
+	BCPC_HYPERVISOR_DOMAIN="$DOMAIN"
 	echo "Ignoring $HOSTNAME - bootstrap node to be retained"
     elif [[ "$ROLE" = "work" || "$ROLE" = "head" ]]; then
 	#
@@ -44,7 +44,7 @@ fi
 # cross check that what I think is the bootstrap node for this domain
 # based on the cluster definition file cluster appears correctly as a
 # node in the databag
-BOOT_FQDN="${BOOTSTRAP_NODE}.${BOOTSTRAP_DOMAIN}"
+BOOT_FQDN="${BOOTSTRAP_NODE}.${BCPC_HYPERVISOR_DOMAIN}"
 echo "BOOT FQDN = ${BOOT_FQDN}"
 MATCH=`knife node list | grep $BOOT_FQDN`
 if [[ ! -z "$MATCH" ]]; then
@@ -63,8 +63,8 @@ knife data bag delete --yes configs
 
 echo "Removing clients and nodes..."
 for CLIENT in $CLUSTER_MEMBERS; do
-    knife client delete --yes "${CLIENT}.${BOOTSTRAP_DOMAIN}"
-    knife node   delete --yes "${CLIENT}.${BOOTSTRAP_DOMAIN}"
+    knife client delete --yes "${CLIENT}.${BCPC_HYPERVISOR_DOMAIN}"
+    knife node   delete --yes "${CLIENT}.${BCPC_HYPERVISOR_DOMAIN}"
 done
 
 echo "reload knife data..."
