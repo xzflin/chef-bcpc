@@ -252,6 +252,29 @@ end
     end
   end
 end
-    
+
+bash "create-ceph-cinder-user" do
+  user "root"
+  code "ceph auth get-or-create client.cinder mon 'allow r' osd 'allow class-read object_prefix rbd_children, allow rwx pool=volumes, allow rwx pool=vms, allow rx pool=images'"
+  not_if "ceph auth get client.cinder"
+end
+
+bash "create-ceph-glance-user" do
+  user "root"
+  code "ceph auth get-or-create client.glance mon 'allow r' osd 'allow class-read object_prefix rbd_children, allow rwx pool=images'"
+  not_if "ceph auth get client.glance"
+end
+
+bash "create-ceph-cinder-keyring" do
+  user "root"
+  code "ceph auth get-or-create client.cinder  > /etc/ceph/ceph.client.cinder.keyring"
+  not_if "test -f  /etc/ceph/ceph.client.cinder.keyring"
+end
+
+bash "create-ceph-glance-keyring" do
+  user "root"
+  code "ceph auth get-or-create client.glance  > /etc/ceph/ceph.client.glance.keyring"
+  not_if "test -f  /etc/ceph/ceph.client.glance.keyring"
+end
 
 include_recipe "bcpc::ceph-work"

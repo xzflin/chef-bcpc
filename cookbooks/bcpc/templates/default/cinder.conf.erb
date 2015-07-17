@@ -84,9 +84,12 @@ signing_dir = /var/lib/cinder
 [<%= type.upcase %>]
 volume_driver=cinder.volume.drivers.rbd.RBDDriver
 volume_backend_name=<%= type.upcase %>
-rbd_user=admin
+rbd_user=cinder
 rbd_pool=<%="#{node['bcpc']['ceph']['volumes']['name']}-#{type}"%>
 rbd_secret_uuid=<%=get_config('libvirt-secret-uuid')%>
 rbd_flatten_volume_from_snapshot=False
 rbd_max_clone_depth=5
+rbd_store_chunk_size = 4
+rados_connect_timeout = -1
+glance_api_version = 2
 <% end -%>

@@ -132,6 +132,9 @@ bash "glance-database-sync" do
     notifies :restart, "service[glance-registry]", :immediately
 end
 
+# Note, glance connects to ceph using client.glance, but we have already generated
+# the key for that in ceph-head.rb, so by now we should have it in /etc/ceph/ceph.client.glance.key
+
 bash "create-glance-rados-pool" do
     user "root"
     optimal = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['images']['replicas']*node['bcpc']['ceph']['images']['portion']/100)

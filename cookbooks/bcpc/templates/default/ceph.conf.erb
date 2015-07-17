@@ -40,12 +40,25 @@
     osd mon report interval min = 30
 <% end %>
 
-[client]
+[client.admin]
+    # dont want the admin client creating sockets/logs
+    admin socket = 
+    log file = 
+
+[client.cinder]
     rbd cache = true
     rbd cache writethrough until flush = true
     admin socket = /var/run/ceph/$cluster-$type.$id.$pid.$cctid.asok # must be writable by QEMU and allowed by SELinux or AppArmor
     log file = /var/log/qemu/qemu-guest-$pid.log
+    rbd concurrent management ops = 20
 
+[client.glance]
+    rbd cache = true
+    rbd cache writethrough until flush = true
+    admin socket = /var/run/ceph/$cluster-$type.$id.$pid.$cctid.asok # must be writable by QEMU and allowed by SELinux or AppArmor
+    log file = /var/log/qemu/qemu-guest-$pid.log
+    rbd concurrent management ops = 20
+    
 [client.radosgw.gateway]
     host = <%=node['hostname']%>
     keyring = /var/lib/ceph/radosgw/$cluster-$id/keyring

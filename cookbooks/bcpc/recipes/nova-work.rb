@@ -164,9 +164,9 @@ end
 
 ruby_block 'load-virsh-keys' do
     block do
-        %x[ ADMIN_KEY=`ceph --name mon. --keyring /etc/ceph/ceph.mon.keyring auth get-or-create-key client.admin`
+        %x[ CINDER_KEY=`ceph --name mon. --keyring /etc/ceph/ceph.mon.keyring auth get-or-create-key client.cinder`
             virsh secret-define --file /etc/nova/virsh-secret.xml
-            virsh secret-set-value --secret #{get_config('libvirt-secret-uuid')} --base64 "$ADMIN_KEY"
+            virsh secret-set-value --secret #{get_config('libvirt-secret-uuid')} --base64 "$CINDER_KEY"
         ]
     end
     not_if { system "virsh secret-list | grep -i #{get_config('libvirt-secret-uuid')} >/dev/null" }
