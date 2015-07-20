@@ -19,7 +19,11 @@ default['bcpc']['libvirt-bin']['ulimit']['nofile'] = 4096
 # Region name for this cluster
 default['bcpc']['region_name'] = node.chef_environment
 # Domain name for this cluster (used in many configs)
-default['bcpc']['domain_name'] = "bcpc.example.com"
+default['bcpc']['cluster_domain'] = "bcpc.example.com"
+# Hypervisor domain (domain used by actual machines)
+default['bcpc']['hypervisor_domain'] = "hypervisor-bcpc.example.com"
+# Key if Cobalt+VMS is to be used
+default['bcpc']['vms_key'] = nil
 
 ###########################################
 #
@@ -124,8 +128,8 @@ default['bcpc']['ceph']['hdd']['ruleset'] = 2
 
 # If you are about to make a big change to the ceph cluster
 # setting to true will reduce the load form the resulting
-# ceph rebalance and keep things operational. 
-# See wiki for further details. 
+# ceph rebalance and keep things operational.
+# See wiki for further details.
 default['bcpc']['ceph']['rebalance'] = false
 
 # Set the default niceness of Ceph OSD and monitor processes
@@ -240,7 +244,7 @@ default['bcpc']['admin_tenant'] = "AdminTenant"
 default['bcpc']['admin_role'] = "Admin"
 default['bcpc']['member_role'] = "Member"
 default['bcpc']['admin_email'] = "admin@localhost.com"
- 
+
 default['bcpc']['zabbix']['user'] = "zabbix"
 default['bcpc']['zabbix']['group'] = "adm"
 
@@ -510,7 +514,7 @@ default['bcpc']['keystone']['policy'] = {
 #
 # Over-allocation settings. Set according to your cluster
 # SLAs. Default is to not allow over allocation of memory
-# a slight over allocation of CPU (x2). 
+# a slight over allocation of CPU (x2).
 default['bcpc']['nova']['ram_allocation_ratio'] = 1.0
 default['bcpc']['nova']['reserved_host_memory_mb'] = 1024
 default['bcpc']['nova']['cpu_allocation_ratio'] = 2.0
@@ -531,8 +535,8 @@ default['bcpc']['nova']['quota'] = {
   "instances" => 10,
   "ram" => 51200
 }
-# load a custom vendor driver, 
-# e.g. "nova.api.metadata.bcpc_metadata.BcpcMetadata", 
+# load a custom vendor driver,
+# e.g. "nova.api.metadata.bcpc_metadata.BcpcMetadata",
 # comment out to use default
 #default['bcpc']['vendordata_driver'] = "nova.api.metadata.bcpc_metadata.BcpcMetadata"
 
@@ -1245,9 +1249,10 @@ default['bcpc']['cpupower']['ondemand_up_threshold'] = nil
 ###########################################
 #
 # List of monitoring clients external to cluster that we are monitoring
-default['bcpc']['monitoring']['external_clients'] = [] 
+default['bcpc']['monitoring']['external_clients'] = []
 # Monitoring database settings
 default['bcpc']['monitoring']['mysql']['innodb_buffer_pool_size'] = nil
+
 ###########################################
 #
 # Graphite settings
@@ -1255,7 +1260,7 @@ default['bcpc']['monitoring']['mysql']['innodb_buffer_pool_size'] = nil
 ###########################################
 #
 # Graphite Server FQDN
-default['bcpc']['graphite']['fqdn'] = "graphite.#{node['bcpc']['domain_name']}"
+default['bcpc']['graphite']['fqdn'] = "graphite.#{node['bcpc']['cluster_domain']}"
 #
 # Default retention rates
 # http://graphite.readthedocs.org/en/latest/config-carbon.html#storage-schemas-conf
@@ -1316,14 +1321,14 @@ default['bcpc']['flavors'] = {
     "m1.small"  => {
       "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
     },
-    "m1.medium"  => { 
+    "m1.medium"  => {
       "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
     },
     "m1.large"  => {
       "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
     },
     "m1.xlarge"  => {
-      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"} 
+      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
     }
 }
 
@@ -1349,7 +1354,7 @@ default['bcpc']['aggregate_membership'] = []
 #
 default['bcpc']['zabbix']['discovery']['delay'] = 600
 default['bcpc']['zabbix']['discovery']['ip_ranges'] = [node['bcpc']['management']['cidr']]
-default['bcpc']['zabbix']['fqdn'] = "zabbix.#{node['bcpc']['domain_name']}"
+default['bcpc']['zabbix']['fqdn'] = "zabbix.#{node['bcpc']['cluster_domain']}"
 default['bcpc']['zabbix']['storage_retention'] = 7
 ###########################################
 #
@@ -1358,7 +1363,7 @@ default['bcpc']['zabbix']['storage_retention'] = 7
 ###########################################
 #
 # Kibana Server FQDN
-default['bcpc']['kibana']['fqdn'] = "kibana.#{node['bcpc']['domain_name']}"
+default['bcpc']['kibana']['fqdn'] = "kibana.#{node['bcpc']['cluster_domain']}"
 ###########################################
 #
 # Elasticsearch settings

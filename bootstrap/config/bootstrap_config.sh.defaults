@@ -8,7 +8,7 @@ export BCPC_VM_DIR=$HOME/BCPC-VMs
 
 # Sets the domain name to use. Note that this must also be set independently in
 # the Chef environment file.
-export BOOTSTRAP_DOMAIN=bcpc.example.com
+export BCPC_HYPERVISOR_DOMAIN=hypervisor-bcpc.example.com
 
 # Sets the name of the Chef environment to use. It is expected that the name of the
 # environment will match a .json file in the environments/ directory and that the name
@@ -33,7 +33,7 @@ export BOOTSTRAP_ADDITIONAL_CACERTS_DIR=
 # Sets the location to use as the cache directory for downloaded files.
 export BOOTSTRAP_CACHE_DIR=$HOME/.bcpc-cache
 
-# Sets an optional URL to be used as an apt mirror instead of the 
+# Sets an optional URL to be used as an apt mirror instead of the
 # defaults. Note that you must also configure repositories in the Chef environment
 # independently so that recipes will use the appropriate mirrors (see
 # environments/repository_template.json for a template to put your own mirror paths into).

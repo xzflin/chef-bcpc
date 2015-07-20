@@ -15,5 +15,5 @@ iface <%= @interface %> inet static
 <% end %>
 <% if @dns %>
  dns-nameservers <%= @dns.join(' ') %>
- dns-search <%=node['bcpc']['domain_name']%>
+ dns-search <%=node['bcpc']['hypervisor_domain']%>
 <% end %>

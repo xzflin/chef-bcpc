@@ -71,4 +71,4 @@
     rgw keystone revocation interval = 1200
     rgw s3 auth use keystone = true
 <% end %>
-    rgw dns name = s3.<%=node['bcpc']['domain_name'] %>
+    rgw dns name = s3.<%=node['bcpc']['cluster_domain'] %>

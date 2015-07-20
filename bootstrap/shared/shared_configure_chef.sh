@@ -4,7 +4,7 @@ set -e
 
 . $REPO_ROOT/bootstrap/shared/shared_functions.sh
 
-REQUIRED_VARS=( BOOTSTRAP_CHEF_DO_CONVERGE BOOTSTRAP_CHEF_ENV BOOTSTRAP_DOMAIN FILECACHE_MOUNT_POINT REPO_MOUNT_POINT REPO_ROOT )
+REQUIRED_VARS=( BOOTSTRAP_CHEF_DO_CONVERGE BOOTSTRAP_CHEF_ENV BCPC_HYPERVISOR_DOMAIN FILECACHE_MOUNT_POINT REPO_MOUNT_POINT REPO_ROOT )
 check_for_envvars ${REQUIRED_VARS[@]}
 
 # This script does a lot of stuff:
@@ -32,7 +32,7 @@ do_on_node bootstrap "sudo dpkg -i \$(find $FILECACHE_MOUNT_POINT/ -name chef-se
   && sudo dpkg -i \$(find $FILECACHE_MOUNT_POINT/ -name chef_\*deb -not -name \*downloaded | tail -1)"
 
 # configure knife on the bootstrap node and perform a knife bootstrap to create the bootstrap node in Chef
-do_on_node bootstrap "mkdir -p \$HOME/.chef && echo -e \"chef_server_url 'https://bcpc-bootstrap.$BOOTSTRAP_DOMAIN/organizations/bcpc'\\\nvalidation_client_name 'bcpc-validator'\\\nvalidation_key '/etc/opscode/bcpc-validator.pem'\\\nnode_name 'admin'\\\nclient_key '/etc/opscode/admin.pem'\\\nknife['editor'] = 'vim'\\\ncookbook_path [ \\\"#{ENV['HOME']}/chef-bcpc/cookbooks\\\" ]\" > \$HOME/.chef/knife.rb \
+do_on_node bootstrap "mkdir -p \$HOME/.chef && echo -e \"chef_server_url 'https://bcpc-bootstrap.$BCPC_HYPERVISOR_DOMAIN/organizations/bcpc'\\\nvalidation_client_name 'bcpc-validator'\\\nvalidation_key '/etc/opscode/bcpc-validator.pem'\\\nnode_name 'admin'\\\nclient_key '/etc/opscode/admin.pem'\\\nknife['editor'] = 'vim'\\\ncookbook_path [ \\\"#{ENV['HOME']}/chef-bcpc/cookbooks\\\" ]\" > \$HOME/.chef/knife.rb \
   && $KNIFE ssl fetch \
   && $KNIFE bootstrap -x vagrant -P vagrant --sudo 10.0.100.3"
 
@@ -78,20 +78,20 @@ done
 # augment the previously configured nodes with our newly uploaded environments and roles
 ENVIRONMENT_SET=""
 for vm in bootstrap $vms $mon_vms; do
-  ENVIRONMENT_SET="$ENVIRONMENT_SET $KNIFE node environment set bcpc-$vm.$BOOTSTRAP_DOMAIN $BOOTSTRAP_CHEF_ENV && "
+  ENVIRONMENT_SET="$ENVIRONMENT_SET $KNIFE node environment set bcpc-$vm.$BCPC_HYPERVISOR_DOMAIN $BOOTSTRAP_CHEF_ENV && "
 done
 ENVIRONMENT_SET="$ENVIRONMENT_SET :"
 do_on_node bootstrap $ENVIRONMENT_SET
 
-do_on_node bootstrap "$KNIFE node run_list set bcpc-bootstrap.$BOOTSTRAP_DOMAIN 'role[BCPC-Bootstrap]' \
-  && $KNIFE node run_list set bcpc-vm1.$BOOTSTRAP_DOMAIN 'role[BCPC-Headnode]' \
-  && $KNIFE node run_list set bcpc-vm2.$BOOTSTRAP_DOMAIN 'role[BCPC-Worknode]' \
-  && $KNIFE node run_list set bcpc-vm3.$BOOTSTRAP_DOMAIN 'role[BCPC-Worknode]'"
+do_on_node bootstrap "$KNIFE node run_list set bcpc-bootstrap.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Bootstrap]' \
+  && $KNIFE node run_list set bcpc-vm1.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Headnode]' \
+  && $KNIFE node run_list set bcpc-vm2.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Worknode]' \
+  && $KNIFE node run_list set bcpc-vm3.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Worknode]'"
 
 # generate actor map and set bootstrap, vm1 and mon vms (if any) as admins so that they can write into the data bag
 ADMIN_SET="cd \$HOME && $KNIFE actor map && "
 for vm in bootstrap vm1 $mon_vms; do
-  ADMIN_SET="$ADMIN_SET $KNIFE group add actor admins bcpc-$vm.$BOOTSTRAP_DOMAIN && "
+  ADMIN_SET="$ADMIN_SET $KNIFE group add actor admins bcpc-$vm.$BCPC_HYPERVISOR_DOMAIN && "
 done
 ADMIN_SET="$ADMIN_SET :"
 do_on_node bootstrap $ADMIN_SET
@@ -101,7 +101,7 @@ do_on_node bootstrap $ADMIN_SET
 # Otherwise, each mon VM needs to complete chef run first before setting the next node's run_list.
 if [[ $BOOTSTRAP_CHEF_DO_CONVERGE -eq 0 ]]; then
   for vm in $mon_vms; do
-    do_on_node bootstrap "$KNIFE node run_list set bcpc-$vm.$BOOTSTRAP_DOMAIN 'role[BCPC-Monitoring]'"
+    do_on_node bootstrap "$KNIFE node run_list set bcpc-$vm.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Monitoring]'"
   done
   echo "BOOTSTRAP_CHEF_DO_CONVERGE is set to 0, skipping automatic convergence."
   exit 0
@@ -119,7 +119,7 @@ else
   done
   # Run chef on each mon VM before assigning next node for monitoring.
   for vm in $mon_vms; do
-    do_on_node bootstrap "$KNIFE node run_list set bcpc-$vm.$BOOTSTRAP_DOMAIN 'role[BCPC-Monitoring]'"
+    do_on_node bootstrap "$KNIFE node run_list set bcpc-$vm.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Monitoring]'"
     do_on_node $vm "sudo chef-client"
   done
   # Run chef on each mon VM except the last node to update cluster components
