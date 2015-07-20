@@ -25,6 +25,7 @@ if node['bcpc']['enabled']['logging'] then
         uri node['bcpc']['repos']['fluentd']
         distribution node['lsb']['codename']
         components ["contrib"]
+        arch "amd64"
         key "fluentd.key"
     end
 
