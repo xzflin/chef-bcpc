@@ -162,6 +162,11 @@ bash "set-nova-user-shell" do
     not_if "grep nova /etc/passwd | grep /bin/bash"
 end
 
+template "/etc/ceph/ceph.client.cinder.keyring" do
+  source "ceph-client-cinder-keyring.erb"
+  mode "00644"
+end
+  
 ruby_block 'load-virsh-keys' do
     block do
         %x[ CINDER_KEY=`ceph --name mon. --keyring /etc/ceph/ceph.mon.keyring auth get-or-create-key client.cinder`
@@ -193,6 +198,17 @@ bash "libvirt-device-acls" do
     EOH
     not_if "grep -e '^cgroup_device_acl' /etc/libvirt/qemu.conf"
     notifies :restart, "service[libvirt-bin]", :delayed
+end
+
+# we have to adjust apparmor to allow qemu to write rbd logs/sockets
+service "apparmor" do
+  action :nothing
+end
+  
+template "/etc/apparmor.d/abstractions/libvirt-qemu" do
+  source "apparmor-libvirt-qemu.erb"
+  notifies :restart, "service[libvirt-bin]", :delayed
+  notifies :restart, "service[apparmor]", :delayed
 end
 
 if node['bcpc']['virt_type'] == "kvm" then

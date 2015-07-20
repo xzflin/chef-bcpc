@@ -271,10 +271,25 @@ bash "create-ceph-cinder-keyring" do
   not_if "test -f  /etc/ceph/ceph.client.cinder.keyring"
 end
 
+ruby_block "store-cinder-ceph-key" do
+  block do
+    make_config("cinder-ceph-key", `ceph auth get-key client.cinder`)
+  end
+  only_if "test -f  /etc/ceph/ceph.client.cinder.keyring"
+end
+
 bash "create-ceph-glance-keyring" do
   user "root"
   code "ceph auth get-or-create client.glance  > /etc/ceph/ceph.client.glance.keyring"
   not_if "test -f  /etc/ceph/ceph.client.glance.keyring"
 end
+
+ruby_block "store-glance-ceph-key" do
+  block do
+    make_config("glance-ceph-key", `ceph auth get-key client.glance`)
+  end
+  only_if "test -f  /etc/ceph/ceph.client.glance.keyring"
+end
+
 
 include_recipe "bcpc::ceph-work"

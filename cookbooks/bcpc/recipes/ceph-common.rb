@@ -77,6 +77,25 @@ template '/etc/ceph/ceph.conf' do
     variables(:servers => get_head_nodes)
 end
 
+directory "/var/run/ceph/" do  
+  owner "root"
+  group "root"
+  mode  "0755"  
+end
+
+directory "/var/run/ceph/guests/" do  
+  owner "libvirt-qemu"
+  group "libvirtd"
+  mode  "0755"  
+end
+
+directory "/var/log/qemu/" do
+  owner "libvirt-qemu"
+  group "libvirtd"
+  mode  "0755"  
+
+end 
+
 bcpc_cephconfig 'paxos_propose_interval' do  
   value node["bcpc"]["ceph"]["rebalance"] ? "60" : "1"
   target "ceph-*"
