@@ -104,7 +104,7 @@ File.open("/tmp/openssl.cnf", 'w') {|f| f.write(ssl_conf)}
     <% key = OpenSSL::PKey::RSA.new 2048; pubkey = "#{key.ssh_type} #{[ key.to_blob ].pack('m0')}" %>
     "ssh-private-key": "<%="#{key.to_pem.gsub(/\n/,'\n')}"%>",
     "ssh-public-key": "<%="#{pubkey.gsub(/\n/,'')}"%>",
-    <% temp = %x[openssl req -config /tmp/openssl.cnf -extensions v3_req -new -x509 -passout pass:temp_passwd -newkey rsa:4096 -out /dev/stdout -keyout /dev/stdout -days 1095 -subj "/C=#{node['bcpc']['country']}/ST=#{node['bcpc']['state']}/L=#{node['bcpc']['location']}/O=#{node['bcpc']['organization']}/OU=#{node['bcpc']['region_name']}/CN=#{node['bcpc']['cluster_domain']}/emailAddress=#{node['bcpc']['admin_email']}"] %>
+    <% temp = %x[openssl req -config /tmp/openssl.cnf -extensions v3_req -new -x509 -passout pass:temp_passwd -newkey rsa:4096 -out /dev/stdout -keyout /dev/stdout -days 1095 -subj "/C=#{node['bcpc']['country']}/ST=#{node['bcpc']['state']}/L=#{node['bcpc']['location']}/O=#{node['bcpc']['organization']}/OU=#{node['bcpc']['region_name']}/CN=openstack.#{node['bcpc']['cluster_domain']}/emailAddress=#{node['bcpc']['admin_email']}"] %>
     "ssl-certificate": "<%="#{%x[echo "#{temp}" | openssl x509].gsub(/\n/,'\n')}"%>",
     "ssl-private-key": "<%="#{%x[echo "#{temp}" | openssl rsa -passin pass:temp_passwd -out /dev/stdout].gsub(/\n/,'\n')}"%>",
     "zabbix-admin-password": "<%="#{secure_password}"%>",
