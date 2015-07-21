@@ -85,3 +85,5 @@ $REPO_ROOT/bootstrap/shared/shared_configure_chef.sh
 
 # Dump out useful information for users.
 $REPO_ROOT/bootstrap/vagrant_scripts/vagrant_print_useful_info.sh
+
+echo "Finished in $SECONDS seconds"
