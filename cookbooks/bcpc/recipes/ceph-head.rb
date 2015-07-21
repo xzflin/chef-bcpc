@@ -255,7 +255,7 @@ end
 
 bash "create-ceph-cinder-user" do
   user "root"
-  code "ceph auth get-or-create client.cinder mon 'allow r' osd 'allow class-read object_prefix rbd_children, allow rwx pool=volumes, allow rwx pool=vms, allow rx pool=images'"
+  code "ceph auth get-or-create client.cinder mon 'allow r' osd 'allow class-read object_prefix rbd_children, allow rwx pool=volumes-ssd,allow rwx pool=volumes-hdd, allow rwx pool=vms, allow rx pool=images'"
   not_if "ceph auth get client.cinder"
 end
 
