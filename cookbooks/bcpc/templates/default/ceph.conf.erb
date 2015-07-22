@@ -61,7 +61,9 @@
     # For Apache
     rgw socket path = /var/lib/ceph/radosgw/rgw_fcgi.sock
 <% end %>
-    debug rgw = 0/0
+    # Increased to 1 to log HTTP return codes
+    # http://tracker.ceph.com/issues/12432
+    debug rgw = 1/0
 
 <% if config_defined('keystone-admin-token') %>
     rgw keystone url = <%=node['bcpc']['management']['vip']%>:35358
