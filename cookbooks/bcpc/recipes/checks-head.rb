@@ -4,7 +4,7 @@ include_recipe "bcpc::checks-common"
     template  "/usr/local/etc/checks/#{cc}.yml" do
         source "checks/#{cc}.yml.erb"
         owner "root"
-        group "zabbix"
+        group "root"
         mode 00640
     end
 
@@ -19,7 +19,7 @@ if node['bcpc']['enabled']['monitoring'] then
     %w{ nova rgw }.each do |cc|
         cron "check-#{cc}" do
             home "/var/lib/zabbix"
-            user "zabbix"
+            user "root"
             minute "*/10"
             path "/usr/local/bin:/usr/bin:/bin"
             command "zabbix_sender -c /etc/zabbix/zabbix_agentd.conf --key 'check.#{cc}' --value `check -f timeonly #{cc}` 2>&1 | /usr/bin/logger -p local0.notice"
