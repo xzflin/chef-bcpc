@@ -140,15 +140,27 @@ if node['bcpc']['enabled']['monitoring'] then
     end
 
     file "/etc/php5/apache2/conf.d/zabbix.ini" do
-        user "root"
+        action :delete
+        notifies :restart, "service[apache2]", :delayed
+    end
+
+    template "/etc/zabbix/apache.conf" do
+        source "apache-zabbix-global.conf.erb"
+        owner "root"
         group "root"
         mode 00644
-        content <<-EOH
-            post_max_size = 16M
-            max_execution_time = 300
-            max_input_time = 300
-            date.timezone = America/New_York
+        variables(
+            :php_settings => node['bcpc']['zabbix']['php_settings']
+        )
+        notifies :restart, "service[apache2]", :delayed
+    end
+
+    bash "apache-enable-zabbix-global-conf" do
+        user "root"
+        code <<-EOH
+             a2enconf zabbix
         EOH
+        not_if "test -r /etc/apache2/conf-enabled/zabbix.conf"
         notifies :restart, "service[apache2]", :delayed
     end
 

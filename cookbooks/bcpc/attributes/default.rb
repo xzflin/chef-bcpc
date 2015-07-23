@@ -1356,6 +1356,14 @@ default['bcpc']['zabbix']['discovery']['delay'] = 600
 default['bcpc']['zabbix']['discovery']['ip_ranges'] = [node['bcpc']['management']['cidr']]
 default['bcpc']['zabbix']['fqdn'] = "zabbix.#{node['bcpc']['cluster_domain']}"
 default['bcpc']['zabbix']['storage_retention'] = 7
+default['bcpc']['zabbix']['php_settings'] = {
+    'max_execution_time' => 300,
+    'memory_limit' => '256M',
+    'post_max_size' => '16M',
+    'upload_max_filesize' => '2M',
+    'max_input_time' => 300,
+    'date.timezone' => 'America/New_York'
+}
 ###########################################
 #
 # Kibana settings
