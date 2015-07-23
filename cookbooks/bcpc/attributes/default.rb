@@ -1068,7 +1068,7 @@ default['bcpc']['glance']['policy'] = {
   "context_is_admin" => "role:admin",
   "default" => "",
 
-  "add_image" => "",
+  "add_image" => "role:admin",
   "delete_image" => "",
   "get_image" => "",
   "get_images" => "",
@@ -1077,7 +1077,7 @@ default['bcpc']['glance']['policy'] = {
   "copy_from" => "",
 
   "download_image" => "",
-  "upload_image" => "",
+  "upload_image" => "role:admin",
 
   "delete_image_location" => "",
   "get_image_location" => "",
