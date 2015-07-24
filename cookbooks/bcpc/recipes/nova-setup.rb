@@ -38,6 +38,16 @@ bash "nova-configure-default-secgroup-rules" do
     not_if ". /root/adminrc; nova secgroup-list-default-rules | grep icmp"
 end
 
+bash "nova-apply-default-secgroup-rules" do
+    user "root"
+    code <<-EOH
+        . /root/adminrc
+        nova secgroup-add-rule default icmp -1 -1 0.0.0.0/0
+        nova secgroup-add-rule default tcp  22 22 0.0.0.0/0
+    EOH
+    not_if ". /root/adminrc; nova secgroup-list-rules default | grep icmp"
+end
+
 bash "nova-floating-add" do
     user "root"
     code <<-EOH
