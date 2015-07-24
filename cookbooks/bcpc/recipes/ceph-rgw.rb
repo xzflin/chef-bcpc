@@ -22,6 +22,7 @@
 #to manually provision accounts for RGW in the radosgw-admin tool
 
 include_recipe "bcpc::apache2"
+include_recipe "bcpc::ceph-work"
 
 package "radosgw" do
     action :install

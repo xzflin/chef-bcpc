@@ -291,5 +291,4 @@ ruby_block "store-glance-ceph-key" do
   only_if "test -f  /etc/ceph/ceph.client.glance.keyring"
 end
 
-
-include_recipe "bcpc::ceph-work"
+include_recipe "bcpc::ceph-osd"

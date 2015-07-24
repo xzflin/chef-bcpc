@@ -1,5 +1,5 @@
 {
-    "name": "BCPC-Compute",
+    "name": "BCPC-Ephemeral",
     "json_class": "Chef::Role",
     "run_list": [
       "role[Basic]",
@@ -9,20 +9,17 @@
       "recipe[bcpc::networking-link-test]",
       "recipe[bcpc::networking-gw-test]",
       "recipe[bcpc::networking-route-test]",
+      "recipe[bcpc::lvm]",
       "recipe[bcpc::ceph-work]",
-      "recipe[bcpc::ceph-osd]",
       "recipe[bcpc::nova-work]",
-      "role[BCPC-Rgwnode]",
       "recipe[bcpc::diamond]",
       "recipe[bcpc::fluentd]",
       "recipe[bcpc::tpm]",
-      "recipe[bcpc::flavors]",
       "recipe[bcpc::host-aggregates]",
       "recipe[bcpc::checks-work]",
-      "recipe[bcpc::zabbix-agent]",
-      "recipe[bcpc::host-aggregates]"
+      "recipe[bcpc::zabbix-agent]"
     ],
-    "description": "Run list for a general compute function. Building block, not designed as an applied role.",
+    "description": "Run list for a general ephemeral compute function. Building block, not designed as an applied role.",
     "chef_type": "role"
 }
 

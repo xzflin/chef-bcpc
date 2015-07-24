@@ -534,6 +534,9 @@ default['bcpc']['nova']['debug'] = false
 # Nova scheduler default filters
 default['bcpc']['nova']['scheduler_default_filters'] = ['AggregateInstanceExtraSpecsFilter', 'RetryFilter', 'AvailabilityZoneFilter', 'RamFilter', 'ComputeFilter', 'ComputeCapabilitiesFilter', 'ImagePropertiesFilter', 'ServerGroupAntiAffinityFilter', 'ServerGroupAffinityFilter']
 
+default['bcpc']['nova']['ephemeral'] = false
+
+
 default['bcpc']['nova']['quota'] = {
   "cores" => 4,
   "floating_ips" => 10,
@@ -1327,6 +1330,13 @@ default['bcpc']['flavors'] = {
     "m1.tiny"  => {
       "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
     },
+    "e1.tiny"  => {
+      "vcpus" => 1,
+      "memory_mb" => 512,
+      "disk_gb" => 1,
+      "ephemeral_gb" => 5,     
+      "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
+    },
     "m1.small"  => {
       "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
     },
@@ -1350,6 +1360,10 @@ default['bcpc']['flavors'] = {
 default['bcpc']['host_aggregates'] = {
     "general_compute" => {
       "general_compute" => "yes"
+    },
+    "ephemeral_compute" => {
+      "general_compute" => "no",
+      "ephemeral_compute" => "yes"
     }
 }
 
