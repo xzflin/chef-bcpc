@@ -23,8 +23,7 @@ VER_REQUESTS_AWS=0.1.6
 VER_GRAPHITE_CARBON=0.9.13
 VER_GRAPHITE_WHISPER=0.9.13
 VER_GRAPHITE_WEB=0.9.13
-# newer versions of Diamond depend upon dh-python which isn't in precise/12.04
-VER_DIAMOND=f33aa2f75c6ea2dfbbc659766fe581e5bfe2476d
+VER_DIAMOND=d6dbab7e9be05201f9109d83157c496dcab7c68b
 VER_ESPLUGIN=9c032b7c628d8da7745fbb1939dcd2db52629943
 
 # Install tools needed for packaging
@@ -63,9 +62,15 @@ if [ ! -f ubuntu-14.04-mini.iso ]; then
 fi
 FILES="ubuntu-14.04-mini.iso $FILES"
 
+# Test if diamond package version is <= 3.x, which implies a BrightCoveOS source
+if [ -f diamond.deb ]; then
+    if [ `dpkg-deb -f diamond.deb Version | cut -b1` -le 3 ]; then
+        rm -f diamond.deb
+    fi
+fi
 # Make the diamond package
 if [ ! -f diamond.deb ]; then
-  cp -r $FILECACHE_MOUNT_POINT/diamond Diamond
+  cp -r $FILECACHE_MOUNT_POINT/python-diamond Diamond
   cd Diamond
   git checkout $VER_DIAMOND
   make builddeb

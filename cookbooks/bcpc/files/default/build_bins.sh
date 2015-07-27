@@ -59,7 +59,7 @@ filecheck() {
 
 # Define the appropriate version of each binary to grab/build
 VER_KIBANA=4.0.2
-VER_DIAMOND=2c0de81281a6750cf06fac760c081f89a088bca4
+VER_DIAMOND=d6dbab7e9be05201f9109d83157c496dcab7c68b
 VER_ESPLUGIN=9c032b7c628d8da7745fbb1939dcd2db52629943
 
 PROXY_INFO_FILE="/home/vagrant/proxy_info.sh"
