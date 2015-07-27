@@ -142,7 +142,7 @@ image_cache_dir = /var/lib/glance/image-cache/
 default_store = rbd
 stores = rbd
 rbd_store_pool = <%=node['bcpc']['ceph']['images']['name']%>
-rbd_store_user = admin
+rbd_store_user = glance
 rbd_store_ceph_conf = /etc/ceph/ceph.conf
 rbd_store_chunk_size = 8
 

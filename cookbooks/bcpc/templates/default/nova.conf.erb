@@ -167,7 +167,7 @@ api_insecure=True
 images_type=rbd
 images_rbd_pool=<%=node['bcpc']['ceph']['vms']['name']%>
 images_rbd_ceph_conf=/etc/ceph/ceph.conf
-rbd_user=admin
+rbd_user=cinder
 rbd_secret_uuid=<%=get_config('libvirt-secret-uuid')%>
 disk_cachemodes="network=writeback"
 # do not allow libvirt to try to inject into the local partition
@@ -178,6 +178,7 @@ inject_partition=-2
 live_migration_flag="VIR_MIGRATE_UNDEFINE_SOURCE,VIR_MIGRATE_PEER2PEER,VIR_MIGRATE_LIVE,VIR_MIGRATE_PERSIST_DEST,VIR_MIGRATE_TUNNELLED"
 virt_type=<%=node['bcpc']['virt_type']%>
 use_virtio_for_bridges=True
+hw_disk_discard = unmap
 
 
 <% unless node["bcpc"]["vendordata_config"].nil? %>
