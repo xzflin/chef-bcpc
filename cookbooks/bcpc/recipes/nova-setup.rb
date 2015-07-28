@@ -28,24 +28,42 @@ bash "wait-for-nova-to-become-operational" do
 end
 
 
-bash "nova-configure-default-secgroup-rules" do
+bash "nova-configure-default-icmp-secgroup-rule" do
     user "root"
     code <<-EOH
         . /root/adminrc
         nova secgroup-add-default-rule icmp -1 -1 0.0.0.0/0
-        nova secgroup-add-default-rule tcp 22 22 0.0.0.0/0
     EOH
     not_if ". /root/adminrc; nova secgroup-list-default-rules | grep icmp"
 end
 
-bash "nova-apply-default-secgroup-rules" do
+bash "nova-configure-default-ssh-secgroup-rule" do
+    user "root"
+    code <<-EOH
+        . /root/adminrc
+        nova secgroup-add-default-rule tcp 22 22 0.0.0.0/0
+    EOH
+    not_if ". /root/adminrc; nova secgroup-list-default-rules | grep tcp | grep 22"
+end
+
+# AdminTenant will already exist, so the above default rules will not
+# have been loaded into that tenancy, so replicate them explicitly
+bash "nova-apply-default-icmp-secgroup-rule" do
     user "root"
     code <<-EOH
         . /root/adminrc
         nova secgroup-add-rule default icmp -1 -1 0.0.0.0/0
-        nova secgroup-add-rule default tcp  22 22 0.0.0.0/0
     EOH
     not_if ". /root/adminrc; nova secgroup-list-rules default | grep icmp"
+end
+
+bash "nova-apply-default-ssh-secgroup-rule" do
+    user "root"
+    code <<-EOH
+        . /root/adminrc
+        nova secgroup-add-rule default tcp  22 22 0.0.0.0/0
+    EOH
+    not_if ". /root/adminrc; nova secgroup-list-rules default | grep tcp | grep 22"
 end
 
 bash "nova-floating-add" do
