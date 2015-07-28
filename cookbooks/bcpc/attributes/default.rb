@@ -1278,6 +1278,8 @@ default['bcpc']['diamond']['collectors']['rabbitmq']['queues'] = nil
 # Regular expression or list of queues to not report on.
 # If not nil, this overrides "queues".
 default['bcpc']['diamond']['collectors']['rabbitmq']['queues_ignored'] = '.*'
+# List of vhosts to report on. If nil, report none.
+default['bcpc']['diamond']['collectors']['rabbitmq']['vhosts'] = nil
 
 ###########################################
 #
