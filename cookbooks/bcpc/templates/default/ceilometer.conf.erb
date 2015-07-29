@@ -723,7 +723,7 @@ host=<%=node['bcpc']['management']['ip']%>
 
 # Host providing the admin Identity API endpoint (string
 # value)
-auth_host = <%=node['bcpc']['management']['vip']%>
+auth_host = openstack.<%=node['bcpc']['cluster_domain']%>
 
 # Port of the admin Identity API endpoint (integer value)
 auth_port = 35357
