@@ -14,9 +14,9 @@ catalog.<%=node['bcpc']['region_name']%>.object-store.adminURL = http://openstac
 catalog.<%=node['bcpc']['region_name']%>.object-store.internalURL = http://openstack.<%=node['bcpc']['cluster_domain']%>/swift/v1
 catalog.<%=node['bcpc']['region_name']%>.object-store.name = Object Store Service
 
-catalog.<%=node['bcpc']['region_name']%>.image.publicURL = <%=node['bcpc']['protocol']['glance']%>://openstack.<%=node['bcpc']['cluster_domain']%>:9292/v1
-catalog.<%=node['bcpc']['region_name']%>.image.adminURL = <%=node['bcpc']['protocol']['glance']%>://openstack.<%=node['bcpc']['cluster_domain']%>:9292/v1
-catalog.<%=node['bcpc']['region_name']%>.image.internalURL = <%=node['bcpc']['protocol']['glance']%>://openstack.<%=node['bcpc']['cluster_domain']%>:9292/v1
+catalog.<%=node['bcpc']['region_name']%>.image.publicURL = <%=node['bcpc']['protocol']['glance']%>://openstack.<%=node['bcpc']['cluster_domain']%>:9292/v2
+catalog.<%=node['bcpc']['region_name']%>.image.adminURL = <%=node['bcpc']['protocol']['glance']%>://openstack.<%=node['bcpc']['cluster_domain']%>:9292/v2
+catalog.<%=node['bcpc']['region_name']%>.image.internalURL = <%=node['bcpc']['protocol']['glance']%>://openstack.<%=node['bcpc']['cluster_domain']%>:9292/v2
 catalog.<%=node['bcpc']['region_name']%>.image.name = Image Service
 
 catalog.<%=node['bcpc']['region_name']%>.compute.publicURL = <%=node['bcpc']['protocol']['nova']%>://openstack.<%=node['bcpc']['cluster_domain']%>:8774/v1.1/$(tenant_id)s

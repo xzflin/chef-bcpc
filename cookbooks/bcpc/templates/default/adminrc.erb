@@ -11,3 +11,5 @@ export OS_AUTH_URL=<%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node
 export OS_REGION_NAME=<%=@node['bcpc']['region_name']%>
 export OS_NO_CACHE=1
 export OS_CACERT=/etc/ssl/certs/ssl-bcpc.pem
+# both Glance API versions are enabled but prefer v2
+export OS_IMAGE_API_VERSION=2
