@@ -43,6 +43,7 @@ scheduler_default_filters=<%=node['bcpc']['nova']['scheduler_default_filters'].j
 ram_allocation_ratio=<%=node['bcpc']['nova']['ram_allocation_ratio']%>
 reserved_host_memory_mb=<%=node['bcpc']['nova']['reserved_host_memory_mb']%>
 cpu_allocation_ratio=<%=node['bcpc']['nova']['cpu_allocation_ratio']%>
+scheduler_host_subset_size=<%= node['bcpc']['nova']['scheduler_host_subset_size'] %>
 
 # Nova Network settings
 network_manager=nova.network.manager.VlanManager

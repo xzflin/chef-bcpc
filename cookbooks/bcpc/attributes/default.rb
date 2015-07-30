@@ -529,6 +529,8 @@ default['bcpc']['keystone']['policy'] = {
 default['bcpc']['nova']['ram_allocation_ratio'] = 1.0
 default['bcpc']['nova']['reserved_host_memory_mb'] = 1024
 default['bcpc']['nova']['cpu_allocation_ratio'] = 2.0
+# select from between this many equally optimal hosts when launching an instance
+default['bcpc']['nova']['scheduler_host_subset_size'] = 3
 # "workers" parameters in nova are set to number of CPUs
 # available by default. This provides an override.
 default['bcpc']['nova']['workers'] = 5
