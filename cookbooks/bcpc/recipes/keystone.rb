@@ -48,6 +48,14 @@ service "keystone" do
     action [:disable, :stop]
 end
 
+# standalone Keystone service has a window to start up in and create keystone.log with
+# wrong permissions, so ensure it's owned by keystone:keystone
+file "/var/log/keystone/keystone.log" do
+  owner "keystone"
+  group "keystone"
+  notifies :restart, "service[apache2]", :immediately
+end
+
 template "/etc/keystone/keystone.conf" do
     source "keystone.conf.erb"
     owner "keystone"

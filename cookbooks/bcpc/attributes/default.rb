@@ -283,6 +283,8 @@ default['bcpc']['horizon']['disable_panels'] = ['containers']
 #
 ###########################################
 #
+# Defaut log file
+default['bcpc']['keystone']['log_file'] = '/var/log/keystone/keystone.log'
 # Eventlet server is deprecated in Kilo, so by default we
 # serve Keystone via Apache now.
 default['bcpc']['keystone']['eventlet_server'] = false
@@ -312,6 +314,10 @@ default['bcpc']['keystone']['drivers']['policy'] = 'sql'
 default['bcpc']['keystone']['drivers']['revoke'] = 'sql'
 default['bcpc']['keystone']['drivers']['role'] = 'sql'
 default['bcpc']['keystone']['drivers']['trust'] = 'sql'
+# Notifications driver
+default['bcpc']['keystone']['drivers']['notification'] = 'log'
+# Notifications format. See: http://docs.openstack.org/developer/keystone/event_notifications.html
+default['bcpc']['keystone']['notification_format'] = 'cadf'
 # LDAP credentials used by Keystone
 default['bcpc']['ldap']['admin_user'] = nil
 default['bcpc']['ldap']['admin_pass'] = nil

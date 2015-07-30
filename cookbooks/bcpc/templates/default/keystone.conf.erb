@@ -22,7 +22,7 @@ member_role_name=<%= node['bcpc']['member_role'] %>
 #strict_password_check = false
 #secure_proxy_ssl_header = <None>
 #default_publisher_id = <None>
-#notification_format = basic
+notification_format = <%= node['bcpc']['keystone']['notification_format'] %>
 #backdoor_port = <None>
 <% if node['bcpc']['keystone']['debug'] %>
 debug = true
@@ -37,7 +37,11 @@ verbose = false
 #log_config_append = <None>
 #log_format = <None>
 #log_date_format = %Y-%m-%d %H:%M:%S
+<% if node['bcpc']['keystone']['log_file'] %>
+log_file = <%= node['bcpc']['keystone']['log_file'] %>
+<% else %>
 #log_file = <None>
+<% end %>
 #log_dir = <None>
 #use_syslog = false
 #use_syslog_rfc_format = false
@@ -63,7 +67,11 @@ verbose = false
 #matchmaker_heartbeat_freq = 300
 #matchmaker_heartbeat_ttl = 600
 #rpc_thread_pool_size = 64
+<% if node['bcpc']['keystone']['drivers']['notification'] %>
+notification_driver = <%= node['bcpc']['keystone']['drivers']['notification'] %>
+<% else %>
 #notification_driver =
+<% end %>
 #notification_topics = notifications
 #rpc_response_timeout = 60
 #transport_url = <None>
