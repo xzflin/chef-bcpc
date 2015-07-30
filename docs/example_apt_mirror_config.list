@@ -33,6 +33,11 @@ deb http://packages.elasticsearch.org/elasticsearch/1.5/debian stable main
 deb-i386 http://packages.elasticsearch.org/elasticsearch/1.5/debian stable main
 clean http://packages.elasticsearch.org/elasticsearch/1.5/debian
 
+# kibana repository in BCPC
+deb http://packages.elasticsearch.org/kibana/4.1/debian stable main
+deb-i386 http://packages.elasticsearch.org/kibana/4.1/debian stable main
+clean http://packages.elasticsearch.org/kibana/4.1/debian
+
 # ubuntu repository in BCPC
 deb http://mirror.pnl.gov/ubuntu/ trusty main restricted universe multiverse main/debian-installer
 deb http://mirror.pnl.gov/ubuntu/ trusty-security main restricted universe multiverse main/debian-installer
@@ -67,5 +72,5 @@ deb-i386 http://ubuntu-cloud.archive.canonical.com/ubuntu trusty-updates/kilo ma
 clean http://ubuntu-cloud.archive.canonical.com/ubuntu
 
 # zabbix repository in BCPC
-deb http://repo.zabbix.com/zabbix/2.2/ubuntu/ trusty main
-clean http://repo.zabbix.com/zabbix/2.2/ubuntu/
+deb http://repo.zabbix.com/zabbix/2.4/ubuntu/ trusty main
+clean http://repo.zabbix.com/zabbix/2.4/ubuntu/

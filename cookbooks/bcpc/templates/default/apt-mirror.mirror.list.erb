@@ -62,7 +62,7 @@ deb-i386 http://ubuntu-cloud.archive.canonical.com/ubuntu precise-<%= @repo %>/<
 <% end %>
 <% end %>
 
-deb <%= @node['bcpc']['repos']['fluentd'] %> <%= @distro %> contrib
+deb http://packages.treasure-data.com/2/ubuntu/trusty/ trusty contrib
 
 <% end %>
 
@@ -70,11 +70,9 @@ deb <%= @node['bcpc']['repos']['fluentd'] %> <%= @distro %> contrib
 deb http://www.rabbitmq.com/debian testing main
 deb-i386 http://www.rabbitmq.com/debian testing main
 
-# no trusty packages yet (20140529)
-deb http://public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.16/repos/ubuntu12 HDP-UTILS main
-deb http://public-repo-1.hortonworks.com/HDP/ubuntu12/2.x HDP main
-
-deb <%=@node['bcpc']['repos']['elasticsearch']%> stable main
+deb http://packages.elasticsearch.org/elasticsearch/1.5/debian stable main
+deb http://packages.elasticsearch.org/kibana/4.1/debian stable main
+deb http://repo.zabbix.com/zabbix/2.4/ubuntu <%= @distro %>  main
 
 clean http://<%=@node['bcpc']['mirror']['ubuntu']%>
 clean http://ceph.com
@@ -85,5 +83,5 @@ clean http://ubuntu-cloud.archive.canonical.com/ubuntu
 clean http://apt.opscode.com
 clean http://www.rabbitmq.com/debian
 clean http://packages.treasure-data.com
-clean http://public-repo-1.hortonworks.com
 clean http://packages.elasticsearch.org
+clean http://repo.zabbix.com

@@ -231,6 +231,7 @@ default['bcpc']['mirror']['ubuntu-dist'] = ['trusty']
 default['bcpc']['mirror']['ceph-dist'] = ['hammer']
 default['bcpc']['mirror']['os-dist'] = ['kilo']
 default['bcpc']['mirror']['elasticsearch-dist'] = '1.5'
+default['bcpc']['mirror']['kibana-dist'] = '4.1'
 
 ###########################################
 #
