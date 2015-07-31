@@ -233,29 +233,6 @@ if [ ! -f python-carbon_${GRAPHITE_CARBON_VER}_all.deb ] || [ ! -f python-whispe
 fi
 FILES="python-carbon_${GRAPHITE_CARBON_VER}_all.deb python-whisper_${GRAPHITE_WHISPER_VER}_all.deb python-graphite-web_${GRAPHITE_WEB_VER}_all.deb $FILES"
 
-# Build the zabbix packages
-if [ ! -f zabbix-agent.tar.gz ] || [ ! -f zabbix-server.tar.gz ]; then
-    ccurl http://sourceforge.net/projects/zabbix/files/ZABBIX%20Latest%20Stable/2.2.2/zabbix-2.2.2.tar.gz
-    tar zxf zabbix-2.2.2.tar.gz
-    rm -rf /tmp/zabbix-install && mkdir -p /tmp/zabbix-install
-    cd zabbix-2.2.2
-    ./configure --prefix=/tmp/zabbix-install --enable-agent --with-ldap
-    make install
-    tar zcf zabbix-agent.tar.gz -C /tmp/zabbix-install .
-    rm -rf /tmp/zabbix-install && mkdir -p /tmp/zabbix-install
-    ./configure --prefix=/tmp/zabbix-install --enable-server --with-mysql --with-ldap
-    make install
-    cp -a frontends/php /tmp/zabbix-install/share/zabbix/
-    cp database/mysql/* /tmp/zabbix-install/share/zabbix/
-    tar zcf zabbix-server.tar.gz -C /tmp/zabbix-install .
-    rm -rf /tmp/zabbix-install
-    cd ..
-    cp zabbix-2.2.2/zabbix-agent.tar.gz .
-    cp zabbix-2.2.2/zabbix-server.tar.gz .
-    rm -rf zabbix-2.2.2 zabbix-2.2.2.tar.gz
-fi
-FILES="zabbix-agent.tar.gz zabbix-server.tar.gz $FILES"
-
 ## Get some python libs
 if [ ! -f python-requests-aws_0.1.6_all.deb ]; then
     fpm -s python -t deb -v 0.1.6 requests-aws
