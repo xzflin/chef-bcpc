@@ -120,6 +120,8 @@ cinder_ca_certificates_file = /etc/ssl/certs/ssl-bcpc.pem
 <% node['bcpc']['nova']['quota'].each do | key, value| %>
 quota_<%=key%> = <%= value %>
 <% end %>
+max_age = 28800
+until_refresh = 10
 
 [oslo_concurrency]
 lock_path=/var/lock/nova
