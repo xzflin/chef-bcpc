@@ -53,43 +53,29 @@ if node['bcpc']['enabled']['logging'] then
         action :upgrade
     end
 
-    if node['bcpc']['use_bootstrap_v2']
-      fluentd_gems = %w{
-        excon-0.45.3
-        multi_json-1.11.2
-        multipart-post-2.0.0
-        faraday-0.9.1
-        elasticsearch-transport-1.0.12
-        elasticsearch-api-1.0.12
-        elasticsearch-1.0.12
-        fluent-plugin-elasticsearch-0.9.0
-      }
-    
-      fluentd_gems.each do |pkg|
-        cookbook_file "/tmp/#{pkg}.gem" do
-          source "bins/#{pkg}.gem"
-          owner "root"
-          mode 00444
-        end
+    fluentd_gems = %w{
+      excon-0.45.3
+      multi_json-1.11.2
+      multipart-post-2.0.0
+      faraday-0.9.1
+      elasticsearch-transport-1.0.12
+      elasticsearch-api-1.0.12
+      elasticsearch-1.0.12
+      fluent-plugin-elasticsearch-0.9.0
+    }
+  
+    fluentd_gems.each do |pkg|
+      cookbook_file "/tmp/#{pkg}.gem" do
+        source "bins/#{pkg}.gem"
+        owner "root"
+        mode 00444
+      end
 
-        bash "install-#{pkg}" do
-          code "/opt/td-agent/embedded/bin/fluent-gem install --local --no-ri --no-rdoc /tmp/#{pkg}.gem"
-          not_if "/opt/td-agent/embedded/bin/fluent-gem list --local --no-versions | grep #{pkg}$"
-        end
+      bash "install-#{pkg}" do
+        code "/opt/td-agent/embedded/bin/fluent-gem install --local --no-ri --no-rdoc /tmp/#{pkg}.gem"
+        not_if "/opt/td-agent/embedded/bin/fluent-gem list --local --no-versions | grep #{pkg}$"
       end
-    else
-      %w{elasticsearch}.each do |pkg|
-          cookbook_file "/tmp/fluent-plugin-#{pkg}.gem" do
-              source "bins/fluent-plugin-#{pkg}.gem"
-              owner "root"
-              mode 00444
-          end
-          bash "install-fluent-plugin-#{pkg}" do
-              code "/opt/td-agent/embedded/bin/fluent-gem install --local --no-ri --no-rdoc /tmp/fluent-plugin-#{pkg}.gem"
-              not_if "/opt/td-agent/embedded/bin/fluent-gem list --local --no-versions | grep fluent-plugin-#{pkg}$"
-          end
-      end
-    end # if node['bcpc']['use_bootstrap_v2']
+    end
 
     template "/etc/td-agent/td-agent.conf" do
         source "fluentd-td-agent.conf.erb"
