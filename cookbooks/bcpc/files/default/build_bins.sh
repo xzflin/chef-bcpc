@@ -146,22 +146,16 @@ if [ ! -f kibana_${VER_KIBANA}_amd64.deb ]; then
 fi
 FILES="kibana_${VER_KIBANA}_amd64.deb $FILES"
 
-# any pegged gem versions
-REV_elasticsearch="0.9.0"
-
+GEMS=( excon-0.45.3
+       multi_json-1.11.2 multipart-post-2.0.0 faraday-0.9.1
+       elasticsearch-api-1.0.12 elasticsearch-transport-1.0.12
+       elasticsearch-1.0.12 fluent-plugin-elasticsearch-0.9.0 )
 # Grab plugins for fluentd
-for i in elasticsearch; do
-    if [ ! -f fluent-plugin-${i}.gem ]; then
-        PEG=REV_${i}
-        if [[ ! -z ${!PEG} ]]; then
-            VERS="-v ${!PEG}"
-        else
-            VERS=""
-        fi
-        gem fetch $GEM_PROXY fluent-plugin-${i} ${VERS}
-        mv fluent-plugin-${i}-*.gem fluent-plugin-${i}.gem
+for GEM in ${GEMS[@]}; do
+    if [ ! -f $GEM.gem ]; then
+        ccurl https://rubygems.global.ssl.fastly.net/gems/$GEM.gem
     fi
-    FILES="fluent-plugin-${i}.gem $FILES"
+    FILES="$GEM.gem $FILES"
 done
 
 # Fetch the cirros image for testing
