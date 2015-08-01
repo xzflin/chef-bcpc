@@ -41,4 +41,3 @@ bash "write-bootstrap-osd-key" do
     EOH
     not_if "test -f /var/lib/ceph/bootstrap-osd/ceph.keyring"
 end
-
