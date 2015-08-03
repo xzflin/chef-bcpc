@@ -8,7 +8,7 @@
         " hostname={{user `hostname`}}",
         " initrd=initrd.gz",
         " interface=auto",
-        " url=http://{{.HTTPIP}}:{{.HTTPPort}}/ubuntu-14.04.2/preseed.cfg.local-apt",
+        " url=http://{{.HTTPIP}}:{{.HTTPPort}}/ubuntu-14.04.2/preseed.cfg",
         " -- <wait>",
         "<enter>"
       ],
