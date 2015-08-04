@@ -189,15 +189,16 @@ if node['bcpc']['enabled']['monitoring'] then
         notifies :restart, "service[apache2]", :immediate
     end
 
-    directory "/usr/local/lib/python2.7/dist-packages/pyzabbix" do
+    cookbook_file "/tmp/python-pyzabbix_0.7.3_all.deb" do
+        source "bins/python-pyzabbix_0.7.3_all.deb"
         owner "root"
-        mode 00775
+        mode 00444
     end
 
-    cookbook_file "/usr/local/lib/python2.7/dist-packages/pyzabbix/__init__.py" do
-        source "pyzabbix.py"
-        owner "root"
-        mode 00755
+    package "python-pyzabbix" do
+        provider Chef::Provider::Package::Dpkg
+        source "/tmp/python-pyzabbix_0.7.3_all.deb"
+        action :upgrade
     end
 
     cookbook_file "/tmp/zabbix_linux_active_template.xml" do

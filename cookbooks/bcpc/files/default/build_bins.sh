@@ -209,6 +209,16 @@ if [ ! -f pyrabbit-1.0.1.tar.gz ]; then
 fi
 FILES="pyrabbit-1.0.1.tar.gz $FILES"
 
+# Build pyzabbix
+PYZABBIX_VER="0.7.3"
+if [ ! -f python-pyzabbix_${PYZABBIX_VER}_all.deb ]; then
+    ccurl https://pypi.python.org/packages/source/p/pyzabbix/pyzabbix-${PYZABBIX_VER}.tar.gz
+    tar zxf pyzabbix-${PYZABBIX_VER}.tar.gz
+    fpm -s python -t deb -f pyzabbix-${PYZABBIX_VER}/setup.py
+    rm -rf pyzabbix-${PYZABBIX_VER}.tar.gz pyzabbix-${PYZABBIX_VER}
+fi
+FILES="python-pyzabbix_${PYZABBIX_VER}_all.deb $FILES"
+
 # Build graphite packages
 GRAPHITE_CARBON_VER="0.9.13"
 GRAPHITE_WHISPER_VER="0.9.13"
