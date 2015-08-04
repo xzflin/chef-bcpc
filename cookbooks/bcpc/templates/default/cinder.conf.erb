@@ -64,10 +64,10 @@ connection=mysql://<%=get_config('mysql-cinder-user')%>:<%=get_config('mysql-cin
 idle_timeout=3600
 
 [ssl]
-ca_file = /etc/ssl/certs/ssl-bcpc.pem
+# ca_file = /etc/ssl/certs/ssl-bcpc.pem
 
 [keystone_authtoken]
-cafile = /etc/ssl/certs/ssl-bcpc.pem
+# cafile = /etc/ssl/certs/ssl-bcpc.pem
 auth_uri = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:5000/v2.0/
 #auth_host = <%=node['bcpc']['management']['vip']%>
 #auth_port = 35357

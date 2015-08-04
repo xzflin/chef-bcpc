@@ -29,8 +29,7 @@ def openstack_cli
       "--os-username", get_config('keystone-admin-user'),
       "--os-auth-url", "#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:5000/v2.0/",
       "--os-region-name", node['bcpc']['region_name'],
-      "--os-password" , get_config('keystone-admin-password'),
-      "--os-cacert" , "/etc/ssl/certs/ssl-bcpc.pem"]
+      "--os-password" , get_config('keystone-admin-password')]
 end
 
 def nova_cli
@@ -41,8 +40,7 @@ def nova_cli
       "--os-user-name", get_config('keystone-admin-user'),
       "--os-auth-url", "#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:5000/v2.0/",
       "--os-region-name", node['bcpc']['region_name'],
-      "--os-password" , get_config('keystone-admin-password'),
-      "--os-cacert" , "/etc/ssl/certs/ssl-bcpc.pem"]
+      "--os-password" , get_config('keystone-admin-password')]
 end 
 
 action :create do
