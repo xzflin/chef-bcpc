@@ -9,8 +9,8 @@
 [DEFAULT]
 admin_token = <%=get_config('keystone-admin-token')%>
 #compute_port = 8774
-public_endpoint = <%=node['bcpc']['protocol']['keystone']%>://<%=@node["bcpc"]["management"]["vip"]%>:5000/
-admin_endpoint = <%=node['bcpc']['protocol']['keystone']%>://<%=@node["bcpc"]["management"]["vip"]%>:35357/
+public_endpoint = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=@node["bcpc"]["cluster_domain"]%>:5000/
+admin_endpoint = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=@node["bcpc"]["cluster_domain"]%>:35357/
 #max_project_tree_depth = 5
 #max_param_size = 64
 #max_token_size = 8192
@@ -22,7 +22,7 @@ member_role_name=<%= node['bcpc']['member_role'] %>
 #strict_password_check = false
 #secure_proxy_ssl_header = <None>
 #default_publisher_id = <None>
-#notification_format = basic
+notification_format = <%= node['bcpc']['keystone']['notification_format'] %>
 #backdoor_port = <None>
 <% if node['bcpc']['keystone']['debug'] %>
 debug = true
@@ -37,7 +37,11 @@ verbose = false
 #log_config_append = <None>
 #log_format = <None>
 #log_date_format = %Y-%m-%d %H:%M:%S
+<% if node['bcpc']['keystone']['log_file'] %>
+log_file = <%= node['bcpc']['keystone']['log_file'] %>
+<% else %>
 #log_file = <None>
+<% end %>
 #log_dir = <None>
 #use_syslog = false
 #use_syslog_rfc_format = false
@@ -63,7 +67,11 @@ verbose = false
 #matchmaker_heartbeat_freq = 300
 #matchmaker_heartbeat_ttl = 600
 #rpc_thread_pool_size = 64
+<% if node['bcpc']['keystone']['drivers']['notification'] %>
+notification_driver = <%= node['bcpc']['keystone']['drivers']['notification'] %>
+<% else %>
 #notification_driver =
+<% end %>
 #notification_topics = notifications
 #rpc_response_timeout = 60
 #transport_url = <None>
@@ -71,7 +79,7 @@ verbose = false
 #control_exchange = keystone
 
 [assignment]
-driver = keystone.assignment.backends.sql.Assignment
+driver = keystone.assignment.backends.<%= node['bcpc']['keystone']['drivers']['assignment'] %>.Assignment
 
 [auth]
 #methods = external,password,token,oauth1
@@ -110,7 +118,7 @@ memcache_pool_connection_get_timeout = 1
 
 [catalog]
 #template_file = default_catalog.templates
-driver = keystone.catalog.backends.templated.Catalog
+driver = keystone.catalog.backends.<%= node['bcpc']['keystone']['drivers']['catalog'] %>.Catalog
 <% if node['bcpc']['keystone']['enable_caching'] %>
 caching = true
 <% else %>
@@ -120,7 +128,7 @@ cache_time = 3600
 #list_limit = <None>
 
 [credential]
-#driver = keystone.credential.backends.sql.Credential
+driver = keystone.credential.backends.<%= node['bcpc']['keystone']['drivers']['credential'] %>.Credential
 
 [database]
 #sqlite_db = oslo.sqlite
@@ -145,7 +153,7 @@ connection = mysql://<%=get_config('mysql-keystone-user')%>:<%=get_config('mysql
 #db_max_retries = 20
 
 [domain_config]
-#driver = keystone.resource.config_backends.sql.DomainConfig
+driver = keystone.resource.config_backends.<%= node['bcpc']['keystone']['drivers']['domain_config'] %>.DomainConfig
 <% if node['bcpc']['keystone']['enable_caching'] %>
 caching = true
 <% else %>
@@ -154,11 +162,11 @@ caching = false
 cache_time = 300
 
 [endpoint_filter]
-#driver = keystone.contrib.endpoint_filter.backends.sql.EndpointFilter
+driver = keystone.contrib.endpoint_filter.backends.<%= node['bcpc']['keystone']['drivers']['endpoint_filter'] %>.EndpointFilter
 #return_all_endpoints_if_no_filter = true
 
 [endpoint_policy]
-#driver = keystone.contrib.endpoint_policy.backends.sql.EndpointPolicy
+driver = keystone.contrib.endpoint_policy.backends.<%= node['bcpc']['keystone']['drivers']['endpoint_policy'] %>.EndpointPolicy
 
 
 [eventlet_server]
@@ -184,7 +192,7 @@ admin_bind_host = <%=node['bcpc']['management']['ip']%>
 #cert_required = false
 
 [federation]
-#driver = keystone.contrib.federation.backends.sql.Federation
+driver = keystone.contrib.federation.backends.<%= node['bcpc']['keystone']['drivers']['federation'] %>.Federation
 #assertion_prefix =
 #remote_id_attribute = <None>
 #federated_domain_name = Federated
@@ -200,7 +208,7 @@ admin_bind_host = <%=node['bcpc']['management']['ip']%>
 #domain_specific_drivers_enabled = false
 #domain_configurations_from_database = false
 #domain_config_dir = /etc/keystone/domains
-driver = keystone.identity.backends.<%=node['bcpc']['keystone']['backend']%>.Identity
+driver = keystone.identity.backends.<%=node['bcpc']['keystone']['drivers']['identity']%>.Identity
 <% if node['bcpc']['keystone']['enable_caching'] %>
 caching = true
 <% else %>
@@ -211,7 +219,7 @@ cache_time = 600
 #list_limit = <None>
 
 [identity_mapping]
-#driver = keystone.identity.mapping_backends.sql.Mapping
+driver = keystone.identity.mapping_backends.<%= node['bcpc']['keystone']['drivers']['identity_mapping'] %>.Mapping
 #generator = keystone.identity.id_generators.sha256.Generator
 #backward_compatible_ids = true
 
@@ -251,7 +259,7 @@ servers = <%=@servers.map{|x| x['bcpc']['management']['ip'] + ":11211"}.join(','
 #pool_connection_get_timeout = 10
 
 [oauth1]
-#driver = keystone.contrib.oauth1.backends.sql.OAuth1
+driver = keystone.contrib.oauth1.backends.<%= node['bcpc']['keystone']['drivers']['oauth1'] %>.OAuth1
 #request_token_duration = 28800
 #access_token_duration = 86400
 
@@ -324,7 +332,7 @@ servers = <%=@servers.map{|x| x['bcpc']['management']['ip'] + ":11211"}.join(','
 #config_file = keystone-paste.ini
 
 [policy]
-#driver = keystone.policy.backends.sql.Policy
+driver = keystone.policy.backends.<%= node['bcpc']['keystone']['drivers']['policy'] %>.Policy
 #list_limit = <None>
 
 [resource]
@@ -338,7 +346,7 @@ caching = false
 #list_limit = <None>
 
 [revoke]
-#driver = keystone.contrib.revoke.backends.sql.Revoke
+driver = keystone.contrib.revoke.backends.<%= node['bcpc']['keystone']['drivers']['revoke'] %>.Revoke
 #expiration_buffer = 1800
 <% if node['bcpc']['keystone']['enable_caching'] %>
 caching = true
@@ -348,7 +356,7 @@ caching = false
 #cache_time = 3600
 
 [role]
-driver =  keystone.assignment.role_backends.sql.Role
+driver = keystone.assignment.role_backends.<%= node['bcpc']['keystone']['drivers']['role'] %>.Role
 <% if node['bcpc']['keystone']['enable_caching'] %>
 caching = true
 <% else %>
@@ -412,4 +420,4 @@ caching = false
 #enabled = true
 #allow_redelegation = false
 #max_redelegation_count = 3
-#driver = keystone.trust.backends.sql.Trust
+driver = keystone.trust.backends.<%= node['bcpc']['keystone']['drivers']['trust'] %>.Trust

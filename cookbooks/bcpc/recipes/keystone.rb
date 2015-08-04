@@ -31,7 +31,7 @@ ruby_block "initialize-keystone-config" do
         begin
             get_config('keystone-pki-certificate')
         rescue
-            temp = %x[openssl req -new -x509 -passout pass:temp_passwd -newkey rsa:2048 -out /dev/stdout -keyout /dev/stdout -days 1095 -subj "/C=#{node['bcpc']['country']}/ST=#{node['bcpc']['state']}/L=#{node['bcpc']['location']}/O=#{node['bcpc']['organization']}/OU=#{node['bcpc']['region_name']}/CN=keystone.#{node['bcpc']['domain_name']}/emailAddress=#{node['bcpc']['admin_email']}"]
+            temp = %x[openssl req -new -x509 -passout pass:temp_passwd -newkey rsa:2048 -out /dev/stdout -keyout /dev/stdout -days 1095 -subj "/C=#{node['bcpc']['country']}/ST=#{node['bcpc']['state']}/L=#{node['bcpc']['location']}/O=#{node['bcpc']['organization']}/OU=#{node['bcpc']['region_name']}/CN=keystone.#{node['bcpc']['cluster_domain']}/emailAddress=#{node['bcpc']['admin_email']}"]
             make_config('keystone-pki-private-key', %x[echo "#{temp}" | openssl rsa -passin pass:temp_passwd -out /dev/stdout])
             make_config('keystone-pki-certificate', %x[echo "#{temp}" | openssl x509])
         end
@@ -46,6 +46,14 @@ end
 # do not run or try to start standalone keystone service since it is now served by WSGI
 service "keystone" do
     action [:disable, :stop]
+end
+
+# standalone Keystone service has a window to start up in and create keystone.log with
+# wrong permissions, so ensure it's owned by keystone:keystone
+file "/var/log/keystone/keystone.log" do
+  owner "keystone"
+  group "keystone"
+  notifies :restart, "service[apache2]", :immediately
 end
 
 template "/etc/keystone/keystone.conf" do
@@ -86,6 +94,7 @@ template "/etc/keystone/policy.json" do
     owner "keystone"
     group "keystone"
     mode 00600
+    variables(:policy => JSON.pretty_generate(node['bcpc']['keystone']['policy']))
 end
 
 template "/root/adminrc" do

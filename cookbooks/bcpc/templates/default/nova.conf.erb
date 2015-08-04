@@ -33,12 +33,8 @@ enabled_apis=ec2,osapi_compute,metadata
 <% else -%>
 enabled_apis=metadata
 <% end %>
-<% if not node['bcpc']['vms_key'].nil? %>
-osapi_compute_extension=nova.api.openstack.compute.contrib.standard_extensions
-osapi_compute_extension=cobalt.nova.osapi.cobalt_extension.Cobalt_extension
-<% end %>
 <% if not node["bcpc"]["vendordata_driver"].nil? %>
-vendordata_driver = node["bcpc"]["vendordata_driver"].
+vendordata_driver = <%=node["bcpc"]["vendordata_driver"] %>
 <% end %>
 
 # Nova Scheduler
@@ -70,7 +66,7 @@ dhcp_lease_time=<%=node['bcpc']['fixed']['dhcp_lease_time']%>
 send_arp_for_ha=True
 my_ip=<%=node['bcpc']['management']['ip']%>
 routing_source_ip=<%=node['bcpc']['floating']['ip']%>
-dhcp_domain=<%=node['bcpc']['domain_name']%>
+dhcp_domain=<%=node['bcpc']['cluster_domain']%>
 default_availability_zone=<%=node['bcpc']['region_name']%>
 
 # Nova Compute settings
@@ -124,6 +120,8 @@ cinder_ca_certificates_file = /etc/ssl/certs/ssl-bcpc.pem
 <% node['bcpc']['nova']['quota'].each do | key, value| %>
 quota_<%=key%> = <%= value %>
 <% end %>
+max_age = 28800
+until_refresh = 10
 
 [oslo_concurrency]
 lock_path=/var/lock/nova
@@ -147,8 +145,8 @@ ca_file = /etc/ssl/certs/ssl-bcpc.pem
 # Keystone settings
 [keystone_authtoken]
 cafile = /etc/ssl/certs/ssl-bcpc.pem
-auth_uri = <%=node['bcpc']['protocol']['keystone']%>://<%=node['bcpc']['management']['vip']%>:5000/v2.0/
-identity_uri = <%=node['bcpc']['protocol']['keystone']%>://<%=node['bcpc']['management']['vip']%>:35357
+auth_uri = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:5000/v2.0/
+identity_uri = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:35357
 auth_version = v2.0
 admin_tenant_name = <%=node['bcpc']['admin_tenant']%>
 admin_user = <%=get_config('keystone-admin-user')%>
@@ -171,7 +169,7 @@ api_insecure=True
 images_type=rbd
 images_rbd_pool=<%=node['bcpc']['ceph']['vms']['name']%>
 images_rbd_ceph_conf=/etc/ceph/ceph.conf
-rbd_user=admin
+rbd_user=cinder
 rbd_secret_uuid=<%=get_config('libvirt-secret-uuid')%>
 disk_cachemodes="network=writeback"
 # do not allow libvirt to try to inject into the local partition
@@ -182,3 +180,13 @@ inject_partition=-2
 live_migration_flag="VIR_MIGRATE_UNDEFINE_SOURCE,VIR_MIGRATE_PEER2PEER,VIR_MIGRATE_LIVE,VIR_MIGRATE_PERSIST_DEST,VIR_MIGRATE_TUNNELLED"
 virt_type=<%=node['bcpc']['virt_type']%>
 use_virtio_for_bridges=True
+hw_disk_discard = unmap
+
+
+<% unless node["bcpc"]["vendordata_config"].nil? %>
+[metadata]
+<% node['bcpc']['vendordata_config'].sort.each do |k, v| %>
+<%=k %>=<%=v %>
+<% end %>
+<% end %>
+

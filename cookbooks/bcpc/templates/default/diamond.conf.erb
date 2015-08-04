@@ -197,7 +197,10 @@ enabled = True
 enabled = True
 
 [[CephCollector]]
-enabled = True
+enabled = False
+
+[[ElasticSearchCollector]]
+enabled = False
 
 <% if node['bcpc']['virt_type'] == "kvm" -%>
 [[KVMCollector]]
@@ -212,12 +215,8 @@ enabled = False
 
 <% if @servers.include?(node) -%>
 [[HAProxyCollector]]
-enabled = True
+enabled = False
 url=http://127.0.0.1:1936/haproxy?stats;csv
-
-[[ElasticSearchCollector]]
-enabled = True
-host=<%=node['bcpc']['management']['ip']%>
 
 #[[MemcachedCollector]]
 #enabled = True
@@ -237,12 +236,9 @@ password=<%=get_config('rabbitmq-password')%>
 <% if @servers.length > 1 -%>
 cluster = True
 <% end -%>
-<% if not node['bcpc']['diamond']['collectors']['rabbitmq']['queues_ignored'].nil? -%>
-queues_ignored = <%=node['bcpc']['diamond']['collectors']['rabbitmq']['queues_ignored']%>
-<% end -%>
-<% if not node['bcpc']['diamond']['collectors']['rabbitmq']['queues'].nil? -%>
-queues = <%=node['bcpc']['diamond']['collectors']['rabbitmq']['queues']%>
-<% end -%>
+queues_ignored = <%= node['bcpc']['diamond']['collectors']['rabbitmq']['queues_ignored'] %>
+queues = <%= node['bcpc']['diamond']['collectors']['rabbitmq']['queues'] %>
+vhosts = <%= node['bcpc']['diamond']['collectors']['rabbitmq']['vhosts'] %>
 <% end -%>
 
 ################################################################################

@@ -41,6 +41,25 @@ if node['bcpc']['enabled']['logging'] then
         action :install
     end
 
+    cookbook_file "/usr/local/bin/ess-shard-rebalancing" do
+        source "ess-shard-rebalancing"
+        owner "root"
+        group "root"
+        mode 00755
+    end
+
+    template "/etc/default/elasticsearch" do
+        source "elasticsearch-default.erb"
+        owner "root"
+        group "root"
+        mode 00644
+        variables(
+            :es_heap_size => node['bcpc']['elasticsearch']['heap_size'],
+            :es_java_opts => node['bcpc']['elasticsearch']['java_opts']
+        )
+        notifies :restart, "service[elasticsearch]", :delayed
+    end
+
     service "elasticsearch" do
         action [:enable, :start]
     end

@@ -8,7 +8,7 @@
     type tail
     path /var/log/syslog
     pos_file /var/log/td-agent/syslog.pos
-    tag pre.system.syslog
+    tag bcpc.system.syslog
     format syslog
 </source>
 
@@ -16,7 +16,7 @@
     type tail
     path /var/log/auth.log
     pos_file /var/log/td-agent/authlog.pos
-    tag pre.system.authlog
+    tag bcpc.system.authlog
     format syslog
 </source>
 
@@ -24,7 +24,7 @@
     type tail
     path /var/log/dmesg
     pos_file /var/log/td-agent/dmesg.pos
-    tag pre.system.dmesg
+    tag bcpc.system.dmesg
     format /^(?<message>.*)$/
 </source>
 
@@ -32,7 +32,7 @@
     type tail
     path /var/log/dpkg.log
     pos_file /var/log/td-agent/dpkg.pos
-    tag pre.system.dpkg
+    tag bcpc.system.dpkg
     format /^(?<time>[^ ]* [^ ]*) (?<message>.*)$/
     time_format %Y-%m-%d %H:%M:%S
 </source>
@@ -41,7 +41,7 @@
     type tail
     path /var/log/kern.log
     pos_file /var/log/td-agent/kern.pos
-    tag pre.system.kern
+    tag bcpc.system.kern
     format syslog
 </source>
 
@@ -49,7 +49,7 @@
     type tail
     path /var/log/apache2/access.log
     pos_file /var/log/td-agent/apache-access.pos
-    tag pre.apache.access
+    tag bcpc.apache.access
     format apache2
 </source>
 
@@ -57,16 +57,15 @@
     type tail
     path /var/log/apache2/error.log
     pos_file /var/log/td-agent/apache-error.pos
-    tag pre.apache.error
-    format /^\[(?<time>[^ ]* [^ ]* [^ ]* [^ ]* [^ ]*)\] \[(?<level>[^ ]*)\] (?<message>.*)$/
-    time_format %a %b %d %H:%M:%S %Y
+    tag bcpc.apache.error
+    format /^\[[^ ]* (?<time>[^\]]*)\] \[(?<level>:?[^\]]*)\] \[pid (?<pid>[^\]]*)\] (?<message>.*)$/
 </source>
 
 <source>
-    type tail_ex
+    type tail
     path /var/log/ceph/ceph-**.log
     pos_file /var/log/td-agent/ceph-daemons.pos
-    tag pre.ceph.daemons
+    tag bcpc.ceph.daemons
     format /^(?<time>[^ ]* [^ ]*) (?<offset>[^ ]*)[ ]*(?<level>[^ ]*) (?<message>.*)$/
     time_format %Y-%m-%d %H:%M:%S
 </source>
@@ -75,147 +74,148 @@
     type tail
     path /var/log/ceph/ceph.log
     pos_file /var/log/td-agent/ceph-activity.pos
-    tag pre.ceph.activity
-    format /^(?<time>[^ ]* [^ ]*) (?<ident>[^ ]*) (?<host>[^ ]*) (?<offset>[^ ]*) : \[(?<level>[^ ]*)\] (?<message>.*)$/
-    time_format %Y-%m-%d %H:%M:%S
-</source>
-
-<source>
-    type tail_multiline
-    path /var/log/cinder/cinder-api.log,/var/log/cinder/cinder-volume.log,/var/log/cinder/cinder-scheduler.log,/var/log/cinder/cinder-manage.log
-    pos_file /var/log/td-agent/openstack-cinder.pos
-    tag pre.openstack.cinder
-    format /^(?<time>[^ ]* [^ ]*)\s*(?<level>[^ ]*) \[(?<ident>[^ ]*)\] (?<message>.*)$/
-    time_format %Y-%m-%d %H:%M:%S
-</source>
-
-<source>
-    type tail_multiline
-    path /var/log/glance/api.log,/var/log/glance/registry.log
-    pos_file /var/log/td-agent/openstack-glance.pos
-    tag pre.openstack.glance
-    format /^(?<time>[^ ]* [^ ]*)\s*(?<pid>([0-9]+)?)\s*(?<level>[a-zA-Z]*)\s*(?<ident>[^ ]*)\s*(\[.*\])?\s*(?<message>.*)$/
-    time_format %Y-%m-%d %H:%M:%S
-</source>
-
-<source>
-    type tail_multiline
-    path /var/log/keystone/keystone.log
-    pos_file /var/log/td-agent/openstack-keystone.pos
-    tag pre.openstack.keystone
-    format /^(?<time>[^ ]* [^ ]*)\s*(?<level>[^ ]*) \[(?<ident>[^ ]*)\] (?<message>.*)$/
+    tag bcpc.ceph.activity
+    format /^(?<time>[^ ]* [^ ]*) (?<ident>[^ ]*) (?<host>[^ ]*) (?<offset>[^ ]*) : (?<cluster>[^ ]*)?\s*\[(?<level>[^ ]*)\] (?<message>.*)$/
     time_format %Y-%m-%d %H:%M:%S
 </source>
 
 <source>
     type tail
-    path /var/log/apache2/keystone-access.log
+    path /var/log/cinder/cinder-api.log,/var/log/cinder/cinder-volume.log,/var/log/cinder/cinder-scheduler.log,/var/log/cinder/cinder-manage.log
+    pos_file /var/log/td-agent/openstack-cinder.pos
+    tag bcpc.openstack.cinder
+    format /^(?<time>[^ ]* [^ ]*)\s*(?<pid>([0-9]+)?)\s*(?<level>[a-zA-Z]*)\s*(?<ident>[^ ]*)\s*(\[.*\])?\s*(?<message>.*)$/
+    time_format %Y-%m-%d %H:%M:%S
+</source>
+
+<source>
+    type tail
+    path /var/log/glance/glance-api.log,/var/log/glance/glance-registry.log
+    pos_file /var/log/td-agent/openstack-glance.pos
+    tag bcpc.openstack.glance
+    format /^(?<time>[^ ]* [^ ]*)\s*(?<pid>([0-9]+)?)\s*(?<level>[a-zA-Z]*)\s*(?<ident>[^ ]*)\s*(\[.*\])?\s*(?<message>.*)$/
+    time_format %Y-%m-%d %H:%M:%S
+</source>
+
+<source>
+    type tail
+    path /var/log/keystone/keystone-manage.log
+    pos_file /var/log/td-agent/openstack-keystone.pos
+    tag bcpc.openstack.keystone
+    format /^(?<time>[^ ]* [^ ]*)\s*(?<pid>([0-9]+)?)\s*(?<level>[^ ]*) \[(?<ident>[^ ]*)\] (?<message>.*)$/
+    time_format %Y-%m-%d %H:%M:%S
+</source>
+
+<source>
+    type tail
+    path /var/log/apache2/keystone_access.log
     pos_file /var/log/td-agent/apache-access.pos
-    tag pre.openstack.keystone.access
+    tag bcpc.openstack.keystone.access
     format apache2
 </source>
 
 <source>
     type tail
-    path /var/log/apache2/keystone-error.log
+    path /var/log/apache2/keystone.log
     pos_file /var/log/td-agent/apache-error.pos
-    tag pre.openstack.keystone.error
+    tag bcpc.openstack.keystone.error
     format /^\[(?<time>[^ ]* [^ ]* [^ ]* [^ ]* [^ ]*)\] \[(?<level>[^ ]*)\] (?<message>.*)$/
     time_format %a %b %d %H:%M:%S %Y
 </source>
 
 <source>
-    type tail_multiline
+    type tail
     path /var/log/nova/nova-api.log,/var/log/nova/nova-compute.log,/var/log/nova/nova-consoleauth.log,/var/log/nova/nova-network.log,/var/log/nova/nova-cert.log,/var/log/nova/nova-conductor.log,/var/log/nova/nova-manage.log,/var/log/nova/nova-scheduler.log
     pos_file /var/log/td-agent/openstack-nova.pos
-    tag pre.openstack.nova
+    tag bcpc.openstack.nova
     format /^(?<time>[^ ]* [^ ]*)\s*(?<pid>([0-9]+)?)\s*(?<level>[a-zA-Z]*)\s*(?<ident>[^ ]*)\s*(\[.*\])?\s*(?<message>.*)$/
     time_format %Y-%m-%d %H:%M:%S
 </source>
 
 <source>
-    type tail_multiline
+    type tail
     path /var/log/heat/heat-api.log,/var/log/heat/heat-api-cfn.log,/var/log/heat/heat-engine.log
     pos_file /var/log/td-agent/openstack-heat.pos
-    tag pre.openstack.heat
+    tag bcpc.openstack.heat
     format /^(?<time>[^ ]* [^ ]*)\s*(?<pid>([0-9]+)?)\s*(?<level>[a-zA-Z]*)\s*(?<ident>[^ ]*)\s*(\[.*\])?\s*(?<message>.*)$/
     time_format %Y-%m-%d %H:%M:%S
 </source>
 
 <source>
-    type tail_multiline
+    type tail
     path /var/lib/mysql/<%=node['hostname']%>.err
     pos_file /var/log/td-agent/mysql.pos
-    tag pre.mysql
-    format /^(?<ident>[0-9]+)\s*(?<time>[0-9]+:[0-9]+:[0-9]+)\s*(\[(?<level>[^ ]+)\])?\s*(?<message>.*)$/
-    time_format %H:%M:%S
+    tag bcpc.mysql
+    format multiline
+    format_firstline /^[0-9]{4}+/
+    format1 /^(?<time>[^ ]* [^ ]*)\s*(?<pid>([0-9]+)?)\s*(\[(?<level>[^ ]+)\])?\s*(?<message>.*)$/
+    time_format %Y-%m-%d %H:%M:%S
 </source>
 
 <source>
-    type tail_multiline
+    type tail
     path /var/log/rabbitmq/rabbit@<%=node['hostname']%>.log
     pos_file /var/log/td-agent/rabbitmq.pos
-    tag pre.rabbitmq
-    format /^=(?<level>[^ ]*)\s*REPORT====\s*(?<time>[^ ]*)\s*===\s*(?<message>.*)$/
+    tag bcpc.rabbitmq
+    format multiline
+    format_firstline /^=/
+    format1 /^=(?<level>[^ ]*)\s*REPORT====\s*(?<time>[^ ]*)\s*===\s*(?<message>.*)$/
     time_format %d-%b-%Y::%H:%M:%S
 </source>
 
 <source>
-    type tail_multiline
+    type tail
     path /var/log/elasticsearch/<%=node['bcpc']['region_name']%>.log
     pos_file /var/log/td-agent/elasticsearch.pos
-    tag pre.logging.elasticsearch
+    tag bcpc.logging.elasticsearch
     format /^\[(?<time>[^ ]* [^\]]*)\]\[(?<level>[^ ]*)\s*\]\[(?<ident>[^ ]*)\s*\]\s*\[(?<host>[^ ]*)\s*\]\s*(?<message>.*)$/
     time_format %Y-%m-%d %H:%M:%S
 </source>
 
 <source>
-    type tail_multiline
+    type tail
     path /var/log/diamond/diamond.log
     pos_file /var/log/td-agent/diamond.pos
-    tag pre.metrics.diamond
-    format /^\[(?<time>[^ ]* [^\]]*)\]\s*\[(?<ident>[^ ]*)\s*\]\s*(?<message>.*)$/
+    tag bcpc.metrics.diamond
+    format multiline
+    format_firstline /^\[/
+    format1 /^\[(?<time>[^ ]* [^\]]*)\]\s*\[(?<ident>[^ ]*)\s*\]\s*(?<message>.*)$/
     time_format %Y-%m-%d %H:%M:%S
 </source>
 
 <source>
-    type tail_ex
+    type tail
     path /opt/graphite/storage/log/carbon-cache/*/listener.log,/opt/graphite/storage/log/carbon-cache/*/query.log,/opt/graphite/storage/log/carbon-relay/*/*.log
     pos_file /var/log/td-agent/graphite.pos
-    tag pre.metrics.graphite
+    tag bcpc.metrics.graphite
     format /^(?<time>[^ ]* [^ ]*)\s*::\s*(?<message>.*)$/
     time_format %d/%m/%Y %H:%M:%S
 </source>
 
 <source>
-    type tail_ex
+    type tail
     path /opt/graphite/storage/log/webapp/*.log
     pos_file /var/log/td-agent/graphite.pos
-    tag pre.metrics.graphite
+    tag bcpc.metrics.graphite
     format /^(?<time>[^ ]* [^ ]* [^ ]* [^ ]* [^ ]*)\s*::\s*\[?(?<ident>[^\] ]*)\]?\s*(- pid (?<pid>[0-9]+) -)?\s*(?<message>.*)$/
     time_format %a %b %d %H:%M:%S %Y
 </source>
 
 <source>
-    type tail_ex
+    type tail
     path /var/log/zabbix/zabbix**.log
     pos_file /var/log/td-agent/zabbix.pos
-    tag pre.monitoring.zabbix
+    tag bcpc.monitoring.zabbix
     format /^\s*(?<pid>[0-9]+):(?<time>[0-9]+:[0-9]+\.[0-9]+)\s*(\[(?<level>[^ ]*)\])?(?<message>.*)$/
     time_format %Y%m%d:%H%M%S
 </source>
 
-<match pre.**>
-    type record_reformer
-    output_tag post.${tag}
-    src_host <%=node['hostname']%>
-</match>
-
-<match post.**>
-    type rewrite
-    remove_prefix post.pre
-    add_prefix bcpc
-</match>
+<filter bcpc.**>
+    type record_transformer
+    <record>
+        src_host <%=node['hostname']%>
+    </record>
+</filter>
 
 <match bcpc.**>
     type elasticsearch

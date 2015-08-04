@@ -6,7 +6,9 @@
 
 [global]
     fsid = <%=get_config('ceph-fs-uuid')%>
-    auth supported = cephx
+    auth cluster required = cephx
+    auth service required = cephx
+    auth client required = cephx
     public network = <%= @node["bcpc"]["storage"]["cidr"] %>
     cluster network = <%= @node["bcpc"]["storage"]["cidr"] %>
     keyring = /etc/ceph/$cluster.$name.keyring
@@ -40,12 +42,25 @@
     osd mon report interval min = 30
 <% end %>
 
-[client]
+[client.admin]
+    # dont want the admin client creating sockets/logs
+    admin socket = 
+    log file =
+    
+[client.cinder]
     rbd cache = true
     rbd cache writethrough until flush = true
-    admin socket = /var/run/ceph/$cluster-$type.$id.$pid.$cctid.asok # must be writable by QEMU and allowed by SELinux or AppArmor
+    admin socket = /var/run/ceph/guests/$cluster-$type.$id.$pid.$cctid.asok # must be writable by QEMU and allowed by SELinux or AppArmor
     log file = /var/log/qemu/qemu-guest-$pid.log
+    rbd concurrent management ops = 20
 
+[client.glance]
+    rbd cache = true
+    rbd cache writethrough until flush = true
+    admin socket = /var/run/ceph/guests/$cluster-$type.$id.$pid.$cctid.asok # must be writable by QEMU and allowed by SELinux or AppArmor
+    log file = /var/log/qemu/qemu-guest-$pid.log
+    rbd concurrent management ops = 20
+    
 [client.radosgw.gateway]
     host = <%=node['hostname']%>
     keyring = /var/lib/ceph/radosgw/$cluster-$id/keyring
@@ -61,14 +76,16 @@
     # For Apache
     rgw socket path = /var/lib/ceph/radosgw/rgw_fcgi.sock
 <% end %>
-    debug rgw = 0/0
+    # Increased to 1 to log HTTP return codes
+    # http://tracker.ceph.com/issues/12432
+    debug rgw = 1/0
 
 <% if config_defined('keystone-admin-token') %>
-    rgw keystone url = <%=node['bcpc']['management']['vip']%>:35358
+    rgw keystone url = openstack.<%=node['bcpc']['cluster_domain']%>:35358
     rgw keystone admin token = <%=get_config('keystone-admin-token')%>
     rgw keystone accepted roles = admin Member _member_
     rgw keystone token cache size = 1000
     rgw keystone revocation interval = 1200
     rgw s3 auth use keystone = true
 <% end %>
-    rgw dns name = s3.<%=node['bcpc']['domain_name'] %>
+    rgw dns name = s3.<%=node['bcpc']['cluster_domain'] %>

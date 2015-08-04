@@ -97,7 +97,7 @@ if node['bcpc']['enabled']['dns'] then
               account VARCHAR(40) DEFAULT NULL,
               primary key (id)
           );
-          INSERT INTO domains (name, type) values ('#{node['bcpc']['domain_name']}', 'NATIVE');
+          INSERT INTO domains (name, type) values ('#{node['bcpc']['cluster_domain']}', 'NATIVE');
           INSERT INTO domains (name, type) values ('#{reverse_float_zone}', 'NATIVE');
           INSERT INTO domains (name, type) values ('#{reverse_fixed_zone}', 'NATIVE');
           CREATE UNIQUE INDEX dom_name_index ON domains(name);
@@ -195,7 +195,7 @@ end
       :all_servers               => get_all_nodes,
       :float_cidr                => IPAddr.new(node['bcpc']['floating']['available_subnet']),
       :database_name             => node['bcpc']['dbname']['pdns'],
-      :domain_name               => node['bcpc']['domain_name'],
+      :cluster_domain               => node['bcpc']['cluster_domain'],
       :floating_vip              => node['bcpc']['floating']['vip'],
       :management_vip            => node['bcpc']['management']['vip'],
       :management_monitoring_vip => node['bcpc']['management']['monitoring']['vip'],

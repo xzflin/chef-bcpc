@@ -35,7 +35,7 @@ if [[ ${BOOT} = "10.0.100.3" ]]; then
     # directory entirely, but then we would have to feed that path
     # info back to knife
     echo "Collecting non-BCPC cookbooks..."
-    $BNDO "cd chef-bcpc && tar --exclude=bcpc --exclude=bcpc-centos --exclude=chef-client.patch --exclude=README.md -cf ../cookbooks.tar cookbooks"
+    $BNDO "cd chef-bcpc && tar --exclude=bcpc --exclude=bcpc-centos --exclude=chef-client.patch --exclude=${PWD}/README.md -cf ../cookbooks.tar cookbooks"
 
     # and now our built binaries. This is easier to do, except they
     # are buried deep down. Perhaps it would be better for the

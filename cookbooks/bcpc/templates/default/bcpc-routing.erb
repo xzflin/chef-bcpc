@@ -8,25 +8,33 @@
 # Add default routes as a safety net, then remove all at the end
 ip route add default via <%=@node["bcpc"]["management"]["gateway"]%> \
          dev <%=@node["bcpc"]["management"]["interface"]%> \
-         table main
+         table main \
+         proto static
+
 ip route add <%=@node["bcpc"]["management"]["cidr"]%> \
          dev <%=@node["bcpc"]["management"]["interface"]%> \
          scope link src <%=@node["bcpc"]["management"]["ip"]%> \
-         table main
+         table main \
+         proto static
+
 ip route add <%=@node["bcpc"]["storage"]["cidr"]%> \
          dev <%=@node["bcpc"]["storage"]["interface"]%> \
          scope link src <%=@node["bcpc"]["storage"]["ip"]%> \
-         table main
+         table main \
+         proto static
 
 # Build routing table for management network
 ip route flush table mgmt
 ip route add default via <%=@node["bcpc"]["management"]["gateway"]%> \
          dev <%=@node["bcpc"]["management"]["interface"]%> \
-         table mgmt 
+         table mgmt \
+         proto static
+
 ip route add <%=@node["bcpc"]["management"]["cidr"]%> \
          dev <%=@node["bcpc"]["management"]["interface"]%> \
          scope link src <%=@node["bcpc"]["management"]["ip"]%> \
-         table mgmt
+         table mgmt \
+         proto static
 
 # Move the local table ip rule up further in the list
 ip rule add from all lookup local pref 0
@@ -61,11 +69,14 @@ ip rule add to <%=@node["bcpc"]["management"]["cidr"]%> pref 10001 table mgmt
 ip route flush table storage
 ip route add default via <%=@node["bcpc"]["storage"]["gateway"]%> \
          dev <%=@node["bcpc"]["storage"]["interface"]%> \
-         table storage 
+         table storage \
+         proto static
+
 ip route add <%=@node["bcpc"]["storage"]["cidr"]%> \
          dev <%=@node["bcpc"]["storage"]["interface"]%> \
          scope link src <%=@node["bcpc"]["storage"]["ip"]%> \
-         table storage
+         table storage \
+         proto static
 
 # Activate this routing table for storage traffic
 ip rule del pref 10002

@@ -77,10 +77,22 @@ iptables-restore <<EOH
 ## powerdns 53
 -A INPUT -i <%=@node["bcpc"]["management"]["interface"]%> -d <%=@node["bcpc"]["management"]["vip"]%> -p udp --dport 53 -j ACCEPT
 -A INPUT -i <%=@node["bcpc"]["management"]["interface"]%> -d <%=@node["bcpc"]["management"]["vip"]%> -p tcp --dport 53 -j ACCEPT
+
+<% if node["roles"].include? "BCPC-Monitoring" -%>
 ## kibana 443
 ## graphite 8888
-<% if node["roles"].include? "BCPC-Monitoring" -%>
 -A INPUT -i <%=@node["bcpc"]["management"]["interface"]%> -d <%=@node["bcpc"]["management"]["monitoring"]["vip"]%> -p tcp --match multiport --dports 443,8888 -j ACCEPT
+
+## carbon-relay 2013, 2014
+## elasticsearch 9200
+## zabbix-server 10051
+:INPUT-monitoring - [0:0]
+-A INPUT -i <%=@node["bcpc"]["management"]["interface"]%> -d <%=@node["bcpc"]["management"]["monitoring"]["vip"]%> -p tcp --match multiport --dports 2013,2014,9200,10051 -j INPUT-monitoring
+
+###########################
+# INPUT-monitoring chain
+###########################
+-A INPUT-monitoring -m set --match-set monitoring-clients src -j ACCEPT
 <% end -%>
 
 # Log and drop everything else

@@ -7,8 +7,8 @@
 Listen <%=node['bcpc']['management']['ip']%>:7777
 
 <VirtualHost <%=node['bcpc']['management']['ip']%>:7777>
-    DocumentRoot "/usr/local/share/zabbix/php"
-    <Directory /usr/local/share/zabbix/php>
+    DocumentRoot "/usr/share/zabbix/"
+    <Directory /usr/share/zabbix/>
         Require all granted
     </Directory>
 </VirtualHost>

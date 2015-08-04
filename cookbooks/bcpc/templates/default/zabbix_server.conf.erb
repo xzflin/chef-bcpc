@@ -71,7 +71,7 @@ LogFile=/var/log/zabbix/zabbix_server.log
 #
 # Mandatory: no
 # Default:
-# PidFile=/tmp/zabbix_server.pid
+PidFile=/var/run/zabbix/zabbix_server.pid
 
 ### Option: DBHost
 #   Database host name.
@@ -389,7 +389,7 @@ ListenIP=<%=node['bcpc']['management']['monitoring']['vip']%>
 #
 # Mandatory: no
 # Default:
-# AlertScriptsPath=${datadir}/zabbix/alertscripts
+AlertScriptsPath=/usr/lib/zabbix/alertscripts
 
 ### Option: ExternalScripts
 #   Full path to location of external scripts.
@@ -449,7 +449,7 @@ ListenIP=<%=node['bcpc']['management']['monitoring']['vip']%>
 # Include=
 
 # Include=/usr/local/etc/zabbix_server.general.conf
-Include=/usr/local/etc/zabbix_server.conf.d/
+# Include=/etc/zabbix/zabbix_server.conf.d/
 
 ### Option: StartProxyPollers
 #   Number of pre-forked instances of pollers for passive proxies.

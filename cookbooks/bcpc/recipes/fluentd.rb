@@ -23,91 +23,58 @@ if node['bcpc']['enabled']['logging'] then
 
     apt_repository "fluentd" do
         uri node['bcpc']['repos']['fluentd']
-        #distribution node['lsb']['codename']
-        distribution "precise"
+        distribution node['lsb']['codename']
         components ["contrib"]
+        arch "amd64"
         key "fluentd.key"
     end
 
-    package "td-agent" do
-        action :upgrade
-        options "--allow-unauthenticated"
+    package "td-agent-v1" do
+        package_name "td-agent"
+        version "1.1.21-1"
+        action :purge
     end
 
-    bash "set-td-agent-user" do
-        user "root"
-        code "sed --in-place 's/^USER=td-agent.*/USER=root/' /etc/init.d/td-agent"
-        only_if "grep -e '^USER=td-agent' /etc/init.d/td-agent"
-        notifies :restart, "service[td-agent]", :delayed
+    bash "clean-up-old-fluentd" do
+        code <<-EOH
+          rm -rf /usr/lib/fluent
+        EOH
+        only_if 'test -d /usr/lib/fluent'
     end
-    
-    if node['bcpc']['use_bootstrap_v2']
-      fluentd_gems = %w{
-        msgpack-0.5.11
-        thread_safe-0.3.5
-        tzinfo-1.2.2
-        tzinfo-data-1.2015.4
-        cool.io-1.3.1
-        http_parser.rb-0.6.0
-        sigdump-0.2.3
-        string-scrub-0.0.5
-        uuidtools-2.1.5
-        yajl-ruby-1.2.1
-        fluentd-0.12.11
-        fluent-mixin-config-placeholders-0.3.0
-        fluent-plugin-elasticsearch-0.2.0
-        fluent-plugin-record-reformer-0.6.3
-        fluent-plugin-rewrite-0.0.12
-        fluent-plugin-tail-ex-0.1.1
-        fluent-plugin-tail-multiline-0.1.5
-      }
-    
-      fluentd_gems.each do |pkg|
-        cookbook_file "/tmp/#{pkg}.gem" do
-          source "bins/#{pkg}.gem"
-          owner "root"
-          mode 00444
-        end
 
-        bash "install-#{pkg}" do
-          code "/usr/lib/fluent/ruby/bin/fluent-gem install --local --no-ri --no-rdoc /tmp/#{pkg}.gem"
-          not_if "/usr/lib/fluent/ruby/bin/fluent-gem list --local --no-versions | grep #{pkg}$"
-        end
-      end
-    else
-      %w{elasticsearch tail-multiline tail-ex record-reformer rewrite}.each do |pkg|
-          cookbook_file "/tmp/fluent-plugin-#{pkg}.gem" do
-              source "bins/fluent-plugin-#{pkg}.gem"
-              owner "root"
-              mode 00444
-          end
-          bash "install-fluent-plugin-#{pkg}" do
-              code "/usr/lib/fluent/ruby/bin/fluent-gem install --local --no-ri --no-rdoc /tmp/fluent-plugin-#{pkg}.gem"
-              not_if "/usr/lib/fluent/ruby/bin/fluent-gem list --local --no-versions | grep fluent-plugin-#{pkg}$"
-          end
-      end
-    end # if node['bcpc']['use_bootstrap_v2']
-
-    cookbook_file "/tmp/fluentd.patch" do
-        source "fluentd.patch"
+    # Run td-agent as root
+    cookbook_file "/etc/default/td-agent" do
+        source "td-agent-default"
         owner "root"
         mode 00644
     end
 
-    bash "patch-for-fluentd-plugin" do
-        user "root"
-        code <<-EOH
-            cd /usr/lib/fluent/ruby/lib/ruby/gems/*/gems/fluent-plugin-elasticsearch-*/lib/fluent/plugin
-            patch < /tmp/fluentd.patch
-            rv=$?
-            if [ $rv -ne 0 ]; then
-              echo "Error applying patch ($rv) - aborting!"
-              exit $rv
-            fi
-            cp /tmp/fluentd.patch .
-        EOH
-        not_if "test -f /usr/lib/fluent/ruby/lib/ruby/gems/*/gems/fluent-plugin-elasticsearch-*/lib/fluent/plugin/fluentd.patch"
-        notifies :restart, "service[td-agent]", :delayed
+    package "td-agent" do
+        action :upgrade
+    end
+
+    fluentd_gems = %w{
+      excon-0.45.3
+      multi_json-1.11.2
+      multipart-post-2.0.0
+      faraday-0.9.1
+      elasticsearch-transport-1.0.12
+      elasticsearch-api-1.0.12
+      elasticsearch-1.0.12
+      fluent-plugin-elasticsearch-0.9.0
+    }
+  
+    fluentd_gems.each do |pkg|
+      cookbook_file "/tmp/#{pkg}.gem" do
+        source "bins/#{pkg}.gem"
+        owner "root"
+        mode 00444
+      end
+
+      bash "install-#{pkg}" do
+        code "/opt/td-agent/embedded/bin/fluent-gem install --local --no-ri --no-rdoc /tmp/#{pkg}.gem"
+        not_if "/opt/td-agent/embedded/bin/fluent-gem list --local --no-versions | grep #{pkg}$"
+      end
     end
 
     template "/etc/td-agent/td-agent.conf" do

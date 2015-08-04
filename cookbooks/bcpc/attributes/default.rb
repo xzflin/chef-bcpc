@@ -19,7 +19,9 @@ default['bcpc']['libvirt-bin']['ulimit']['nofile'] = 4096
 # Region name for this cluster
 default['bcpc']['region_name'] = node.chef_environment
 # Domain name for this cluster (used in many configs)
-default['bcpc']['domain_name'] = "bcpc.example.com"
+default['bcpc']['cluster_domain'] = "bcpc.example.com"
+# Hypervisor domain (domain used by actual machines)
+default['bcpc']['hypervisor_domain'] = "hypervisor-bcpc.example.com"
 # Key if Cobalt+VMS is to be used
 default['bcpc']['vms_key'] = nil
 
@@ -34,9 +36,9 @@ default['bcpc']['ceph']['version_number'] = '0.94.2'
 # Ceph.com version number '0.94.2-1trusty'
 # Ubuntu cloud version number '0.94.1-0ubuntu1~cloud0'
 default['bcpc']['erlang']['version'] = '1:17.5.3'
-default['bcpc']['haproxy']['version'] = '1.5.12-1ppa1~trusty'
+default['bcpc']['haproxy']['version'] = '1.5.14-1ppa~trusty'
 default['bcpc']['kibana']['version'] = '4.0.2'
-default['bcpc']['rabbitmq']['version'] = '3.5.3-1'
+default['bcpc']['rabbitmq']['version'] = '3.5.4-1'
 
 ###########################################
 #
@@ -120,24 +122,14 @@ default['bcpc']['ceph']['vms']['replicas'] = 3
 default['bcpc']['ceph']['vms']['portion'] = 33
 default['bcpc']['ceph']['vms']['type'] = 'ssd'
 default['bcpc']['ceph']['vms']['name'] = "vms"
-
-# Begin cobalt - not used in cluster
-default['bcpc']['ceph']['vms_disk']['replicas'] = 3
-default['bcpc']['ceph']['vms_disk']['portion'] = 10
-default['bcpc']['ceph']['vms_disk']['type'] = 'ssd'
-default['bcpc']['ceph']['vms_disk']['name'] = "vmsdisk"
-default['bcpc']['ceph']['vms_mem']['replicas'] = 3
-default['bcpc']['ceph']['vms_mem']['portion'] = 10
-default['bcpc']['ceph']['vms_mem']['type'] = 'ssd'
-default['bcpc']['ceph']['vms_mem']['name'] = "vmsmem"
-# End cobalt
+# Set up crush rulesets
 default['bcpc']['ceph']['ssd']['ruleset'] = 1
 default['bcpc']['ceph']['hdd']['ruleset'] = 2
 
 # If you are about to make a big change to the ceph cluster
 # setting to true will reduce the load form the resulting
-# ceph rebalance and keep things operational. 
-# See wiki for further details. 
+# ceph rebalance and keep things operational.
+# See wiki for further details.
 default['bcpc']['ceph']['rebalance'] = false
 
 # Set the default niceness of Ceph OSD and monitor processes
@@ -207,13 +199,12 @@ default['bcpc']['repos']['mysql'] = "http://repo.percona.com/apt"
 default['bcpc']['repos']['haproxy'] = "http://ppa.launchpad.net/vbernat/haproxy-1.5/ubuntu"
 default['bcpc']['repos']['openstack'] = "http://ubuntu-cloud.archive.canonical.com/ubuntu"
 default['bcpc']['repos']['hwraid'] = "http://hwraid.le-vert.net/ubuntu"
-# there is no trusty repo for fluentd from this provider
-#default['bcpc']['repos']['fluentd'] = "http://packages.treasure-data.com/#{node['lsb']['codename']}"
-default['bcpc']['repos']['fluentd'] = "http://packages.treasure-data.com/precise"
+default['bcpc']['repos']['fluentd'] = "http://packages.treasure-data.com/2/ubuntu/#{node['lsb']['codename']}"
 default['bcpc']['repos']['gridcentric'] = "http://downloads.gridcentric.com/packages/%s/%s/ubuntu"
 default['bcpc']['repos']['elasticsearch'] = "http://packages.elasticsearch.org/elasticsearch/1.5/debian"
 default['bcpc']['repos']['erlang'] = "http://packages.erlang-solutions.com/ubuntu"
 default['bcpc']['repos']['ceph'] = "http://ceph.com/debian-hammer"
+default['bcpc']['repos']['zabbix'] = "http://repo.zabbix.com/zabbix/2.2/ubuntu"
 
 ###########################################
 #
@@ -292,6 +283,8 @@ default['bcpc']['horizon']['disable_panels'] = ['containers']
 #
 ###########################################
 #
+# Defaut log file
+default['bcpc']['keystone']['log_file'] = '/var/log/keystone/keystone.log'
 # Eventlet server is deprecated in Kilo, so by default we
 # serve Keystone via Apache now.
 default['bcpc']['keystone']['eventlet_server'] = false
@@ -305,9 +298,27 @@ default['bcpc']['keystone']['verbose'] = false
 # before failing (configures timeout on the wait-for-keystone-to-be-operational
 # spinlock guard).
 default['bcpc']['keystone']['wait_for_keystone_timeout'] = 120
-# This can be either 'sql' or 'ldap' to either store identities
-# in the mysql DB or the LDAP server
-default['bcpc']['keystone']['backend'] = 'sql'
+# The driver section below allows either 'sql' or 'ldap' (or 'templated' for catalog)
+# Note that not all drivers may support SQL/LDAP, only tinker if you know what you're getting into
+default['bcpc']['keystone']['drivers']['assignment'] = 'sql'
+default['bcpc']['keystone']['drivers']['catalog'] = 'templated'
+default['bcpc']['keystone']['drivers']['credential'] = 'sql'
+default['bcpc']['keystone']['drivers']['domain_config'] = 'sql'
+default['bcpc']['keystone']['drivers']['endpoint_filter'] = 'sql'
+default['bcpc']['keystone']['drivers']['endpoint_policy'] = 'sql'
+default['bcpc']['keystone']['drivers']['federation'] = 'sql'
+default['bcpc']['keystone']['drivers']['identity'] = 'sql'
+default['bcpc']['keystone']['drivers']['identity_mapping'] = 'sql'
+default['bcpc']['keystone']['drivers']['oauth1'] = 'sql'
+default['bcpc']['keystone']['drivers']['policy'] = 'sql'
+default['bcpc']['keystone']['drivers']['revoke'] = 'sql'
+default['bcpc']['keystone']['drivers']['role'] = 'sql'
+default['bcpc']['keystone']['drivers']['trust'] = 'sql'
+# Notifications driver
+default['bcpc']['keystone']['drivers']['notification'] = 'log'
+# Notifications format. See: http://docs.openstack.org/developer/keystone/event_notifications.html
+default['bcpc']['keystone']['notification_format'] = 'cadf'
+# LDAP credentials used by Keystone
 default['bcpc']['ldap']['admin_user'] = nil
 default['bcpc']['ldap']['admin_pass'] = nil
 default['bcpc']['ldap']['config'] = {}
@@ -509,7 +520,7 @@ default['bcpc']['keystone']['policy'] = {
 #
 # Over-allocation settings. Set according to your cluster
 # SLAs. Default is to not allow over allocation of memory
-# a slight over allocation of CPU (x2). 
+# a slight over allocation of CPU (x2).
 default['bcpc']['nova']['ram_allocation_ratio'] = 1.0
 default['bcpc']['nova']['reserved_host_memory_mb'] = 1024
 default['bcpc']['nova']['cpu_allocation_ratio'] = 2.0
@@ -521,7 +532,8 @@ default['bcpc']['nova']['live_migration_patch'] = false
 # Nova debug toggle
 default['bcpc']['nova']['debug'] = false
 # Nova scheduler default filters
-default['bcpc']['nova']['scheduler_default_filters'] = ['AggregateInstanceExtraSpecsFilter', 'AvailabilityZoneFilter', 'RamFilter', 'ComputeFilter', 'DifferentHostFilter', 'SameHostFilter']
+default['bcpc']['nova']['scheduler_default_filters'] = ['AggregateInstanceExtraSpecsFilter', 'RetryFilter', 'AvailabilityZoneFilter', 'RamFilter', 'ComputeFilter', 'ComputeCapabilitiesFilter', 'ImagePropertiesFilter', 'ServerGroupAntiAffinityFilter', 'ServerGroupAffinityFilter']
+
 default['bcpc']['nova']['quota'] = {
   "cores" => 4,
   "floating_ips" => 10,
@@ -529,8 +541,8 @@ default['bcpc']['nova']['quota'] = {
   "instances" => 10,
   "ram" => 51200
 }
-# load a custom vendor driver, 
-# e.g. "nova.api.metadata.bcpc_metadata.BcpcMetadata", 
+# load a custom vendor driver,
+# e.g. "nova.api.metadata.bcpc_metadata.BcpcMetadata",
 # comment out to use default
 #default['bcpc']['vendordata_driver'] = "nova.api.metadata.bcpc_metadata.BcpcMetadata"
 
@@ -542,158 +554,412 @@ default['bcpc']['nova']['quota'] = {
 default['bcpc']['nova']['policy'] = {
   "context_is_admin" => "role:admin",
   "admin_or_owner" => "is_admin:True or project_id:%(project_id)s",
-  "default" => "rule:admin_or_owner",
+  "default" => "role:admin",
+
+  "cells_scheduler_filter:TargetCellFilter" => "is_admin:True",
 
   "compute:create" => "",
-  "compute:create:attach_network" => "",
-  "compute:create:attach_volume" => "",
+  "compute:create:attach_network" => "role:admin",
+  "compute:create:attach_volume" => "rule:admin_or_owner",
   "compute:create:forced_host" => "is_admin:True",
-  "compute:get_all" => "",
-  "compute:get_all_tenants" => "",
+  "compute:get" => "rule:admin_or_owner",
+  "compute:get_all" => "rule:admin_or_owner",
+  "compute:get_all_tenants" => "rule:admin_or_owner",
+  "compute:get_diagnostics" => "rule:admin_or_owner",
+  "compute:start" => "rule:admin_or_owner",
+  "compute:stop" => "rule:admin_or_owner",
+  "compute:attach_volume" => "rule:admin_or_owner",
+  "compute:detach_volume" => "rule:admin_or_owner",
+  "compute:update" => "rule:admin_or_owner",
+  "compute:reboot" => "rule:admin_or_owner",
+  "compute:delete" => "rule:admin_or_owner",
+  "compute:unlock_override" => "rule:admin_api",
+
+  "compute:get_rdp_console" => "rule:admin_or_owner",
+  "compute:get_vnc_console" => "rule:admin_or_owner",
+  "compute:get_console_output" => "rule:admin_or_owner",
+  "compute:get_serial_console" => "rule:admin_or_owner",
+
+  "compute:snapshot" => "role:admin",
+
+  "compute:shelve" => "role:admin",
+  "compute:shelve_offload" => "role:admin",
+  "compute:unshelve" => "role:admin",
+  "compute:resize" => "role:admin",
+  "compute:confirm_resize" => "role:admin",
+  "compute:revert_resize" => "role:admin",
+  "compute:rebuild" => "role:admin",
+
+  "compute:security_groups:add_to_instance" => "rule:admin_or_owner",
+  "compute:security_groups:remove_from_instance" => "rule:admin_or_owner",
+
+  "compute:volume_snapshot_create" => "role:admin",
+  "compute:volume_snapshot_delete" => "role:admin",
 
   "admin_api" => "is_admin:True",
   "compute_extension:accounts" => "rule:admin_api",
   "compute_extension:admin_actions" => "rule:admin_api",
-  "compute_extension:admin_actions:pause" => "rule:admin_or_owner",
-  "compute_extension:admin_actions:unpause" => "rule:admin_or_owner",
-  "compute_extension:admin_actions:suspend" => "rule:admin_or_owner",
-  "compute_extension:admin_actions:resume" => "rule:admin_or_owner",
-  "compute_extension:admin_actions:lock" => "rule:admin_api",
-  "compute_extension:admin_actions:unlock" => "rule:admin_api",
+  "compute_extension:admin_actions:pause" => "role:admin",
+  "compute_extension:admin_actions:unpause" => "role:admin",
+  "compute_extension:admin_actions:suspend" => "role:admin",
+  "compute_extension:admin_actions:resume" => "role:admin",
+  "compute_extension:admin_actions:lock" => "role:admin",
+  "compute_extension:admin_actions:unlock" => "role:admin",
   "compute_extension:admin_actions:resetNetwork" => "rule:admin_api",
   "compute_extension:admin_actions:injectNetworkInfo" => "rule:admin_api",
-  "compute_extension:admin_actions:createBackup" => "rule:admin_or_owner",
+  "compute_extension:admin_actions:createBackup" => "role:admin",
   "compute_extension:admin_actions:migrateLive" => "rule:admin_api",
   "compute_extension:admin_actions:resetState" => "rule:admin_api",
   "compute_extension:admin_actions:migrate" => "rule:admin_api",
   "compute_extension:aggregates" => "rule:admin_api",
   "compute_extension:agents" => "rule:admin_api",
-  "compute_extension:attach_interfaces" => "",
+  "compute_extension:attach_interfaces" => "role:admin",
   "compute_extension:baremetal_nodes" => "rule:admin_api",
   "compute_extension:cells" => "rule:admin_api",
-  "compute_extension:certificates" => "",
+  "compute_extension:cells:create" => "rule:admin_api",
+  "compute_extension:cells:delete" => "rule:admin_api",
+  "compute_extension:cells:update" => "rule:admin_api",
+  "compute_extension:cells:sync_instances" => "rule:admin_api",
+  "compute_extension:certificates" => "role:admin",
   "compute_extension:cloudpipe" => "rule:admin_api",
   "compute_extension:cloudpipe_update" => "rule:admin_api",
-  "compute_extension:console_output" => "",
-  "compute_extension:consoles" => "",
-  "compute_extension:coverage_ext" => "rule:admin_api",
-  "compute_extension:createserverext" => "",
-  "compute_extension:deferred_delete" => "",
-  "compute_extension:disk_config" => "",
+  "compute_extension:console_output" => "rule:admin_or_owner",
+  "compute_extension:consoles" => "rule:admin_or_owner",
+  "compute_extension:config_drive" => "rule:admin_or_owner",
+  "compute_extension:createserverext" => "role:admin",
+  "compute_extension:deferred_delete" => "role:admin",
+  "compute_extension:disk_config" => "rule:admin_or_owner",
   "compute_extension:evacuate" => "rule:admin_api",
-  "compute_extension:extended_server_attributes" => "",
-  "compute_extension:extended_status" => "",
+  "compute_extension:extended_server_attributes" => "rule:admin_api",
+  "compute_extension:extended_status" => "rule:admin_or_owner",
   "compute_extension:extended_availability_zone" => "",
-  "compute_extension:extended_ips" => "",
+  "compute_extension:extended_ips" => "rule:admin_or_owner",
+  "compute_extension:extended_ips_mac" => "rule:admin_or_owner",
+  "compute_extension:extended_vif_net" => "role:admin",
+  "compute_extension:extended_volumes" => "rule:admin_or_owner",
   "compute_extension:fixed_ips" => "rule:admin_api",
-  "compute_extension:flavor_access" => "",
-  "compute_extension:flavor_disabled" => "",
-  "compute_extension:flavor_rxtx" => "",
-  "compute_extension:flavor_swap" => "",
-  "compute_extension:flavorextradata" => "",
-  "compute_extension:flavorextraspecs:index" => "",
-  "compute_extension:flavorextraspecs:show" => "",
+  "compute_extension:flavor_access" => "rule:admin_or_owner",
+  "compute_extension:flavor_access:addTenantAccess" => "rule:admin_api",
+  "compute_extension:flavor_access:removeTenantAccess" => "rule:admin_api",
+  "compute_extension:flavor_disabled" => "rule:admin_or_owner",
+  "compute_extension:flavor_rxtx" => "rule:admin_or_owner",
+  "compute_extension:flavor_swap" => "rule:admin_or_owner",
+  "compute_extension:flavorextradata" => "rule:admin_or_owner",
+  "compute_extension:flavorextraspecs:index" => "role:admin",
+  "compute_extension:flavorextraspecs:show" => "role:admin",
   "compute_extension:flavorextraspecs:create" => "rule:admin_api",
   "compute_extension:flavorextraspecs:update" => "rule:admin_api",
   "compute_extension:flavorextraspecs:delete" => "rule:admin_api",
   "compute_extension:flavormanage" => "rule:admin_api",
-  "compute_extension:floating_ip_dns" => "",
-  "compute_extension:floating_ip_pools" => "",
-  "compute_extension:floating_ips" => "",
+  "compute_extension:floating_ip_dns" => "rule:admin_or_owner",
+  "compute_extension:floating_ip_pools" => "rule:admin_or_owner",
+  "compute_extension:floating_ips" => "rule:admin_or_owner",
   "compute_extension:floating_ips_bulk" => "rule:admin_api",
-  "compute_extension:fping" => "",
+  "compute_extension:fping" => "role:admin",
   "compute_extension:fping:all_tenants" => "rule:admin_api",
   "compute_extension:hide_server_addresses" => "is_admin:False",
   "compute_extension:hosts" => "rule:admin_api",
   "compute_extension:hypervisors" => "rule:admin_api",
-  "compute_extension:image_size" => "",
-  "compute_extension:instance_actions" => "",
+  "compute_extension:image_size" => "role:admin",
+  "compute_extension:instance_actions" => "rule:admin_or_owner",
   "compute_extension:instance_actions:events" => "rule:admin_api",
   "compute_extension:instance_usage_audit_log" => "rule:admin_api",
-  "compute_extension:keypairs" => "",
-  "compute_extension:multinic" => "",
+  "compute_extension:keypairs" => "rule:admin_or_owner",
+  "compute_extension:keypairs:index" => "rule:admin_or_owner",
+  "compute_extension:keypairs:show" => "rule:admin_or_owner",
+  "compute_extension:keypairs:create" => "",
+  "compute_extension:keypairs:delete" => "rule:admin_or_owner",
+  "compute_extension:multinic" => "role:admin",
   "compute_extension:networks" => "rule:admin_api",
-  "compute_extension:networks:view" => "",
+  "compute_extension:networks:view" => "role:admin",
   "compute_extension:networks_associate" => "rule:admin_api",
-  "compute_extension:quotas:show" => "",
+  "compute_extension:quotas:show" => "rule:admin_or_owner",
   "compute_extension:quotas:update" => "rule:admin_api",
-  "compute_extension:quota_classes" => "",
-  "compute_extension:rescue" => "",
+  "compute_extension:quotas:delete" => "rule:admin_api",
+  "compute_extension:quota_classes" => "role:admin",
+  "compute_extension:rescue" => "role:admin",
   "compute_extension:security_group_default_rules" => "rule:admin_api",
-  "compute_extension:security_groups" => "",
-  "compute_extension:server_diagnostics" => "rule:admin_api",
-  "compute_extension:server_password" => "",
+  "compute_extension:security_groups" => "rule:admin_or_owner",
+  "compute_extension:server_diagnostics" => "rule:admin_or_owner",
+  "compute_extension:server_groups" => "role:admin",
+  "compute_extension:server_password" => "role:admin",
+  "compute_extension:server_usage" => "rule:admin_or_owner",
   "compute_extension:services" => "rule:admin_api",
+  "compute_extension:shelve" => "role:admin",
+  "compute_extension:shelveOffload" => "rule:admin_api",
   "compute_extension:simple_tenant_usage:show" => "rule:admin_or_owner",
   "compute_extension:simple_tenant_usage:list" => "rule:admin_api",
+  "compute_extension:unshelve" => "role:admin",
   "compute_extension:users" => "rule:admin_api",
-  "compute_extension:virtual_interfaces" => "",
-  "compute_extension:virtual_storage_arrays" => "",
-  "compute_extension:volumes" => "",
-  "compute_extension:volume_attachments:index" => "",
-  "compute_extension:volume_attachments:show" => "",
-  "compute_extension:volume_attachments:create" => "",
-  "compute_extension:volume_attachments:delete" => "",
-  "compute_extension:volumetypes" => "",
-  "compute_extension:availability_zone:list" => "",
+  "compute_extension:virtual_interfaces" => "role:admin",
+  "compute_extension:virtual_storage_arrays" => "role:admin",
+  "compute_extension:volumes" => "rule:admin_or_owner",
+  "compute_extension:volume_attachments:index" => "rule:admin_or_owner",
+  "compute_extension:volume_attachments:show" => "rule:admin_or_owner",
+  "compute_extension:volume_attachments:create" => "rule:admin_or_owner",
+  "compute_extension:volume_attachments:update" => "rule:admin_or_owner",
+  "compute_extension:volume_attachments:delete" => "rule:admin_or_owner",
+  "compute_extension:volumetypes" => "role:admin",
+  "compute_extension:availability_zone:list" => "rule:admin_or_owner",
   "compute_extension:availability_zone:detail" => "rule:admin_api",
+  "compute_extension:used_limits_for_admin" => "rule:admin_api",
+  "compute_extension:migrations:index" => "rule:admin_api",
+  "compute_extension:os-assisted-volume-snapshots:create" => "rule:admin_api",
+  "compute_extension:os-assisted-volume-snapshots:delete" => "rule:admin_api",
+  "compute_extension:console_auth_tokens" => "rule:admin_api",
+  "compute_extension:os-server-external-events:create" => "rule:admin_api",
 
-  "volume:create" => "",
-  "volume:get_all" => "",
-  "volume:get_volume_metadata" => "",
-  "volume:get_snapshot" => "",
-  "volume:get_all_snapshots" => "",
+  "network:get_all" => "rule:admin_or_owner",
+  "network:get" => "rule:admin_or_owner",
+  "network:create" => "rule:admin_or_owner",
+  "network:delete" => "rule:admin_or_owner",
+  "network:associate" => "rule:admin_or_owner",
+  "network:disassociate" => "rule:admin_or_owner",
+  "network:get_vifs_by_instance" => "rule:admin_or_owner",
+  "network:allocate_for_instance" => "rule:admin_or_owner",
+  "network:deallocate_for_instance" => "rule:admin_or_owner",
+  "network:validate_networks" => "rule:admin_or_owner",
+  "network:get_instance_uuids_by_ip_filter" => "rule:admin_or_owner",
+  "network:get_instance_id_by_floating_address" => "rule:admin_or_owner",
+  "network:setup_networks_on_host" => "rule:admin_or_owner",
+  "network:get_backdoor_port" => "rule:admin_or_owner",
 
-  "volume_extension:types_manage" => "rule:admin_api",
-  "volume_extension:types_extra_specs" => "rule:admin_api",
-  "volume_extension:volume_admin_actions:reset_status" => "rule:admin_api",
-  "volume_extension:snapshot_admin_actions:reset_status" => "rule:admin_api",
-  "volume_extension:volume_admin_actions:force_delete" => "rule:admin_api",
+  "network:get_floating_ip" => "rule:admin_or_owner",
+  "network:get_floating_ip_pools" => "rule:admin_or_owner",
+  "network:get_floating_ip_by_address" => "rule:admin_or_owner",
+  "network:get_floating_ips_by_project" => "rule:admin_or_owner",
+  "network:get_floating_ips_by_fixed_address" => "rule:admin_or_owner",
+  "network:allocate_floating_ip" => "rule:admin_or_owner",
+  "network:associate_floating_ip" => "rule:admin_or_owner",
+  "network:disassociate_floating_ip" => "rule:admin_or_owner",
+  "network:release_floating_ip" => "rule:admin_or_owner",
+  "network:migrate_instance_start" => "rule:admin_or_owner",
+  "network:migrate_instance_finish" => "rule:admin_or_owner",
 
-  "network:get_all" => "",
-  "network:get" => "",
-  "network:create" => "",
-  "network:delete" => "",
-  "network:associate" => "",
-  "network:disassociate" => "",
-  "network:get_vifs_by_instance" => "",
-  "network:allocate_for_instance" => "",
-  "network:deallocate_for_instance" => "",
-  "network:validate_networks" => "",
-  "network:get_instance_uuids_by_ip_filter" => "",
-  "network:get_instance_id_by_floating_address" => "",
-  "network:setup_networks_on_host" => "",
-  "network:get_backdoor_port" => "",
+  "network:get_fixed_ip" => "role:admin",
+  "network:get_fixed_ip_by_address" => "rule:admin_or_owner",
+  "network:add_fixed_ip_to_instance" => "role:admin",
+  "network:remove_fixed_ip_from_instance" => "role:admin",
+  "network:add_network_to_project" => "role:admin",
+  "network:get_instance_nw_info" => "rule:admin_or_owner",
 
-  "network:get_floating_ip" => "",
-  "network:get_floating_ip_pools" => "",
-  "network:get_floating_ip_by_address" => "",
-  "network:get_floating_ips_by_project" => "",
-  "network:get_floating_ips_by_fixed_address" => "",
-  "network:allocate_floating_ip" => "",
-  "network:deallocate_floating_ip" => "",
-  "network:associate_floating_ip" => "",
-  "network:disassociate_floating_ip" => "",
-  "network:release_floating_ip" => "",
-  "network:migrate_instance_start" => "",
-  "network:migrate_instance_finish" => "",
+  "network:get_dns_domains" => "role:admin",
+  "network:add_dns_entry" => "role:admin",
+  "network:modify_dns_entry" => "role:admin",
+  "network:delete_dns_entry" => "role:admin",
+  "network:get_dns_entries_by_address" => "role:admin",
+  "network:get_dns_entries_by_name" => "role:admin",
+  "network:create_private_dns_domain" => "role:admin",
+  "network:create_public_dns_domain" => "role:admin",
+  "network:delete_dns_domain" => "role:admin",
+  "network:attach_external_network" => "rule:admin_api",
 
-  "network:get_fixed_ip" => "",
-  "network:get_fixed_ip_by_address" => "",
-  "network:add_fixed_ip_to_instance" => "",
-  "network:remove_fixed_ip_from_instance" => "",
-  "network:add_network_to_project" => "",
-  "network:get_instance_nw_info" => "",
-
-  "network:get_dns_domains" => "",
-  "network:add_dns_entry" => "",
-  "network:modify_dns_entry" => "",
-  "network:delete_dns_entry" => "",
-  "network:get_dns_entries_by_address" => "",
-  "network:get_dns_entries_by_name" => "",
-  "network:create_private_dns_domain" => "",
-  "network:create_public_dns_domain" => "",
-  "network:delete_dns_domain" => ""
+  "os_compute_api:servers:start" => "role:admin",
+  "os_compute_api:servers:stop" => "role:admin",
+  "os_compute_api:os-access-ips:discoverable" => "role:admin",
+  "os_compute_api:os-access-ips" => "role:admin",
+  "os_compute_api:os-admin-actions" => "rule:admin_api",
+  "os_compute_api:os-admin-actions:discoverable" => "role:admin",
+  "os_compute_api:os-admin-actions:reset_network" => "rule:admin_api",
+  "os_compute_api:os-admin-actions:inject_network_info" => "rule:admin_api",
+  "os_compute_api:os-admin-actions:reset_state" => "rule:admin_api",
+  "os_compute_api:os-admin-password" => "role:admin",
+  "os_compute_api:os-admin-password:discoverable" => "role:admin",
+  "os_compute_api:os-aggregates:discoverable" => "role:admin",
+  "os_compute_api:os-aggregates:index" => "rule:admin_api",
+  "os_compute_api:os-aggregates:create" => "rule:admin_api",
+  "os_compute_api:os-aggregates:show" => "rule:admin_api",
+  "os_compute_api:os-aggregates:update" => "rule:admin_api",
+  "os_compute_api:os-aggregates:delete" => "rule:admin_api",
+  "os_compute_api:os-aggregates:add_host" => "rule:admin_api",
+  "os_compute_api:os-aggregates:remove_host" => "rule:admin_api",
+  "os_compute_api:os-aggregates:set_metadata" => "rule:admin_api",
+  "os_compute_api:os-agents" => "rule:admin_api",
+  "os_compute_api:os-agents:discoverable" => "role:admin",
+  "os_compute_api:os-attach-interfaces" => "role:admin",
+  "os_compute_api:os-attach-interfaces:discoverable" => "role:admin",
+  "os_compute_api:os-baremetal-nodes" => "rule:admin_api",
+  "os_compute_api:os-baremetal-nodes:discoverable" => "role:admin",
+  "os_compute_api:os-block-device-mapping-v1:discoverable" => "role:admin",
+  "os_compute_api:os-cells" => "rule:admin_api",
+  "os_compute_api:os-cells:create" => "rule:admin_api",
+  "os_compute_api:os-cells:delete" => "rule:admin_api",
+  "os_compute_api:os-cells:update" => "rule:admin_api",
+  "os_compute_api:os-cells:sync_instances" => "rule:admin_api",
+  "os_compute_api:os-cells:discoverable" => "role:admin",
+  "os_compute_api:os-certificates:create" => "role:admin",
+  "os_compute_api:os-certificates:show" => "role:admin",
+  "os_compute_api:os-certificates:discoverable" => "role:admin",
+  "os_compute_api:os-cloudpipe" => "rule:admin_api",
+  "os_compute_api:os-cloudpipe:discoverable" => "role:admin",
+  "os_compute_api:os-consoles:discoverable" => "role:admin",
+  "os_compute_api:os-consoles:create" => "role:admin",
+  "os_compute_api:os-consoles:delete" => "role:admin",
+  "os_compute_api:os-consoles:index" => "role:admin",
+  "os_compute_api:os-consoles:show" => "role:admin",
+  "os_compute_api:os-console-output:discoverable" => "role:admin",
+  "os_compute_api:os-console-output" => "role:admin",
+  "os_compute_api:os-remote-consoles" => "role:admin",
+  "os_compute_api:os-remote-consoles:discoverable" => "role:admin",
+  "os_compute_api:os-create-backup:discoverable" => "role:admin",
+  "os_compute_api:os-create-backup" => "role:admin",
+  "os_compute_api:os-deferred-delete" => "role:admin",
+  "os_compute_api:os-deferred-delete:discoverable" => "role:admin",
+  "os_compute_api:os-disk-config" => "role:admin",
+  "os_compute_api:os-disk-config:discoverable" => "role:admin",
+  "os_compute_api:os-evacuate" => "rule:admin_api",
+  "os_compute_api:os-evacuate:discoverable" => "role:admin",
+  "os_compute_api:os-extended-server-attributes" => "rule:admin_api",
+  "os_compute_api:os-extended-server-attributes:discoverable" => "role:admin",
+  "os_compute_api:os-extended-status" => "role:admin",
+  "os_compute_api:os-extended-status:discoverable" => "role:admin",
+  "os_compute_api:os-extended-availability-zone" => "role:admin",
+  "os_compute_api:os-extended-availability-zone:discoverable" => "role:admin",
+  "os_compute_api:extension_info:discoverable" => "role:admin",
+  "os_compute_api:os-extended-volumes" => "role:admin",
+  "os_compute_api:os-extended-volumes:discoverable" => "role:admin",
+  "os_compute_api:os-fixed-ips" => "rule:admin_api",
+  "os_compute_api:os-fixed-ips:discoverable" => "role:admin",
+  "os_compute_api:os-flavor-access" => "role:admin",
+  "os_compute_api:os-flavor-access:discoverable" => "role:admin",
+  "os_compute_api:os-flavor-access:remove_tenant_access" => "rule:admin_api",
+  "os_compute_api:os-flavor-access:add_tenant_access" => "rule:admin_api",
+  "os_compute_api:os-flavor-rxtx" => "role:admin",
+  "os_compute_api:os-flavor-rxtx:discoverable" => "role:admin",
+  "os_compute_api:flavors:discoverable" => "role:admin",
+  "os_compute_api:os-flavor-extra-specs:discoverable" => "role:admin",
+  "os_compute_api:os-flavor-extra-specs:index" => "role:admin",
+  "os_compute_api:os-flavor-extra-specs:show" => "role:admin",
+  "os_compute_api:os-flavor-extra-specs:create" => "rule:admin_api",
+  "os_compute_api:os-flavor-extra-specs:update" => "rule:admin_api",
+  "os_compute_api:os-flavor-extra-specs:delete" => "rule:admin_api",
+  "os_compute_api:os-flavor-manage:discoverable" => "role:admin",
+  "os_compute_api:os-flavor-manage" => "rule:admin_api",
+  "os_compute_api:os-floating-ip-dns" => "role:admin",
+  "os_compute_api:os-floating-ip-dns:discoverable" => "role:admin",
+  "os_compute_api:os-floating-ip-pools" => "role:admin",
+  "os_compute_api:os-floating-ip-pools:discoverable" => "role:admin",
+  "os_compute_api:os-floating-ips" => "role:admin",
+  "os_compute_api:os-floating-ips:discoverable" => "role:admin",
+  "os_compute_api:os-floating-ips-bulk" => "rule:admin_api",
+  "os_compute_api:os-floating-ips-bulk:discoverable" => "role:admin",
+  "os_compute_api:os-fping" => "role:admin",
+  "os_compute_api:os-fping:discoverable" => "role:admin",
+  "os_compute_api:os-fping:all_tenants" => "rule:admin_api",
+  "os_compute_api:os-hide-server-addresses" => "is_admin:False",
+  "os_compute_api:os-hide-server-addresses:discoverable" => "role:admin",
+  "os_compute_api:os-hosts" => "rule:admin_api",
+  "os_compute_api:os-hosts:discoverable" => "role:admin",
+  "os_compute_api:os-hypervisors" => "rule:admin_api",
+  "os_compute_api:os-hypervisors:discoverable" => "role:admin",
+  "os_compute_api:images:discoverable" => "role:admin",
+  "os_compute_api:image-size" => "role:admin",
+  "os_compute_api:image-size:discoverable" => "role:admin",
+  "os_compute_api:os-instance-actions" => "role:admin",
+  "os_compute_api:os-instance-actions:discoverable" => "role:admin",
+  "os_compute_api:os-instance-actions:events" => "rule:admin_api",
+  "os_compute_api:os-instance-usage-audit-log" => "rule:admin_api",
+  "os_compute_api:os-instance-usage-audit-log:discoverable" => "role:admin",
+  "os_compute_api:ips:discoverable" => "role:admin",
+  "os_compute_api:ips:index" => "role:admin",
+  "os_compute_api:ips:show" => "role:admin",
+  "os_compute_api:os-keypairs:discoverable" => "role:admin",
+  "os_compute_api:os-keypairs" => "role:admin",
+  "os_compute_api:os-keypairs:index" => "role:admin",
+  "os_compute_api:os-keypairs:show" => "role:admin",
+  "os_compute_api:os-keypairs:create" => "role:admin",
+  "os_compute_api:os-keypairs:delete" => "role:admin",
+  "os_compute_api:limits:discoverable" => "role:admin",
+  "os_compute_api:os-lock-server:discoverable" => "role:admin",
+  "os_compute_api:os-lock-server:lock" => "role:admin",
+  "os_compute_api:os-lock-server:unlock" => "role:admin",
+  "os_compute_api:os-migrate-server:discoverable" => "role:admin",
+  "os_compute_api:os-migrate-server:migrate" => "rule:admin_api",
+  "os_compute_api:os-migrate-server:migrate_live" => "rule:admin_api",
+  "os_compute_api:os-multinic" => "role:admin",
+  "os_compute_api:os-multinic:discoverable" => "role:admin",
+  "os_compute_api:os-networks" => "rule:admin_api",
+  "os_compute_api:os-networks:view" => "role:admin",
+  "os_compute_api:os-networks:discoverable" => "role:admin",
+  "os_compute_api:os-networks-associate" => "rule:admin_api",
+  "os_compute_api:os-networks-associate:discoverable" => "role:admin",
+  "os_compute_api:os-pause-server:discoverable" => "role:admin",
+  "os_compute_api:os-pause-server:pause" => "role:admin",
+  "os_compute_api:os-pause-server:unpause" => "role:admin",
+  "os_compute_api:os-pci:pci_servers" => "role:admin",
+  "os_compute_api:os-pci:discoverable" => "role:admin",
+  "os_compute_api:os-pci:index" => "rule:admin_api",
+  "os_compute_api:os-pci:detail" => "rule:admin_api",
+  "os_compute_api:os-pci:show" => "rule:admin_api",
+  "os_compute_api:os-personality:discoverable" => "role:admin",
+  "os_compute_api:os-preserve-ephemeral-rebuild:discoverable" => "role:admin",
+  "os_compute_api:os-quota-sets:discoverable" => "role:admin",
+  "os_compute_api:os-quota-sets:show" => "role:admin",
+  "os_compute_api:os-quota-sets:update" => "rule:admin_api",
+  "os_compute_api:os-quota-sets:delete" => "rule:admin_api",
+  "os_compute_api:os-quota-sets:detail" => "rule:admin_api",
+  "os_compute_api:os-quota-class-sets" => "role:admin",
+  "os_compute_api:os-quota-class-sets:discoverable" => "role:admin",
+  "os_compute_api:os-rescue" => "role:admin",
+  "os_compute_api:os-rescue:discoverable" => "role:admin",
+  "os_compute_api:os-scheduler-hints:discoverable" => "role:admin",
+  "os_compute_api:os-security-group-default-rules:discoverable" => "role:admin",
+  "os_compute_api:os-security-group-default-rules" => "rule:admin_api",
+  "os_compute_api:os-security-groups" => "role:admin",
+  "os_compute_api:os-security-groups:discoverable" => "role:admin",
+  "os_compute_api:os-server-diagnostics" => "rule:admin_api",
+  "os_compute_api:os-server-diagnostics:discoverable" => "role:admin",
+  "os_compute_api:os-server-password" => "role:admin",
+  "os_compute_api:os-server-password:discoverable" => "role:admin",
+  "os_compute_api:os-server-usage" => "role:admin",
+  "os_compute_api:os-server-usage:discoverable" => "role:admin",
+  "os_compute_api:os-server-groups" => "role:admin",
+  "os_compute_api:os-server-groups:discoverable" => "role:admin",
+  "os_compute_api:os-services" => "rule:admin_api",
+  "os_compute_api:os-services:discoverable" => "role:admin",
+  "os_compute_api:server-metadata:discoverable" => "role:admin",
+  "os_compute_api:server-metadata:index" => "role:admin",
+  "os_compute_api:server-metadata:show" => "role:admin",
+  "os_compute_api:server-metadata:delete" => "role:admin",
+  "os_compute_api:server-metadata:create" => "role:admin",
+  "os_compute_api:server-metadata:update" => "role:admin",
+  "os_compute_api:server-metadata:update_all" => "role:admin",
+  "os_compute_api:servers:discoverable" => "role:admin",
+  "os_compute_api:os-shelve:shelve" => "role:admin",
+  "os_compute_api:os-shelve:shelve:discoverable" => "role:admin",
+  "os_compute_api:os-shelve:shelve_offload" => "rule:admin_api",
+  "os_compute_api:os-simple-tenant-usage:discoverable" => "role:admin",
+  "os_compute_api:os-simple-tenant-usage:show" => "role:admin",
+  "os_compute_api:os-simple-tenant-usage:list" => "rule:admin_api",
+  "os_compute_api:os-suspend-server:discoverable" => "role:admin",
+  "os_compute_api:os-suspend-server:suspend" => "role:admin",
+  "os_compute_api:os-suspend-server:resume" => "role:admin",
+  "os_compute_api:os-tenant-networks" => "role:admin",
+  "os_compute_api:os-tenant-networks:discoverable" => "role:admin",
+  "os_compute_api:os-shelve:unshelve" => "role:admin",
+  "os_compute_api:os-user-data:discoverable" => "role:admin",
+  "os_compute_api:os-virtual-interfaces" => "role:admin",
+  "os_compute_api:os-virtual-interfaces:discoverable" => "role:admin",
+  "os_compute_api:os-volumes" => "role:admin",
+  "os_compute_api:os-volumes:discoverable" => "role:admin",
+  "os_compute_api:os-volumes-attachments:index" => "role:admin",
+  "os_compute_api:os-volumes-attachments:show" => "role:admin",
+  "os_compute_api:os-volumes-attachments:create" => "role:admin",
+  "os_compute_api:os-volumes-attachments:update" => "role:admin",
+  "os_compute_api:os-volumes-attachments:delete" => "role:admin",
+  "os_compute_api:os-volumes-attachments:discoverable" => "role:admin",
+  "os_compute_api:os-availability-zone:list" => "rule:admin_or_owner",
+  "os_compute_api:os-availability-zone:discoverable" => "role:admin",
+  "os_compute_api:os-availability-zone:detail" => "rule:admin_api",
+  "os_compute_api:os-used-limits" => "rule:admin_api",
+  "os_compute_api:os-used-limits:discoverable" => "role:admin",
+  "os_compute_api:os-migrations:index" => "rule:admin_api",
+  "os_compute_api:os-migrations:discoverable" => "role:admin",
+  "os_compute_api:os-assisted-volume-snapshots:create" => "rule:admin_api",
+  "os_compute_api:os-assisted-volume-snapshots:delete" => "rule:admin_api",
+  "os_compute_api:os-assisted-volume-snapshots:discoverable" => "role:admin",
+  "os_compute_api:os-console-auth-tokens" => "rule:admin_api",
+  "os_compute_api:os-server-external-events:create" => "rule:admin_api"
 }
 
 ###########################################
@@ -776,11 +1042,11 @@ default['bcpc']['cinder']['policy'] = {
   "volume_extension:replication:promote" => "rule:admin_api",
   "volume_extension:replication:reenable" => "rule:admin_api",
 
-  "backup:create" => "",
-  "backup:delete" => "",
+  "backup:create" => "role:admin",
+  "backup:delete" => "role:admin",
   "backup:get" => "",
   "backup:get_all" => "",
-  "backup:restore" => "",
+  "backup:restore" => "role:admin",
   "backup:backup-import" => "rule:admin_api",
   "backup:backup-export" => "rule:admin_api",
 
@@ -809,7 +1075,7 @@ default['bcpc']['glance']['policy'] = {
   "context_is_admin" => "role:admin",
   "default" => "",
 
-  "add_image" => "",
+  "add_image" => "role:admin",
   "delete_image" => "",
   "get_image" => "",
   "get_images" => "",
@@ -818,7 +1084,7 @@ default['bcpc']['glance']['policy'] = {
   "copy_from" => "",
 
   "download_image" => "",
-  "upload_image" => "",
+  "upload_image" => "role:admin",
 
   "delete_image_location" => "",
   "get_image_location" => "",
@@ -983,6 +1249,16 @@ default['bcpc']['cpupower']['ondemand_powersave_bias'] = nil
 default['bcpc']['cpupower']['ondemand_sampling_down_factor'] = nil
 default['bcpc']['cpupower']['ondemand_sampling_rate'] = nil
 default['bcpc']['cpupower']['ondemand_up_threshold'] = nil
+###########################################
+#
+# General monitoring settings
+#
+###########################################
+#
+# List of monitoring clients external to cluster that we are monitoring
+default['bcpc']['monitoring']['external_clients'] = []
+# Monitoring database settings
+default['bcpc']['monitoring']['mysql']['innodb_buffer_pool_size'] = nil
 
 ###########################################
 #
@@ -991,12 +1267,12 @@ default['bcpc']['cpupower']['ondemand_up_threshold'] = nil
 ###########################################
 #
 # Graphite Server FQDN
-default['bcpc']['graphite']['fqdn'] = "graphite.#{node['bcpc']['domain_name']}"
+default['bcpc']['graphite']['fqdn'] = "graphite.#{node['bcpc']['cluster_domain']}"
 #
 # Default retention rates
 # http://graphite.readthedocs.org/en/latest/config-carbon.html#storage-schemas-conf
 default['bcpc']['graphite']['retention'] = '60s:1d'
-#
+
 ###########################################
 #
 # Diamond settings
@@ -1008,26 +1284,9 @@ default['bcpc']['diamond']['collectors']['rabbitmq']['queues'] = nil
 # Regular expression or list of queues to not report on.
 # If not nil, this overrides "queues".
 default['bcpc']['diamond']['collectors']['rabbitmq']['queues_ignored'] = '.*'
-###########################################
-#
-# defaults for the bcpc.bootstrap settings
-#
-###########################################
-#
-# A value of nil means to let the Ubuntu installer work it out - it
-# will try to find the nearest one. However the selected mirror is
-# often slow.
-default['bcpc']['bootstrap']['mirror'] = nil
-#
-# if you do specify a mirror, you can adjust the file path that comes
-# after the hostname in the URL here
-default['bcpc']['bootstrap']['mirror_path'] = "/ubuntu"
-#
-# Default retention rates
-# http://graphite.readthedocs.org/en/latest/config-carbon.html#storage-schemas-conf
-default['bcpc']['graphite']['retention'] = '60s:1d'
+# List of vhosts to report on. If nil, report none.
+default['bcpc']['diamond']['collectors']['rabbitmq']['vhosts'] = nil
 
-#
 ###########################################
 #
 # defaults for the bcpc.bootstrap settings
@@ -1064,8 +1323,38 @@ default['bcpc']['rally']['user'] = 'ubuntu'
 #
 ###########################################
 
-default['bcpc']['flavors']['deleted'] = []
-default['bcpc']['flavors']['enabled'] = {}
+default['bcpc']['flavors'] = {
+    "m1.tiny"  => {
+      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    },
+    "m1.small"  => {
+      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    },
+    "m1.medium"  => {
+      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    },
+    "m1.large"  => {
+      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    },
+    "m1.xlarge"  => {
+      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    }
+}
+
+###########################################
+#
+# Openstack Host Aggregates
+#
+###########################################
+
+default['bcpc']['host_aggregates'] = {
+    "general_compute" => {
+      "general_compute" => "yes"
+    }
+}
+
+default['bcpc']['aggregate_membership'] = []
+
 ###########################################
 #
 # Zabbix settings
@@ -1074,7 +1363,16 @@ default['bcpc']['flavors']['enabled'] = {}
 #
 default['bcpc']['zabbix']['discovery']['delay'] = 600
 default['bcpc']['zabbix']['discovery']['ip_ranges'] = [node['bcpc']['management']['cidr']]
-default['bcpc']['zabbix']['fqdn'] = "zabbix.#{node['bcpc']['domain_name']}"
+default['bcpc']['zabbix']['fqdn'] = "zabbix.#{node['bcpc']['cluster_domain']}"
+default['bcpc']['zabbix']['storage_retention'] = 7
+default['bcpc']['zabbix']['php_settings'] = {
+    'max_execution_time' => 300,
+    'memory_limit' => '256M',
+    'post_max_size' => '16M',
+    'upload_max_filesize' => '2M',
+    'max_input_time' => 300,
+    'date.timezone' => 'America/New_York'
+}
 ###########################################
 #
 # Kibana settings
@@ -1082,4 +1380,14 @@ default['bcpc']['zabbix']['fqdn'] = "zabbix.#{node['bcpc']['domain_name']}"
 ###########################################
 #
 # Kibana Server FQDN
-default['bcpc']['kibana']['fqdn'] = "kibana.#{node['bcpc']['domain_name']}"
+default['bcpc']['kibana']['fqdn'] = "kibana.#{node['bcpc']['cluster_domain']}"
+###########################################
+#
+# Elasticsearch settings
+#
+###########################################
+#
+# Heap memory size
+default['bcpc']['elasticsearch']['heap_size'] = '256m'
+# Additional Java options
+default['bcpc']['elasticsearch']['java_opts'] = '-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -verbose:gc -Xloggc:/var/log/elasticsearch/gc.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=10m'

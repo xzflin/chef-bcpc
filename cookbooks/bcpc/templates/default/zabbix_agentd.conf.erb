@@ -14,7 +14,7 @@
 #
 # Mandatory: no
 # Default:
-# PidFile=/tmp/zabbix_agentd.pid
+PidFile=/var/run/zabbix/zabbix_agentd.pid
 
 ### Option: LogFile
 #   Name of log file.
@@ -222,8 +222,8 @@ HostMetadata=BCPC-Worknode
 # Default:
 # Include=
 
-# Include=/usr/local/etc/zabbix_agentd.userparams.conf
-Include=/usr/local/etc/zabbix_agentd.conf.d/
+# Include=/etc/zabbix/zabbix_agentd.d/userparams.conf
+Include=/etc/zabbix/zabbix_agentd.d/
 
 ####### USER-DEFINED MONITORED PARAMETERS #######
 
@@ -244,7 +244,3 @@ UnsafeUserParameters=1
 #
 # Mandatory: no
 # Default:
-UserParameter=mysql.status[*],echo "show global status where Variable_name='$1';" | mysql --defaults-file=/etc/mysql/debian.cnf -N | awk '{print $$2}'
-UserParameter=mysql.size[*],echo "select sum($(case "$3" in both|"") echo "data_length+index_length";; data|index) echo "$3_length";; free) echo "data_free";; esac)) from information_schema.tables$([[ "$1" = "all" || ! "$1" ]] || echo " where table_schema='$1'")$([[ "$2" = "all" || ! "$2" ]] || echo "and table_name='$2'");" | HOME=/var/lib/zabbix mysql --defaults-file=/etc/mysql/debian.cnf -N
-UserParameter=mysql.ping,HOME=/var/lib/zabbix mysqladmin --defaults-file=/etc/mysql/debian.cnf ping | grep -c alive
-UserParameter=mysql.version,mysql -V

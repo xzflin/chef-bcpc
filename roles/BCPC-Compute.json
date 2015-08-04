@@ -1,0 +1,28 @@
+{
+    "name": "BCPC-Compute",
+    "json_class": "Chef::Role",
+    "run_list": [
+      "role[Basic]",
+      "recipe[bcpc]",
+      "recipe[bcpc::system]",
+      "recipe[bcpc::networking]",
+      "recipe[bcpc::networking-link-test]",
+      "recipe[bcpc::networking-gw-test]",
+      "recipe[bcpc::networking-route-test]",
+      "recipe[bcpc::ceph-work]",
+      "role[BCPC-Rgwnode]",
+      "recipe[bcpc::nova-work]",
+      "recipe[bcpc::diamond]",
+      "recipe[bcpc::fluentd]",
+      "recipe[bcpc::tpm]",
+      "recipe[bcpc::flavors]",
+      "recipe[bcpc::host-aggregates]",
+      "recipe[bcpc::checks-work]",
+      "recipe[bcpc::zabbix-agent]"
+    ],
+    "description": "Run list for a general compute function. Building block, not designed as an applied role.",
+    "chef_type": "role"
+}
+
+
+

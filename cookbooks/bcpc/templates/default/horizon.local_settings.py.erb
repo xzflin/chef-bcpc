@@ -542,8 +542,3 @@ FLAVOR_EXTRA_KEYS = {
         ('quota:outbound_average', _('Quota: Outbound average')),
     ]
 }
-
-<% if not node['bcpc']['vms_key'].nil? %>
-mod = sys.modules['openstack_dashboard.settings']
-mod.INSTALLED_APPS += ('cobalt.horizon',)
-<% end %>

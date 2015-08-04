@@ -59,7 +59,7 @@ filecheck() {
 
 # Define the appropriate version of each binary to grab/build
 VER_KIBANA=4.0.2
-VER_DIAMOND=2c0de81281a6750cf06fac760c081f89a088bca4
+VER_DIAMOND=d6dbab7e9be05201f9109d83157c496dcab7c68b
 VER_ESPLUGIN=9c032b7c628d8da7745fbb1939dcd2db52629943
 
 PROXY_INFO_FILE="/home/vagrant/proxy_info.sh"
@@ -146,22 +146,16 @@ if [ ! -f kibana_${VER_KIBANA}_amd64.deb ]; then
 fi
 FILES="kibana_${VER_KIBANA}_amd64.deb $FILES"
 
-# any pegged gem versions
-REV_elasticsearch="0.2.0"
-
+GEMS=( excon-0.45.3
+       multi_json-1.11.2 multipart-post-2.0.0 faraday-0.9.1
+       elasticsearch-api-1.0.12 elasticsearch-transport-1.0.12
+       elasticsearch-1.0.12 fluent-plugin-elasticsearch-0.9.0 )
 # Grab plugins for fluentd
-for i in elasticsearch tail-multiline tail-ex record-reformer rewrite; do
-    if [ ! -f fluent-plugin-${i}.gem ]; then
-        PEG=REV_${i}
-        if [[ ! -z ${!PEG} ]]; then
-            VERS="-v ${!PEG}"
-        else
-            VERS=""
-        fi
-        gem fetch $GEM_PROXY fluent-plugin-${i} ${VERS}
-        mv fluent-plugin-${i}-*.gem fluent-plugin-${i}.gem
+for GEM in ${GEMS[@]}; do
+    if [ ! -f $GEM.gem ]; then
+        ccurl https://rubygems.global.ssl.fastly.net/gems/$GEM.gem
     fi
-    FILES="fluent-plugin-${i}.gem $FILES"
+    FILES="$GEM.gem $FILES"
 done
 
 # Fetch the cirros image for testing
@@ -232,29 +226,6 @@ if [ ! -f python-carbon_${GRAPHITE_CARBON_VER}_all.deb ] || [ ! -f python-whispe
     rm -rf carbon-${GRAPHITE_CARBON_VER} carbon-${GRAPHITE_CARBON_VER}.tar.gz whisper-${GRAPHITE_WHISPER_VER} whisper-${GRAPHITE_WHISPER_VER}.tar.gz graphite-web-${GRAPHITE_WEB_VER} graphite-web-${GRAPHITE_WEB_VER}.tar.gz
 fi
 FILES="python-carbon_${GRAPHITE_CARBON_VER}_all.deb python-whisper_${GRAPHITE_WHISPER_VER}_all.deb python-graphite-web_${GRAPHITE_WEB_VER}_all.deb $FILES"
-
-# Build the zabbix packages
-if [ ! -f zabbix-agent.tar.gz ] || [ ! -f zabbix-server.tar.gz ]; then
-    ccurl http://sourceforge.net/projects/zabbix/files/ZABBIX%20Latest%20Stable/2.2.2/zabbix-2.2.2.tar.gz
-    tar zxf zabbix-2.2.2.tar.gz
-    rm -rf /tmp/zabbix-install && mkdir -p /tmp/zabbix-install
-    cd zabbix-2.2.2
-    ./configure --prefix=/tmp/zabbix-install --enable-agent --with-ldap
-    make install
-    tar zcf zabbix-agent.tar.gz -C /tmp/zabbix-install .
-    rm -rf /tmp/zabbix-install && mkdir -p /tmp/zabbix-install
-    ./configure --prefix=/tmp/zabbix-install --enable-server --with-mysql --with-ldap
-    make install
-    cp -a frontends/php /tmp/zabbix-install/share/zabbix/
-    cp database/mysql/* /tmp/zabbix-install/share/zabbix/
-    tar zcf zabbix-server.tar.gz -C /tmp/zabbix-install .
-    rm -rf /tmp/zabbix-install
-    cd ..
-    cp zabbix-2.2.2/zabbix-agent.tar.gz .
-    cp zabbix-2.2.2/zabbix-server.tar.gz .
-    rm -rf zabbix-2.2.2 zabbix-2.2.2.tar.gz
-fi
-FILES="zabbix-agent.tar.gz zabbix-server.tar.gz $FILES"
 
 ## Get some python libs
 if [ ! -f python-requests-aws_0.1.6_all.deb ]; then

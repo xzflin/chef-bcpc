@@ -1007,11 +1007,11 @@ rabbit_ha_queues=True
 
 [keystone_authtoken]
 cafile = /etc/ssl/certs/ssl-bcpc.pem
-auth_uri = <%=node['bcpc']['protocol']['keystone']%>://<%=node['bcpc']['management']['vip']%>:5000/v2.0/
+auth_uri = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:5000/v2.0/
 #auth_host = <%=node['bcpc']['management']['vip']%>
 #auth_port = 35357
 #auth_protocol = <%=node['bcpc']['protocol']['keystone']%>
-identity_uri = <%=node['bcpc']['protocol']['keystone']%>://<%=node['bcpc']['management']['vip']%>:35357
+identity_uri = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:35357
 auth_version = v2.0
 admin_tenant_name = <%=node['bcpc']['admin_tenant']%>
 admin_user = <%=get_config('keystone-admin-user')%>

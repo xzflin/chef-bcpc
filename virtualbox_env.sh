@@ -21,7 +21,8 @@ if [[ -z "$VBM" ]]; then
         local version_array
         read -a version_array <<< "$version"
 
-        if ! [[ "${version_array[0]}" -ge "$MIN_MAJOR" && \
+        if ! [[ "${version_array[0]}" -gt "$MIN_MAJOR" || \
+                "${version_array[0]}" -ge "$MIN_MAJOR" && \
                 "${version_array[1]}" -ge "$MIN_MINOR" ]]
         then
             echo "ERROR: VirtualBox $version is less than $MIN_MAJOR.$MIN_MINOR.x!" >&2

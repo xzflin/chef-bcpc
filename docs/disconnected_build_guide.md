@@ -6,7 +6,7 @@ It is possible to do a build of a BCPC cluster in a completely isolated environm
 * a DNS server (does not necessarily need to be able to resolve anything)
 * an NTP server
 * full apt mirrors of all required packages, using apt-mirror or aptly
-* all source files used by `bootstrap/common_scripts/common_build_bins.sh`
+* all source files used by `bootstrap/shared/shared_build_bins.sh`
 
 This guide is tailored towards OS X, since that is what we customarily build on. Where possible, discussion of how to achieve the equivalent on L This guide also assumes that you want to build in complete isolation, like you will be taking a laptop on a flight without any Internet access. If you have any of these services available somewhere, you may of course use them.
 
@@ -72,4 +72,4 @@ You will need to configure the Chef environment appropriately to use all these r
 
 build_bins source files
 ---
-You will need all the files downloaded by `bootstrap/common_scripts/bootstrap_prereqs.sh`. By default, these files are downloaded to `$HOME/.bcpc-cache` on your system, which can be overridden by setting the `BOOTSTRAP_CACHE_DIR` environment variable. These are used by the `bootstrap/common_scripts/common_build_bins.sh` script, which is invoked inside the bootstrap VM to build various binary packages. The source location can be set via the `FILES_ROOT` environment variable, and the destination for the build products can be set with the `BUILD_DEST` environment variable. The build products must go into the `cookbooks/bcpc/files/default/bins` directory and be uploaded to the Chef server with `knife`.
+You will need all the files downloaded by `bootstrap/shared/shared_prereqs.sh`. By default, these files are downloaded to `$HOME/.bcpc-cache` on your system, which can be overridden by setting the `BOOTSTRAP_CACHE_DIR` environment variable. These are used by the `bootstrap/shared/shared_build_bins.sh` script, which is invoked inside the bootstrap VM to build various binary packages. The source location can be set via the `FILES_ROOT` environment variable, and the destination for the build products can be set with the `BUILD_DEST` environment variable. The build products must go into the `cookbooks/bcpc/files/default/bins` directory and be uploaded to the Chef server with `knife`.

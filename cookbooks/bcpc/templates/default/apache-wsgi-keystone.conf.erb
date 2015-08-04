@@ -10,7 +10,6 @@ Listen <%=node['bcpc']['management']['ip']%>:35357
     <IfVersion >= 2.4>
         ErrorLogFormat "%{cu}t %M"
     </IfVersion>
-    ErrorLog /var/log/apache2/keystone.log
     CustomLog /var/log/apache2/keystone_access.log combined
 </VirtualHost>
 
@@ -23,6 +22,5 @@ Listen <%=node['bcpc']['management']['ip']%>:35357
     <IfVersion >= 2.4>
         ErrorLogFormat "%{cu}t %M"
     </IfVersion>
-    ErrorLog /var/log/apache2/keystone.log
     CustomLog /var/log/apache2/keystone_access.log combined
 </VirtualHost>

@@ -23,7 +23,7 @@ done
 
 # Source common bootstrap functions. This is the only place that uses a
 # relative path; everything henceforth must use $REPO_ROOT.
-source ../common_scripts/bootstrap_functions.sh
+source ../shared/shared_functions.sh
 export REPO_ROOT=$REPO_ROOT
 
 # Source the bootstrap configuration file if present.
@@ -48,7 +48,7 @@ export CLUSTER_VM_DRIVE_SIZE=${CLUSTER_VM_DRIVE_SIZE:-20480}
 
 # Perform preflight checks to validate environment sanity as much as possible.
 echo "Performing preflight environment validation..."
-source $REPO_ROOT/bootstrap/common_scripts/bootstrap_validate_env.sh
+source $REPO_ROOT/bootstrap/shared/shared_validate_env.sh
 
 # Test that VirtualBox is really installed and of an appropriate version.
 # If successful, registers $VBM as the location of VBoxManage.
@@ -58,13 +58,13 @@ source $REPO_ROOT/bootstrap/vbox_scripts/vbox_test.sh
 # Configure and test any proxy configured in $BOOTSTRAP_PROXY.
 if [[ -z $BOOTSTRAP_PROXY ]]; then
   echo "Testing configured proxy..."
-  source $REPO_ROOT/bootstrap/common_scripts/bootstrap_proxy_setup.sh
+  source $REPO_ROOT/bootstrap/shared/shared_proxy_setup.sh
 fi
 
 # Do prerequisite work prior to starting build, downloading files and
 # creating local directories.
 echo "Downloading necessary files to local cache..."
-source $REPO_ROOT/bootstrap/common_scripts/bootstrap_prereqs.sh
+source $REPO_ROOT/bootstrap/shared/shared_prereqs.sh
 
 # Terminate existing BCPC VMs and clean out $BCPC_VM_DIR.
 # (don't source this script because VBoxManage is expected to return non-0)

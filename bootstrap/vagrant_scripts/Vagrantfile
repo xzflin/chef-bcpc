@@ -1,6 +1,5 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
-
 # This is a Vagrantfile to automatically provision a local BCPC cluster.
 
 require 'openssl' # used to validate CA certificates
@@ -9,34 +8,71 @@ require 'uri' # used to parse the local mirror if one is given
 Vagrant.require_version ">= 1.7.0"
 ENV['VAGRANT_DEFAULT_PROVIDER'] = 'virtualbox'
 
-$bootstrap_domain = ( ENV["BOOTSTRAP_DOMAIN"] or "bcpc.example.com" )
-$local_mirror = ENV["BOOTSTRAP_APT_MIRROR"]
-$http_proxy_server = ENV["BOOTSTRAP_HTTP_PROXY"]
-$https_proxy_server = ENV["BOOTSTRAP_HTTPS_PROXY"]
-$additional_cacerts_dir = ENV["BOOTSTRAP_ADDITIONAL_CACERTS_DIR"]
-$box_url = "#{ENV['BOOTSTRAP_CACHE_DIR']}/trusty-server-cloudimg-amd64-vagrant-disk1.box"
-$packages_to_remove = ['puppet', 'puppet-common']
-$monitoring_nodes = ENV["MONITORING_NODES"].to_i
+# if being run via BOOT_GO.sh, ENV['REPO_ROOT'] will be the root of the repo;
+# if it is not set, set it ourselves
+ENV['REPO_ROOT'] ||= %x{git rev-parse --show-toplevel}.strip
+
+# pull in the bootstrap config defaults and overrides (even though these would already
+# be set by BOOT_GO.sh, do it again here so that Vagrant always has access to all
+# configuration variables)
+def extract_and_export_envvar(line)
+  matches = line.match(/^\s*(?!#)(export |)(?<name>.+)=(?<value>.+)$/)
+  unless matches.nil?
+    name, value = matches[:name], matches[:value]
+    # this blob interpolates existing environment variables in
+    interpolated_value = value.dup
+    envvars_to_interpolate = interpolated_value.scan /\$\w+/
+    envvars_to_interpolate.flatten.each {|v| interpolated_value.gsub!(v, ENV[v.tr('$', '')])}
+    explanation = (ENV[name] ? "Overriding " : "Setting ") + "#{name} = #{interpolated_value}"
+    explanation << " (originally #{value})" if interpolated_value != value
+    # puts explanation
+    ENV[name] = interpolated_value
+  end
+end
+
+config_path = File.join ENV['REPO_ROOT'], 'bootstrap', 'config'
+config_defaults = File.join(config_path, 'bootstrap_config.sh.defaults')
+config_overrides = File.join(config_path, 'bootstrap_config.sh.overrides')
+
+File.open(config_defaults).each do |line|
+    extract_and_export_envvar(line)
+end
+if File.exist?(config_overrides)
+  File.open(config_overrides).each do |line|
+      extract_and_export_envvar(line)
+  end
+end
+
+# list any package names to be automatically removed here
+$packages_to_remove = []
 
 # if a directory with additional CA certs is provided, test each file in there to
-# verify that it's a certificate and then add it to a script to be run inside each VM
+# verify that it's a certificate ending in .crt (due to update-ca-certificates restrictions)
+# and then add it to a script to be run inside each VM
+# script will also test the file to see if it appears to contain multiple certificates,
+# which update-ca-certificates does not seem to handle reliably
 $update_ca_certificates_script = ""
-unless $additional_cacerts_dir.nil? or $additional_cacerts_dir.empty?
-  files_in_cacerts_dir = Dir.entries($additional_cacerts_dir).select{|e| not ['.', '..'].include? e}
+unless ENV['BOOTSTRAP_ADDITIONAL_CACERTS_DIR'].nil? or ENV['BOOTSTRAP_ADDITIONAL_CACERTS_DIR'].empty?
+  cacerts_dir = Dir.new(ENV['BOOTSTRAP_ADDITIONAL_CACERTS_DIR'])
+  files_in_cacerts_dir = cacerts_dir.entries.select{|e| not ['.', '..'].include? e}
   files_in_cacerts_dir.each do |f|
     begin
-      cert_raw = File.read(File.join($additional_cacerts_dir, f))
-      cert = OpenSSL::X509::Certificate.new(cert_raw) # test the cert
+      unless f.end_with? '.crt'
+        fail "All files in #{ENV['BOOTSTRAP_ADDITIONAL_CACERTS_DIR']} must end in .crt due to update-ca-certificates restrictions."
+      end
+      cert_raw = File.read(File.join(ENV['BOOTSTRAP_ADDITIONAL_CACERTS_DIR'], f))
+      if cert_raw.scan('-----BEGIN CERTIFICATE-----').length > 1
+        fail "Multiple certificates detected in #{File.join(ENV['BOOTSTRAP_ADDITIONAL_CACERTS_DIR'], f)}, please split them into separate certificates."
+      end
+      cert = OpenSSL::X509::Certificate.new(cert_raw) # test that the cert is valid
       dest_cert_path = File.join('/usr/local/share/ca-certificates', f)
       $update_ca_certificates_script << <<-EOH
         echo -e "#{cert_raw}" > #{dest_cert_path}
       EOH
     rescue OpenSSL::X509::CertificateError
-      raise "Certificate #{File.join($additional_cacerts_dir, f)} is not a valid PEM certificate, aborting."
+      fail "Certificate #{File.join(ENV['BOOTSTRAP_ADDITIONAL_CACERTS_DIR'], f)} is not a valid PEM certificate, aborting."
     end
   end
-end
-unless $update_ca_certificates_script.empty?
   $update_ca_certificates_script << <<-EOH
     update-ca-certificates
   EOH
@@ -49,18 +85,37 @@ $proxy_configuration_script = <<-EOH
   sudo touch /etc/apt/apt.conf
   touch $HOME/proxy_config.sh
 EOH
-unless $http_proxy_server.nil? or $http_proxy_server.empty?
+unless ENV['BOOTSTRAP_HTTP_PROXY'].nil? or ENV['BOOTSTRAP_HTTP_PROXY'].empty?
   $proxy_configuration_script << <<-EOH
-    echo 'Acquire::http::Proxy "http://#{$http_proxy_server}";' | sudo tee -a /etc/apt/apt.conf
-    echo 'export http_proxy=#{$http_proxy_server}' | tee -a $HOME/proxy_config.sh
+    echo 'Acquire::http::Proxy "http://#{ENV['BOOTSTRAP_HTTP_PROXY']}";' | sudo tee -a /etc/apt/apt.conf
+    echo 'export http_proxy=#{ENV['BOOTSTRAP_HTTP_PROXY']}' | tee -a $HOME/proxy_config.sh
   EOH
 end
-unless $https_proxy_server.nil? or $https_proxy_server.empty?
+unless ENV['BOOTSTRAP_HTTPS_PROXY'].nil? or ENV['BOOTSTRAP_HTTPS_PROXY'].empty?
   $proxy_configuration_script << <<-EOH
-    echo 'Acquire::https::Proxy "https://#{$https_proxy_server}";' | sudo tee -a /etc/apt/apt.conf
-    echo 'export https_proxy=#{$https_proxy_server}' | tee -a $HOME/proxy_config.sh
+    echo 'Acquire::https::Proxy "https://#{ENV['BOOTSTRAP_HTTPS_PROXY']}";' | sudo tee -a /etc/apt/apt.conf
+    echo 'export https_proxy=#{ENV['BOOTSTRAP_HTTPS_PROXY']}' | tee -a $HOME/proxy_config.sh
   EOH
 end
+
+# this script tests proxy servers from inside the bootstrap node
+$testing_proxy_servers_script = <<-EOH
+  . $HOME/proxy_config.sh
+  FAILED=0
+  HTTP_PROXY_TEST=$(curl http://www.google.com 2>&1)
+  if [[ $? != 0 ]]; then
+    echo "HTTP proxy test failed, check HTTP proxy configuration:"
+    echo -e "$HTTP_PROXY_TEST"
+    FAILED=1
+  fi
+  HTTPS_PROXY_TEST=$(curl https://github.com 2>&1)
+  if [[ $? != 0 ]]; then
+    echo -e "HTTPS proxy test failed, check HTTPS proxy configuration and SSL certificates:"
+    echo -e "$HTTPS_PROXY_TEST"
+    FAILED=1
+  fi
+  exit $FAILED
+EOH
 
 # compute the repository configuration script
 $repos_script = <<-EOH
@@ -71,13 +126,13 @@ $repos_script = <<-EOH
   date --rfc-3339=s
 EOH
 
-unless $local_mirror.nil? or $local_mirror.empty?
-  local_mirror_host = URI($local_mirror).host
-  raise "#{$local_mirror} is an invalid URL, aborting build" if local_mirror_host.nil?
+unless ENV['BOOTSTRAP_APT_MIRROR'].nil? or ENV['BOOTSTRAP_APT_MIRROR'].empty?
+  local_mirror_host = URI(ENV['BOOTSTRAP_APT_MIRROR']).host
+  fail "#{ENV['BOOTSTRAP_APT_MIRROR']} is an invalid URL, aborting build" if local_mirror_host.nil?
   $repos_script << <<-EOH
     cp /etc/apt/sources.list /etc/apt/sources.list.bak
-    sed -i 's|http://archive\.ubuntu\.com/ubuntu|#{$local_mirror}|g' /etc/apt/sources.list
-    sed -i 's|http://security\.ubuntu\.com/ubuntu|#{$local_mirror}|g' /etc/apt/sources.list
+    sed -i 's|http://archive\.ubuntu\.com/ubuntu|#{ENV['BOOTSTRAP_APT_MIRROR']}|g' /etc/apt/sources.list
+    sed -i 's|http://security\.ubuntu\.com/ubuntu|#{ENV['BOOTSTRAP_APT_MIRROR']}|g' /etc/apt/sources.list
     sed -i s/^deb-src/\#deb-src/g /etc/apt/sources.list
     touch /etc/apt/apt.conf
     echo 'Acquire::http::Proxy::#{local_mirror_host} "DIRECT";' | tee -a /etc/apt/apt.conf
@@ -102,181 +157,140 @@ $add_swap_script = <<-EOH
   echo '/swap none swap defaults 0 0' | tee -a /etc/fstab
 EOH
 
-at_exit do
-  raise $! unless $!.success?
-  # put anything that should happen on successful provisioning below here
-end
-
 Vagrant.configure("2") do |config|
-  # configure bootstrap node
-  config.vm.define "bootstrap" do |machine|
-    machine.vm.hostname = "bcpc-bootstrap.#{$bootstrap_domain}"
-
-    machine.vm.network :private_network, ip: "10.0.100.3", netmask: "255.255.255.0", adapter_ip: "10.0.100.2"
-    machine.vm.network :private_network, ip: "172.16.100.3", netmask: "255.255.255.0", adapter_ip: "172.16.100.2"
-    machine.vm.network :private_network, ip: "192.168.100.3", netmask: "255.255.255.0", adapter_ip: "192.168.100.2"
-
-    machine.vm.synced_folder(ENV['REPO_ROOT'], "/chef-bcpc-host") unless ENV['REPO_ROOT'].nil?
-    machine.vm.synced_folder(ENV['BOOTSTRAP_CACHE_DIR'], "/chef-bcpc-files") unless ENV['BOOTSTRAP_CACHE_DIR'].nil?
-    machine.vm.synced_folder ".", "/vagrant", disabled: true
-
-    # fix no-tty error
-    machine.vm.provision "fix-no-tty", type: "shell" do |s|
-      s.privileged = false
-      s.inline = "sudo sed -i '/tty/!s/mesg n/tty -s \\&\\& mesg n/' /root/.profile"
-    end
-    
-    # configure extra CA certificates
-    machine.vm.provision "configure-ca-certificates", type: "shell" do |s|
-      s.inline = $update_ca_certificates_script
-    end
-    
-    # configure proxy servers (do not run as root)
-    machine.vm.provision "configure-proxy-servers", type: "shell" do |s|
-      s.privileged = false
-      s.inline = $proxy_configuration_script
-    end
-
-    # set up repositories
-    machine.vm.provision "configure-repositories", type: "shell" do |s|
-      s.inline = $repos_script
-    end
-    
-    # configure a hostfile entry with the IP of the bootstrap node (for Chef)
-    machine.vm.provision "configure-bootstrap-hostfile-entry", type: "shell" do |s|
-      s.inline = "echo -e '10.0.100.3\tbcpc-bootstrap.#{$bootstrap_domain}\n' >> /etc/hosts"
-    end
-    
-    # clean up some packages installed in this image by default
-    machine.vm.provision "clean-up-unnecessary-packages", type: "shell" do |s|
-      s.inline = "apt-get remove -y #{$packages_to_remove.join(' ')}"
-    end
-    
-    # add swap space
-    machine.vm.provision "add-swap-space", type: "shell" do |s|
-      s.inline = $add_swap_script
-    end
-    
-    machine.vm.box = "trusty64"
-    machine.vm.box_url = $box_url
-
-    memory = ( ENV["BOOTSTRAP_VM_MEM"] or "2048" )
-    cpus = ( ENV["BOOTSTRAP_VM_CPUS"] or "1" )
-    vram = ( ENV["BOOTSTRAP_VM_VRAM"] or "16" )
-
-    machine.vm.provider :virtualbox do |vb|
-      vb.name = "bcpc-bootstrap"
-      vb.customize ["modifyvm", :id, "--nictype2", "82543GC"]
-      vb.customize ["modifyvm", :id, "--memory", memory]
-      vb.customize ["modifyvm", :id, "--vram", vram]
-      vb.customize ["modifyvm", :id, "--cpus", cpus]
-      vb.customize ["modifyvm", :id, "--largepages", "on"]
-      vb.customize ["modifyvm", :id, "--nestedpaging", "on"]
-      vb.customize ["modifyvm", :id, "--vtxvpid", "on"]
-      vb.customize ["modifyvm", :id, "--hwvirtex", "on"]
-      vb.customize ["modifyvm", :id, "--ioapic", "on"]
-    end
-  end # bootstrap node
-  
-  $cluster_nodes = 3
-  unless $monitoring_nodes.nil? or $monitoring_nodes == 0
-    if (1..3).include?($monitoring_nodes)
-      $cluster_nodes += $monitoring_nodes
+  # build list of all machines to provision at once
+  cluster_nodes = 3
+  monitoring_node_count = ENV['MONITORING_NODES'].to_i
+  # nil.to_i is 0, so no need to check for nil explicitly
+  unless monitoring_node_count == 0
+    if (1..3).include? monitoring_node_count
+      cluster_nodes += monitoring_node_count
     else
-      raise "Invalid number of monitoring nodes specified"
+      fail "Invalid number of monitoring nodes specified (1-3 allowed)"
     end
   end
+  # ENV['CLUSTER_NODE_COUNT_OVERRIDE'] is a safety valve used by vagrant_clean.sh
+  # to always clean up the maximal count of VMs (e.g., try to clean monitoring
+  # nodes even if the script isn't sure any were made)
+  if ENV['CLUSTER_NODE_COUNT_OVERRIDE'].to_i > 0
+    cluster_nodes = ENV['CLUSTER_NODE_COUNT_OVERRIDE'].to_i
+    # puts "Cluster node count is being overridden to #{cluster_nodes} via CLUSTER_NODE_COUNT_OVERRIDE"
+  end
 
-  # configure cluster nodes
-  (1..$cluster_nodes).each do |i|
-    config.vm.define "vm#{i}" do |machine|
-      machine.vm.hostname = "bcpc-vm#{i}.#{$bootstrap_domain}"
+  vms_to_build = ['bootstrap', (1..cluster_nodes).collect {|x| "vm#{x}"}].flatten
 
-      machine.vm.network :private_network, ip: "10.0.100.#{10+i}", netmask: "255.255.255.0", adapter_ip: "10.0.100.2"
-      machine.vm.network :private_network, ip: "172.16.100.#{10+i}", netmask: "255.255.255.0", adapter_ip: "172.16.100.2"
-      machine.vm.network :private_network, ip: "192.168.100.#{10+i}", netmask: "255.255.255.0", adapter_ip: "192.168.100.2"
-      
-      machine.vm.synced_folder(ENV['REPO_ROOT'], "/chef-bcpc-host") unless ENV['REPO_ROOT'].nil?
-      machine.vm.synced_folder(ENV['BOOTSTRAP_CACHE_DIR'], "/chef-bcpc-files") unless ENV['BOOTSTRAP_CACHE_DIR'].nil?
-      machine.vm.synced_folder ".", "/vagrant", disabled: true
-      
+  vms_to_build.each_with_index do |vm, idx|
+    config.vm.define vm do |m|
+      # use .3 as the final octet for the bootstrap node, otherwise 11, 12, etc.
+      final_octet = (vm == 'bootstrap' ? 3 : 10+idx)
+      bootstrap_domain = (ENV['BCPC_HYPERVISOR_DOMAIN'] or "bcpc.example.com")
+      m.vm.hostname = "bcpc-#{vm}.#{bootstrap_domain}"
+      m.vm.network :private_network, ip: "10.0.100.#{final_octet}", netmask: "255.255.255.0", adapter_ip: "10.0.100.2"
+      m.vm.network :private_network, ip: "172.16.100.#{final_octet}", netmask: "255.255.255.0", adapter_ip: "172.16.100.2"
+      m.vm.network :private_network, ip: "192.168.100.#{final_octet}", netmask: "255.255.255.0", adapter_ip: "192.168.100.2"
+      if ENV['REPO_ROOT'].nil? or ENV['REPO_MOUNT_POINT'].nil?
+        fail "REPO_ROOT and REPO_MOUNT_POINT must be set in the environment."
+      end
+      m.vm.synced_folder(ENV['REPO_ROOT'], ENV['REPO_MOUNT_POINT'])
+      if ENV['BOOTSTRAP_CACHE_DIR'].nil? or ENV['FILECACHE_MOUNT_POINT'].nil?
+        fail "BOOTSTRAP_CACHE_DIR and FILECACHE_MOUNT_POINT must be set in the environment."
+      end
+      m.vm.synced_folder(ENV['BOOTSTRAP_CACHE_DIR'], ENV['FILECACHE_MOUNT_POINT'])
+      m.vm.synced_folder ".", "/vagrant", disabled: true
+
       # fix no-tty error
-      machine.vm.provision "fix-no-tty", type: "shell" do |s|
+      m.vm.provision "fix-no-tty", type: "shell" do |s|
         s.privileged = false
         s.inline = "sudo sed -i '/tty/!s/mesg n/tty -s \\&\\& mesg n/' /root/.profile"
       end
-    
+
       # configure extra CA certificates
-      machine.vm.provision "configure-ca-certificates", type: "shell" do |s|
+      m.vm.provision "configure-ca-certificates", type: "shell" do |s|
         s.inline = $update_ca_certificates_script
       end
-          
+
       # configure proxy servers (do not run as root)
-      machine.vm.provision "configure-proxy-servers", type: "shell" do |s|
+      m.vm.provision "configure-proxy-servers", type: "shell" do |s|
         s.privileged = false
         s.inline = $proxy_configuration_script
       end
 
+      # from bootstrap node only: test proxy servers from inside to determine whether
+      # everything's set up properly
+      if vm == 'bootstrap'
+        m.vm.provision "testing-proxy-servers", type: "shell" do |s|
+          s.privileged = false
+          s.inline = $testing_proxy_servers_script
+        end
+      end
+
       # set up repositories
-      machine.vm.provision "configure-repositories", type: "shell" do |s|
+      m.vm.provision "configure-repositories", type: "shell" do |s|
         s.inline = $repos_script
       end
-      
+
       # configure a hostfile entry with the IP of the bootstrap node (for Chef)
-      machine.vm.provision "configure-bootstrap-hostfile-entry", type: "shell" do |s|
-        s.inline = "echo -e '10.0.100.3\tbcpc-bootstrap.#{$bootstrap_domain}\n' >> /etc/hosts"
+      m.vm.provision "configure-bootstrap-hostfile-entry", type: "shell" do |s|
+        s.inline = "echo -e '10.0.100.3\tbcpc-bootstrap.#{bootstrap_domain}\n' >> /etc/hosts"
       end
-      
+
       # clean up some packages installed in this image by default
-      machine.vm.provision "clean-up-unnecessary-packages", type: "shell" do |s|
+      m.vm.provision "clean-up-unnecessary-packages", type: "shell" do |s|
         s.inline = "apt-get remove -y #{$packages_to_remove.join(' ')}"
-      end
-      
+      end if $packages_to_remove.length > 0
+
       # add swap space
-      machine.vm.provision "add-swap-space", type: "shell" do |s|
+      m.vm.provision "add-swap-space", type: "shell" do |s|
         s.inline = $add_swap_script
       end
 
-      machine.vm.box = "trusty64"
-      machine.vm.box_url = $box_url
+      m.vm.box = "trusty64"
+      m.vm.box_url = "#{ENV['BOOTSTRAP_CACHE_DIR']}/trusty-server-cloudimg-amd64-vagrant-disk1.box"
 
-      memory = ( ENV["CLUSTER_VM_MEM"] or "2560" )
-      cpus = ( ENV["CLUSTER_VM_CPUS"] or "2" )
-      vram = ( ENV["CLUSTER_VM_VRAM"] or "16" )
-      disk_size = ( ENV["CLUSTER_VM_DRIVE_SIZE"] or "20480" )
+      if vm == 'bootstrap'
+        memory = ( ENV["BOOTSTRAP_VM_MEM"] or "2048" )
+        cpus = ( ENV["BOOTSTRAP_VM_CPUS"] or "2" )
+      else
+        memory = ( ENV["CLUSTER_VM_MEM"] or "2560" )
+        cpus = ( ENV["CLUSTER_VM_CPUS"] or "2" )
+        disk_size = ( ENV["CLUSTER_VM_DRIVE_SIZE"] or "20480" )
+      end
 
-      machine.vm.provider :virtualbox do |vb|
-        vm_name = "bcpc-vm#{i}"
-        vb.name = vm_name
+      m.vm.provider :virtualbox do |vb|
+        vb.name = "bcpc-#{vm}"
         vb.memory = memory
         vb.cpus = cpus
-        
+
         vb.customize ["modifyvm", :id, "--nictype2", "82543GC"]
-        vb.customize ["modifyvm", :id, "--vram", vram]
+        vb.customize ["modifyvm", :id, "--vram", "16"]
         vb.customize ["modifyvm", :id, "--largepages", "on"]
         vb.customize ["modifyvm", :id, "--nestedpaging", "on"]
         vb.customize ["modifyvm", :id, "--vtxvpid", "on"]
         vb.customize ["modifyvm", :id, "--hwvirtex", "on"]
         vb.customize ["modifyvm", :id, "--ioapic", "on"]
-        
-        # this is an unpleasing hack to locate the VM on disk, so that additional disks can be stored with it
-        # this assumes that all VMs will be going into the default VirtualBox folder
-        begin
-          default_vm_config_file = %x[VBoxManage list systemproperties | grep 'Default machine folder']
-          default_vm_loc = default_vm_config_file.match(/^Default machine folder:\s+(.+)$/)[1]
-          vm_dir = File.join(default_vm_loc, vm_name)
-        rescue
-          fail "Unable to locate VM #{vm_name} on disk, terminating"
-        end        
-        
-        ('b'..'e').each_with_index do |disk, idx|
-          disk_file = File.join(vm_dir, "vm#{i}-#{disk}.vdi")
-          unless File.exist?(disk_file)
-            vb.customize ["createhd", "--filename", disk_file, "--size", disk_size]
-            vb.customize ["storageattach", :id, "--storagectl", "SATAController", "--device", "0", "--port", "#{idx+1}", "--type", "hdd", "--medium", disk_file]
-          end # File.exist
-        end # b..e each
-      end # machine.vm.provider
-    end # config.vm.define
-  end # 1..$cluster_nodes each
-end
+
+        # this attaches extra disks to the first 3 non-bootstrap nodes (additional cluster
+        # nodes are assumed to be monitoring, which do not need extra disks)
+        if (1..3).include? idx
+          # this is an unpleasing hack to locate the VM on disk, so that additional disks can be stored with it
+          # this assumes that all VMs will be going into the default VirtualBox folder
+          begin
+            default_vm_config_file = %x[VBoxManage list systemproperties | grep 'Default machine folder']
+            default_vm_loc = default_vm_config_file.match(/^Default machine folder:\s+(.+)$/)[1]
+            vm_dir = File.join(default_vm_loc, vm)
+          rescue
+            fail "Unable to locate VM #{vm} on disk, terminating"
+          end
+
+          ('b'..'e').each_with_index do |disk, disk_idx|
+            disk_file = File.join(vm_dir, "#{vm}-#{disk}.vdi")
+            unless File.exist?(disk_file)
+              vb.customize ["createhd", "--filename", disk_file, "--size", disk_size]
+              vb.customize ["storageattach", :id, "--storagectl", "SATAController", "--device", "0", "--port", "#{disk_idx+1}", "--type", "hdd", "--medium", disk_file]
+            end # File.exist
+          end # b..e each
+        end # if (1..3).include? idx
+      end # machine.vm.provider :virtualbox do |vb|
+    end # config.vm.define vm do |machine|
+  end # $vms_to_build.each_with_index
+end # Vagrant.configure("2") do |config|

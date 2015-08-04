@@ -12,7 +12,7 @@ OS_AUTH_URL: <%=node['bcpc']['protocol']['keystone']%>://<%=node['bcpc']['manage
 OS_REGION_NAME: <%=@node['bcpc']['region_name']%>
 OS_NO_CACHE: 1
 OS_CACERT: /etc/ssl/certs/ssl-bcpc.pem
-domain: <%=@node['bcpc']['domain_name']%>
+domain: <%=@node['bcpc']['cluster_domain']%>
 db:
   host: <%=@node['bcpc']['management']['vip']%>
   user: <%=get_config('mysql-pdns-user')%>

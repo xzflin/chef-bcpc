@@ -57,15 +57,11 @@ class TestNovaCompute(object):
 
 
     def _delete_server(self, server):
-        """Nassty hack, current stack requires >1 delete"""
-        start = time.time()
-        while time.time() - start < self.config["timeout"]:
-            try:
-                server.delete()
-                time.sleep(2)
-            except novaclient.exceptions.NotFound:
-                return
-        raise Exception("unable to delete server")
+        try:
+            server.delete()
+        except novaclient.exceptions.NotFound:
+            raise Exception("unable to delete server")
+        return
 
     def run(self):
         import glob

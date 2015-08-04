@@ -31,9 +31,9 @@ osapi_volume_workers=1
 #qpid_password=<%=get_config('rabbitmq-password')%>
 
 # Other service endpoints
-glance_api_servers=<%=node['bcpc']['protocol']['glance']%>://<%=node['bcpc']['management']['vip']%>:9292
+glance_api_servers=<%=node['bcpc']['protocol']['glance']%>://openstack.<%=node['bcpc']['cluster_domain']%>:9292
 glance_api_insecure=True
-glance_api_version=1
+glance_api_version=2
 
 # Volume driver settings for RBD
 enabled_backends=<%= node['bcpc']['ceph']['enabled_pools'].map {|type| type.upcase}.join(",") %>
@@ -68,11 +68,11 @@ ca_file = /etc/ssl/certs/ssl-bcpc.pem
 
 [keystone_authtoken]
 cafile = /etc/ssl/certs/ssl-bcpc.pem
-auth_uri = <%=node['bcpc']['protocol']['keystone']%>://<%=node['bcpc']['management']['vip']%>:5000/v2.0/
+auth_uri = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:5000/v2.0/
 #auth_host = <%=node['bcpc']['management']['vip']%>
 #auth_port = 35357
 #auth_protocol = <%=node['bcpc']['protocol']['keystone']%>
-identity_uri = <%=node['bcpc']['protocol']['keystone']%>://<%=node['bcpc']['management']['vip']%>:35357
+identity_uri = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:35357
 auth_version = v2.0
 admin_tenant_name = <%=node['bcpc']['admin_tenant']%>
 admin_user = <%=get_config('keystone-admin-user')%>
@@ -84,9 +84,12 @@ signing_dir = /var/lib/cinder
 [<%= type.upcase %>]
 volume_driver=cinder.volume.drivers.rbd.RBDDriver
 volume_backend_name=<%= type.upcase %>
-rbd_user=admin
+rbd_user=cinder
 rbd_pool=<%="#{node['bcpc']['ceph']['volumes']['name']}-#{type}"%>
 rbd_secret_uuid=<%=get_config('libvirt-secret-uuid')%>
 rbd_flatten_volume_from_snapshot=False
 rbd_max_clone_depth=5
+rbd_store_chunk_size = 4
+rados_connect_timeout = -1
+glance_api_version = 2
 <% end -%>

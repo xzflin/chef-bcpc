@@ -209,6 +209,39 @@ bash "routing-storage" do
     not_if "grep -e '^2 storage' /etc/iproute2/rt_tables"
 end
 
+if node["roles"].include? "BCPC-Monitoring"
+    # ipset is used to maintain largish block(s) of IP addresses to be referred to
+    # by iptables
+    package "ipset"
+
+    bash "create-ipset-lists" do
+        user "root"
+        code <<-EOH
+            ipset list monitoring-clients >/dev/null || ipset create monitoring-clients hash:ip
+        EOH
+    end
+
+    # Stage monitoring-clients ipset, and swap if lists have changed
+    template "/tmp/ipset-monitoring-clients" do
+        mode 00600
+        source "ipset-monitoring-clients.erb"
+        variables(
+            :clients => node['bcpc']['monitoring']['external_clients'].sort
+        )
+        notifies :run, "bash[apply-ipset-monitoring-clients]", :immediately
+    end
+
+    bash "apply-ipset-monitoring-clients" do
+        action :nothing
+        user "root"
+        code <<-EOH
+            ipset restore -f /tmp/ipset-monitoring-clients
+            ipset swap monitoring-clients-staging monitoring-clients
+            ipset destroy monitoring-clients-staging
+        EOH
+    end
+end
+
 %w{ routing firewall }.each do |function|
     template "/etc/network/if-up.d/bcpc-#{function}" do
         mode 00775
@@ -221,6 +254,7 @@ end
         command "/etc/network/if-up.d/bcpc-#{function}"
     end
 end
+
 
 bash "disable-noninteractive-pam-logging" do
     user "root"
