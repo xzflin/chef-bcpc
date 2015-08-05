@@ -213,7 +213,7 @@ if get_head_nodes.length == 1; then
     end
 end
 
-replicas = [search_nodes("recipe", "ceph-work").length, node['bcpc']['ceph']['default']['replicas']].min
+replicas = [search_nodes("recipe", "ceph-osd").length, node['bcpc']['ceph']['default']['replicas']].min
 if replicas < 1; then
     replicas = 1
 end
@@ -291,5 +291,4 @@ ruby_block "store-glance-ceph-key" do
   only_if "test -f  /etc/ceph/ceph.client.glance.keyring"
 end
 
-
-include_recipe "bcpc::ceph-work"
+include_recipe "bcpc::ceph-osd"

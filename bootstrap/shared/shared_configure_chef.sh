@@ -86,7 +86,7 @@ do_on_node bootstrap $ENVIRONMENT_SET
 do_on_node bootstrap "$KNIFE node run_list set bcpc-bootstrap.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Bootstrap]' \
   && $KNIFE node run_list set bcpc-vm1.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Headnode]' \
   && $KNIFE node run_list set bcpc-vm2.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Worknode]' \
-  && $KNIFE node run_list set bcpc-vm3.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Worknode]'"
+  && $KNIFE node run_list set bcpc-vm3.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-EphemeralWorknode]'"
 
 # generate actor map and set bootstrap, vm1 and mon vms (if any) as admins so that they can write into the data bag
 ADMIN_SET="cd \$HOME && $KNIFE actor map && "

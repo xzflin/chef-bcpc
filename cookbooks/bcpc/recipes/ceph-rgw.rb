@@ -22,6 +22,7 @@
 #to manually provision accounts for RGW in the radosgw-admin tool
 
 include_recipe "bcpc::apache2"
+include_recipe "bcpc::ceph-work"
 
 package "radosgw" do
     action :install
@@ -73,7 +74,7 @@ rgw_rule = (node['bcpc']['ceph']['rgw']['type'] == "ssd") ? node['bcpc']['ceph']
     end
     bash "set-#{pool}-rados-pool-replicas" do
         user "root"
-        replicas = [search_nodes("recipe", "ceph-work").length, node['bcpc']['ceph']['rgw']['replicas']].min
+        replicas = [search_nodes("recipe", "ceph-osd").length, node['bcpc']['ceph']['rgw']['replicas']].min
         if replicas < 1; then
             replicas = 1
         end
