@@ -979,6 +979,7 @@ default['bcpc']['nova']['policy'] = {
 #  Cinder Settings
 #
 ###########################################
+default['bcpc']['cinder']['workers'] = 5
 default['bcpc']['cinder']['quota'] = {
   "volumes" => 10,
   "quota_snapshots" => 10,
@@ -1083,6 +1084,7 @@ default['bcpc']['cinder']['policy'] = {
 #  Glance policy Settings
 #
 ###########################################
+default['bcpc']['glance']['workers'] = 5
 default['bcpc']['glance']['policy'] = {
   "context_is_admin" => "role:admin",
   "default" => "",
@@ -1149,6 +1151,7 @@ default['bcpc']['glance']['policy'] = {
 #  Heat policy Settings
 #
 ###########################################
+default['bcpc']['heat']['workers'] = 5
 default['bcpc']['heat']['policy'] = {
   "deny_stack_user" => "not role:heat_stack_user",
   "deny_everybody" => "!",

@@ -22,7 +22,7 @@ enable_v2_api=true
 
 # Bind to mgt IP only
 osapi_volume_listen=<%=node['bcpc']['management']['ip']%>
-osapi_volume_workers=1
+osapi_volume_workers=<%= node['bcpc']['cinder']['workers'] %>
 
 # If using qpid...
 #rpc_backend=cinder.openstack.common.rpc.impl_qpid

@@ -865,7 +865,7 @@ bind_host=<%= node['bcpc']['management']['ip'] %>
 #key_file=<None>
 
 # Number of workers for Heat service. (integer value)
-#workers=0
+workers=<%= node['bcpc']['heat']['workers'] %>
 
 # Maximum line size of message headers to be accepted.
 # max_header_line may need to be increased when using large
@@ -900,7 +900,7 @@ bind_host=<%= node['bcpc']['management']['ip'] %>
 #key_file=<None>
 
 # Number of workers for Heat service. (integer value)
-#workers=0
+workers=<%= node['bcpc']['heat']['workers'] %>
 
 # Maximum line size of message headers to be accepted.
 # max_header_line may need to be increased when using large
@@ -935,7 +935,7 @@ bind_host=<%= node['bcpc']['management']['ip'] %>
 #key_file=<None>
 
 # Number of workers for Heat service. (integer value)
-#workers=0
+workers=<%= node['bcpc']['heat']['workers'] %>
 
 # Maximum line size of message headers to be accepted.
 # max_header_line may need to be increased when using large

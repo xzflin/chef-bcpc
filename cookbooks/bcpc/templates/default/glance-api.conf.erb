@@ -16,7 +16,7 @@ log_file = /var/log/glance/api.log
 backlog = 4096
 #tcp_keepidle = 600
 # data_api = glance.db.sqlalchemy.api
-workers = 1
+workers = <%= node['bcpc']['glance']['workers'] %>
 # max_header_line = 16384
 admin_role = <%=node['bcpc']['admin_role']%>
 #allow_anonymous_access = False
