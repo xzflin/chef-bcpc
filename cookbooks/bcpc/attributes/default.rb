@@ -582,6 +582,10 @@ default['bcpc']['nova']['policy'] = {
   "compute:reboot" => "rule:admin_or_owner",
   "compute:delete" => "rule:admin_or_owner",
   "compute:unlock_override" => "rule:admin_api",
+  
+  "compute:get_instance_metadata" => "rule:admin_or_owner",
+  "compute:update_instance_metadata" => "rule:admin_or_owner",
+  "compute:delete_instance_metadata" => "rule:admin_or_owner",
 
   "compute:get_rdp_console" => "rule:admin_or_owner",
   "compute:get_vnc_console" => "rule:admin_or_owner",
