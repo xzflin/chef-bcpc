@@ -185,7 +185,7 @@ if node['bcpc']['enabled']['monitoring'] then
         code <<-EOH
              a2ensite zabbix-web
         EOH
-        not_if "test -r /etc/apache2/sites-enabled/zabbix-web"
+        not_if "test -r /etc/apache2/sites-enabled/zabbix-web.conf"
         notifies :restart, "service[apache2]", :immediate
     end
 
