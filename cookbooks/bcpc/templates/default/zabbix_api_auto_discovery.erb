@@ -78,14 +78,16 @@ for role in roles:
                 "eventsource": 2,
                 "status": 0,
                 "esc_period": 0,
-                "evaltype": 0,
-                "conditions": [
-                    {
-                        "conditiontype": 24,
-                        "operator": 2,
-                        "value": role
-                    }
-                ],
+                "filter": {
+                    "evaltype": 0,
+                    "conditions": [
+                        {
+                            "conditiontype": 24,
+                            "operator": 2,
+                            "value": role
+                        }
+                    ]
+                },
                 "operations": [
                     {
                         "esc_step_from": 1,
