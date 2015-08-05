@@ -26,6 +26,29 @@ template "/tmp/openssl.cnf" do
     mode 00644
 end
 
+ruby_block "read-ssl-certificate" do
+    block do
+      begin
+        require 'openssl'
+        if !node['bcpc']['ssl_certificate'].nil? and !node['bcpc']['ssl_private_key'].nil?
+          ssl_path = Chef::Config['file_cache_path'] + "/cookbooks/bcpc/files/default/"
+          cert = OpenSSL::X509::Certificate.new File.read(ssl_path + node['bcpc']['ssl_certificate'])
+          key  = OpenSSL::PKey::RSA.new File.read(ssl_path + node['bcpc']['ssl_private_key'])
+          make_config('ssl-private-key', key.to_pem)
+          make_config('ssl-certificate', cert.to_pem)
+	  if !node['bcpc']['ssl_intermediate_certificate'].nil?
+	      intermediate_cert = OpenSSL::X509::Certificate.new File.read(ssl_path + node['bcpc']['ssl_intermediate_certificate'])
+	      make_config('ssl-intermediate-certificate', intermediate_cert.to_pem)
+	  end
+        else
+          Chef::Log.warn("SSL certificate and/or key are not specified, will generate self-signed certificate")
+        end
+      rescue Exception => e
+        raise("Unable to process specified SSL certificate: " + e.message)
+      end
+    end
+end
+
 ruby_block "initialize-ssh-keys" do
     block do
         require 'openssl'
@@ -86,6 +109,15 @@ template "/etc/ssl/certs/ssl-bcpc.pem" do
     owner "root"
     group "root"
     mode 00644
+end
+
+template "/usr/local/share/ca-certificates/bcpc-intermediate.crt" do
+    source "bcpc-intermediate.pem.erb"
+    owner "root"
+    group "root"
+    mode 00644
+    notifies :run, "execute[reload-ca-certificates]", :immediately
+    only_if { node['bcpc']['ssl_intermediate_certificate'] }
 end
 
 template "/usr/local/share/ca-certificates/ssl-bcpc.crt" do

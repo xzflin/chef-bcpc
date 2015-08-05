@@ -24,6 +24,11 @@ default['bcpc']['cluster_domain'] = "bcpc.example.com"
 default['bcpc']['hypervisor_domain'] = "hypervisor-bcpc.example.com"
 # Key if Cobalt+VMS is to be used
 default['bcpc']['vms_key'] = nil
+# custom SSL certificate (specify filename).
+# certificate files should be stored under 'files/default' directory
+default['bcpc']['ssl_certificate'] = nil
+default['bcpc']['ssl_private_key'] = nil
+default['bcpc']['ssl_intermediate_certificate'] = nil
 
 ###########################################
 #

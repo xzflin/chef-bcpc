@@ -34,12 +34,14 @@
 		<h3>Web Interfaces</h3>
 			<div class="block">
 				<label>Openstack</label>
-				<a href="https://<%=node['bcpc']['management']['vip']%>/horizon">https://<%=node['bcpc']['management']['vip']%>/horizon</a>
-				<br/><label>-</label>
 				<a href="https://openstack.<%=node['bcpc']['cluster_domain']%>/horizon">https://openstack.<%=node['bcpc']['cluster_domain']%>/horizon</a>
+				<br/><label>-</label>
+				<a href="https://<%=node['bcpc']['management']['vip']%>/horizon">https://<%=node['bcpc']['management']['vip']%>/horizon</a>
 			</div>
 			<div class="block">
 				<label>HAProxy</label>
+				<a href="https://openstack.<%=node['bcpc']['cluster_domain']%>/haproxy">https://openstack.<%=node['bcpc']['cluster_domain']%>/haproxy</a>
+				<br/><label>-</label>
 				<a href="https://<%=node['bcpc']['management']['vip']%>/haproxy">https://<%=node['bcpc']['management']['vip']%>/haproxy</a>
 			</div>
 			<div class="block">
@@ -56,46 +58,58 @@
 			</div>
 			<div class="block">
 				<label>Kibana</label>
-				<a href="https://<%=node['bcpc']['management']['monitoring']['vip']%>/kibana/">https://<%=node['bcpc']['management']['monitoring']['vip']%>/kibana/</a>
+				<a href="https://<%=node['bcpc']['kibana']['fqdn']%>">https://<%=node['bcpc']['kibana']['fqdn']%></a>
 				<br/><label>-</label>
-                <a href="https://<%=node['bcpc']['kibana']['fqdn']%>">https://<%=node['bcpc']['kibana']['fqdn']%></a>
+				<a href="https://<%=node['bcpc']['management']['monitoring']['vip']%>/kibana/">https://<%=node['bcpc']['management']['monitoring']['vip']%>/kibana/</a>
 			</div>
 			<div class="block">
 				<label>Graphite</label>
-				<a href="https://<%=node['bcpc']['management']['monitoring']['vip']%>:8888">https://<%=node['bcpc']['management']['monitoring']['vip']%>:8888</a>
+				<a href="https://<%=node['bcpc']['graphite']['fqdn']%>">https://<%=node['bcpc']['graphite']['fqdn']%></a>
 				<br/><label>-</label>
-                <a href="https://<%=node['bcpc']['graphite']['fqdn']%>">https://<%=node['bcpc']['graphite']['fqdn']%></a>
+				<a href="https://<%=node['bcpc']['management']['monitoring']['vip']%>:8888">https://<%=node['bcpc']['management']['monitoring']['vip']%>:8888</a>
 			</div>
 			<div class="block">
 				<label>Zabbix</label>
-				<a href="https://<%=node['bcpc']['management']['monitoring']['vip']%>/zabbix/">https://<%=node['bcpc']['management']['monitoring']['vip']%>/zabbix/</a>
+				<a href="https://<%=node['bcpc']['zabbix']['fqdn']%>">https://<%=node['bcpc']['zabbix']['fqdn']%></a>
 				<br/><label>-</label>
-                <a href="https://<%=node['bcpc']['zabbix']['fqdn']%>">https://<%=node['bcpc']['zabbix']['fqdn']%></a>
+				<a href="https://<%=node['bcpc']['management']['monitoring']['vip']%>/zabbix/">https://<%=node['bcpc']['management']['monitoring']['vip']%>/zabbix/</a>
 			</div>
 
 		<h3>API Endpoints</h3>
 			<div class="block">
 				<label>Keystone API</label>
+				<a href="<%=node['bcpc']['protocol']['keystone']%>://<%=node['bcpc']['cluster_domain']%>:5000/v2.0"><%=node['bcpc']['protocol']['keystone']%>://<%=node['bcpc']['cluster_domain']%>:5000/v2.0</a>
+				<br/><label>-</label>
 				<a href="<%=node['bcpc']['protocol']['keystone']%>://<%=node['bcpc']['management']['vip']%>:5000/v2.0"><%=node['bcpc']['protocol']['keystone']%>://<%=node['bcpc']['management']['vip']%>:5000/v2.0</a>
 			</div>
 			<div class="block">
 				<label>Keystone Admin API</label>
+				<a href="<%=node['bcpc']['protocol']['keystone']%>://<%=node['bcpc']['cluster_domain']%>:35357/v2.0"><%=node['bcpc']['protocol']['keystone']%>://<%=node['bcpc']['cluster_domain']%>:35357/v2.0</a>
+				<br/><label>-</label>
 				<a href="<%=node['bcpc']['protocol']['keystone']%>://<%=node['bcpc']['management']['vip']%>:35357/v2.0"><%=node['bcpc']['protocol']['keystone']%>://<%=node['bcpc']['management']['vip']%>:35357/v2.0</a>
 			</div>
 			<div class="block">
 				<label>Nova API</label>
+				<a href="<%=node['bcpc']['protocol']['nova']%>://<%=node['bcpc']['cluster_domain']%>:8774/v1.1"><%=node['bcpc']['protocol']['nova']%>://<%=node['bcpc']['cluster_domain']%>:8774/v1.1</a>
+				<br/><label>-</label>
 				<a href="<%=node['bcpc']['protocol']['nova']%>://<%=node['bcpc']['management']['vip']%>:8774/v1.1"><%=node['bcpc']['protocol']['nova']%>://<%=node['bcpc']['management']['vip']%>:8774/v1.1</a>
 			</div>
 			<div class="block">
 				<label>Glance API</label>
+				<a href="<%=node['bcpc']['protocol']['glance']%>://<%=node['bcpc']['cluster_domain']%>:9292/v1"><%=node['bcpc']['protocol']['glance']%>://<%=node['bcpc']['cluster_domain']%>:9292/v2</a>
+				<br/><label>-</label>
 				<a href="<%=node['bcpc']['protocol']['glance']%>://<%=node['bcpc']['management']['vip']%>:9292/v1"><%=node['bcpc']['protocol']['glance']%>://<%=node['bcpc']['management']['vip']%>:9292/v2</a>
 			</div>
 			<div class="block">
 				<label>Cinder API</label>
+				<a href="<%=node['bcpc']['protocol']['cinder']%>://<%=node['bcpc']['cluster_domain']%>:8776/v1"><%=node['bcpc']['protocol']['cinder']%>://<%=node['bcpc']['cluster_domain']%>:8776/v1</a>
+				<br/><label>-</label>
 				<a href="<%=node['bcpc']['protocol']['cinder']%>://<%=node['bcpc']['management']['vip']%>:8776/v1"><%=node['bcpc']['protocol']['cinder']%>://<%=node['bcpc']['management']['vip']%>:8776/v1</a>
 			</div>
 			<div class="block">
 				<label>EC2 API</label>
+				<a href="<%=node['bcpc']['protocol']['nova']%>://<%=node['bcpc']['cluster_domain']%>:8773/services/Cloud"><%=node['bcpc']['protocol']['nova']%>://<%=node['bcpc']['cluster_domain']%>:8773/services/Cloud</a>
+				<br/><label>-</label>
 				<a href="<%=node['bcpc']['protocol']['nova']%>://<%=node['bcpc']['management']['vip']%>:8773/services/Cloud"><%=node['bcpc']['protocol']['nova']%>://<%=node['bcpc']['management']['vip']%>:8773/services/Cloud</a>
 			</div>
 
