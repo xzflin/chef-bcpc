@@ -197,3 +197,10 @@ ruby_block "reap-dead-rabbitmq-servers" do
         end
     end
 end
+
+template "/etc/sudoers.d/rabbitmqctl" do
+    source "sudoers-rabbitmqctl.erb"
+    user "root"
+    group "root"
+    mode 00440
+end
