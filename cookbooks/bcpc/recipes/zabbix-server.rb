@@ -185,19 +185,20 @@ if node['bcpc']['enabled']['monitoring'] then
         code <<-EOH
              a2ensite zabbix-web
         EOH
-        not_if "test -r /etc/apache2/sites-enabled/zabbix-web"
+        not_if "test -r /etc/apache2/sites-enabled/zabbix-web.conf"
         notifies :restart, "service[apache2]", :immediate
     end
 
-    directory "/usr/local/lib/python2.7/dist-packages/pyzabbix" do
+    cookbook_file "/tmp/python-pyzabbix_0.7.3_all.deb" do
+        source "bins/python-pyzabbix_0.7.3_all.deb"
         owner "root"
-        mode 00775
+        mode 00444
     end
 
-    cookbook_file "/usr/local/lib/python2.7/dist-packages/pyzabbix/__init__.py" do
-        source "pyzabbix.py"
-        owner "root"
-        mode 00755
+    package "python-pyzabbix" do
+        provider Chef::Provider::Package::Dpkg
+        source "/tmp/python-pyzabbix_0.7.3_all.deb"
+        action :upgrade
     end
 
     cookbook_file "/tmp/zabbix_linux_active_template.xml" do
@@ -221,8 +222,8 @@ if node['bcpc']['enabled']['monitoring'] then
     ruby_block "configure_zabbix_templates" do
         block do
             # Ensures no proxy is ever used locally
-            %x[export no_proxy="#{node['bcpc']['management']['monitoring']['vip']}";
-               zabbix_config https://#{node['bcpc']['management']['monitoring']['vip']}/zabbix #{get_config('zabbix-admin-user')} #{get_config('zabbix-admin-password')}
+            %x[export no_proxy="#{node['bcpc']['management']['ip']}";
+               zabbix_config http://#{node['bcpc']['management']['ip']}:7777/ #{get_config('zabbix-admin-user')} #{get_config('zabbix-admin-password')}
             ]
         end
     end
@@ -237,7 +238,7 @@ if node['bcpc']['enabled']['monitoring'] then
     ruby_block "zabbix-api-auto-discovery-register" do
         block do
             # Ensures no proxy is ever used locally
-            %x[export no_proxy="#{node['bcpc']['management']['monitoring']['vip']}";
+            %x[export no_proxy="#{node['bcpc']['management']['ip']}";
                /usr/share/zabbix/zabbix-api-auto-discovery
             ]
         end

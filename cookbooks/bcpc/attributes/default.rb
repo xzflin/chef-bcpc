@@ -209,7 +209,7 @@ default['bcpc']['repos']['gridcentric'] = "http://downloads.gridcentric.com/pack
 default['bcpc']['repos']['elasticsearch'] = "http://packages.elasticsearch.org/elasticsearch/1.5/debian"
 default['bcpc']['repos']['erlang'] = "http://packages.erlang-solutions.com/ubuntu"
 default['bcpc']['repos']['ceph'] = "http://ceph.com/debian-hammer"
-default['bcpc']['repos']['zabbix'] = "http://repo.zabbix.com/zabbix/2.2/ubuntu"
+default['bcpc']['repos']['zabbix'] = "http://repo.zabbix.com/zabbix/2.4/ubuntu"
 
 ###########################################
 #
