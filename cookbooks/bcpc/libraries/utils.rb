@@ -48,9 +48,9 @@ def init_config
     end
 end
 
-def make_config(key, value)
+def make_config(key, value, force=false)
     init_config if $dbi.nil?
-    if $dbi[key].nil?
+    if $dbi[key].nil? or force
         $dbi[key] = (node['bcpc']['enabled']['encrypt_data_bag']) ? Chef::EncryptedDataBagItem.encrypt_value(value, Chef::EncryptedDataBagItem.load_secret) : value
         $dbi.save
         $edbi = Chef::EncryptedDataBagItem.load('configs', node.chef_environment) if node['bcpc']['enabled']['encrypt_data_bag']

@@ -273,9 +273,9 @@ end
 
 ruby_block "store-cinder-ceph-key" do
   block do
-    make_config("cinder-ceph-key", `ceph auth get-key client.cinder`)
+    make_config("cinder-ceph-key", `ceph auth get-key client.cinder`, force=true)
   end
-  only_if "test -f  /etc/ceph/ceph.client.cinder.keyring"
+  only_if { File.exist?('/etc/ceph/ceph.client.cinder.keyring') and ((config_defined('cinder-ceph-key') and (get_config('cinder-ceph-key') != `ceph auth get-key client.cinder`)) or (not config_defined('cinder-ceph-key'))) }
 end
 
 bash "create-ceph-glance-keyring" do
@@ -286,9 +286,9 @@ end
 
 ruby_block "store-glance-ceph-key" do
   block do
-    make_config("glance-ceph-key", `ceph auth get-key client.glance`)
+    make_config("glance-ceph-key", `ceph auth get-key client.glance`, force=true)
   end
-  only_if "test -f  /etc/ceph/ceph.client.glance.keyring"
+  only_if { File.exist?('/etc/ceph/ceph.client.glance.keyring') and ((config_defined('glance-ceph-key') and (get_config('glance-ceph-key') != `ceph auth get-key client.glance`)) or (not config_defined('glance-ceph-key'))) }
 end
 
 include_recipe "bcpc::ceph-osd"
