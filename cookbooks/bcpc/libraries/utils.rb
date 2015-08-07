@@ -108,7 +108,7 @@ def get_all_nodes
 end
 
 def get_ceph_osd_nodes
-    results = search(:node, "recipes:bcpc\\:\\:ceph-work AND chef_environment:#{node.chef_environment}")
+  results = search(:node, "recipes:bcpc\\:\\:ceph-osd AND chef_environment:#{node.chef_environment}")
     if results.any? { |x| x['hostname'] == node['hostname'] }
         results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
     else

@@ -20,6 +20,7 @@ VER_KIBANA=4.0.2
 VER_PIP=7.0.3
 VER_RALLY=0.0.4
 VER_REQUESTS_AWS=0.1.6
+VER_PYZABBIX=0.7.3
 VER_GRAPHITE_CARBON=0.9.13
 VER_GRAPHITE_WHISPER=0.9.13
 VER_GRAPHITE_WEB=0.9.13
@@ -102,6 +103,14 @@ if [ ! -f python-requests-aws_${VER_REQUESTS_AWS}_all.deb ]; then
   tar zxf requests-aws-${VER_REQUESTS_AWS}.tar.gz
   fpm -s python -t deb -f requests-aws-${VER_REQUESTS_AWS}/setup.py
   rm -rf requests-aws-${VER_REQUESTS_AWS}.tar.gz requests-aws-${VER_REQUESTS_AWS}
+fi
+
+# Build pyzabbix package
+if [ ! -f python-pyzabbix_${VER_PYZABBIX}_all.deb ]; then
+  cp -v $FILECACHE_MOUNT_POINT/pyzabbix-${VER_PYZABBIX}.tar.gz .
+  tar zxf pyzabbix-${VER_PYZABBIX}.tar.gz
+  fpm -s python -t deb -f pyzabbix-${VER_PYZABBIX}/setup.py
+  rm -rf pyzabbix-${VER_PYZABBIX}.tar.gz pyzabbix-${VER_PYZABBIX}
 fi
 
 # Build graphite packages

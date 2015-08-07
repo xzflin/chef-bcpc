@@ -16,7 +16,7 @@ log_file = /var/log/glance/api.log
 backlog = 4096
 #tcp_keepidle = 600
 # data_api = glance.db.sqlalchemy.api
-workers = 1
+workers = <%= node['bcpc']['glance']['workers'] %>
 # max_header_line = 16384
 admin_role = <%=node['bcpc']['admin_role']%>
 #allow_anonymous_access = False
@@ -34,14 +34,14 @@ show_image_direct_url = True
 #syslog_log_facility = LOG_LOCAL0
 #cert_file = /path/to/certfile
 #key_file = /path/to/keyfile
-ca_file = /etc/ssl/certs/ssl-bcpc.pem
+# ca_file = /etc/ssl/certs/ssl-bcpc.pem
 #metadata_encryption_key = <16, 24 or 32 char registry metadata key>
 registry_host = <%=node['bcpc']['management']['vip']%>
 registry_port = 9191
 registry_client_protocol = <%= node['bcpc']['protocol']['glance'] %>
 #registry_client_key_file = /path/to/key/file
 #registry_client_cert_file = /path/to/cert/file
-registry_client_ca_file = /etc/ssl/certs/ssl-bcpc.pem
+# registry_client_ca_file = /etc/ssl/certs/ssl-bcpc.pem
 #registry_client_insecure = False
 #registry_client_timeout = 600
 #db_auto_create = False
@@ -107,7 +107,7 @@ sheepdog_store_chunk_size = 64
 #cinder_catalog_info = volume:cinder:publicURL
 #cinder_endpoint_template = <None>
 #os_region_name = <None>
-cinder_ca_certificates_file = /etc/ssl/certs/ssl-bcpc.pem
+# cinder_ca_certificates_file = /etc/ssl/certs/ssl-bcpc.pem
 #cinder_http_retries = 3
 #cinder_api_insecure = False
 
@@ -190,7 +190,7 @@ connection = mysql://<%=get_config('mysql-glance-user')%>:<%=get_config('mysql-g
 #db_max_retries = 20
 
 [keystone_authtoken]
-cafile = /etc/ssl/certs/ssl-bcpc.pem
+# cafile = /etc/ssl/certs/ssl-bcpc.pem
 auth_uri = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:5000/v2.0/
 #auth_host = <%=node['bcpc']['management']['vip']%>
 #auth_port = 35357

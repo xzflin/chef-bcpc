@@ -24,6 +24,11 @@ default['bcpc']['cluster_domain'] = "bcpc.example.com"
 default['bcpc']['hypervisor_domain'] = "hypervisor-bcpc.example.com"
 # Key if Cobalt+VMS is to be used
 default['bcpc']['vms_key'] = nil
+# custom SSL certificate (specify filename).
+# certificate files should be stored under 'files/default' directory
+default['bcpc']['ssl_certificate'] = nil
+default['bcpc']['ssl_private_key'] = nil
+default['bcpc']['ssl_intermediate_certificate'] = nil
 
 ###########################################
 #
@@ -204,7 +209,7 @@ default['bcpc']['repos']['gridcentric'] = "http://downloads.gridcentric.com/pack
 default['bcpc']['repos']['elasticsearch'] = "http://packages.elasticsearch.org/elasticsearch/1.5/debian"
 default['bcpc']['repos']['erlang'] = "http://packages.erlang-solutions.com/ubuntu"
 default['bcpc']['repos']['ceph'] = "http://ceph.com/debian-hammer"
-default['bcpc']['repos']['zabbix'] = "http://repo.zabbix.com/zabbix/2.2/ubuntu"
+default['bcpc']['repos']['zabbix'] = "http://repo.zabbix.com/zabbix/2.4/ubuntu"
 
 ###########################################
 #
@@ -534,6 +539,9 @@ default['bcpc']['nova']['debug'] = false
 # Nova scheduler default filters
 default['bcpc']['nova']['scheduler_default_filters'] = ['AggregateInstanceExtraSpecsFilter', 'RetryFilter', 'AvailabilityZoneFilter', 'RamFilter', 'ComputeFilter', 'ComputeCapabilitiesFilter', 'ImagePropertiesFilter', 'ServerGroupAntiAffinityFilter', 'ServerGroupAffinityFilter']
 
+default['bcpc']['nova']['ephemeral'] = false
+
+
 default['bcpc']['nova']['quota'] = {
   "cores" => 4,
   "floating_ips" => 10,
@@ -574,6 +582,10 @@ default['bcpc']['nova']['policy'] = {
   "compute:reboot" => "rule:admin_or_owner",
   "compute:delete" => "rule:admin_or_owner",
   "compute:unlock_override" => "rule:admin_api",
+  
+  "compute:get_instance_metadata" => "rule:admin_or_owner",
+  "compute:update_instance_metadata" => "rule:admin_or_owner",
+  "compute:delete_instance_metadata" => "rule:admin_or_owner",
 
   "compute:get_rdp_console" => "rule:admin_or_owner",
   "compute:get_vnc_console" => "rule:admin_or_owner",
@@ -967,6 +979,7 @@ default['bcpc']['nova']['policy'] = {
 #  Cinder Settings
 #
 ###########################################
+default['bcpc']['cinder']['workers'] = 5
 default['bcpc']['cinder']['quota'] = {
   "volumes" => 10,
   "quota_snapshots" => 10,
@@ -1071,6 +1084,7 @@ default['bcpc']['cinder']['policy'] = {
 #  Glance policy Settings
 #
 ###########################################
+default['bcpc']['glance']['workers'] = 5
 default['bcpc']['glance']['policy'] = {
   "context_is_admin" => "role:admin",
   "default" => "",
@@ -1137,6 +1151,7 @@ default['bcpc']['glance']['policy'] = {
 #  Heat policy Settings
 #
 ###########################################
+default['bcpc']['heat']['workers'] = 5
 default['bcpc']['heat']['policy'] = {
   "deny_stack_user" => "not role:heat_stack_user",
   "deny_everybody" => "!",
@@ -1327,6 +1342,13 @@ default['bcpc']['flavors'] = {
     "m1.tiny"  => {
       "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
     },
+    "e1.tiny"  => {
+      "vcpus" => 1,
+      "memory_mb" => 512,
+      "disk_gb" => 1,
+      "ephemeral_gb" => 5,     
+      "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
+    },
     "m1.small"  => {
       "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
     },
@@ -1350,6 +1372,10 @@ default['bcpc']['flavors'] = {
 default['bcpc']['host_aggregates'] = {
     "general_compute" => {
       "general_compute" => "yes"
+    },
+    "ephemeral_compute" => {
+      "general_compute" => "no",
+      "ephemeral_compute" => "yes"
     }
 }
 

@@ -16,7 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 include_recipe "bcpc::ceph-work"
 include_recipe "bcpc::nova-common"
 
@@ -282,3 +281,4 @@ bash "patch-for-ip-hostnames-networking" do
     notifies :restart, "service[nova-compute]", :immediately
     notifies :restart, "service[nova-network]", :immediately
 end 
+
