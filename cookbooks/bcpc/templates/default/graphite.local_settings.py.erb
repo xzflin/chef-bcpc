@@ -131,7 +131,7 @@ DATABASES = {
         'NAME': '<%=node['bcpc']['dbname']['graphite']%>',
         'USER': '<%=get_config('mysql-graphite-user')%>',
         'PASSWORD': '<%=get_config('mysql-graphite-password')%>',
-        'HOST': '<%=node['bcpc']['management']['monitoring']['vip']%>',
+        'HOST': '<%=node['bcpc']['monitoring']['vip']%>',
         'default-character-set': 'utf8'
     },
 }

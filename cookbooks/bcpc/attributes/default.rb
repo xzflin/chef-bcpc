@@ -160,7 +160,6 @@ default['bcpc']['management']['netmask'] = "255.255.255.0"
 default['bcpc']['management']['cidr'] = "10.17.1.0/24"
 default['bcpc']['management']['gateway'] = "10.17.1.1"
 default['bcpc']['management']['interface'] = nil
-default['bcpc']['management']['monitoring']['vip'] = "10.17.1.16"
 # if 'interface' is a VLAN interface, specifying a parent allows MTUs
 # to be set properly
 default['bcpc']['management']['interface-parent'] = nil
@@ -1272,6 +1271,10 @@ default['bcpc']['cpupower']['ondemand_up_threshold'] = nil
 #
 ###########################################
 #
+# Besides being the VIP that monitoring agents/clients will communicate with,
+# monitoring services (carbon/elasticsearch/zabbix-server) will bind to it if
+# BCPC-Monitoring role is assigned in-cluster.
+default['bcpc']['monitoring']['vip'] = "10.17.1.16"
 # List of monitoring clients external to cluster that we are monitoring
 default['bcpc']['monitoring']['external_clients'] = []
 # Monitoring database settings

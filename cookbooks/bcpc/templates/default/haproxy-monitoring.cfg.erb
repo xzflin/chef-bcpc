@@ -15,7 +15,7 @@ global
 
 defaults
   log global
-  source <%=node['bcpc']['management']['monitoring']['vip']%>
+  source <%=node['bcpc']['monitoring']['vip']%>
   mode http
   option http-server-close
   option abortonclose
@@ -31,7 +31,7 @@ defaults
   timeout client 30m
   timeout server 30m
 
-listen mysql-galera <%=node['bcpc']['management']['monitoring']['vip']%>:3306
+listen mysql-galera <%=node['bcpc']['monitoring']['vip']%>:3306
   timeout client 24h
   timeout server 24h
   mode tcp
@@ -44,7 +44,7 @@ listen mysql-galera <%=node['bcpc']['management']['monitoring']['vip']%>:3306
 <% end -%>
 
 frontend https
-  bind <%=node['bcpc']['management']['monitoring']['vip']%>:443 ssl crt /etc/haproxy/haproxy.pem
+  bind <%=node['bcpc']['monitoring']['vip']%>:443 ssl crt /etc/haproxy/haproxy.pem
   option tcplog
   stats enable
   stats uri /haproxy
@@ -78,7 +78,7 @@ backend graphite-web-backend
 
 backend kibana-backend
   balance source
-  option httpchk HEAD /elasticsearch/ HTTP/1.1\r\nHost: <%=node['bcpc']['management']['monitoring']['vip']%>
+  option httpchk HEAD /elasticsearch/ HTTP/1.1\r\nHost: <%=node['bcpc']['monitoring']['vip']%>
   http-check expect status 200
   reqrep ^([^\ :]*)\ /kibana/(.*) \1\ /\2
 <% @servers.each do |server| -%>
@@ -105,12 +105,12 @@ backend zabbix-backend
 
 # This is temporary until graphite supports being served under /graphite
 frontend graphite-web
-  bind <%="#{node['bcpc']['management']['monitoring']['vip']}:8888"%> ssl crt /etc/haproxy/haproxy.pem
+  bind <%="#{node['bcpc']['monitoring']['vip']}:8888"%> ssl crt /etc/haproxy/haproxy.pem
   option tcplog
   reqadd X-Forwarded-Proto:\ https
   default_backend graphite-web-backend
 
-listen graphite-carbon-relay-line <%=node['bcpc']['management']['monitoring']['vip']%>:2013
+listen graphite-carbon-relay-line <%=node['bcpc']['monitoring']['vip']%>:2013
   mode tcp
   balance leastconn
   option tcplog
@@ -119,7 +119,7 @@ listen graphite-carbon-relay-line <%=node['bcpc']['management']['monitoring']['v
   <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:2013 check inter 5s rise 1 fall 1 observe layer4" %>
 <% end -%>
 
-listen graphite-carbon-relay-pickle <%=node['bcpc']['management']['monitoring']['vip']%>:2014
+listen graphite-carbon-relay-pickle <%=node['bcpc']['monitoring']['vip']%>:2014
   mode tcp
   balance leastconn
   option tcplog
@@ -128,7 +128,7 @@ listen graphite-carbon-relay-pickle <%=node['bcpc']['management']['monitoring'][
   <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:2014 check inter 5s rise 1 fall 1 observe layer4" %>
 <% end -%>
 
-listen elasticsearch <%=node['bcpc']['management']['monitoring']['vip']%>:9200
+listen elasticsearch <%=node['bcpc']['monitoring']['vip']%>:9200
   balance source
   option tcplog
   option httpchk GET /
