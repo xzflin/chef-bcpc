@@ -16,11 +16,8 @@
 # limitations under the License.
 #
 
-az_number = if node['hostname'] =~ /bcpc\-vm/
-  node['bcpc']['node_number']
-else
-  node['bcpc']['rack'].nil? ? 1 : node['bcpc']['rack']
-end 
+parsed_rack_number = node['bcpc']['rack_name'].match(/^rack-(\d+)/)
+az_number = parsed_rack_number.nil? ? 1 : parsed_rack_number.captures[0].to_i
 availability_zone = (node['bcpc']['availability_zone'].nil? ) ? node['bcpc']['region_name'] + "-" + az_number.to_s : node['bcpc']['availability_zone'].to_s
 
 node['bcpc']['host_aggregates'].each do |name, properties| 
