@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: bcpc
-# Recipe::developer
+# Cookbook Name:: bcpc-foundation
+# Recipe:: developer
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Tools and setup useful when your doing dev on BCPC
-# but dont want them to go into a production system.
+# Tools and setup useful when you're doing dev on BCPC
+# but don't want them to go into a production system.
 #
 
 package "emacs24-nox"

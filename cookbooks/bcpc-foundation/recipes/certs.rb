@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: bcpc
+# Cookbook Name:: bcpc-foundation
 # Recipe:: certs
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-include_recipe "bcpc::default"
 
 template "/tmp/openssl.cnf" do
     source "openssl.cnf.erb"

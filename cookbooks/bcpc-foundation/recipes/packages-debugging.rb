@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: bcpc
+# Cookbook Name:: bcpc-foundation
 # Recipe:: packages-debugging
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,12 +39,4 @@ package "iotop"
 # System troubleshooting tools
 package "htop"
 package "sysstat"
-
-# In precise, sosreport is only in backports.
-apt_repository "backports" do
-    uri node['ubuntu']['archive_url']
-    distribution "#{node['lsb']['codename']}-backports"
-    components node['ubuntu']['components'].split(" ")
-end
 package "sosreport"
-

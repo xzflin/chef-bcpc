@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: bcpc
+# Cookbook Name:: bcpc-foundation
 # Recipe:: packages-common
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,12 +17,10 @@
 # limitations under the License.
 #
 
-
-
 # This recipe installs OS packages which are required by all node types.
 
 package 'patch'
-package 'sshpass'  # GitHub #112 -- required for nodessh.sh 
+package 'sshpass'  # GitHub #112 -- required for nodessh.sh
 # logtail is used for some zabbix checks
 package 'logtail'
 

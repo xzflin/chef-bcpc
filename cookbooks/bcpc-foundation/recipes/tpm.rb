@@ -1,5 +1,5 @@
 #
-# Cookbook Name:: bcpc
+# Cookbook Name:: bcpc-foundation
 # Recipe:: tpm
 #
 # Copyright 2015, Bloomberg Finance L.P.
@@ -16,18 +16,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-if node['bcpc']['enabled']['tpm'] then
+if node['bcpc']['enabled']['tpm']
   include_recipe "bcpc::default"
-  
+
   package "linux-image-extra-virtual" # installs the TPM module if not already there
-  
+
   bash "ensure-tpm_rng-module-is-loaded" do
     code <<-EOH
       modprobe tpm_rng
     EOH
     not_if "lsmod | grep -q tpm_rng"
   end
-  
+
   bash "ensure-tpm_rng-module-loads-on-boot" do
     code <<-EOH
       echo 'tpm_rng' >> /etc/modules

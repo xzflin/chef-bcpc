@@ -47,11 +47,11 @@ if [ $MONITORING_NODES -gt 0 ]; then
   done
 fi
 
-# install the knife-acl plugin into embedded knife, rsync the Chef repository into the non-root user 
+# install the knife-acl plugin into embedded knife, rsync the Chef repository into the non-root user
 # (vagrant)'s home directory, and add the dependency cookbooks from the file cache
 do_on_node bootstrap "sudo /opt/opscode/embedded/bin/gem install $FILECACHE_MOUNT_POINT/knife-acl-0.0.12.gem \
   && rsync -a $REPO_MOUNT_POINT/* \$HOME/chef-bcpc \
-  && cp $FILECACHE_MOUNT_POINT/cookbooks/*.tar.gz \$HOME/chef-bcpc/cookbooks \
+  && cp $FILECACHE_MOUNT_POINT/cookbooks-new/*.tar.gz \$HOME/chef-bcpc/cookbooks \
   && cd \$HOME/chef-bcpc/cookbooks && ls -1 *.tar.gz | xargs -I% tar xvzf %"
 
 # build binaries before uploading the bcpc cookbook
@@ -63,7 +63,8 @@ do_on_node bootstrap "sudo apt-get update \
 
 # upload all cookbooks, roles and our chosen environment to the Chef server
 # (cookbook upload uses the cookbook_path set when configuring knife on the bootstrap node)
-do_on_node bootstrap "$KNIFE cookbook upload apt bcpc chef-client cron logrotate ntp ubuntu yum \
+COOKBOOKS="apt ntp chef-client bcpc-foundation"
+do_on_node bootstrap "$KNIFE cookbook upload $COOKBOOKS \
   && cd \$HOME/chef-bcpc/roles && $KNIFE role from file *.json \
   && cd \$HOME/chef-bcpc/environments && $KNIFE environment from file $BOOTSTRAP_CHEF_ENV.json"
 

@@ -1,5 +1,5 @@
-
-# Cookbook Name:: bcpc
+#
+# Cookbook Name:: bcpc-foundation
 # Recipe:: cpupower
 #
 # Copyright 2015, Bloomberg Finance L.P.
@@ -33,7 +33,7 @@ service "cpufrequtils" do
   action [:disable, :stop]
 end
 
-bcpc_cpupower "cpu governor" do
+bcpc_foundation_cpupower "cpu governor" do
   governor                      node['bcpc']['cpupower']['governor']
   ondemand_ignore_nice_load     node['bcpc']['cpupower']['ondemand_ignore_nice_load']
   ondemand_io_is_busy           node['bcpc']['cpupower']['ondemand_io_is_busy']
