@@ -306,7 +306,7 @@ default['bcpc']['keystone']['wait_for_keystone_timeout'] = 120
 # The driver section below allows either 'sql' or 'ldap' (or 'templated' for catalog)
 # Note that not all drivers may support SQL/LDAP, only tinker if you know what you're getting into
 default['bcpc']['keystone']['drivers']['assignment'] = 'sql'
-default['bcpc']['keystone']['drivers']['catalog'] = 'templated'
+default['bcpc']['keystone']['drivers']['catalog'] = 'sql'
 default['bcpc']['keystone']['drivers']['credential'] = 'sql'
 default['bcpc']['keystone']['drivers']['domain_config'] = 'sql'
 default['bcpc']['keystone']['drivers']['endpoint_filter'] = 'sql'
