@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: bcpc
+# Cookbook Name:: bcpc-bootstrap
 # Recipe:: cobbler
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-include_recipe "bcpc::default"
 
 # for mkpasswd
 package "whois"
@@ -57,6 +55,20 @@ template "/etc/cobbler/dhcp.template" do
     notifies :restart, "service[cobbler]", :delayed
 end
 
+directory "/var/www/cobbler/pub/scripts" do
+    action :create
+    owner "root"
+    group "adm"
+    mode 02775
+end
+
+cookbook_file "/var/www/cobbler/pub/scripts/get-ssh-keys" do
+    source "get-ssh-keys"
+    owner "root"
+    group "root"
+    mode 00755
+end
+
 template "/var/lib/cobbler/kickstarts/bcpc_ubuntu_host.preseed" do
     source "cobbler.bcpc_ubuntu_host.preseed.erb"
     mode 00644
@@ -64,7 +76,8 @@ template "/var/lib/cobbler/kickstarts/bcpc_ubuntu_host.preseed" do
 end
 
 cookbook_file "/tmp/ubuntu-14.04-mini.iso" do
-    source "bins/ubuntu-14.04-mini.iso"
+    source "ubuntu-14.04-mini.iso"
+    cookbook "bcpc-binary-files"
     owner "root"
     mode 00444
 end

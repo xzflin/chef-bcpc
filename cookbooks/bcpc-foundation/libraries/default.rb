@@ -127,7 +127,7 @@ def get_head_nodes
 end
 
 def get_bootstrap_node
-    results = search(:node, "role:BCPC-Bootstrap AND chef_environment:#{node.chef_environment}")
+    results = search(:node, "recipe:bcpc-bootstrap AND chef_environment:#{node.chef_environment}")
     raise 'There is not exactly one bootstrap node found.' if results.size != 1
     results.first
 end
@@ -150,7 +150,7 @@ def get_cached_head_node_names
             end
         end
     rescue Errno::ENOENT
-    # assume first run   
+    # assume first run
     end
     return headnodes
 end
@@ -194,7 +194,7 @@ def ceph_keygen()
     Base64.encode64(key).strip
 end
 
-# requires cidr in form '1.2.3.0/24', where 1.2.3.0 is a dotted quad ip4 address 
+# requires cidr in form '1.2.3.0/24', where 1.2.3.0 is a dotted quad ip4 address
 # and 24 is a number of netmask bits (e.g. 8, 16, 24)
 def calc_reverse_dns_zone(cidr)
 
