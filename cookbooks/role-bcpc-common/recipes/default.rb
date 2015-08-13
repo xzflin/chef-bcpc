@@ -1,5 +1,5 @@
 #
-# Cookbook Name:: role-bcpc-node-bootstrap
+# Cookbook Name:: role-bcpc-common
 # Recipe:: default
 #
 # Copyright 2015, Bloomberg Finance L.P.
@@ -16,5 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-include_recipe 'role-bcpc-common'
-include_recipe 'bcpc-bootstrap'
+include_recipe 'ubuntu'
+include_recipe 'ntp'
+include_recipe 'chef-client'
+include_recipe 'chef-client::delete_validation'
+include_recipe 'chef-client::config'
+include_recipe 'bcpc-foundation'

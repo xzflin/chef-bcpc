@@ -7,6 +7,3 @@ long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
 version          '6.0.0'
 
 conflicts        'bcpc'
-depends          'chef-client', '>= 4.3.1'
-depends          'ntp',         '>= 1.8.6'
-depends          'ubuntu',      '>= 1.1.8'

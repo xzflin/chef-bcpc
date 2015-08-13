@@ -127,7 +127,7 @@ def get_head_nodes
 end
 
 def get_bootstrap_node
-    results = search(:node, "recipe:bcpc-bootstrap AND chef_environment:#{node.chef_environment}")
+    results = search(:node, "recipe:role-bcpc-node-bootstrap AND chef_environment:#{node.chef_environment}")
     raise 'There is not exactly one bootstrap node found.' if results.size != 1
     results.first
 end
