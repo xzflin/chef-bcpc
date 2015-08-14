@@ -16,3 +16,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+package "ubuntu-cloud-keyring" do
+  action :upgrade
+end
+
+apt_repository "openstack" do
+  uri node['bcpc']['repos']['openstack']
+  distribution "#{node['lsb']['codename']}-#{node['bcpc']['openstack_branch']}/#{node['bcpc']['openstack_release']}"
+  components ["main"]
+  key "ubuntu-cloud.key"
+end
+
+%w{ python-novaclient
+    python-cinderclient
+    python-glanceclient
+    python-nova
+    python-memcache
+    python-keystoneclient
+    python-nova-adminclient
+    python-heatclient
+    python-ceilometerclient
+    python-mysqldb
+    python-six
+    python-ldap
+    python-openstackclient
+}.each do |pkg|
+    package pkg do
+        action :upgrade
+    end
+end
+
+%w{hup_openstack logwatch}.each do |script|
+    template "/usr/local/bin/#{script}" do
+        source "#{script}.erb"
+        mode 0755
+        owner "root"
+        group "root"
+        variables(:servers => get_head_nodes)
+    end
+end
