@@ -18,6 +18,7 @@
 #
 include_recipe 'bcpc-foundation::certs'
 include_recipe 'bcpc-foundation::cpupower'
+include_recipe 'bcpc-foundation::deadline-io-scheduler'
 include_recipe 'bcpc-foundation::developer'
 include_recipe 'bcpc-foundation::packages-common'
 include_recipe 'bcpc-foundation::packages-debugging'

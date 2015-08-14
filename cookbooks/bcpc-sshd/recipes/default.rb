@@ -1,14 +1,14 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: networking-gw-test
+# Cookbook Name:: bcpc-sshd
+# Recipe:: default
 #
-# Copyright 2014, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,13 +17,12 @@
 # limitations under the License.
 #
 
-if node['bcpc']['enabled']['network_tests'] then
+template "/etc/ssh/sshd_config" do
+    source "sshd_config.erb"
+    mode 00644
+    notifies :restart, "service[ssh]", :immediately
+end
 
-    ruby_block "check-gateways" do
-        block do
-            ping_node("storage gateway", node['bcpc']['storage']['gateway'])
-            ping_node("floating gateway", node['bcpc']['floating']['gateway'])
-        end
-    end
-
+service "ssh" do
+    action [:enable, :start]
 end

@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: check_cluster
+# Cookbook Name:: bcpc-foundation
+# Recipe:: deadline-io-scheduler
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,9 +17,14 @@
 # limitations under the License.
 #
 
-raise Chef::Application.fatal!("Chef reports reduced number of headnodes, see /etc/headnodes") if (get_cached_head_node_names - get_head_nodes.map { |x| x['hostname'] }).length > 0
-
-template "/etc/headnodes" do
-    source "headnodes.erb"
-    variables(:servers => get_head_nodes)
+bash "set-deadline-io-scheduler" do
+    user "root"
+    code <<-EOH
+        for i in /sys/block/sd?; do
+            echo deadline > $i/queue/scheduler
+        done
+        echo GRUB_CMDLINE_LINUX_DEFAULT=\\\"\\$GRUB_CMDLINE_LINUX_DEFAULT elevator=deadline\\\" >> /etc/default/grub
+        update-grub
+    EOH
+    not_if "grep 'elevator=deadline' /etc/default/grub"
 end

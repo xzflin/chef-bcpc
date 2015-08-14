@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: default
+# Cookbook Name:: bcpc-foundation
+# Recipe:: set-node-number-and-rack
 #
 # Copyright 2013, Bloomberg Finance L.P.
 #

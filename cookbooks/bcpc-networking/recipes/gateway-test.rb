@@ -1,14 +1,14 @@
 #
 # Cookbook Name:: bcpc-networking
-# Recipe:: default
+# Recipe:: gateway-test
 #
-# Copyright 2015, Bloomberg Finance L.P.
+# Copyright 2014, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,9 +16,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-include_recipe 'bcpc-networking::set-node-number-and-rack'
-include_recipe 'bcpc-networking::configure-tcp'
-include_recipe 'bcpc-networking::configure-interfaces'
-include_recipe 'bcpc-networking::link-test'
-include_recipe 'bcpc-networking::gateway-test'
-include_recipe 'bcpc-networking::routing-test'
+
+if node['bcpc']['enabled']['network_tests'] then
+
+    ruby_block "check-gateways" do
+        block do
+            ping_node("storage gateway", node['bcpc']['storage']['gateway'])
+            ping_node("floating gateway", node['bcpc']['floating']['gateway'])
+        end
+    end
+
+end

@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: networking
+# Cookbook Name:: bcpc-networking
+# Recipe:: configure-interfaces
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,28 +17,10 @@
 # limitations under the License.
 #
 
-include_recipe "bcpc::default"
-include_recipe "bcpc::system"
-include_recipe "bcpc::certs"
-
 template "/etc/hosts" do
     source "hosts.erb"
     mode 00644
     variables(:servers => get_all_nodes, :bootstrap_node => get_bootstrap_node)
-end
-
-template "/etc/ssh/sshd_config" do
-    source "sshd_config.erb"
-    mode 00644
-    notifies :restart, "service[ssh]", :immediately
-end
-
-service "ssh" do
-    action [:enable, :start]
-end
-
-service "cron" do
-    action [:enable, :start]
 end
 
 # Core networking package
@@ -104,7 +86,7 @@ end
 end
 
 %w{ storage floating }.each do |net|
-  if not node['bcpc'][net]['interface-parent'].nil? 
+  if not node['bcpc'][net]['interface-parent'].nil?
     template "/etc/network/interfaces.d/iface-#{node['bcpc'][net]['interface-parent']}" do
       source "network.iface-parent.erb"
       owner "root"
@@ -115,7 +97,7 @@ end
                 :mtu => node['bcpc'][net]['mtu'],
                 )
     end
-  end    
+  end
 end
 
 # set up the DNS resolvers
@@ -163,8 +145,8 @@ bash "interface-mgmt-make-static-if-dhcp" do
 end
 
 %w{ management storage floating }.each do |iface|
-  
-  if not node['bcpc'][iface]['interface-parent'].nil? 
+
+  if not node['bcpc'][iface]['interface-parent'].nil?
     bash "#{iface} up" do
       user "root"
       code <<-EOH
@@ -179,7 +161,7 @@ end
         end
     end
   end
-    
+
     bash "#{iface} up" do
         user "root"
         code <<-EOH
@@ -261,5 +243,3 @@ bash "disable-noninteractive-pam-logging" do
     code "sed --in-place 's/^\\(session\\s*required\\s*pam_unix.so\\)/#\\1/' /etc/pam.d/common-session-noninteractive"
     only_if "grep -e '^session\\s*required\\s*pam_unix.so' /etc/pam.d/common-session-noninteractive"
 end
-
-include_recipe "bcpc::apache2"

@@ -16,3 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+include_recipe 'role-bcpc-common'
+include_recipe 'bcpc-health-check::check-headnode-count'
+include_recipe 'bcpc-crond'
+include_recipe 'bcpc-sshd'
+include_recipe 'bcpc-networking'

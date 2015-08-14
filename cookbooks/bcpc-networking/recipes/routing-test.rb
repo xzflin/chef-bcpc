@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: networking-route-test
+# Cookbook Name:: bcpc-networking
+# Recipe:: routing-test
 #
 # Copyright 2014, Bloomberg Finance L.P.
 #

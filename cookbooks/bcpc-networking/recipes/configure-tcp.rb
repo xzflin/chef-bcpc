@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: system
+# Cookbook Name:: bcpc-networking
+# Recipe:: configure-tcp
 #
 # Copyright 2013, Bloomberg Finance L.P.
 #
@@ -17,8 +17,6 @@
 # limitations under the License.
 #
 
-include_recipe "bcpc::default"
-
 template "/etc/sysctl.d/70-bcpc.conf" do
     source "sysctl-70-bcpc.conf.erb"
     owner "root"
@@ -30,16 +28,4 @@ end
 execute "reload-sysctl" do
     action :nothing
     command "sysctl -p /etc/sysctl.d/70-bcpc.conf"
-end
-
-bash "set-deadline-io-scheduler" do
-    user "root"
-    code <<-EOH
-        for i in /sys/block/sd?; do
-            echo deadline > $i/queue/scheduler
-        done
-        echo GRUB_CMDLINE_LINUX_DEFAULT=\\\"\\$GRUB_CMDLINE_LINUX_DEFAULT elevator=deadline\\\" >> /etc/default/grub
-        update-grub
-    EOH
-    not_if "grep 'elevator=deadline' /etc/default/grub"
 end

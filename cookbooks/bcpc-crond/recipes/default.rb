@@ -1,5 +1,5 @@
 #
-# Cookbook Name:: bcpc-networking
+# Cookbook Name:: bcpc-crond
 # Recipe:: default
 #
 # Copyright 2015, Bloomberg Finance L.P.
@@ -16,9 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-include_recipe 'bcpc-networking::set-node-number-and-rack'
-include_recipe 'bcpc-networking::configure-tcp'
-include_recipe 'bcpc-networking::configure-interfaces'
-include_recipe 'bcpc-networking::link-test'
-include_recipe 'bcpc-networking::gateway-test'
-include_recipe 'bcpc-networking::routing-test'
+
+service "cron" do
+      action [:enable, :start]
+end
