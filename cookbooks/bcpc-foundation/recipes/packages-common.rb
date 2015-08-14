@@ -44,3 +44,9 @@ if node['bcpc']['enabled']['always_update_package_lists'] then
         code "DEBIAN_FRONTEND=noninteractive apt-get update"
     end
 end
+
+cookbook_file "/usr/local/bin/apt-pkg-check-version" do
+    source "apt-pkg-check-version"
+    owner "root"
+    mode 00755
+end

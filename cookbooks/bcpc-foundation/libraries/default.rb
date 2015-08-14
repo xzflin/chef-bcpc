@@ -98,7 +98,7 @@ def search_nodes(key, value)
 end
 
 def get_all_nodes
-    results = search(:node, "recipes:bcpc AND chef_environment:#{node.chef_environment}")
+    results = search(:node, "recipes:role-bcpc-common AND chef_environment:#{node.chef_environment}")
     if results.any? { |x| x['hostname'] == node['hostname'] }
         results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
     else
@@ -108,7 +108,7 @@ def get_all_nodes
 end
 
 def get_ceph_osd_nodes
-  results = search(:node, "recipes:bcpc\\:\\:ceph-osd AND chef_environment:#{node.chef_environment}")
+  results = search(:node, "recipes:bcpc-ceph\\:\\:osd AND chef_environment:#{node.chef_environment}")
     if results.any? { |x| x['hostname'] == node['hostname'] }
         results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
     else
@@ -118,7 +118,7 @@ def get_ceph_osd_nodes
 end
 
 def get_head_nodes
-    results = search(:node, "role:BCPC-Headnode AND chef_environment:#{node.chef_environment}")
+    results = search(:node, "recipe:role-bcpc-node-head AND chef_environment:#{node.chef_environment}")
     results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
     if not results.include?(node) and node.run_list.roles.include?('BCPC-Headnode')
         results.push(node)

@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: ceph-work
+# Cookbook Name:: bcpc-ceph
+# Recipe:: write-bootstrap-osd-key
 #
 # Copyright 2015, Bloomberg Finance L.P.
 #
@@ -17,19 +17,7 @@
 # limitations under the License.
 #
 
-include_recipe "bcpc::ceph-common"
-
-bash "write-client-admin-key" do
-    code <<-EOH
-        ADMIN_KEY=`ceph --name mon. --keyring /etc/ceph/ceph.mon.keyring auth get-or-create-key client.admin`
-        ceph-authtool "/etc/ceph/ceph.client.admin.keyring" \
-            --create-keyring \
-            --name=client.admin \
-            --add-key="$ADMIN_KEY"
-        chmod 644 /etc/ceph/ceph.client.admin.keyring
-    EOH
-    not_if "test -f /etc/ceph/ceph.client.admin.keyring && chmod 644 /etc/ceph/ceph.client.admin.keyring"
-end
+include_recipe 'bcpc-ceph'
 
 bash "write-bootstrap-osd-key" do
     code <<-EOH

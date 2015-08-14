@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: ceph-mon
+# Cookbook Name:: bcpc-ceph
+# Recipe:: headnode
 #
 # Copyright 2015, Bloomberg Finance L.P.
 #
@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-include_recipe "bcpc::ceph-common"
+include_recipe 'bcpc-ceph'
 
 bash 'ceph-mon-mkfs' do
     code <<-EOH
@@ -38,7 +38,6 @@ service 'ceph-mon-renice' do
   action [:enable, :start]
   restart_command 'service ceph-mon-renice restart'
 end
-
 
 execute "ceph-mon-start" do
     command "initctl emit ceph-mon id='#{node['hostname']}'"
@@ -66,7 +65,7 @@ ruby_block "wait-for-mon-quorum" do
         status = { 'state' => '' }
         until %w{leader peon}.include?(status['state']) do
             if clock >= timeout
-              fail "Exceeded quorum wait timeout of #{timeout} seconds, check Ceph status with ceph -s and ceph health detail" 
+              fail "Exceeded quorum wait timeout of #{timeout} seconds, check Ceph status with ceph -s and ceph health detail"
             end
             Chef::Log.warn("Waiting for ceph-mon to get quorum...")
             status = JSON.parse(%x[ceph --admin-daemon /var/run/ceph/ceph-mon.#{node['hostname']}.asok mon_status])
@@ -240,10 +239,10 @@ end
 end
 
 %w{noscrub nodeep-scrub}.each do |flag|
-  if node['bcpc']['ceph']['rebalance'] 
+  if node['bcpc']['ceph']['rebalance']
     execute "ceph-osd-set-#{flag}" do
       command "ceph osd set #{flag}"
-      only_if "ceph health"    
+      only_if "ceph health"
     end
   else
     execute "ceph-osd-unset-#{flag}" do
@@ -290,5 +289,3 @@ ruby_block "store-glance-ceph-key" do
   end
   only_if { File.exist?('/etc/ceph/ceph.client.glance.keyring') and ((config_defined('glance-ceph-key') and (get_config('glance-ceph-key') != `ceph auth get-key client.glance`)) or (not config_defined('glance-ceph-key'))) }
 end
-
-include_recipe "bcpc::ceph-osd"
