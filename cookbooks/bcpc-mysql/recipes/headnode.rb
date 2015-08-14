@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: mysql-head
+# Cookbook Name:: bcpc-mysql
+# Recipe:: headnode
 #
 # Copyright 2013, Bloomberg Finance L.P.
 #
@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-include_recipe "bcpc::packages-mysql"
+include_recipe 'bcpc-mysql'
 
 ruby_block "initialize-mysql-config" do
     block do
@@ -25,8 +25,6 @@ ruby_block "initialize-mysql-config" do
         make_config('mysql-root-password', secure_password)
         make_config('mysql-galera-user', "sst")
         make_config('mysql-galera-password', secure_password)
-        make_config('mysql-check-user', "check")
-        make_config('mysql-check-password', secure_password)
     end
 end
 
@@ -44,8 +42,6 @@ ruby_block "initial-mysql-config" do
     end
     not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT user from mysql.user where User=\"haproxy\"' >/dev/null" }
 end
-
-include_recipe "bcpc::mysql-common"
 
 template "/etc/mysql/debian.cnf" do
     source "my-debian.cnf.erb"
