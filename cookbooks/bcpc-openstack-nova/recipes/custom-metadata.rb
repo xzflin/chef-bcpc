@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: bcpc
+# Cookbook Name:: bcpc-openstack-nova
 # Recipe:: custom-metadata
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,12 +17,10 @@
 # limitations under the License.
 #
 
-cookbook_file "/usr/share/pyshared/nova/api/metadata/bcpc_metadata.py" do
+include_recipe 'bcpc-openstack-nova::compute'
+
+cookbook_file '/usr/lib/python2.7/dist-packages/nova/api/metadata/bcpc_metadata.py' do
   source "bcpc_metadata.py"
   owner "root"
   mode 00644
-end
-
-link "/usr/lib/python2.7/dist-packages/nova/api/metadata/bcpc_metadata.py" do
-  to "/usr/share/pyshared/nova/api/metadata/bcpc_metadata.py"
 end

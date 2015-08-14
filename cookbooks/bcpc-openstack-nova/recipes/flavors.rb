@@ -1,4 +1,4 @@
-# Cookbook Name:: bcpc
+# Cookbook Name:: bcpc-openstack-nova
 # Recipe:: flavors
 #
 # Copyright 2013, Bloomberg Finance L.P.
@@ -16,15 +16,15 @@
 # limitations under the License.
 #
 
-node['bcpc']['flavors'].each do |name, flavor| 
-  bcpc_osflavor name do
-    memory_mb flavor['memory_mb'] 
-    disk_gb   flavor['disk_gb'] 
-    vcpus  flavor['vcpus'] 
+node['bcpc']['flavors'].each do |name, flavor|
+  bcpc_openstack_nova_osflavor name do
+    memory_mb flavor['memory_mb']
+    disk_gb   flavor['disk_gb']
+    vcpus  flavor['vcpus']
     ephemeral_gb flavor['ephemeral_gb']
     swap_gb flavor['swap_gb']
     is_public flavor['is_public'] or true
     flavor_id flavor['id'] or "auto"
     extra_specs flavor["extra_specs"]
   end
-end 
+end

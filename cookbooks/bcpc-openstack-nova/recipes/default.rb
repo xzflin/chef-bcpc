@@ -16,3 +16,45 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+require 'ipaddr'
+
+include_recipe 'bcpc-openstack-common'
+
+ruby_block "initialize-nova-config" do
+    block do
+        require 'openssl'
+        require 'net/ssh'
+        key = OpenSSL::PKey::RSA.new 2048;
+        pubkey = "#{key.ssh_type} #{[key.to_blob].pack('m0')}"
+        make_config('ssh-nova-private-key', key.to_pem)
+        make_config('ssh-nova-public-key', pubkey)
+        make_config('mysql-nova-user', "nova")
+        make_config('mysql-nova-password', secure_password)
+        make_config('glance-cloudpipe-uuid', %x[uuidgen -r].strip)
+    end
+end
+
+package "nova-common"
+
+template "/etc/nova/nova.conf" do
+    source "nova.conf.erb"
+    owner "nova"
+    group "nova"
+    mode 00600
+    variables(:servers => get_head_nodes)
+end
+
+template "/etc/nova/api-paste.ini" do
+    source "nova.api-paste.ini.erb"
+    owner "nova"
+    group "nova"
+    mode 00600
+end
+
+template "/etc/nova/policy.json" do
+    source "nova-policy.json.erb"
+    owner "nova"
+    group "nova"
+    mode 00600
+    variables(:policy => JSON.pretty_generate(node['bcpc']['nova']['policy']))
+end

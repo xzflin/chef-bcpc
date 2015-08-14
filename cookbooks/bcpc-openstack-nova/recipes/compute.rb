@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: nova-head
+# Cookbook Name:: bcpc-openstack-nova
+# Recipe:: compute
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-include_recipe "bcpc::ceph-work"
-include_recipe "bcpc::nova-common"
+include_recipe 'bcpc-ceph'
+include_recipe 'bcpc-openstack-nova'
 
 package "nova-compute-#{node['bcpc']['virt_type']}" do
     action :upgrade
@@ -78,6 +78,7 @@ end
 
 template "/etc/nova/ssl-bcpc.pem" do
     source "ssl-bcpc.pem.erb"
+    cookbook 'bcpc-foundation'
     owner "nova"
     group "nova"
     mode 00644
@@ -85,6 +86,7 @@ end
 
 template "/etc/nova/ssl-bcpc.key" do
     source "ssl-bcpc.key.erb"
+    cookbook 'bcpc-foundation'
     owner "nova"
     group "nova"
     mode 00600
@@ -105,6 +107,7 @@ end
 
 template "/var/lib/nova/.ssh/known_hosts" do
     source "known_hosts.erb"
+    cookbook 'bcpc-foundation'
     owner "nova"
     group "nova"
     mode 00644
@@ -163,9 +166,10 @@ end
 
 template "/etc/ceph/ceph.client.cinder.keyring" do
   source "ceph-client-cinder-keyring.erb"
+  cookbook 'bcpc-ceph'
   mode "00644"
 end
-  
+
 ruby_block 'load-virsh-keys' do
     block do
         %x[ CINDER_KEY=`ceph --name mon. --keyring /etc/ceph/ceph.mon.keyring auth get-or-create-key client.cinder`
@@ -203,7 +207,7 @@ end
 service "apparmor" do
   action :nothing
 end
-  
+
 template "/etc/apparmor.d/abstractions/libvirt-qemu" do
   source "apparmor-libvirt-qemu.erb"
   notifies :restart, "service[libvirt-bin]", :delayed
@@ -239,7 +243,7 @@ cookbook_file "/tmp/nova_api_metadata_base.patch" do
     source "nova_api_metadata_base.patch"
     owner "root"
     mode 0644
-end 
+end
 
 bash "patch-for-ip-hostnames-metadata" do
     user "root"
@@ -256,13 +260,13 @@ bash "patch-for-ip-hostnames-metadata" do
     EOH
     not_if "grep -q 'THIS FILE PATCHED BY BCPC' /usr/lib/python2.7/dist-packages/nova/api/metadata/base.py"
     notifies :restart, "service[nova-api]", :immediately
-end 
+end
 
 cookbook_file "/tmp/nova_network_linux_net.patch" do
     source "nova_network_linux_net.patch"
     owner "root"
     mode 0644
-end 
+end
 
 bash "patch-for-ip-hostnames-networking" do
     user "root"
@@ -280,5 +284,4 @@ bash "patch-for-ip-hostnames-networking" do
     not_if "grep -q 'THIS FILE PATCHED BY BCPC' /usr/lib/python2.7/dist-packages/nova/network/linux_net.py"
     notifies :restart, "service[nova-compute]", :immediately
     notifies :restart, "service[nova-network]", :immediately
-end 
-
+end

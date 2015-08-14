@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: nova-head
+# Cookbook Name:: bcpc-openstack-nova
+# Recipe:: headnode
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
 # limitations under the License.
 #
 
-include_recipe "bcpc::mysql-head"
-include_recipe "bcpc::nova-common"
+include_recipe 'bcpc-mysql::headnode'
+include_recipe 'bcpc-openstack-nova'
 
 %w{nova-scheduler nova-cert nova-consoleauth nova-conductor}.each do |pkg|
     package pkg do
@@ -70,5 +70,8 @@ ruby_block "reap-dead-servers-from-nova" do
     end
 end
 
-include_recipe "bcpc::nova-work"
-include_recipe "bcpc::nova-setup"
+include_recipe 'bcpc-openstack-nova::compute'
+include_recipe 'bcpc-openstack-nova::network-setup'
+include_recipe 'bcpc-openstack-nova::flavors'
+include_recipe 'bcpc-openstack-nova::custom-metadata'
+include_recipe 'bcpc-openstack-nova::host-aggregates'

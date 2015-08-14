@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: nova-setup
+# Cookbook Name:: bcpc-openstack-nova
+# Recipe:: network-setup
 #
 # Copyright 2013, Bloomberg Finance L.P.
 #
@@ -17,8 +17,8 @@
 # limitations under the License.
 #
 
-include_recipe "bcpc::keystone"
-include_recipe "bcpc::nova-head"
+include_recipe 'bcpc-openstack-keystone'
+include_recipe 'bcpc-openstack-nova::headnode'
 
 # spin until nova starts to respond, avoids blowing up on an HTTP 503
 # if Apache was restarted recently and is not yet ready
@@ -26,7 +26,6 @@ bash "wait-for-nova-to-become-operational" do
   code ". /root/adminrc; until nova secgroup-list >/dev/null 2>&1; do sleep 1; done"
   timeout 30
 end
-
 
 bash "nova-configure-default-icmp-secgroup-rule" do
     user "root"
