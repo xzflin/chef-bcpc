@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: zabbix-agent
+# Cookbook Name:: bcpc-zabbix
+# Recipe:: agent
 #
 # Copyright 2015, Bloomberg Finance L.P.
 #
@@ -17,9 +17,8 @@
 # limitations under the License.
 #
 
-if node['bcpc']['enabled']['monitoring'] then
-    include_recipe "bcpc::default"
-    include_recipe "bcpc::packages-zabbix"
+if node['bcpc']['enabled']['monitoring']
+    include_recipe 'bcpc-zabbix'
 
     # this script removes the old manually compiled Zabbix agent installation
     # (being a bit lazy and assuming the presence of the old agent binary signals everything
@@ -44,7 +43,7 @@ if node['bcpc']['enabled']['monitoring'] then
         EOH
         only_if 'test -f /usr/local/sbin/zabbix_agentd'
     end
-  
+
     %w{zabbix-agent zabbix-get zabbix-sender}.each do |zabbix_package|
       package zabbix_package do
         action :upgrade
@@ -110,7 +109,8 @@ if node['bcpc']['enabled']['monitoring'] then
     end
 
     cookbook_file "/tmp/python-requests-aws_0.1.6_all.deb" do
-        source "bins/python-requests-aws_0.1.6_all.deb"
+        source "python-requests-aws_0.1.6_all.deb"
+        cookbook 'bcpc-binary-files'
         owner "root"
         mode 00444
     end
@@ -119,14 +119,6 @@ if node['bcpc']['enabled']['monitoring'] then
         provider Chef::Provider::Package::Dpkg
         source "/tmp/python-requests-aws_0.1.6_all.deb"
         action :install
-    end
-
-    template "/usr/local/bin/zabbix_bucket_stats" do
-        source "zabbix_bucket_stats.erb"
-        owner "root"
-        group "root"
-        mode "00755"
-        only_if do get_cached_head_node_names.include?(node['hostname']) end
     end
 
     cookbook_file "/usr/local/bin/zabbix_discover_buckets" do

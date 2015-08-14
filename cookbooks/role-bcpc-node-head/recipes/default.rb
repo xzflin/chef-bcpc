@@ -15,12 +15,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+
 include_recipe 'role-bcpc-common'
 include_recipe 'bcpc-health-check::check-headnode-count'
 include_recipe 'bcpc-crond'
 include_recipe 'bcpc-sshd'
 include_recipe 'bcpc-networking'
+include_recipe 'bcpc-zabbix::agent'
 include_recipe 'bcpc-ceph::headnode'
 include_recipe 'bcpc-ceph::write-client-admin-key'
 include_recipe 'bcpc-ceph::write-bootstrap-osd-key'

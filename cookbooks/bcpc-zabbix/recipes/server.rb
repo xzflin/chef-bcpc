@@ -17,10 +17,10 @@
 # limitations under the License.
 #
 
-if node['bcpc']['enabled']['monitoring'] then
-    include_recipe "bcpc::mysql-monitoring"
-    include_recipe "bcpc::apache2"
-    include_recipe "bcpc::packages-zabbix"
+if node['bcpc']['enabled']['monitoring']
+    include_recipe 'bcpc-mysql::monitoring'
+    include_recipe 'bcpc-apache'
+    include_recipe 'bcpc-zabbix'
 
     ruby_block "initialize-zabbix-config" do
         block do
@@ -32,7 +32,7 @@ if node['bcpc']['enabled']['monitoring'] then
             make_config('zabbix-guest-password', secure_password)
         end
     end
-    
+
     # this script removes the old manually compiled Zabbix server installation
     # (being a bit lazy and assuming the presence of the old server binary signals everything
     # is still there)
@@ -64,7 +64,7 @@ if node['bcpc']['enabled']['monitoring'] then
         options "--no-install-recommends"
       end
     end
-    
+
     # terminate the Zabbix server if this server doesn't hold the monitoring VIP
     # (this is a safeguard to get out of a potential weird state immediately after
     # migrating from compiled Zabbix to packaged Zabbix)

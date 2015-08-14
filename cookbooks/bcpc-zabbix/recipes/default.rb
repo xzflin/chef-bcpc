@@ -16,3 +16,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+apt_repository 'zabbix' do
+  uri node['bcpc']['repos']['zabbix']
+  distribution node['lsb']['codename']
+  components ['main']
+  key 'zabbix-official-repo.key'
+end
