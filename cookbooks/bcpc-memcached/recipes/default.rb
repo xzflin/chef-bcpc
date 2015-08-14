@@ -16,3 +16,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+package 'memcached' do
+  action :upgrade
+end
+
+file '/var/log/memcached.log' do
+  owner 'memcache'
+  group 'memcache'
+  mode  00644
+end
+
+template '/etc/memcached.conf' do
+  source   'memcached.conf.erb'
+  owner    'root'
+  group    'root'
+  mode     00644
+  notifies :restart, 'service[memcached]', :immediate
+end
+
+service 'memcached' do
+  action [:enable, :start]
+end
