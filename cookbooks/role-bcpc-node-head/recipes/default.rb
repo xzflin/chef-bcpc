@@ -17,11 +17,7 @@
 # limitations under the License.
 
 include_recipe 'role-bcpc-common'
-include_recipe 'bcpc-health-check::check-headnode-count'
-include_recipe 'bcpc-crond'
-include_recipe 'bcpc-sshd'
-include_recipe 'bcpc-networking'
-include_recipe 'bcpc-zabbix::agent'
+include_recipe 'role-bcpc-node-common'
 include_recipe 'bcpc-ceph::headnode'
 include_recipe 'bcpc-ceph::write-client-admin-key'
 include_recipe 'bcpc-ceph::write-bootstrap-osd-key'
