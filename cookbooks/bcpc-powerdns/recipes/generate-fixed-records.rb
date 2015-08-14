@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: powerdns-nova
+# Cookbook Name:: bcpc-powerdns
+# Recipe:: generate-fixed-records
 #
 # Copyright 2015, Bloomberg Finance L.P.
 #
@@ -18,7 +18,7 @@
 #
 
 if node['bcpc']['enabled']['dns']
-  include_recipe "bcpc::nova-head"
+  include_recipe 'bcpc-openstack-nova::headnode'
 
   # this template replaces several old ruby_block resources and pre-seeds fixed entries into a template file to be loaded into MySQL
   fixed_records_file = "/tmp/powerdns_generate_fixed_records.sql"
