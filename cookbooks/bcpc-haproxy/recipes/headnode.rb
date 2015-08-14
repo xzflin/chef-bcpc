@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: haproxy-head
+# Cookbook Name:: bcpc-haproxy
+# Recipe:: headnode
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,14 +17,14 @@
 # limitations under the License.
 #
 
-include_recipe "bcpc::default"
-include_recipe "bcpc::haproxy-common"
+include_recipe 'bcpc-haproxy'
+include_recipe 'bcpc-xinetd'
 
 template "/etc/haproxy/haproxy.cfg" do
     source "haproxy-head.cfg.erb"
     mode 00644
     variables(
-        :servers => get_head_nodes,
+        :servers     => get_head_nodes,
         :all_servers => get_ceph_osd_nodes
     )
     notifies :restart, "service[haproxy]", :immediately
