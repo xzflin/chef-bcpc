@@ -17,8 +17,6 @@
 # limitations under the License.
 #
 if node['bcpc']['enabled']['tpm']
-  include_recipe "bcpc::default"
-
   package "linux-image-extra-virtual" # installs the TPM module if not already there
 
   bash "ensure-tpm_rng-module-is-loaded" do
@@ -65,5 +63,4 @@ if node['bcpc']['enabled']['tpm']
   service "rng-tools" do
     action :start
   end
-
 end
