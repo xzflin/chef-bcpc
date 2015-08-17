@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: mysql-monitoring
+# Cookbook Name:: bcpc-mysql
+# Recipe:: monitornode
 #
 # Copyright 2013, Bloomberg Finance L.P.
 #
@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-include_recipe "bcpc::packages-mysql"
+include_recipe "bcpc-mysql"
 
 ruby_block "initialize-mysql-monitoring-config" do
     block do
@@ -44,8 +44,6 @@ ruby_block "initial-mysql-monitoring-config" do
     end
     not_if { system "MYSQL_PWD=#{get_config('mysql-monitoring-root-password')} mysql -uroot -e 'SELECT user from mysql.user where User=\"haproxy\"' >/dev/null" }
 end
-
-include_recipe "bcpc::mysql-common"
 
 template "/etc/mysql/debian.cnf" do
     source "my-debian.cnf.erb"
