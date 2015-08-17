@@ -17,6 +17,8 @@
 # limitations under the License.
 
 include_recipe 'bcpc-ceph'
+include_recipe 'bcpc-ceph::write-bootstrap-osd-key'
+include_recipe 'bcpc-ceph::write-client-admin-key'
 
 %w{ssd hdd}.each do |type|
     node['bcpc']['ceph']["#{type}_disks"].each do |disk|

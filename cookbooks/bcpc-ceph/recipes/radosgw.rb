@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: ceph-rgw
+# Cookbook Name:: bcpc-ceph
+# Recipe:: radosgw
 #
 # Copyright 2015, Bloomberg Finance L.P.
 #
@@ -21,8 +21,8 @@
 #Note, currently rgw cannot use Keystone to auth S3 requests, only swift, so for the time being we'll have
 #to manually provision accounts for RGW in the radosgw-admin tool
 
-include_recipe "bcpc::apache2"
-include_recipe "bcpc::ceph-work"
+include_recipe "bcpc-apache"
+include_recipe "bcpc-ceph"
 
 package "radosgw" do
     action :install
@@ -122,7 +122,7 @@ end
 service "radosgw-all" do
   provider Chef::Provider::Service::Upstart
   action [ :enable, :start ]
-end 
+end
 
 ruby_block "initialize-radosgw-admin-user" do
     block do

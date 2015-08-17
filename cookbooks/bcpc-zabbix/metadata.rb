@@ -6,4 +6,6 @@ description      'Installs/Configures bcpc-zabbix'
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
 version          '6.0.0'
 
-depends          'apt', '>= 2.7.0'
+depends          'apt',               '>= 2.7.0'
+depends          'bcpc-binary-files', '>= 6.0.0'
+depends          'bcpc-foundation',   '>= 6.0.0'

@@ -16,3 +16,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+include_recipe 'role-bcpc-common'
+include_recipe 'role-bcpc-node-common'
+include_recipe 'bcpc-ceph::write-bootstrap-osd-key'
+include_recipe 'bcpc-ceph::write-client-admin-key'
+include_recipe 'bcpc-ceph::osd'
+include_recipe 'bcpc-ceph::radosgw'
+include_recipe 'bcpc-openstack-nova::compute'
