@@ -80,7 +80,8 @@ done
 download_file cirros-0.3.4-x86_64-disk.img http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img
 
 # Obtain various items used for monitoring.
-download_file kibana-4.0.2-linux-x64.tar.gz https://download.elastic.co/kibana/kibana/kibana-4.0.2-linux-x64.tar.gz
+# Remove obsolete kibana package
+rm -f $BOOTSTRAP_CACHE_DIR/kibana-4.0.2-linux-x64.tar.gz_downloaded $BOOTSTRAP_CACHE_DIR/kibana-4.0.2-linux-x64.tar.gz
 # Remove obsolete cached items for BrightCoveOS Diamond
 rm -rf $BOOTSTRAP_CACHE_DIR/diamond_downloaded $BOOTSTRAP_CACHE_DIR/diamond
 # unfortunately GitHub ZIP files do not contain the actual Git index, so we must use Git to clone here

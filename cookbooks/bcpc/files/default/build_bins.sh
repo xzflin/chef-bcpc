@@ -136,15 +136,10 @@ if [ ! -f chef-server.deb ]; then
 fi
 FILES="chef-client.deb chef-server.deb $FILES"
 
-KIBANA_URL=https://download.elastic.co/kibana/kibana/kibana-${VER_KIBANA}-linux-x64.tar.gz
-# Build kibana 4 deb
-if [ ! -f kibana_${VER_KIBANA}_amd64.deb ]; then
-    ccurl ${KIBANA_URL} kibana-${VER_KIBANA}.tar.gz
-    tar -zxf kibana-${VER_KIBANA}.tar.gz
-    fpm -s dir -t deb --prefix /opt/kibana -n kibana -v ${VER_KIBANA} -C kibana-${VER_KIBANA}-linux-x64
-    rm -rf kibana-${VER_KIBANA}-linux-x64{,.tar.gz}
+# Remove old kibana 4 deb
+if [ -f kibana_${VER_KIBANA}_amd64.deb ]; then
+    rm -f kibana_${VER_KIBANA}_amd64.deb
 fi
-FILES="kibana_${VER_KIBANA}_amd64.deb $FILES"
 
 GEMS=( excon-0.45.3
        multi_json-1.11.2 multipart-post-2.0.0 faraday-0.9.1
