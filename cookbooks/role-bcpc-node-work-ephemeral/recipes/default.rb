@@ -22,10 +22,5 @@
 # that are using this role cookbook - erhudy)
 node.override['bcpc']['nova']['ephemeral'] = true
 
-include_recipe 'role-bcpc-common'
-include_recipe 'role-bcpc-node-common'
+include_recipe 'role-bcpc-node-work-common'
 include_recipe 'bcpc-ephemeral-disk'
-include_recipe 'bcpc-openstack-nova::compute'
-include_recipe 'bcpc-diamond'
-include_recipe 'bcpc-fluentd'
-include_recipe 'bcpc-health-check::worknode'

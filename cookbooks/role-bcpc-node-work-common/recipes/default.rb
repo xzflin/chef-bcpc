@@ -1,5 +1,5 @@
 #
-# Cookbook Name:: role-bcpc-node-work-osd
+# Cookbook Name:: role-bcpc-node-work-common
 # Recipe:: default
 #
 # Copyright 2015, Bloomberg Finance L.P.
@@ -17,8 +17,9 @@
 # limitations under the License.
 #
 
-include_recipe 'role-bcpc-node-work-common'
-include_recipe 'bcpc-ceph::write-bootstrap-osd-key'
-include_recipe 'bcpc-ceph::write-client-admin-key'
-include_recipe 'bcpc-ceph::osd'
-include_recipe 'bcpc-ceph::radosgw'
+include_recipe 'role-bcpc-common'
+include_recipe 'role-bcpc-node-common'
+include_recipe 'bcpc-diamond'
+include_recipe 'bcpc-fluentd'
+include_recipe 'bcpc-openstack-nova::compute'
+include_recipe 'bcpc-health-check::worknode'
