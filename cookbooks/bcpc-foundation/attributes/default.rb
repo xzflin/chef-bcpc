@@ -541,7 +541,7 @@ default['bcpc']['nova']['debug'] = false
 default['bcpc']['nova']['scheduler_default_filters'] = ['AggregateInstanceExtraSpecsFilter', 'RetryFilter', 'AvailabilityZoneFilter', 'RamFilter', 'ComputeFilter', 'ComputeCapabilitiesFilter', 'ImagePropertiesFilter', 'ServerGroupAntiAffinityFilter', 'ServerGroupAffinityFilter']
 
 default['bcpc']['nova']['ephemeral'] = false
-
+default['bcpc']['nova']['ephemeral_disks'] = %w{ /dev/sdb /dev/sdc /dev/sdd /dev/sde }
 
 default['bcpc']['nova']['quota'] = {
   "cores" => 4,
@@ -583,7 +583,7 @@ default['bcpc']['nova']['policy'] = {
   "compute:reboot" => "rule:admin_or_owner",
   "compute:delete" => "rule:admin_or_owner",
   "compute:unlock_override" => "rule:admin_api",
-  
+
   "compute:get_instance_metadata" => "rule:admin_or_owner",
   "compute:update_instance_metadata" => "rule:admin_or_owner",
   "compute:delete_instance_metadata" => "rule:admin_or_owner",
@@ -1351,7 +1351,7 @@ default['bcpc']['flavors'] = {
       "vcpus" => 1,
       "memory_mb" => 512,
       "disk_gb" => 1,
-      "ephemeral_gb" => 5,     
+      "ephemeral_gb" => 5,
       "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
     },
     "m1.small"  => {

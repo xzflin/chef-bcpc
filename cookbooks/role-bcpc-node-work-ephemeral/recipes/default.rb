@@ -16,3 +16,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+# this is a hack to force nodes with this role cookbook into ephemeral mode
+# (I am going to reconstruct things later to naturally Just Work for nodes
+# that are using this role cookbook - erhudy)
+node.override['bcpc']['nova']['ephemeral'] = true
+
+include_recipe 'role-bcpc-common'
+include_recipe 'role-bcpc-node-common'
+include_recipe 'bcpc-ephemeral-disk'
+include_recipe 'bcpc-openstack-nova::compute'
+include_recipe 'bcpc-diamond'
+include_recipe 'bcpc-fluentd'
+include_recipe 'bcpc-health-check::worknode'

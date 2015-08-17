@@ -16,3 +16,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+if node['bcpc']['nova']['ephemeral']
+  package 'lvm2'
+
+  bash "setup-lvm-pv" do
+    user "root"
+    code <<-EOH
+    pvcreate #{ node['bcpc']['nova']['ephemeral_disks'].join(' ') }
+  EOH
+    not_if "pvdisplay | grep '/dev'"
+  end
+
+  bash "setup-lvm-lv" do
+    user "root"
+    code <<-EOH
+    vgcreate nova_disk  #{ node['bcpc']['nova']['ephemeral_disks'].join(' ') }
+  EOH
+    not_if "vgdisplay nova_disk"
+  end
+end
