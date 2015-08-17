@@ -77,24 +77,20 @@ def get_config(key)
     return result
 end
 
-def search_nodes(key, value)
-    if key == "recipe"
-        results = search(:node, "recipes:bcpc\\:\\:#{value} AND chef_environment:#{node.chef_environment}")
-        results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
-        if not results.include?(node) and node.run_list.expand(node.chef_environment).recipes.include?("bcpc::#{value}")
-            results.push(node)
-        end
-    elsif key == "role"
-        results = search(:node, "#{key}:#{value} AND chef_environment:#{node.chef_environment}")
-        results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
-        if not results.include?(node) and node.run_list.expand(node.chef_environment).roles.include?(value)
-            results.push(node)
-        end
-    else
-        raise("Invalid search key: #{key}")
-    end
+def find_recipe(value)
+  escaped_value = value.gsub(':', '\:')
+  # if just searching for a cookbook, also look for ::default
+  search_pattern = if value.include? ':'
+    "recipes:#{escaped_value}"
+  else
+    "(recipes:#{escaped_value} OR recipes:#{escaped_value}\\:\\:default)"
+  end
+  search_pattern << " AND chef_environment:#{node.chef_environment}"
 
-    return results.sort! { |a, b| a['hostname'] <=> b['hostname'] }
+  results = search(:node, search_pattern)
+  results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
+  results.push(node) if node.recipes.include?(value) and not results.include?(node)
+  results.sort { |a, b| a['hostname'] <=> b['hostname'] }
 end
 
 def get_all_nodes

@@ -212,7 +212,7 @@ if get_head_nodes.length == 1; then
     end
 end
 
-replicas = [search_nodes("recipe", "ceph-osd").length, node['bcpc']['ceph']['default']['replicas']].min
+replicas = [find_recipe('bcpc-ceph::osd').length, node['bcpc']['ceph']['default']['replicas']].min
 if replicas < 1; then
     replicas = 1
 end
