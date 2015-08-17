@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: keepalived-monitoring
+# Cookbook Name:: bcpc-keepalived
+# Recipe:: monitornode
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,8 +17,7 @@
 # limitations under the License.
 #
 
-include_recipe "bcpc::default"
-include_recipe "bcpc::keepalived-common"
+include_recipe "bcpc-keepalived"
 
 ruby_block "initialize-keepalived-config" do
     block do
