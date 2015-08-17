@@ -19,7 +19,5 @@
 
 include_recipe 'role-bcpc-common'
 include_recipe 'role-bcpc-node-common'
-include_recipe 'bcpc-diamond'
-include_recipe 'bcpc-fluentd'
 include_recipe 'bcpc-openstack-nova::compute'
 include_recipe 'bcpc-health-check::worknode'

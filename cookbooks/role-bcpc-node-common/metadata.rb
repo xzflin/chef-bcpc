@@ -8,6 +8,8 @@ version          '6.0.0'
 
 depends          'bcpc-ceph',         '>= 6.0.0'
 depends          'bcpc-crond',        '>= 6.0.0'
+depends          'bcpc-diamond',      '>= 6.0.0'
+depends          'bcpc-fluentd',      '>= 6.0.0'
 depends          'bcpc-foundation',   '>= 6.0.0'
 depends          'bcpc-health-check', '>= 6.0.0'
 depends          'bcpc-networking',   '>= 6.0.0'
