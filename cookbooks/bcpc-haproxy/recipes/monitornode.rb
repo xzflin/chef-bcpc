@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: haproxy-monitoring
+# Cookbook Name:: bcpc-haproxy
+# Recipe:: monitornode
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,14 +17,13 @@
 # limitations under the License.
 #
 
-include_recipe "bcpc::default"
-include_recipe "bcpc::haproxy-common"
+include_recipe "bcpc-haproxy"
 
 template "/etc/haproxy/haproxy.cfg" do
     source "haproxy-monitoring.cfg.erb"
     mode 00644
     variables(
-        :servers => search_nodes("role", "BCPC-Monitoring")
+        :servers => search_nodes("recipe", "role-bcpc-node-monitor")
     )
     notifies :restart, "service[haproxy]", :immediately
 end

@@ -19,3 +19,4 @@
 include_recipe 'role-bcpc-common'
 include_recipe 'role-bcpc-node-common'
 include_recipe 'bcpc-mysql::monitornode'
+include_recipe 'bcpc-haproxy::monitornode'
