@@ -21,7 +21,7 @@ FastCgiExternalServer /var/www/s3gw.fcgi -socket /var/lib/ceph/radosgw/rgw_fcgi.
 
 <% if node['bcpc']['enabled']['radosgw_cache'] -%>
         CacheEnable disk /
-        CacheMaxFileSize <%="#{node['bcpc']['radosgw']['cache_max_file_size']}"%>
+        CacheMaxFileSize <%= node['bcpc']['radosgw']['cache_max_file_size'] %>
 <% end -%>
 
         RewriteEngine On
@@ -53,7 +53,7 @@ NameVirtualHost <%="#{node['bcpc']['floating']['ip']}:#{node['bcpc']['ports']['a
 
 <% if node['bcpc']['enabled']['radosgw_cache'] -%>
         CacheEnable disk /
-        CacheMaxFileSize <%="#{node['bcpc']['radosgw']['cache_max_file_size']}"%>
+        CacheMaxFileSize <%= node['bcpc']['radosgw']['cache_max_file_size'] %>
 <% end -%>
 
         SSLEngine on
@@ -77,4 +77,3 @@ NameVirtualHost <%="#{node['bcpc']['floating']['ip']}:#{node['bcpc']['ports']['a
         CustomLog /var/log/apache2/rgw_access.log combined
         ServerSignature Off
 </VirtualHost>
-

@@ -67,8 +67,8 @@ if node['bcpc']['enabled']['logging']
         group "root"
         mode 00644
         variables(
-            :servers => find_recipe('bcpc-elasticsearch'),
-            :min_quorum => find_recipe('bcpc-elasticsearch').length/2 + 1
+            :servers => get_nodes_with_recipe('bcpc-elasticsearch'),
+            :min_quorum => get_nodes_with_recipe('bcpc-elasticsearch').length/2 + 1
         )
         notifies :restart, "service[elasticsearch]", :immediately
     end
@@ -98,7 +98,7 @@ if node['bcpc']['enabled']['logging']
     end
 
     bash "set-elasticsearch-replicas" do
-        min_quorum = find_recipe('bcpc-elasticsearch').length/2 + 1
+        min_quorum = get_nodes_with_recipe('bcpc-elasticsearch').length/2 + 1
         code <<-EOH
             curl -XPUT '#{node['bcpc']['monitoring']['vip']}:9200/_settings' -d '
             {

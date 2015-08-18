@@ -28,19 +28,18 @@ include_recipe 'bcpc-health-check'
   end
 
   cookbook_file "/usr/local/bin/checks/#{cc}" do
-    source "#{cc}"
+    source cc
     owner "root"
     mode "00755"
   end
 
   # this requires the Zabbix agent to be installed
-  if node['bcpc']['enabled']['monitoring']
-    cron "check-#{cc}" do
-      home "/var/lib/zabbix"
-      user "root"
-      minute "*/10"
-      path "/usr/local/bin:/usr/bin:/bin"
-      command "zabbix_sender -c /etc/zabbix/zabbix_agentd.conf --key 'check.#{cc}' --value `check -f timeonly #{cc}` 2>&1 | /usr/bin/logger -p local0.notice"
-    end
+  cron "check-#{cc}" do
+    home "/var/lib/zabbix"
+    user "root"
+    minute "*/10"
+    path "/usr/local/bin:/usr/bin:/bin"
+    command "zabbix_sender -c /etc/zabbix/zabbix_agentd.conf --key 'check.#{cc}' --value `check -f timeonly #{cc}` 2>&1 | /usr/bin/logger -p local0.notice"
+    only_if node['bcpc']['enabled']['monitoring']
   end
 end

@@ -74,7 +74,7 @@ rgw_rule = (node['bcpc']['ceph']['rgw']['type'] == "ssd") ? node['bcpc']['ceph']
     end
     bash "set-#{pool}-rados-pool-replicas" do
         user "root"
-        replicas = [find_recipe('bcpc-ceph::osd').length, node['bcpc']['ceph']['rgw']['replicas']].min
+        replicas = [get_nodes_with_recipe('bcpc-ceph::osd').length, node['bcpc']['ceph']['rgw']['replicas']].min
         if replicas < 1; then
             replicas = 1
         end

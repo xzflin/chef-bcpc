@@ -23,8 +23,8 @@ require 'thread'
 require 'ipaddr'
 
 def is_vip?
-    ipaddr = `ip addr show dev #{node['bcpc']['management']['interface']}`
-    return ipaddr.include? node['bcpc']['management']['vip']
+    ipaddr = Mixlib::ShellOut("ip addr show dev #{node['bcpc']['management']['interface']}").run_command
+    return ipaddr.stdout.include? node['bcpc']['management']['vip']
 end
 
 def init_config
@@ -77,7 +77,7 @@ def get_config(key)
     return result
 end
 
-def find_recipe(value)
+def get_nodes_with_recipe(value)
   escaped_value = value.gsub(':', '\:')
   # if just searching for a cookbook, also look for ::default
   search_pattern = if value.include? ':'
@@ -87,54 +87,33 @@ def find_recipe(value)
   end
   search_pattern << " AND chef_environment:#{node.chef_environment}"
 
-  results = search(:node, search_pattern)
-  results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
-  results.push(node) if node.recipes.include?(value) and not results.include?(node)
-  results.sort { |a, b| a['hostname'] <=> b['hostname'] }
+  if Chef::Config[:solo]
+    fail 'BCPC cookbooks require a functional Chef Server installation.'
+  else
+    search(:node, search_pattern).collect { |x| x.hostname }.sort
+  end
 end
 
 def get_all_nodes
-    results = search(:node, "recipes:role-bcpc-common AND chef_environment:#{node.chef_environment}")
-    if results.any? { |x| x['hostname'] == node['hostname'] }
-        results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
-    else
-        results.push(node)
-    end
-    return results.sort! { |a, b| a['hostname'] <=> b['hostname'] }
+  get_nodes_with_recipe('role-bcpc-common')
 end
 
 def get_ceph_osd_nodes
-  results = search(:node, "recipes:bcpc-ceph\\:\\:osd AND chef_environment:#{node.chef_environment}")
-    if results.any? { |x| x['hostname'] == node['hostname'] }
-        results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
-    else
-        results.push(node)
-    end
-    return results.sort! { |a, b| a['hostname'] <=> b['hostname'] }
+  get_nodes_with_recipe('bcpc-ceph::osd')
 end
 
 def get_head_nodes
-    results = search(:node, "recipe:role-bcpc-node-head AND chef_environment:#{node.chef_environment}")
-    results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
-    if not results.include?(node) and node.run_list.roles.include?('BCPC-Headnode')
-        results.push(node)
-    end
-    return results.sort! { |a, b| a['hostname'] <=> b['hostname'] }
+  get_nodes_with_recipe('role-bcpc-node-head')
 end
 
 def get_monitor_nodes
-    results = search(:node, "recipe:role-bcpc-node-monitor AND chef_environment:#{node.chef_environment}")
-    results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
-    if not results.include?(node) and node.run_list.roles.include?('BCPC-Headnode')
-        results.push(node)
-    end
-    return results.sort! { |a, b| a['hostname'] <=> b['hostname'] }
+  get_nodes_with_recipe('role-bcpc-node-monitor')
 end
 
 def get_bootstrap_node
-    results = search(:node, "recipe:role-bcpc-node-bootstrap AND chef_environment:#{node.chef_environment}")
-    raise 'There is not exactly one bootstrap node found.' if results.size != 1
-    results.first
+  results = get_nodes_with_recipe('role-bcpc-node-monitor')
+  raise 'There is not exactly one bootstrap node found.' if results.size != 1
+  results.first
 end
 
 # shuffles a list of servers deterministically to avoid stacking all connections up on a single node

@@ -6,6 +6,7 @@ description      'Installs/Configures role-bcpc-node-common'
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
 version          '6.0.0'
 
+depends          'role-bcpc-common',  '>= 6.0.0'
 depends          'bcpc-ceph',         '>= 6.0.0'
 depends          'bcpc-crond',        '>= 6.0.0'
 depends          'bcpc-diamond',      '>= 6.0.0'

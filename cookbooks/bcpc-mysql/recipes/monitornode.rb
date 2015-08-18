@@ -59,8 +59,8 @@ template "/etc/mysql/conf.d/wsrep.cnf" do
     source "wsrep.cnf.erb"
     mode 00644
     variables(
-        :max_connections => [find_recipe('bcpc-mysql::monitornode').length*150, 200].max,
-        :servers => find_recipe('bcpc-mysql::monitornode'),
+        :max_connections => [get_nodes_with_recipe('bcpc-mysql::monitornode').length*150, 200].max,
+        :servers => get_nodes_with_recipe('bcpc-mysql::monitornode'),
         :wsrep_cluster_name => "#{node['bcpc']['region_name']}-Monitoring",
         :wsrep_port => 4577,
         :galera_user_key => "mysql-monitoring-galera-user",
@@ -76,7 +76,7 @@ template "/usr/local/etc/chk_mysql_quorum.sql" do
     owner "root"
     group "root"
     variables(
-        :min_quorum => find_recipe('bcpc-mysql::monitornode').length/2+1
+        :min_quorum => get_nodes_with_recipe('bcpc-mysql::monitornode').length/2+1
     )
 end
 

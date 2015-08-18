@@ -87,8 +87,8 @@ if node['bcpc']['enabled']['metrics']
         group "root"
         mode 00644
         variables(
-            :servers => find_recipe('bcpc-graphite'),
-            :min_quorum => find_recipe('bcpc-graphite').length/2 + 1
+            :servers => get_nodes_with_recipe('bcpc-graphite'),
+            :min_quorum => get_nodes_with_recipe('bcpc-graphite').length/2 + 1
         )
         notifies :restart, "service[carbon-cache]", :delayed
         notifies :restart, "service[carbon-relay]", :delayed
@@ -115,7 +115,7 @@ if node['bcpc']['enabled']['metrics']
         owner "root"
         group "root"
         mode 00644
-        variables(:servers => find_recipe('bcpc-graphite'))
+        variables(:servers => get_nodes_with_recipe('bcpc-graphite'))
         notifies :restart, "service[carbon-relay]", :delayed
     end
 
@@ -146,7 +146,7 @@ if node['bcpc']['enabled']['metrics']
         owner "root"
         group "root"
         mode 00644
-        variables(:servers => find_recipe('bcpc-graphite'))
+        variables(:servers => get_nodes_with_recipe('bcpc-graphite'))
         notifies :restart, "service[apache2]", :delayed
     end
 

@@ -39,7 +39,7 @@ vrrp_instance VI1_<%=@group_name%> {
   interface <%= node['bcpc']['management']['interface'] %>
 
   virtual_ipaddress {
-    <%=@vip%>/<%="#{(node['bcpc']['management']['cidr'].match /\d+\.\d+\.\d+\.\d+\/(\d+)/)[1].to_i}"%>
+    <%=@vip%>/<%= (node['bcpc']['management']['cidr'].match /\d+\.\d+\.\d+\.\d+\/(\d+)/)[1].to_i %>
   }
   track_script {
 <% if node['bcpc']['enabled']['keepalived_checks'] then -%>

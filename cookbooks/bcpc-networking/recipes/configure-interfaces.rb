@@ -86,17 +86,15 @@ end
 end
 
 %w{ storage floating }.each do |net|
-  if not node['bcpc'][net]['interface-parent'].nil?
-    template "/etc/network/interfaces.d/iface-#{node['bcpc'][net]['interface-parent']}" do
-      source "network.iface-parent.erb"
-      owner "root"
-      group "root"
-      mode 00644
-      variables(
-                :interface => node['bcpc'][net]['interface-parent'],
-                :mtu => node['bcpc'][net]['mtu'],
-                )
-    end
+  template "/etc/network/interfaces.d/iface-#{node['bcpc'][net]['interface-parent']}" do
+    source "network.iface-parent.erb"
+    owner "root"
+    group "root"
+    mode 00644
+    variables(
+      :interface => node['bcpc'][net]['interface-parent'],
+      :mtu => node['bcpc'][net]['mtu'])
+    not_if { node['bcpc'][net]['interface-parent'].nil? }
   end
 end
 
@@ -191,6 +189,7 @@ bash "routing-storage" do
     not_if "grep -e '^2 storage' /etc/iproute2/rt_tables"
 end
 
+# TODO figure out why this line trips foodcritic FC019
 if node.recipes.include? 'role-bcpc-node-monitor'
     # ipset is used to maintain largish block(s) of IP addresses to be referred to
     # by iptables

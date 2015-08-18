@@ -150,7 +150,7 @@ end
 
 bash "set-glance-rados-pool-replicas" do
     user "root"
-    replicas = [find_recipe('bcpc-ceph::osd').length, node['bcpc']['ceph']['images']['replicas']].min
+    replicas = [get_nodes_with_recipe('bcpc-ceph::osd').length, node['bcpc']['ceph']['images']['replicas']].min
     if replicas < 1; then
         replicas = 1
     end

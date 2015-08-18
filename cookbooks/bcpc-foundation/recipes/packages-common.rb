@@ -30,7 +30,7 @@ package "powernap" do
 end
 
 if node['bcpc']['enabled']['apt_upgrade'] then
-    include_recipe "apt::default"
+    include_recipe 'apt'
     bash "perform-upgrade" do
         user "root"
         code "DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" upgrade"

@@ -7,4 +7,5 @@ long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
 version          '6.0.0'
 
 conflicts        'bcpc-apache'
-depends          'bcpc-bootstrap', '>= 6.0.0'
+depends          'bcpc-bootstrap',  '>= 6.0.0'
+depends          'bcpc-foundation', '>= 6.0.0'

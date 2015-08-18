@@ -111,7 +111,7 @@ template "/var/lib/nova/.ssh/known_hosts" do
     owner "nova"
     group "nova"
     mode 00644
-    variables(:servers => find_recipe('bcpc-openstack-nova::compute'))
+    variables(:servers => get_nodes_with_recipe('bcpc-openstack-nova::compute'))
 end
 
 template "/var/lib/nova/.ssh/id_rsa" do

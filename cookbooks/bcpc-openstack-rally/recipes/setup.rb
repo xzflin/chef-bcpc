@@ -19,11 +19,6 @@
 
 # Note: The rally.rb recipe must have already been executed before running this one.
 # IMPORTANT: The head nodes MUST have already been installed and the keystone endpoints working. Rally verifies.
-
-include_recipe "bcpc::certs"
-
-rally_user = node['bcpc']['rally']['user']
-
 ruby_block "initialize-rally-keystone-config" do
     block do
         make_config('keystone-admin-token', secure_password)
@@ -37,8 +32,8 @@ end
 template "/opt/rally/existing.json" do
     user 'root'
     source "rally.existing.json.erb"
-    owner "#{rally_user}"
-    group "#{rally_user}"
+    owner node['bcpc']['rally']['user']
+    group node['bcpc']['rally']['user']
     mode 0664
 end
 
@@ -67,7 +62,7 @@ end
 # Note: The returns in this block can be pass or fail because it attempts to set the initial deployment up but if the
 # head nodes are not responding then it will fail and will have to be ran again after the head nodes are up.
 bash "rally-deployment-create" do
-    user "#{rally_user}"
+    user node['bcpc']['rally']['user']
     code <<-EOH
         rally deployment create --file=/opt/rally/existing.json --name=existing
         rally deployment use existing
