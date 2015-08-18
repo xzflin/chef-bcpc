@@ -8,6 +8,7 @@ version          '6.0.0'
 
 depends          'role-bcpc-common',        '>= 6.0.0'
 depends          'role-bcpc-node-common',   '>= 6.0.0'
+depends          'bcpc-foundation',         '>= 6.0.0'
 depends          'bcpc-ceph',               '>= 6.0.0'
 depends          'bcpc-health-check',       '>= 6.0.0'
 depends          'bcpc-mysql',              '>= 6.0.0'
