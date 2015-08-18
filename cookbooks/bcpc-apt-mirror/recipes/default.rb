@@ -16,3 +16,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+package 'apache2'
+
+service 'apache2' do
+  action [:enable, :start]
+end
+
+template "/etc/apache2/sites-available/apt-mirror.conf" do
+    source "apache-mirror.erb"
+    owner "root"
+    group "root"
+    mode 00644
+    notifies :restart, "service[apache2]", :delayed
+end
+
+bash "a2ensite-apt-mirror" do
+    user "root"
+    code <<-EOH
+        a2dissite 000-default
+        a2ensite apt-mirror
+    EOH
+    not_if "test -r /etc/apache2/sites-enabled/apt-mirror.conf"
+    notifies :reload, "service[apache2]", :immediately
+end
+
+package "apt-mirror"
+
+template "/etc/apt/mirror.list" do
+    source "apt-mirror.mirror.list.erb"
+    mode 00644
+end
