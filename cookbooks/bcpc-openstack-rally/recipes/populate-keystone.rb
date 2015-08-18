@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: keystone_populate
+# Cookbook Name:: bcpc-openstack-rally
+# Recipe: populate-keystone
 #
 # Copyright 2015, Bloomberg Finance L.P.
 #
@@ -17,12 +17,9 @@
 # limitations under the License.
 #
 
-
 # keystone_populate.sh creates records in the db for service-* and endpoint-* records so that rally and other tools
 # can function properly since templated backend services in our version of openstack do not support service-* and
 # endpoint-* calls.
-
-rally_user = node['bcpc']['rally']['user']
 
 ruby_block "setup-rally-keystone-config" do
     block do
@@ -32,19 +29,16 @@ ruby_block "setup-rally-keystone-config" do
     end
 end
 
-template "/tmp/keystone_populate.sh" do
+template "/tmp/populate-keystone.sh" do
     user 'root'
-    source "keystone_populate.sh.erb"
-    owner "#{rally_user}"
-    group "#{rally_user}"
+    source "populate-keystone.sh.erb"
+    owner node['bcpc']['rally']['user']
+    group node['bcpc']['rally']['user']
     mode 0755
 end
 
-bash "keystone-populate" do
+bash "rally-populate-keystone" do
     user "root"
-    code <<-EOH
-        /tmp/keystone_populate.sh
-    EOH
+    code '/tmp/populate-keystone.sh'
     returns [0, 1]
 end
-
