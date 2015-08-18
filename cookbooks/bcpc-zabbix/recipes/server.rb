@@ -18,7 +18,7 @@
 #
 
 if node['bcpc']['enabled']['monitoring']
-    include_recipe 'bcpc-mysql::monitoring'
+    include_recipe 'bcpc-mysql::monitornode'
     include_recipe 'bcpc-apache'
     include_recipe 'bcpc-zabbix'
 
@@ -190,7 +190,8 @@ if node['bcpc']['enabled']['monitoring']
     end
 
     cookbook_file "/tmp/python-pyzabbix_0.7.3_all.deb" do
-        source "bins/python-pyzabbix_0.7.3_all.deb"
+        source "python-pyzabbix_0.7.3_all.deb"
+        cookbook 'bcpc-binary-files'
         owner "root"
         mode 00444
     end
