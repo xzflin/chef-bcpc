@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: ceilometer-work
+# Cookbook Name:: bcpc-openstack-ceilometer
+# Recipe:: compute
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-include_recipe "bcpc::ceilometer-common"
+include_recipe 'bcpc-openstack-ceilometer'
 
 package "ceilometer-agent-compute" do
     action :upgrade

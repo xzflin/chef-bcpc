@@ -16,3 +16,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+include_recipe "bcpc-openstack-common"
+
+ruby_block "initialize-ceilometer-config" do
+    block do
+        make_config('mysql-ceilometer-user', "ceilometer")
+        make_config('mysql-ceilometer-password', secure_password)
+        make_config('ceilometer-secret', secure_password)
+    end
+end
+
+package "ceilometer-common"
+
+template "/etc/ceilometer/ceilometer.conf" do
+    source "ceilometer.conf.erb"
+    owner "ceilometer"
+    group "ceilometer"
+    mode 00600
+    variables(:servers => get_head_nodes)
+end

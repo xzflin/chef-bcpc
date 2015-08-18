@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: ceilometer-head
+# Cookbook Name:: bcpc-openstack-ceilometer
+# Recipe:: headnode
 #
 # Copyright 2013, Bloomberg Finance L.P.
 #
@@ -17,8 +17,8 @@
 # limitations under the License.
 #
 
-include_recipe "bcpc::mysql-head"
-include_recipe "bcpc::ceilometer-common"
+include_recipe "bcpc-mysql::headnode"
+include_recipe 'bcpc-openstack-ceilometer'
 
 %w{ceilometer-api ceilometer-collector ceilometer-agent-central}.each do |pkg|
     package pkg do
@@ -53,4 +53,4 @@ bash "ceilometer-database-sync" do
     notifies :restart, "service[ceilometer-agent-central]", :immediately
 end
 
-include_recipe "bcpc::ceilometer-work"
+include_recipe 'bcpc-openstack-ceilometer::compute'
