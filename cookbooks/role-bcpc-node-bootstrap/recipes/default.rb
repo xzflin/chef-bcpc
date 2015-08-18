@@ -18,3 +18,8 @@
 #
 include_recipe 'role-bcpc-common'
 include_recipe 'bcpc-bootstrap'
+include_recipe 'bcpc-openstack-rally'
+# disabled on bootstrap node for the moment because it requires
+# bcpc-openstack-rally::populate-keystone to have executed on a head node -
+# will sort race condition at some point in the future - erhudy
+#include_recipe 'bcpc-openstack-rally::setup'

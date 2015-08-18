@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: rally-setup
+# Cookbook Name:: bcpc-openstack-rally
+# Recipe:: setup
 #
 # Copyright 2015, Bloomberg Finance L.P.
 #
