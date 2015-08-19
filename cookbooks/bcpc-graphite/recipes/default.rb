@@ -81,6 +81,7 @@ if node['bcpc']['enabled']['metrics']
         notifies :restart, "service[carbon-relay]", :delayed
     end
 
+    # TODO reconfigure for lazy evaluation
     template "/opt/graphite/conf/carbon.conf" do
         source "carbon.conf.erb"
         owner "root"
@@ -110,6 +111,7 @@ if node['bcpc']['enabled']['metrics']
         notifies :restart, "service[carbon-cache]", :delayed
     end
 
+# TODO reconfigure for lazy evaluation
     template "/opt/graphite/conf/relay-rules.conf" do
         source "carbon-relay-rules.conf.erb"
         owner "root"
@@ -141,6 +143,7 @@ if node['bcpc']['enabled']['metrics']
         mode 00755
     end
 
+# TODO reconfigure for lazy evaluation
     template "/opt/graphite/webapp/graphite/local_settings.py" do
         source "graphite.local_settings.py.erb"
         owner "root"

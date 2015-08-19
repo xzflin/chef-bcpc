@@ -134,6 +134,7 @@ service "rabbitmq-server" do
     supports :status => true
 end
 
+# TODO convert to lazy evaluation
 get_head_nodes.each do |server|
     if server['hostname'] != node['hostname']
         bash "rabbitmq-clustering-with-#{server['hostname']}" do
@@ -154,6 +155,7 @@ ruby_block "set-rabbitmq-guest-password" do
     end
 end
 
+# TODO convert to lazy evaluation
 bash "set-rabbitmq-ha-policy" do
     min_quorum = get_head_nodes.length/2 + 1
     code <<-EOH

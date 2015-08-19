@@ -53,20 +53,28 @@ template "/etc/mysql/debian.cnf" do
     notifies :reload, "service[mysql]", :immediately
 end
 
-if node['bcpc']['mysql-head']['max_connections'] == 0 then
-    node.default['bcpc']['mysql-head']['max_connections'] = [get_head_nodes.length*150+get_all_nodes.length*10, 200].max
+ruby_block 'set-max-mysql-connections' do
+  block do
+    if node['bcpc']['mysql-head']['max_connections'] == 0
+      node.override['bcpc']['mysql-head']['max_connections'] = [get_head_nodes.length*150+get_all_nodes.length*10, 200].max
+    end
+  end
 end
 
 template "/etc/mysql/conf.d/wsrep.cnf" do
     source "wsrep.cnf.erb"
     mode 00644
     variables(
-        :max_connections => node['bcpc']['mysql-head']['max_connections'],
-        :servers => get_head_nodes,
-        :wsrep_cluster_name => node['bcpc']['region_name'],
-        :wsrep_port => 4567,
-        :galera_user_key => "mysql-galera-user",
-        :galera_pass_key => "mysql-galera-password"
+      lazy {
+        {
+          :max_connections => node['bcpc']['mysql-head']['max_connections'],
+          :servers => get_head_nodes,
+          :wsrep_cluster_name => node['bcpc']['region_name'],
+          :wsrep_port => 4567,
+          :galera_user_key => "mysql-galera-user",
+          :galera_pass_key => "mysql-galera-password"
+        }
+      }
     )
     notifies :restart, "service[mysql]", :immediately
 end

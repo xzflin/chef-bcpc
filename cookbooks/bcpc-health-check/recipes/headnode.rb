@@ -40,6 +40,6 @@ include_recipe 'bcpc-health-check'
     minute "*/10"
     path "/usr/local/bin:/usr/bin:/bin"
     command "zabbix_sender -c /etc/zabbix/zabbix_agentd.conf --key 'check.#{cc}' --value `check -f timeonly #{cc}` 2>&1 | /usr/bin/logger -p local0.notice"
-    only_if node['bcpc']['enabled']['monitoring']
+    only_if { node['bcpc']['enabled']['monitoring'] }
   end
 end

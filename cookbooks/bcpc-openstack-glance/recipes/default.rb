@@ -66,12 +66,17 @@ bash "patch-backport-for-glance-v2-null-description" do
   notifies :restart, "service[glance-registry]", :immediately
 end
 
+# TODO configure for lazy evaluation
 template "/etc/glance/glance-api.conf" do
     source "glance-api.conf.erb"
     owner "glance"
     group "glance"
     mode 00600
-    variables(:servers => get_head_nodes)
+    variables(
+      lazy {
+        {:servers => get_head_nodes}
+      }
+    )
     notifies :restart, "service[glance-api]", :delayed
     notifies :restart, "service[glance-registry]", :delayed
 end
@@ -136,6 +141,7 @@ end
 # Note, glance connects to ceph using client.glance, but we have already generated
 # the key for that in ceph-head.rb, so by now we should have it in /etc/ceph/ceph.client.glance.key
 
+# TODO reconfigure for lazy evaluation
 bash "create-glance-rados-pool" do
     user "root"
     optimal = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['images']['replicas']*node['bcpc']['ceph']['images']['portion']/100)
@@ -147,10 +153,10 @@ bash "create-glance-rados-pool" do
     notifies :run, "bash[wait-for-pgs-creating]", :immediately
 end
 
-
+# TODO reconfigure for lazy evaluation
 bash "set-glance-rados-pool-replicas" do
     user "root"
-    replicas = [get_nodes_with_recipe('bcpc-ceph::osd').length, node['bcpc']['ceph']['images']['replicas']].min
+    replicas = [get_ceph_osd_nodes.length, node['bcpc']['ceph']['images']['replicas']].min
     if replicas < 1; then
         replicas = 1
     end
@@ -159,6 +165,7 @@ bash "set-glance-rados-pool-replicas" do
 end
 
 (node['bcpc']['ceph']['pgp_auto_adjust'] ? %w{pg_num pgp_num} : %w{pg_num}).each do |pg|
+    # TODO reconfigure for lazy evaluation
     bash "set-glance-rados-pool-#{pg}" do
         user "root"
         optimal = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['images']['replicas']*node['bcpc']['ceph']['images']['portion']/100)

@@ -22,6 +22,23 @@ require 'base64'
 require 'thread'
 require 'ipaddr'
 
+# this horrid little blob was stolen from https://tickets.opscode.com/browse/CHEF-2756
+# to allow accessing the DSL inside ruby_block resources, so that resources that depend
+# on search results can be created at runtime
+require 'chef/mixin/recipe_definition_dsl_core'
+require 'chef/mixin/language'
+require 'chef/mixin/language_include_recipe'
+
+class Chef
+  class Resource
+    class RubyBlock
+      include Chef::Mixin::Language
+      include Chef::Mixin::LanguageIncludeRecipe
+      include Chef::Mixin::RecipeDefinitionDSLCore
+    end
+  end
+end
+
 def is_vip?
     ipaddr = Mixlib::ShellOut("ip addr show dev #{node['bcpc']['management']['interface']}").run_command
     return ipaddr.stdout.include? node['bcpc']['management']['vip']
@@ -77,6 +94,13 @@ def get_config(key)
     return result
 end
 
+###########################
+# IMPORTANT NOTE
+# #########################
+# If invoking any of the below search functions in a recipe,
+# wrap in a lazy {} block or use inside a ruby_block
+# so that you will not be bitten by compile time vs runtime issues
+
 def get_nodes_with_recipe(value)
   escaped_value = value.gsub(':', '\:')
   # if just searching for a cookbook, also look for ::default
@@ -90,7 +114,9 @@ def get_nodes_with_recipe(value)
   if Chef::Config[:solo]
     fail 'BCPC cookbooks require a functional Chef Server installation.'
   else
-    search(:node, search_pattern)
+    # the map replaces the node that matches the current node with the node object,
+    # which allows get_x_nodes.include?(node) to work in recipes
+    search(:node, search_pattern).map { |x| x.hostname == node.hostname ? node : x }
   end
 end
 

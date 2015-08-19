@@ -190,18 +190,21 @@ if node['bcpc']['enabled']['dns']
     owner "root"
     group "root"
     mode 00644
-    # result of get_all_nodes is passed in here because Chef can't get context for running Chef::Search::Query#search inside the template generator
-    variables({
-      :all_servers         => get_all_nodes,
-      :float_cidr          => IPAddr.new(node['bcpc']['floating']['available_subnet']),
-      :database_name       => node['bcpc']['dbname']['pdns'],
-      :cluster_domain      => node['bcpc']['cluster_domain'],
-      :floating_vip        => node['bcpc']['floating']['vip'],
-      :management_vip      => node['bcpc']['management']['vip'],
-      :monitoring_vip      => node['bcpc']['monitoring']['vip'],
-      :reverse_fixed_zone  => (node['bcpc']['fixed']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['fixed']['cidr'])),
-      :reverse_float_zone  => (node['bcpc']['floating']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['floating']['cidr'])),
-    })
+    variables(
+      lazy {
+        {
+          :all_servers               => get_all_nodes,
+          :float_cidr                => IPAddr.new(node['bcpc']['floating']['available_subnet']),
+          :database_name             => node['bcpc']['dbname']['pdns'],
+          :cluster_domain            => node['bcpc']['cluster_domain'],
+          :floating_vip              => node['bcpc']['floating']['vip'],
+          :management_vip            => node['bcpc']['management']['vip'],
+          :monitoring_vip            => node['bcpc']['monitoring']['vip'],
+          :reverse_fixed_zone        => (node['bcpc']['fixed']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['fixed']['cidr'])),
+          :reverse_float_zone        => (node['bcpc']['floating']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['floating']['cidr'])),
+        }
+      }
+    )
   end
 
   ruby_block "powerdns-load-float-records" do

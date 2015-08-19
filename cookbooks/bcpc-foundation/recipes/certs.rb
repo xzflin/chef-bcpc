@@ -17,8 +17,6 @@
 # limitations under the License.
 #
 
-sleep 10
-
 template "/tmp/openssl.cnf" do
     source "openssl.cnf.erb"
     owner "root"
@@ -101,7 +99,11 @@ template "/root/.ssh/known_hosts" do
     owner "root"
     group "root"
     mode 00644
-#    variables(:servers => get_all_nodes)
+    variables(
+      lazy {
+        {:servers => get_all_nodes}
+      }
+    )
 end
 
 template "/etc/ssl/certs/ssl-bcpc.pem" do

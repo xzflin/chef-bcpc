@@ -56,12 +56,17 @@ file "/var/log/keystone/keystone.log" do
   notifies :restart, "service[apache2]", :immediately
 end
 
+# TODO configure for lazy evaluation
 template "/etc/keystone/keystone.conf" do
     source "keystone.conf.erb"
     owner "keystone"
     group "keystone"
     mode 00600
-    variables(:servers => get_head_nodes)
+    variables(
+      lazy {
+        {:servers => get_head_nodes}
+      }
+    )
     notifies :restart, "service[apache2]", :delayed
 end
 

@@ -183,6 +183,7 @@ bash "ceph-add-crush-rules" do
 end
 
 # Beginning in Hammer these two are not automatically created
+# TODO reconfigure for lazy evaluation
 vms_optimal_pg = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['vms']['replicas']*node['bcpc']['ceph']['vms']['portion']/100)
 
 # Create the VMs pool and any others that may need creating
@@ -202,6 +203,7 @@ end
 
 # Commented out 'data' and 'metadata' since the number of pools can impact pgs
 # data metadata - removed from loop below - After firefly data and metadata are no longer default pools
+# TODO reconfigure for lazy evaluation
 if get_head_nodes.length == 1; then
     rule = (node['bcpc']['ceph']['default']['type'] == "ssd") ? node['bcpc']['ceph']['ssd']['ruleset'] : node['bcpc']['ceph']['hdd']['ruleset']
     ["rbd"].each do |pool|
@@ -212,6 +214,7 @@ if get_head_nodes.length == 1; then
     end
 end
 
+# TODO reconfigure for lazy evaluation
 replicas = [get_nodes_with_recipe('bcpc-ceph::osd').length, node['bcpc']['ceph']['default']['replicas']].min
 if replicas < 1; then
     replicas = 1

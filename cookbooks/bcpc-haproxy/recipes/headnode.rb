@@ -20,6 +20,7 @@
 include_recipe 'bcpc-haproxy'
 include_recipe 'bcpc-xinetd'
 
+# TODO reconfigure for lazy evaluation
 template "/etc/haproxy/haproxy.cfg" do
     source "haproxy-head.cfg.erb"
     mode 00644

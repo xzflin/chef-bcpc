@@ -40,12 +40,17 @@ service "heat-api" do
     restart_command "service heat-api restart; sleep 5"
 end
 
+# TODO configure for lazy evaluation
 template "/etc/heat/heat.conf" do
     source "heat.conf.erb"
     owner "heat"
     group "heat"
     mode 00600
-    variables(:servers => get_head_nodes)
+    variables(
+      lazy {
+        {:servers => get_head_nodes}
+      }
+    )
     notifies :restart, "service[heat-api]", :delayed
     notifies :restart, "service[heat-api-cfn]", :delayed
     notifies :restart, "service[heat-engine]", :delayed

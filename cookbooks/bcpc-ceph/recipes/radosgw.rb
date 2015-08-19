@@ -59,6 +59,7 @@ bash "write-client-radosgw-key" do
     notifies :restart, "service[radosgw-all]", :delayed
 end
 
+# TODO reconfigure for lazy evaluation
 rgw_optimal_pg = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['rgw']['replicas']*node['bcpc']['ceph']['rgw']['portion']/100)
 
 rgw_rule = (node['bcpc']['ceph']['rgw']['type'] == "ssd") ? node['bcpc']['ceph']['ssd']['ruleset'] : node['bcpc']['ceph']['hdd']['ruleset']
@@ -72,6 +73,7 @@ rgw_rule = (node['bcpc']['ceph']['rgw']['type'] == "ssd") ? node['bcpc']['ceph']
         not_if "rados lspools | grep ^#{pool}$"
         notifies :run, "bash[wait-for-pgs-creating]", :immediately
     end
+    # TODO reconfigure for lazy evaluation
     bash "set-#{pool}-rados-pool-replicas" do
         user "root"
         replicas = [get_nodes_with_recipe('bcpc-ceph::osd').length, node['bcpc']['ceph']['rgw']['replicas']].min

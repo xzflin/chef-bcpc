@@ -47,12 +47,17 @@ end
     end
 end
 
+# TODO configure for lazy evaluation
 %w{hup_openstack logwatch}.each do |script|
     template "/usr/local/bin/#{script}" do
         source "#{script}.erb"
         mode 0755
         owner "root"
         group "root"
-        variables(:servers => get_head_nodes)
+        variables(
+          lazy {
+            {:servers => get_head_nodes}
+          }
+        )
     end
 end

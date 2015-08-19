@@ -61,6 +61,7 @@ if node['bcpc']['enabled']['logging']
         action [:enable, :start]
     end
 
+    # TODO reconfigure for lazy evaluation
     template "/etc/elasticsearch/elasticsearch.yml" do
         source "elasticsearch.yml.erb"
         owner "root"
@@ -97,6 +98,7 @@ if node['bcpc']['enabled']['logging']
         action :upgrade
     end
 
+    # TODO reconfigure for lazy evaluation
     bash "set-elasticsearch-replicas" do
         min_quorum = get_nodes_with_recipe('bcpc-elasticsearch').length/2 + 1
         code <<-EOH

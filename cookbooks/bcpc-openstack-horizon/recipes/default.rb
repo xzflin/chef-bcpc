@@ -138,12 +138,17 @@ bash "apache-enable-openstack-dashboard" do
     notifies :restart, "service[apache2]", :delayed
 end
 
+# TODO configure for lazy evaluation
 template "/etc/openstack-dashboard/local_settings.py" do
     source "horizon.local_settings.py.erb"
     owner "root"
     group "root"
     mode 00644
-    variables(:servers => get_head_nodes)
+    variables(
+      lazy {
+        {:servers => get_head_nodes}
+      }
+    )
     notifies :restart, "service[apache2]", :delayed
 end
 

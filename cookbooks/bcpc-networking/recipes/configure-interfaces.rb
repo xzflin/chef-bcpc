@@ -20,7 +20,14 @@
 template "/etc/hosts" do
     source "hosts.erb"
     mode 00644
-    variables(:servers => get_all_nodes, :bootstrap_node => get_bootstrap_node)
+    variables(
+      lazy {
+        {
+          :servers => get_all_nodes,
+          :bootstrap_node => get_bootstrap_node
+        }
+      }
+    )
 end
 
 # Core networking package

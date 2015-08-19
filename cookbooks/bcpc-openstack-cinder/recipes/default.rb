@@ -48,7 +48,11 @@ template "/etc/cinder/cinder.conf" do
     owner "cinder"
     group "cinder"
     mode 00600
-    variables(:servers => get_head_nodes)
+    variables(
+      lazy {
+        {:servers => get_head_nodes}
+      }
+    )
     notifies :restart, "service[cinder-api]", :immediately
     notifies :restart, "service[cinder-volume]", :immediately
     notifies :restart, "service[cinder-scheduler]", :immediately
@@ -93,6 +97,7 @@ bash "wait-for-cinder-to-become-operational" do
 end
 
 node['bcpc']['ceph']['enabled_pools'].each do |type|
+  # TODO reconfigure for lazy evaluation
     bash "create-cinder-rados-pool-#{type}" do
         user "root"
         optimal = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['volumes']['replicas']*node['bcpc']['ceph']['volumes']['portion']/100/node['bcpc']['ceph']['enabled_pools'].length)
@@ -104,9 +109,10 @@ node['bcpc']['ceph']['enabled_pools'].each do |type|
         notifies :run, "bash[wait-for-pgs-creating]", :immediately
     end
 
+    # TODO reconfigure for lazy evaluation
     bash "set-cinder-rados-pool-replicas-#{type}" do
         user "root"
-        replicas = [get_nodes_with_recipe('bcpc-ceph::osd').length, node['bcpc']['ceph']['volumes']['replicas']].min
+        replicas = [get_ceph_osd_nodes.length, node['bcpc']['ceph']['volumes']['replicas']].min
         if replicas < 1; then
             replicas = 1
         end
@@ -115,6 +121,7 @@ node['bcpc']['ceph']['enabled_pools'].each do |type|
     end
 
     (node['bcpc']['ceph']['pgp_auto_adjust'] ? %w{pg_num pgp_num} : %w{pg_num}).each do |pg|
+        # TODO reconfigure for lazy evaluation
         bash "set-cinder-rados-pool-#{pg}-#{type}" do
             user "root"
             optimal = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['volumes']['replicas']*node['bcpc']['ceph']['volumes']['portion']/100/node['bcpc']['ceph']['enabled_pools'].length)

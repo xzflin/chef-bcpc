@@ -16,7 +16,7 @@ ff02::2 ip6-allrouters
 # this is used by openstack services to reach API endpoints
 <%= "#{node['bcpc']['management']['vip']}\topenstack.#{node['bcpc']['cluster_domain']}" %>
 
-<% get_all_nodes.each do |server| -%>
+<% @servers.each do |server| -%>
 <%= "#{server['bcpc']['management']['ip']}\t#{server['hostname']}.#{node['bcpc']['hypervisor_domain']} #{server['fqdn']} #{server['hostname']}" %>
 <% end -%>
 <%=

@@ -55,6 +55,7 @@ template "/etc/mysql/debian.cnf" do
     notifies :restart, "service[mysql]", :delayed
 end
 
+# TODO reconfigure for lazy evaluation
 template "/etc/mysql/conf.d/wsrep.cnf" do
     source "wsrep.cnf.erb"
     mode 00644
@@ -70,6 +71,7 @@ template "/etc/mysql/conf.d/wsrep.cnf" do
     notifies :restart, "service[mysql]", :immediately
 end
 
+# TODO reconfigure for lazy evaluation
 template "/usr/local/etc/chk_mysql_quorum.sql" do
     source "chk_mysql_quorum.sql.erb"
     mode 0640
