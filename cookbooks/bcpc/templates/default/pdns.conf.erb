@@ -274,17 +274,17 @@ socket-dir=/var/run
 #################################
 # webserver Start a webserver for monitoring
 #
-# webserver=no
+webserver=yes
 
 #################################
 # webserver-address IP Address of webserver to listen on
 #
-# webserver-address=127.0.0.1
+webserver-address=<%=node['bcpc']['management']['vip']%>
 
 #################################
 # webserver-password    Password required for accessing the webserver
 #
-# webserver-password=
+webserver-password=<%=get_config('web-pdns-password')%>
 
 #################################
 # webserver-port    Port of webserver to listen on

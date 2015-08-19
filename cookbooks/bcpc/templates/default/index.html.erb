@@ -84,6 +84,12 @@
                 <td><em>Zabbix</em></td>
                 <td><a href="https://<%= node['bcpc']['zabbix']['fqdn'] %>">https://<%= node['bcpc']['zabbix']['fqdn'] %></a></td>
                 <td><a href="https://<%= node['bcpc']['monitoring']['vip'] %>/zabbix/">https://<%= node['bcpc']['monitoring']['vip'] %>/zabbix/</a></td>
+        </tr>
+            <tr>
+              <td><em>PDNS</em></td>
+              <td> - </td>
+              <td><a href="http://<%= node['bcpc']['management']['vip'] %>:8081">http://<%= node['bcpc']['management']['vip'] %>:8081</a></td>
+	    </tr>
         </table>
 
 		<h3>API Endpoints</h3>

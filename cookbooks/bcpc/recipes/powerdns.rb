@@ -24,6 +24,7 @@ if node['bcpc']['enabled']['dns'] then
     block do
       make_config('mysql-pdns-user', "pdns")
       make_config('mysql-pdns-password', secure_password)
+      make_config('web-pdns-password', secure_password)
       make_config('powerdns-update-timestamp', Time.now.to_i)
     end
   end
