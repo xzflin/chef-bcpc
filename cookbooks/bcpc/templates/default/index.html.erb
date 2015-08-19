@@ -68,22 +68,22 @@
             <tr>
                 <td><em>Elasticsearch</em></td>
                 <td>---</td>
-                <td><a href="http://<%= node['bcpc']['management']['monitoring']['vip'] %>:9200/_plugin/head/">http://<%= node['bcpc']['management']['monitoring']['vip'] %>:9200/_plugin/head/</a></td>
+                <td><a href="http://<%= node['bcpc']['monitoring']['vip'] %>:9200/_plugin/head/">http://<%= node['bcpc']['monitoring']['vip'] %>:9200/_plugin/head/</a></td>
             </tr>
             <tr>
                 <td><em>Kibana</em></td>
                 <td><a href="https://<%= node['bcpc']['kibana']['fqdn'] %>">https://<%= node['bcpc']['kibana']['fqdn'] %></a></td>
-                <td><a href="https://<%= node['bcpc']['management']['monitoring']['vip'] %>/kibana/">https://<%= node['bcpc']['management']['monitoring']['vip'] %>/kibana/</a></td>
+                <td><a href="https://<%= node['bcpc']['monitoring']['vip'] %>/kibana/">https://<%= node['bcpc']['monitoring']['vip'] %>/kibana/</a></td>
             </tr>
             <tr>
                 <td><em>Graphite</em></td>
                 <td><a href="https://<%= node['bcpc']['graphite']['fqdn'] %>">https://<%= node['bcpc']['graphite']['fqdn'] %></a></td>    
-                <td><a href="https://<%= node['bcpc']['management']['monitoring']['vip'] %>:8888">https://<%= node['bcpc']['management']['monitoring']['vip'] %>:8888</a></td>
+                <td><a href="https://<%= node['bcpc']['monitoring']['vip'] %>:8888">https://<%= node['bcpc']['monitoring']['vip'] %>:8888</a></td>
             </tr>
             <tr>
                 <td><em>Zabbix</em></td>
                 <td><a href="https://<%= node['bcpc']['zabbix']['fqdn'] %>">https://<%= node['bcpc']['zabbix']['fqdn'] %></a></td>
-                <td><a href="https://<%= node['bcpc']['management']['monitoring']['vip'] %>/zabbix/">https://<%= node['bcpc']['management']['monitoring']['vip'] %>/zabbix/</a></td>
+                <td><a href="https://<%= node['bcpc']['monitoring']['vip'] %>/zabbix/">https://<%= node['bcpc']['monitoring']['vip'] %>/zabbix/</a></td>
         </table>
 
 		<h3>API Endpoints</h3>

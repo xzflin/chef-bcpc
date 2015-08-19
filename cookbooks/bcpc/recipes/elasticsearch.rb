@@ -102,7 +102,7 @@ if node['bcpc']['enabled']['logging'] then
     bash "set-elasticsearch-replicas" do
         min_quorum = search_nodes("recipe", "elasticsearch").length/2 + 1
         code <<-EOH
-            curl -XPUT '#{node['bcpc']['management']['monitoring']['vip']}:9200/_settings' -d '
+            curl -XPUT '#{node['bcpc']['monitoring']['vip']}:9200/_settings' -d '
             {
                 "index" : {
                     "number_of_replicas" : #{min_quorum-1}
