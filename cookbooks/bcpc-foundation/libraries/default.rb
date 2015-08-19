@@ -90,12 +90,13 @@ def get_nodes_with_recipe(value)
   if Chef::Config[:solo]
     fail 'BCPC cookbooks require a functional Chef Server installation.'
   else
-    search(:node, search_pattern).collect { |x| x.hostname }.sort
+    search(:node, search_pattern)
   end
 end
 
+# this gets all nodes except the bootstrap node
 def get_all_nodes
-  get_nodes_with_recipe('role-bcpc-common')
+  get_nodes_with_recipe('component-bcpc-node-common::default')
 end
 
 def get_ceph_osd_nodes
@@ -111,7 +112,7 @@ def get_monitor_nodes
 end
 
 def get_bootstrap_node
-  results = get_nodes_with_recipe('role-bcpc-node-monitor')
+  results = get_nodes_with_recipe('role-bcpc-bootstrap')
   raise 'There is not exactly one bootstrap node found.' if results.size != 1
   results.first
 end

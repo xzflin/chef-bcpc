@@ -16,7 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-include_recipe 'role-bcpc-common'
+
+# save the node at the start of the run so that its run list is available
+node.save
+# magic sleep so that Chef server has time to reindex
+sleep 2
+
+include_recipe 'component-bcpc-common'
 include_recipe 'bcpc-bootstrap'
 include_recipe 'bcpc-openstack-rally'
 # disabled on bootstrap node for the moment because it requires

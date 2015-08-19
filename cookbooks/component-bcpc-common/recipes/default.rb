@@ -1,5 +1,5 @@
 #
-# Cookbook Name:: role-bcpc-node-work-common
+# Cookbook Name:: component-bcpc-common
 # Recipe:: default
 #
 # Copyright 2015, Bloomberg Finance L.P.
@@ -17,7 +17,12 @@
 # limitations under the License.
 #
 
-include_recipe 'role-bcpc-common'
-include_recipe 'role-bcpc-node-common'
-include_recipe 'bcpc-openstack-nova::compute'
-include_recipe 'bcpc-health-check::worknode'
+# save the node at the start of the run so that its run list is available
+node.save
+
+include_recipe 'ubuntu'
+include_recipe 'ntp'
+include_recipe 'chef-client'
+include_recipe 'chef-client::delete_validation'
+include_recipe 'chef-client::config'
+include_recipe 'bcpc-foundation'

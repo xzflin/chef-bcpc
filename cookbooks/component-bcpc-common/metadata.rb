@@ -1,4 +1,4 @@
-name             'role-bcpc-common'
+name             'component-bcpc-common'
 maintainer       'Bloomberg Finance L.P.'
 maintainer_email 'bcpc@bloomberg.net'
 license          'Apache 2.0'

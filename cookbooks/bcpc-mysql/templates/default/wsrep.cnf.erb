@@ -75,8 +75,7 @@ character-set-server = utf8
 ## WSREP options
 ##
 
-<% @servers.delete(node) -%>
-wsrep_cluster_address=gcomm://<%=@servers.collect{|x| x['bcpc']['management']['ip'] + ':' + @wsrep_port.to_s}.join(',')%>
+wsrep_cluster_address=gcomm://<%=@servers.reject { |x| x.name == node.name }.collect{|x| x['bcpc']['management']['ip'] + ':' + @wsrep_port.to_s}.join(',')%>
 
 # Full path to wsrep provider library or 'none'
 wsrep_provider=/usr/lib/libgalera_smm.so

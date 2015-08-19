@@ -22,5 +22,13 @@
 # that are using this role cookbook - erhudy)
 node.override['bcpc']['nova']['ephemeral'] = true
 
-include_recipe 'role-bcpc-node-work-common'
+# save the node at the start of the run so that its run list is available
+node.save
+# magic sleep so that Chef server has time to reindex
+sleep 2
+
+include_recipe 'component-bcpc-common'
+include_recipe 'component-bcpc-node-common'
+include_recipe 'component-bcpc-node-work-common'
 include_recipe 'bcpc-ephemeral-disk'
+include_recipe 'component-bcpc-node-monitoring'

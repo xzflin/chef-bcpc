@@ -16,8 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-include_recipe 'role-bcpc-common'
-include_recipe 'role-bcpc-node-common'
+# save the node at the start of the run so that its run list is available
+node.save
+# magic sleep so that Chef server has time to reindex
+sleep 2
+
+include_recipe 'component-bcpc-common'
+include_recipe 'component-bcpc-node-common'
 include_recipe 'bcpc-ceph::headnode'
 include_recipe 'bcpc-ceph::write-client-admin-key'
 include_recipe 'bcpc-ceph::write-bootstrap-osd-key'
@@ -40,3 +45,4 @@ include_recipe 'bcpc-openstack-heat'
 include_recipe 'bcpc-openstack-horizon'
 include_recipe 'bcpc-openstack-rally::populate-keystone'
 include_recipe 'bcpc-health-check::headnode'
+include_recipe 'component-bcpc-node-monitoring'

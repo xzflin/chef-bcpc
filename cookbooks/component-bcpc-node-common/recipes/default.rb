@@ -1,5 +1,5 @@
 #
-# Cookbook Name:: role-bcpc-node-common
+# Cookbook Name:: component-bcpc-node-common
 # Recipe:: default
 #
 # Copyright 2015, Bloomberg Finance L.P.
@@ -16,11 +16,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-include_recipe 'role-bcpc-common'
+# save the node at the start of the run so that its run list is available
+node.save
+
+include_recipe 'component-bcpc-common'
 include_recipe 'bcpc-health-check::check-headnode-count'
 include_recipe 'bcpc-crond'
 include_recipe 'bcpc-sshd'
 include_recipe 'bcpc-networking'
-include_recipe 'bcpc-zabbix::agent'
-include_recipe 'bcpc-diamond'
-include_recipe 'bcpc-fluentd'

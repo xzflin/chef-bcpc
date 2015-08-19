@@ -22,5 +22,5 @@ ruby_block "check-gateways" do
     ping_node("storage gateway", node['bcpc']['storage']['gateway'])
     ping_node("floating gateway", node['bcpc']['floating']['gateway'])
   end
-  only_if node['bcpc']['enabled']['network_tests']
+  only_if { node['bcpc']['enabled']['network_tests'] }
 end

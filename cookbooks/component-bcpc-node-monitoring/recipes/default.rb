@@ -1,5 +1,5 @@
 #
-# Cookbook Name:: role-bcpc-node-work-osd
+# Cookbook Name:: component-bcpc-node-monitoring
 # Recipe:: default
 #
 # Copyright 2015, Bloomberg Finance L.P.
@@ -17,16 +17,8 @@
 # limitations under the License.
 #
 
-# save the node at the start of the run so that its run list is available
 node.save
-# magic sleep so that Chef server has time to reindex
-sleep 2
 
-include_recipe 'component-bcpc-common'
-include_recipe 'component-bcpc-node-common'
-include_recipe 'component-bcpc-node-work-common'
-include_recipe 'bcpc-ceph::write-bootstrap-osd-key'
-include_recipe 'bcpc-ceph::write-client-admin-key'
-include_recipe 'bcpc-ceph::osd'
-include_recipe 'bcpc-ceph::radosgw'
-include_recipe 'component-bcpc-node-monitoring'
+include_recipe 'bcpc-zabbix::agent'
+include_recipe 'bcpc-diamond'
+include_recipe 'bcpc-fluentd'
