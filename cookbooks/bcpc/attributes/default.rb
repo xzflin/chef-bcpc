@@ -106,6 +106,7 @@ default['bcpc']['ceph']['chooseleaf'] = "rack"
 default['bcpc']['ceph']['pgp_auto_adjust'] = false
 # Need to review...
 default['bcpc']['ceph']['pgs_per_node'] = 1024
+default['bcpc']['ceph']['max_pgs_per_osd'] = 300
 # Journal size could be 10GB or higher in some cases
 default['bcpc']['ceph']['journal_size'] = 2048
 # The 'portion' parameters should add up to ~100 across all pools
@@ -1344,27 +1345,62 @@ default['bcpc']['rally']['user'] = 'ubuntu'
 ###########################################
 
 default['bcpc']['flavors'] = {
-    "m1.tiny"  => {
+    "m1.tiny" => {
       "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
     },
-    "e1.tiny"  => {
+    "m1.small" => {
+      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    },
+    "m1.medium" => {
+      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    },
+    "m1.large" => {
+      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    },
+    "m1.xlarge" => {
+      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    },
+    "e1.tiny" => {
       "vcpus" => 1,
       "memory_mb" => 512,
       "disk_gb" => 1,
       "ephemeral_gb" => 5,     
       "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
     },
-    "m1.small"  => {
-      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    "e1.small" => {
+      "vcpus" => 1,
+      "memory_mb" => 2048,
+      "disk_gb" => 20,
+      "ephemeral_gb" => 20,     
+      "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
     },
-    "m1.medium"  => {
-      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    "e1.medium" => {
+      "vcpus" => 2,
+      "memory_mb" => 4096,
+      "disk_gb" => 40,
+      "ephemeral_gb" => 40,
+      "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
     },
-    "m1.large"  => {
-      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    "e1.large" => {
+      "vcpus" => 4,
+      "memory_mb" => 8192,
+      "disk_gb" => 40,
+      "ephemeral_gb" => 80,    
+      "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
     },
-    "m1.xlarge"  => {
-      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    "e1.xlarge" => {
+      "vcpus" => 8,
+      "memory_mb" => 16384,
+      "disk_gb" => 40,
+      "ephemeral_gb" => 160,   
+      "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
+    },
+    "e1.2xlarge" => {
+      "vcpus" => 8,
+      "memory_mb" => 32768,
+      "disk_gb" => 40,
+      "ephemeral_gb" => 320,     
+      "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
     }
 }
 

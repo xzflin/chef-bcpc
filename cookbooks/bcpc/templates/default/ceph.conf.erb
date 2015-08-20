@@ -13,6 +13,7 @@
     cluster network = <%= @node["bcpc"]["storage"]["cidr"] %>
     keyring = /etc/ceph/$cluster.$name.keyring
     mon host = <%= @servers.map{|s| s["bcpc"]["storage"]["ip"] + ":6789"}.join(', ') %>
+    mon_pg_warn_max_per_osd = <%= @node['bcpc']['ceph']['max_pgs_per_osd'] %>
 <% if @node["bcpc"]["ceph"]["rebalance"] %>
     paxos_propose_interval = 60 
 <% end %>
