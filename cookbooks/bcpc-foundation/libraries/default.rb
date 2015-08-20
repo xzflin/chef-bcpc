@@ -25,16 +25,18 @@ require 'ipaddr'
 # this horrid little blob was stolen from https://tickets.opscode.com/browse/CHEF-2756
 # to allow accessing the DSL inside ruby_block resources, so that resources that depend
 # on search results can be created at runtime
-require 'chef/mixin/recipe_definition_dsl_core'
-require 'chef/mixin/language'
-require 'chef/mixin/language_include_recipe'
+require 'chef/dsl/data_query'
+require 'chef/dsl/include_recipe'
+require 'chef/dsl/platform_introspection'
+require 'chef/dsl/recipe'
 
 class Chef
   class Resource
     class RubyBlock
-      include Chef::Mixin::Language
-      include Chef::Mixin::LanguageIncludeRecipe
-      include Chef::Mixin::RecipeDefinitionDSLCore
+      include Chef::DSL::DataQuery
+      include Chef::DSL::IncludeRecipe
+      include Chef::DSL::PlatformIntrospection
+      include Chef::DSL::Recipe
     end
   end
 end

@@ -59,40 +59,44 @@ bash "write-client-radosgw-key" do
     notifies :restart, "service[radosgw-all]", :delayed
 end
 
-# TODO reconfigure for lazy evaluation
-rgw_optimal_pg = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['rgw']['replicas']*node['bcpc']['ceph']['rgw']['portion']/100)
-
 rgw_rule = (node['bcpc']['ceph']['rgw']['type'] == "ssd") ? node['bcpc']['ceph']['ssd']['ruleset'] : node['bcpc']['ceph']['hdd']['ruleset']
 
 %w{.rgw .rgw.control .rgw.gc .rgw.root .users.uid .users.email .users .usage .log .intent-log .rgw.buckets .rgw.buckets.index .rgw.buckets.extra}.each do |pool|
-    bash "create-rados-pool-#{pool}" do
-        code <<-EOH
-            ceph osd pool create #{pool} #{rgw_optimal_pg}
-            ceph osd pool set #{pool} crush_ruleset #{rgw_rule}
-        EOH
-        not_if "rados lspools | grep ^#{pool}$"
-        notifies :run, "bash[wait-for-pgs-creating]", :immediately
+  ruby_block "create-rados-pool-#{pool}" do
+    block do
+      rgw_optimal_pg = optimal_pgs_per_node
+      %x[ceph osd pool create #{pool} #{rgw_optimal_pg}]
+      %x[ceph osd pool set #{pool} crush_ruleset #{rgw_rule}]
     end
-    # TODO reconfigure for lazy evaluation
-    bash "set-#{pool}-rados-pool-replicas" do
-        user "root"
-        replicas = [get_nodes_with_recipe('bcpc-ceph::osd').length, node['bcpc']['ceph']['rgw']['replicas']].min
-        if replicas < 1; then
-            replicas = 1
-        end
-        code "ceph osd pool set #{pool} size #{replicas}"
-        not_if "ceph osd pool get #{pool} size | grep #{replicas}"
+    not_if "rados lspools | grep ^#{pool}$"
+    notifies :run, "bash[wait-for-pgs-creating]", :immediately
+  end
+  ruby_block "set-#{pool}-rados-pool-replicas" do
+    block do
+      replicas = [get_ceph_osd_nodes.length, node['bcpc']['ceph']['rgw']['replicas']].min
+      replicas = 1 if replicas < 1
+      %x[ceph osd pool set #{pool} size #{replicas}]
     end
+    not_if {
+      replicas = [get_ceph_osd_nodes.length, node['bcpc']['ceph']['rgw']['replicas']].min
+      %x[ceph osd pool get #{pool} size].strip == "size: #{replicas}"
+    }
+  end
 end
 
 # check to see if we should up the number of pg's now for the core buckets pool
 (node['bcpc']['ceph']['pgp_auto_adjust'] ? %w{pg_num pgp_num} : %w{pg_num}).each do |pg|
-    bash "update-rgw-buckets-#{pg}" do
-        user "root"
-        code "ceph osd pool set .rgw.buckets #{pg} #{rgw_optimal_pg}"
-        only_if { %x[ceph osd pool get .rgw.buckets #{pg} | awk '{print $2}'].to_i < rgw_optimal_pg }
-        notifies :run, "bash[wait-for-pgs-creating]", :immediately
+  ruby_block "update-rgw-buckets-#{pg}" do
+    block do
+      rgw_optimal_pg = optimal_pgs_per_node
+      %x[ceph osd pool set .rgw.buckets #{pg} #{rgw_optimal_pg}]
     end
+    only_if {
+      rgw_optimal_pg = optimal_pgs_per_node
+      %x[ceph osd pool get .rgw.buckets #{pg} | awk '{print $2}'].to_i < rgw_optimal_pg
+    }
+    notifies :run, "bash[wait-for-pgs-creating]", :immediately
+  end
 end
 
 # Leaving apache portion in so that we can switch back if needed by removing 'rgw frontends...' statement
