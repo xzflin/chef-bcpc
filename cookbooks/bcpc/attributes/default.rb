@@ -1464,3 +1464,9 @@ default['bcpc']['kibana']['fqdn'] = "kibana.#{node['bcpc']['cluster_domain']}"
 default['bcpc']['elasticsearch']['heap_size'] = '256m'
 # Additional Java options
 default['bcpc']['elasticsearch']['java_opts'] = '-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -verbose:gc -Xloggc:/var/log/elasticsearch/gc.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=10m'
+###########################################
+#
+#  Getty settings
+#
+###########################################
+default['bcpc']['getty']['ttys'] = %w( ttyS0 ttyS1 )
