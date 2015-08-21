@@ -44,7 +44,7 @@ template "/etc/keepalived/keepalived.conf" do
         :router_id_key => "keepalived-monitoring-router-id",
         :password_key => "keepalived-monitoring-password",
         :chk_quorum_script => "/usr/local/bin/chk_mysql_quorum",
-        :vip => "#{node['bcpc']['management']['monitoring']['vip']}"
+        :vip => "#{node['bcpc']['monitoring']['vip']}"
     )
     notifies :restart, "service[keepalived]", :immediately
 end

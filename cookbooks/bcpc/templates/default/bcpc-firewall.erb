@@ -62,6 +62,8 @@ iptables-restore <<EOH
 ## ssh 22
 ## nova-novncproxy 6080
 -A INPUT -i <%=@node["bcpc"]["management"]["interface"]%> -d <%=@node["bcpc"]["management"]["ip"]%> -p tcp --match multiport --dports 22,6080 -j ACCEPT
+## Fallback rule in case node is monitored by out-of-cluster Zabbix
+-A INPUT -i <%= @node["bcpc"]["management"]["interface"] %> -s <%= @node["bcpc"]["monitoring"]["vip"] %> -d <%= @node["bcpc"]["management"]["ip"] %> -p tcp --dport 10050 -j ACCEPT
 
 # Allow external access to some VIP services
 ## apache 80, 443
@@ -81,13 +83,13 @@ iptables-restore <<EOH
 <% if node["roles"].include? "BCPC-Monitoring" -%>
 ## kibana 443
 ## graphite 8888
--A INPUT -i <%=@node["bcpc"]["management"]["interface"]%> -d <%=@node["bcpc"]["management"]["monitoring"]["vip"]%> -p tcp --match multiport --dports 443,8888 -j ACCEPT
+-A INPUT -i <%=@node["bcpc"]["management"]["interface"]%> -d <%=@node["bcpc"]["monitoring"]["vip"]%> -p tcp --match multiport --dports 443,8888 -j ACCEPT
 
 ## carbon-relay 2013, 2014
 ## elasticsearch 9200
 ## zabbix-server 10051
 :INPUT-monitoring - [0:0]
--A INPUT -i <%=@node["bcpc"]["management"]["interface"]%> -d <%=@node["bcpc"]["management"]["monitoring"]["vip"]%> -p tcp --match multiport --dports 2013,2014,9200,10051 -j INPUT-monitoring
+-A INPUT -i <%=@node["bcpc"]["management"]["interface"]%> -d <%=@node["bcpc"]["monitoring"]["vip"]%> -p tcp --match multiport --dports 2013,2014,9200,10051 -j INPUT-monitoring
 
 ###########################
 # INPUT-monitoring chain

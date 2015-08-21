@@ -16,6 +16,10 @@
 # limitations under the License.
 #
 
+parsed_rack_number = node['bcpc']['rack_name'].match(/^rack-(\d+)/)
+az_number = parsed_rack_number.nil? ? 1 : parsed_rack_number.captures[0].to_i
+availability_zone = (node['bcpc']['availability_zone'].nil? ) ? node['bcpc']['region_name'] + "-" + az_number.to_s : node['bcpc']['availability_zone'].to_s
+
 node['bcpc']['host_aggregates'].each do |name, properties| 
   bcpc_host_aggregate name do
     metadata properties
@@ -25,7 +29,16 @@ end
 node['bcpc']['aggregate_membership'].each do |name| 
     bcpc_host_aggregate name do
         action :member 
-        zone  node['bcpc']['region_name']
     end
 end 
+
+bcpc_host_aggregate availability_zone do
+  action :create
+  zone availability_zone
+end
+
+bcpc_host_aggregate availability_zone do
+  action :member
+end
+
 

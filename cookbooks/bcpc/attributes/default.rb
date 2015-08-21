@@ -106,6 +106,7 @@ default['bcpc']['ceph']['chooseleaf'] = "rack"
 default['bcpc']['ceph']['pgp_auto_adjust'] = false
 # Need to review...
 default['bcpc']['ceph']['pgs_per_node'] = 1024
+default['bcpc']['ceph']['max_pgs_per_osd'] = 300
 # Journal size could be 10GB or higher in some cases
 default['bcpc']['ceph']['journal_size'] = 2048
 # The 'portion' parameters should add up to ~100 across all pools
@@ -160,7 +161,6 @@ default['bcpc']['management']['netmask'] = "255.255.255.0"
 default['bcpc']['management']['cidr'] = "10.17.1.0/24"
 default['bcpc']['management']['gateway'] = "10.17.1.1"
 default['bcpc']['management']['interface'] = nil
-default['bcpc']['management']['monitoring']['vip'] = "10.17.1.16"
 # if 'interface' is a VLAN interface, specifying a parent allows MTUs
 # to be set properly
 default['bcpc']['management']['interface-parent'] = nil
@@ -529,11 +529,15 @@ default['bcpc']['keystone']['policy'] = {
 default['bcpc']['nova']['ram_allocation_ratio'] = 1.0
 default['bcpc']['nova']['reserved_host_memory_mb'] = 1024
 default['bcpc']['nova']['cpu_allocation_ratio'] = 2.0
+# select from between this many equally optimal hosts when launching an instance
+default['bcpc']['nova']['scheduler_host_subset_size'] = 3
 # "workers" parameters in nova are set to number of CPUs
 # available by default. This provides an override.
 default['bcpc']['nova']['workers'] = 5
 # Patch toggle for https://github.com/bloomberg/chef-bcpc/pull/493
 default['bcpc']['nova']['live_migration_patch'] = false
+# Verbose logging (level INFO)
+default['bcpc']['nova']['verbose'] = false
 # Nova debug toggle
 default['bcpc']['nova']['debug'] = false
 # Nova scheduler default filters
@@ -693,7 +697,7 @@ default['bcpc']['nova']['policy'] = {
   "compute_extension:security_group_default_rules" => "rule:admin_api",
   "compute_extension:security_groups" => "rule:admin_or_owner",
   "compute_extension:server_diagnostics" => "rule:admin_or_owner",
-  "compute_extension:server_groups" => "role:admin",
+  "compute_extension:server_groups" => "rule:admin_or_owner",
   "compute_extension:server_password" => "role:admin",
   "compute_extension:server_usage" => "rule:admin_or_owner",
   "compute_extension:services" => "rule:admin_api",
@@ -979,6 +983,8 @@ default['bcpc']['nova']['policy'] = {
 #  Cinder Settings
 #
 ###########################################
+# Verbose logging (level INFO)
+default['bcpc']['cinder']['verbose'] = false
 default['bcpc']['cinder']['workers'] = 5
 default['bcpc']['cinder']['quota'] = {
   "volumes" => 10,
@@ -1084,6 +1090,8 @@ default['bcpc']['cinder']['policy'] = {
 #  Glance policy Settings
 #
 ###########################################
+# Verbose logging (level INFO)
+default['bcpc']['glance']['verbose'] = false
 default['bcpc']['glance']['workers'] = 5
 default['bcpc']['glance']['policy'] = {
   "context_is_admin" => "role:admin",
@@ -1270,6 +1278,10 @@ default['bcpc']['cpupower']['ondemand_up_threshold'] = nil
 #
 ###########################################
 #
+# Besides being the VIP that monitoring agents/clients will communicate with,
+# monitoring services (carbon/elasticsearch/zabbix-server) will bind to it if
+# BCPC-Monitoring role is assigned in-cluster.
+default['bcpc']['monitoring']['vip'] = "10.17.1.16"
 # List of monitoring clients external to cluster that we are monitoring
 default['bcpc']['monitoring']['external_clients'] = []
 # Monitoring database settings
@@ -1339,27 +1351,62 @@ default['bcpc']['rally']['user'] = 'ubuntu'
 ###########################################
 
 default['bcpc']['flavors'] = {
-    "m1.tiny"  => {
+    "m1.tiny" => {
       "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
     },
-    "e1.tiny"  => {
+    "m1.small" => {
+      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    },
+    "m1.medium" => {
+      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    },
+    "m1.large" => {
+      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    },
+    "m1.xlarge" => {
+      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    },
+    "e1.tiny" => {
       "vcpus" => 1,
       "memory_mb" => 512,
       "disk_gb" => 1,
       "ephemeral_gb" => 5,     
       "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
     },
-    "m1.small"  => {
-      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    "e1.small" => {
+      "vcpus" => 1,
+      "memory_mb" => 2048,
+      "disk_gb" => 20,
+      "ephemeral_gb" => 20,     
+      "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
     },
-    "m1.medium"  => {
-      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    "e1.medium" => {
+      "vcpus" => 2,
+      "memory_mb" => 4096,
+      "disk_gb" => 40,
+      "ephemeral_gb" => 40,
+      "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
     },
-    "m1.large"  => {
-      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    "e1.large" => {
+      "vcpus" => 4,
+      "memory_mb" => 8192,
+      "disk_gb" => 40,
+      "ephemeral_gb" => 80,    
+      "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
     },
-    "m1.xlarge"  => {
-      "extra_specs" => { "aggregate_instance_extra_specs:general_compute" => "yes"}
+    "e1.xlarge" => {
+      "vcpus" => 8,
+      "memory_mb" => 16384,
+      "disk_gb" => 40,
+      "ephemeral_gb" => 160,   
+      "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
+    },
+    "e1.2xlarge" => {
+      "vcpus" => 8,
+      "memory_mb" => 32768,
+      "disk_gb" => 40,
+      "ephemeral_gb" => 320,     
+      "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
     }
 }
 

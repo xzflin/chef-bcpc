@@ -40,4 +40,9 @@ if node['bcpc']['rack_name'].nil? then
     node.set['bcpc']['rack_name'] = (rack_guess.nil?) ? "rack" : "rack-#{rack_guess[1].to_i}"
 end
 
+# Test if deprecated attribute hash still exists
+if node['bcpc']['management']['monitoring'] then
+    raise("node['bcpc']['management']['monitoring'] is deprecated. Please remove and set monitoring VIP in node['bcpc']['monitoring']['vip'].")
+end
+
 node.save rescue nil

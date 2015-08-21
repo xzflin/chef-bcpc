@@ -43,6 +43,7 @@ scheduler_default_filters=<%=node['bcpc']['nova']['scheduler_default_filters'].j
 ram_allocation_ratio=<%=node['bcpc']['nova']['ram_allocation_ratio']%>
 reserved_host_memory_mb=<%=node['bcpc']['nova']['reserved_host_memory_mb']%>
 cpu_allocation_ratio=<%=node['bcpc']['nova']['cpu_allocation_ratio']%>
+scheduler_host_subset_size=<%= node['bcpc']['nova']['scheduler_host_subset_size'] %>
 
 # Nova Network settings
 network_manager=nova.network.manager.VlanManager
@@ -67,7 +68,7 @@ send_arp_for_ha=True
 my_ip=<%=node['bcpc']['management']['ip']%>
 routing_source_ip=<%=node['bcpc']['floating']['ip']%>
 dhcp_domain=<%=node['bcpc']['cluster_domain']%>
-default_availability_zone=<%=node['bcpc']['region_name']%>
+default_availability_zone=
 
 # Nova Compute settings
 compute_driver=libvirt.LibvirtDriver
@@ -107,8 +108,8 @@ cnt_vpn_clients=5
 logdir=/var/log/nova
 state_path=/var/lib/nova
 rootwrap_config=/etc/nova/rootwrap.conf
-verbose=False
-debug=<%=node['bcpc']['nova']['debug']%>
+verbose=<%= node['bcpc']['nova']['verbose'] %>
+debug=<%= node['bcpc']['nova']['debug'] %>
 ec2_private_dns_show_ip=True
 #default_log_levels="amqplib=DEBUG,sqlalchemy=DEBUG,boto=WARN,suds=INFO,eventlet.wsgi.server=WARN"
 #rpc_response_timeout=120
