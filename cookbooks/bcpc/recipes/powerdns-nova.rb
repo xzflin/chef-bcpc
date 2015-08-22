@@ -32,12 +32,14 @@ if node['bcpc']['enabled']['dns']
       :cluster_domain        => node['bcpc']['cluster_domain'],
       :reverse_fixed_zone => (node['bcpc']['fixed']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['fixed']['cidr'])),
     })
+    notifies :run, 'ruby_block[powerdns-load-fixed-records]', :immediately
   end
 
   ruby_block "powerdns-load-fixed-records" do
     block do
       system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot #{node['bcpc']['dbname']['pdns']} < #{fixed_records_file}"
     end
+    action :nothing
   end
 
   # dns_fill.py handles creating CNAMEs based on instance and tenancy
