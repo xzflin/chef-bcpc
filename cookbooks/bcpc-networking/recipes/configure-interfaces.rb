@@ -197,29 +197,31 @@ bash "routing-storage" do
 end
 
 # TODO figure out why this line trips foodcritic FC019
-if node.recipes.include? 'role-bcpc-node-monitor'
-    # ipset is used to maintain largish block(s) of IP addresses to be referred to
-    # by iptables
-    package "ipset"
+ruby_block "additional-interface-setup-for-montoring" do
+  block do
+    if node.recipes.include? 'role-bcpc-node-monitor'
+      # ipset is used to maintain largish block(s) of IP addresses to be referred to
+      # by iptables
+      package "ipset"
 
-    bash "create-ipset-lists" do
+      bash "create-ipset-lists" do
         user "root"
         code <<-EOH
-            ipset list monitoring-clients >/dev/null || ipset create monitoring-clients hash:ip
+          ipset list monitoring-clients >/dev/null || ipset create monitoring-clients hash:ip
         EOH
-    end
+      end
 
-    # Stage monitoring-clients ipset, and swap if lists have changed
-    template "/tmp/ipset-monitoring-clients" do
+      # Stage monitoring-clients ipset, and swap if lists have changed
+      template "/tmp/ipset-monitoring-clients" do
         mode 00600
         source "ipset-monitoring-clients.erb"
         variables(
-            :clients => node['bcpc']['monitoring']['external_clients'].sort
+          :clients => node['bcpc']['monitoring']['external_clients'].sort
         )
         notifies :run, "bash[apply-ipset-monitoring-clients]", :immediately
-    end
+      end
 
-    bash "apply-ipset-monitoring-clients" do
+      bash "apply-ipset-monitoring-clients" do
         action :nothing
         user "root"
         code <<-EOH
@@ -227,7 +229,9 @@ if node.recipes.include? 'role-bcpc-node-monitor'
             ipset swap monitoring-clients-staging monitoring-clients
             ipset destroy monitoring-clients-staging
         EOH
+      end
     end
+  end
 end
 
 %w{ routing firewall }.each do |function|

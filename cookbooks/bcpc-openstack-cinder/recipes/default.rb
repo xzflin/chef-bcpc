@@ -96,10 +96,12 @@ bash "wait-for-cinder-to-become-operational" do
     timeout 120
 end
 
-node['bcpc']['ceph']['enabled_pools'].each do |type|
-  # TODO reconfigure for lazy evaluation
-    bash "create-cinder-rados-pool-#{type}" do
+ruby_block "create-cinder-pools-wrapper" do
+  block do
+    node['bcpc']['ceph']['enabled_pools'].each do |type|
+      bash "create-cinder-rados-pool-#{type}" do
         user "root"
+        # TODO rewrite this to use a common function
         optimal = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['volumes']['replicas']*node['bcpc']['ceph']['volumes']['portion']/100/node['bcpc']['ceph']['enabled_pools'].length)
         code <<-EOH
             ceph osd pool create #{node['bcpc']['ceph']['volumes']['name']}-#{type} #{optimal}
@@ -107,39 +109,38 @@ node['bcpc']['ceph']['enabled_pools'].each do |type|
         EOH
         not_if "rados lspools | grep #{node['bcpc']['ceph']['volumes']['name']}-#{type}"
         notifies :run, "bash[wait-for-pgs-creating]", :immediately
-    end
+      end
 
-    # TODO reconfigure for lazy evaluation
-    bash "set-cinder-rados-pool-replicas-#{type}" do
+      bash "set-cinder-rados-pool-replicas-#{type}" do
         user "root"
         replicas = [get_ceph_osd_nodes.length, node['bcpc']['ceph']['volumes']['replicas']].min
-        if replicas < 1; then
-            replicas = 1
-        end
+        replicas = 1 if replicas < 1
         code "ceph osd pool set #{node['bcpc']['ceph']['volumes']['name']}-#{type} size #{replicas}"
         not_if "ceph osd pool get #{node['bcpc']['ceph']['volumes']['name']}-#{type} size | grep #{replicas}"
-    end
+      end
 
-    (node['bcpc']['ceph']['pgp_auto_adjust'] ? %w{pg_num pgp_num} : %w{pg_num}).each do |pg|
-        # TODO reconfigure for lazy evaluation
+      (node['bcpc']['ceph']['pgp_auto_adjust'] ? %w{pg_num pgp_num} : %w{pg_num}).each do |pg|
         bash "set-cinder-rados-pool-#{pg}-#{type}" do
-            user "root"
-            optimal = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['volumes']['replicas']*node['bcpc']['ceph']['volumes']['portion']/100/node['bcpc']['ceph']['enabled_pools'].length)
-            code "ceph osd pool set #{node['bcpc']['ceph']['volumes']['name']}-#{type} #{pg} #{optimal}"
-            only_if { %x[ceph osd pool get #{node['bcpc']['ceph']['volumes']['name']}-#{type} #{pg} | awk '{print $2}'].to_i < optimal }
-            notifies :run, "bash[wait-for-pgs-creating]", :immediately
+          user "root"
+          # TODO rewrite this to use a common function
+          optimal = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['volumes']['replicas']*node['bcpc']['ceph']['volumes']['portion']/100/node['bcpc']['ceph']['enabled_pools'].length)
+          code "ceph osd pool set #{node['bcpc']['ceph']['volumes']['name']}-#{type} #{pg} #{optimal}"
+          only_if { %x[ceph osd pool get #{node['bcpc']['ceph']['volumes']['name']}-#{type} #{pg} | awk '{print $2}'].to_i < optimal }
+          notifies :run, "bash[wait-for-pgs-creating]", :immediately
         end
-    end
+      end
 
-    bash "cinder-make-type-#{type}" do
+      bash "cinder-make-type-#{type}" do
         user "root"
         code <<-EOH
-            . /root/adminrc
-            cinder type-create #{type.upcase}
-            cinder type-key #{type.upcase} set volume_backend_name=#{type.upcase}
+          . /root/adminrc
+          cinder type-create #{type.upcase}
+          cinder type-key #{type.upcase} set volume_backend_name=#{type.upcase}
         EOH
         not_if ". /root/adminrc; cinder type-list | grep #{type.upcase}"
+      end
     end
+  end
 end
 
 service "tgt" do

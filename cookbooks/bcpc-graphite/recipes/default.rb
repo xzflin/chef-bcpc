@@ -81,15 +81,18 @@ if node['bcpc']['enabled']['metrics']
         notifies :restart, "service[carbon-relay]", :delayed
     end
 
-    # TODO reconfigure for lazy evaluation
     template "/opt/graphite/conf/carbon.conf" do
         source "carbon.conf.erb"
         owner "root"
         group "root"
         mode 00644
         variables(
-            :servers => get_nodes_with_recipe('bcpc-graphite'),
-            :min_quorum => get_nodes_with_recipe('bcpc-graphite').length/2 + 1
+          lazy {
+            {
+              :servers    => get_nodes_with_recipe('bcpc-graphite'),
+              :min_quorum => get_nodes_with_recipe('bcpc-graphite').length/2 + 1
+            }
+          }
         )
         notifies :restart, "service[carbon-cache]", :delayed
         notifies :restart, "service[carbon-relay]", :delayed
@@ -117,7 +120,11 @@ if node['bcpc']['enabled']['metrics']
         owner "root"
         group "root"
         mode 00644
-        variables(:servers => get_nodes_with_recipe('bcpc-graphite'))
+        variables(
+          lazy {
+            {:servers => get_nodes_with_recipe('bcpc-graphite')}
+          }
+        )
         notifies :restart, "service[carbon-relay]", :delayed
     end
 
@@ -143,13 +150,16 @@ if node['bcpc']['enabled']['metrics']
         mode 00755
     end
 
-# TODO reconfigure for lazy evaluation
     template "/opt/graphite/webapp/graphite/local_settings.py" do
         source "graphite.local_settings.py.erb"
         owner "root"
         group "root"
         mode 00644
-        variables(:servers => get_nodes_with_recipe('bcpc-graphite'))
+        variables(
+          lazy {
+            {:servers => get_nodes_with_recipe('bcpc-graphite')}
+          }
+        )
         notifies :restart, "service[apache2]", :delayed
     end
 

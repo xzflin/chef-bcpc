@@ -67,12 +67,12 @@ template "/etc/mysql/conf.d/wsrep.cnf" do
     variables(
       lazy {
         {
-          :max_connections => node['bcpc']['mysql-head']['max_connections'],
-          :servers => get_head_nodes,
+          :max_connections    => node['bcpc']['mysql-head']['max_connections'],
+          :servers            => get_head_nodes,
           :wsrep_cluster_name => node['bcpc']['region_name'],
-          :wsrep_port => 4567,
-          :galera_user_key => "mysql-galera-user",
-          :galera_pass_key => "mysql-galera-password"
+          :wsrep_port         => 4567,
+          :galera_user_key    => "mysql-galera-user",
+          :galera_pass_key    => "mysql-galera-password"
         }
       }
     )

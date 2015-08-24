@@ -55,30 +55,33 @@ template "/etc/mysql/debian.cnf" do
     notifies :restart, "service[mysql]", :delayed
 end
 
-# TODO reconfigure for lazy evaluation
 template "/etc/mysql/conf.d/wsrep.cnf" do
     source "wsrep.cnf.erb"
     mode 00644
     variables(
-        :max_connections => [get_nodes_with_recipe('bcpc-mysql::monitornode').length*150, 200].max,
-        :servers => get_nodes_with_recipe('bcpc-mysql::monitornode'),
-        :wsrep_cluster_name => "#{node['bcpc']['region_name']}-Monitoring",
-        :wsrep_port => 4577,
-        :galera_user_key => "mysql-monitoring-galera-user",
-        :galera_pass_key => "mysql-monitoring-galera-password",
-        :innodb_buffer_pool_size => node['bcpc']['monitoring']['mysql']['innodb_buffer_pool_size']
+      lazy {
+        {
+          :max_connections         => [get_nodes_with_recipe('bcpc-mysql::monitornode').length*150, 200].max,
+          :servers                 => get_nodes_with_recipe('bcpc-mysql::monitornode'),
+          :wsrep_cluster_name      => "#{node['bcpc']['region_name']}-Monitoring",
+          :wsrep_port              => 4577,
+          :galera_user_key         => "mysql-monitoring-galera-user",
+          :galera_pass_key         => "mysql-monitoring-galera-password",
+          :innodb_buffer_pool_size => node['bcpc']['monitoring']['mysql']['innodb_buffer_pool_size']
+        }
+      }
     )
     notifies :restart, "service[mysql]", :immediately
 end
-
-# TODO reconfigure for lazy evaluation
 template "/usr/local/etc/chk_mysql_quorum.sql" do
     source "chk_mysql_quorum.sql.erb"
     mode 0640
     owner "root"
     group "root"
     variables(
-        :min_quorum => get_nodes_with_recipe('bcpc-mysql::monitornode').length/2+1
+      lazy {
+        {:min_quorum => get_nodes_with_recipe('bcpc-mysql::monitornode').length/2+1}
+      }
     )
 end
 

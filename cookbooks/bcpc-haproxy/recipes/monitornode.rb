@@ -23,7 +23,9 @@ template "/etc/haproxy/haproxy.cfg" do
     source "haproxy-monitoring.cfg.erb"
     mode 00644
     variables(
-        :servers => get_monitor_nodes
+      lazy {
+        {:servers => get_monitor_nodes}
+      }
     )
     notifies :restart, "service[haproxy]", :immediately
 end

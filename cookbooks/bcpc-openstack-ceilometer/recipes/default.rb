@@ -34,5 +34,9 @@ template "/etc/ceilometer/ceilometer.conf" do
     owner "ceilometer"
     group "ceilometer"
     mode 00600
-    variables(:servers => get_head_nodes)
+    variables(
+      lazy {
+        {:servers => get_head_nodes}
+      }
+    )
 end

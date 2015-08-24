@@ -25,8 +25,12 @@ template "/etc/haproxy/haproxy.cfg" do
     source "haproxy-head.cfg.erb"
     mode 00644
     variables(
-        :servers     => get_head_nodes,
-        :all_servers => get_ceph_osd_nodes
+      lazy {
+        {
+          :servers     => get_head_nodes,
+          :all_servers => get_ceph_osd_nodes
+        }
+      }
     )
     notifies :restart, "service[haproxy]", :immediately
     notifies :restart, "service[xinetd]", :immediately

@@ -134,19 +134,22 @@ service "rabbitmq-server" do
     supports :status => true
 end
 
-# TODO convert to lazy evaluation
-get_head_nodes.each do |server|
-    if server['hostname'] != node['hostname']
+ruby_block "rabbitmq-clustering-lazy-wrapper" do
+  block do
+    get_head_nodes.each do |server|
+      if server['hostname'] != node['hostname']
         bash "rabbitmq-clustering-with-#{server['hostname']}" do
-            code <<-EOH
-                rabbitmqctl stop_app
-                rabbitmqctl reset
-                rabbitmqctl join_cluster rabbit@#{server['hostname']}
-                rabbitmqctl start_app
-            EOH
-            not_if "rabbitmqctl cluster_status | grep rabbit@#{server['hostname']}"
+          code <<-EOH
+              rabbitmqctl stop_app
+              rabbitmqctl reset
+              rabbitmqctl join_cluster rabbit@#{server['hostname']}
+              rabbitmqctl start_app
+          EOH
+          not_if "rabbitmqctl cluster_status | grep rabbit@#{server['hostname']}"
         end
+      end
     end
+  end
 end
 
 ruby_block "set-rabbitmq-guest-password" do
@@ -155,12 +158,11 @@ ruby_block "set-rabbitmq-guest-password" do
     end
 end
 
-# TODO convert to lazy evaluation
-bash "set-rabbitmq-ha-policy" do
+ruby_block "set-rabbitmq-ha-policy" do
+  block do
     min_quorum = get_head_nodes.length/2 + 1
-    code <<-EOH
-        rabbitmqctl set_policy HA '^(?!(amq\.|[a-f0-9]{32})).*' '{"ha-mode": "all"}'
-    EOH
+    %x[rabbitmqctl set_policy HA '^(?!(amq\.|[a-f0-9]{32})).*' '{"ha-mode": "all"}']
+  end
 end
 
 template "/usr/local/bin/rabbitmqcheck" do

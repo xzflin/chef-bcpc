@@ -69,11 +69,14 @@ ruby_block 'write-ceph-mon-key' do
     not_if "test -f /etc/ceph/ceph.mon.keyring"
 end
 
-# TODO configure for lazy evaluation
 template '/etc/ceph/ceph.conf' do
     source 'ceph.conf.erb'
     mode '0644'
-    variables(:servers => get_head_nodes)
+    variables(
+      lazy {
+        {:servers => get_head_nodes}
+      }
+    )
 end
 
 directory "/var/run/ceph/" do

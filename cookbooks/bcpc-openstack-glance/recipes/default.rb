@@ -66,19 +66,18 @@ bash "patch-backport-for-glance-v2-null-description" do
   notifies :restart, "service[glance-registry]", :immediately
 end
 
-# TODO configure for lazy evaluation
 template "/etc/glance/glance-api.conf" do
-    source "glance-api.conf.erb"
-    owner "glance"
-    group "glance"
-    mode 00600
-    variables(
-      lazy {
-        {:servers => get_head_nodes}
-      }
-    )
-    notifies :restart, "service[glance-api]", :delayed
-    notifies :restart, "service[glance-registry]", :delayed
+  source "glance-api.conf.erb"
+  owner "glance"
+  group "glance"
+  mode 00600
+  variables(
+    lazy {
+      {:servers => get_head_nodes}
+    }
+  )
+  notifies :restart, "service[glance-api]", :delayed
+  notifies :restart, "service[glance-registry]", :delayed
 end
 
 template "/etc/glance/glance-registry.conf" do
@@ -140,39 +139,41 @@ end
 
 # Note, glance connects to ceph using client.glance, but we have already generated
 # the key for that in ceph-head.rb, so by now we should have it in /etc/ceph/ceph.client.glance.key
-
-# TODO reconfigure for lazy evaluation
-bash "create-glance-rados-pool" do
-    user "root"
+ruby_block "create-glance-pools-lazy-wrapper" do
+  block do
+    # TODO rewrite with common function
     optimal = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['images']['replicas']*node['bcpc']['ceph']['images']['portion']/100)
-    code <<-EOH
-        ceph osd pool create #{node['bcpc']['ceph']['images']['name']} #{optimal}
-        ceph osd pool set #{node['bcpc']['ceph']['images']['name']} crush_ruleset #{(node['bcpc']['ceph']['images']['type']=="ssd") ? node['bcpc']['ceph']['ssd']['ruleset'] : node['bcpc']['ceph']['hdd']['ruleset']}
-    EOH
-    not_if "rados lspools | grep #{node['bcpc']['ceph']['images']['name']}"
-    notifies :run, "bash[wait-for-pgs-creating]", :immediately
-end
-
-# TODO reconfigure for lazy evaluation
-bash "set-glance-rados-pool-replicas" do
-    user "root"
     replicas = [get_ceph_osd_nodes.length, node['bcpc']['ceph']['images']['replicas']].min
-    if replicas < 1; then
-        replicas = 1
-    end
-    code "ceph osd pool set #{node['bcpc']['ceph']['images']['name']} size #{replicas}"
-    not_if "ceph osd pool get #{node['bcpc']['ceph']['images']['name']} size | grep #{replicas}"
-end
+    replicas = 1 if replicas < 1
 
-(node['bcpc']['ceph']['pgp_auto_adjust'] ? %w{pg_num pgp_num} : %w{pg_num}).each do |pg|
-    # TODO reconfigure for lazy evaluation
-    bash "set-glance-rados-pool-#{pg}" do
-        user "root"
-        optimal = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['images']['replicas']*node['bcpc']['ceph']['images']['portion']/100)
-        code "ceph osd pool set #{node['bcpc']['ceph']['images']['name']} #{pg} #{optimal}"
+    ruby_block "create-glance-rados-pool" do
+      block do
+        %x[
+          ceph osd pool create #{node['bcpc']['ceph']['images']['name']} #{optimal}
+          ceph osd pool set #{node['bcpc']['ceph']['images']['name']} crush_ruleset #{(node['bcpc']['ceph']['images']['type']=="ssd") ? node['bcpc']['ceph']['ssd']['ruleset'] : node['bcpc']['ceph']['hdd']['ruleset']}
+        ]
+      end
+      not_if "rados lspools | grep #{node['bcpc']['ceph']['images']['name']}"
+      notifies :run, "bash[wait-for-pgs-creating]", :immediately
+    end
+
+    ruby_block "set-glance-rados-pool-replicas" do
+      block do
+        %x[ceph osd pool set #{node['bcpc']['ceph']['images']['name']} size #{replicas}]
+      end
+      not_if "ceph osd pool get #{node['bcpc']['ceph']['images']['name']} size | grep #{replicas}"
+    end
+
+    (node['bcpc']['ceph']['pgp_auto_adjust'] ? %w{pg_num pgp_num} : %w{pg_num}).each do |pg|
+      ruby_block "set-glance-rados-pool-#{pg}" do
+        block do
+          %x[ceph osd pool set #{node['bcpc']['ceph']['images']['name']} #{pg} #{optimal}]
+        end
         only_if { %x[ceph osd pool get #{node['bcpc']['ceph']['images']['name']} #{pg} | awk '{print $2}'].to_i < optimal }
         notifies :run, "bash[wait-for-pgs-creating]", :immediately
+      end
     end
+  end
 end
 
 cookbook_file "/tmp/cirros-0.3.4-x86_64-disk.img" do

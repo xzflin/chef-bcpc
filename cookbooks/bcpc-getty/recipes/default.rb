@@ -1,5 +1,5 @@
 #
-# Cookbook Name:: bcpc-getting
+# Cookbook Name:: bcpc-getty
 # Recipe:: default
 #
 # Copyright 2015, Bloomberg Finance L.P.

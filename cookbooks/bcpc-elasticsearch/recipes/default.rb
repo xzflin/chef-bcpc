@@ -61,15 +61,18 @@ if node['bcpc']['enabled']['logging']
         action [:enable, :start]
     end
 
-    # TODO reconfigure for lazy evaluation
     template "/etc/elasticsearch/elasticsearch.yml" do
         source "elasticsearch.yml.erb"
         owner "root"
         group "root"
         mode 00644
         variables(
-            :servers => get_nodes_with_recipe('bcpc-elasticsearch'),
-            :min_quorum => get_nodes_with_recipe('bcpc-elasticsearch').length/2 + 1
+          lazy {
+            {
+              :servers    => get_nodes_with_recipe('bcpc-elasticsearch'),
+              :min_quorum => get_nodes_with_recipe('bcpc-elasticsearch').length/2 + 1
+            }
+          }
         )
         notifies :restart, "service[elasticsearch]", :immediately
     end

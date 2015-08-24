@@ -19,7 +19,12 @@
 
 require 'ipaddr'
 
-node.set['bcpc']['management']['ip'] = node['network']['interfaces'][node['bcpc']['management']['interface']]['addresses'].select { |k, v| v['family'] == "inet" and k != node['bcpc']['management']['vip'] }.first[0]
+# TODO rewrite this to stop brain hurt
+node.set['bcpc']['management']['ip'] = node['network']['interfaces'][
+  node['bcpc']['management']['interface']
+]['addresses'].select {
+  |k, v| v['family'] == "inet" and k != node['bcpc']['management']['vip']
+}.first[0]
 
 # Compute the bitlen for each of the network cidrs
 mgmt_bitlen = (node['bcpc']['management']['cidr'].match /\d+\.\d+\.\d+\.\d+\/(\d+)/)[1].to_i
@@ -35,14 +40,14 @@ node.set['bcpc']['storage']['ip'] = ((IPAddr.new(node['bcpc']['storage']['cidr']
 node.set['bcpc']['floating']['ip'] = ((IPAddr.new(node['bcpc']['floating']['cidr'])>>(32-flot_bitlen)<<(32-flot_bitlen))|mgmt_hostaddr).to_s
 
 # Take a guess at the rack name or default to 'rack'
-if node['bcpc']['rack_name'].nil? then
+if node['bcpc']['rack_name'].nil?
     rack_guess = node['hostname'].match /.*-r(\d+)[a-d]?n\d+$/
     node.set['bcpc']['rack_name'] = (rack_guess.nil?) ? "rack" : "rack-#{rack_guess[1].to_i}"
 end
 
 # Test if deprecated attribute hash still exists
-if node['bcpc']['management']['monitoring'] then
+if node['bcpc']['management']['monitoring']
     raise("node['bcpc']['management']['monitoring'] is deprecated. Please remove and set monitoring VIP in node['bcpc']['monitoring']['vip'].")
 end
 
-node.save rescue nil
+node.save

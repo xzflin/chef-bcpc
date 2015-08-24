@@ -72,13 +72,17 @@ if node['bcpc']['enabled']['monitoring']
         notifies :restart, "service[zabbix-agent]", :delayed
     end
 
-    template "/etc/zabbix/zabbix_agentd.d/zabbix-openstack.conf" do
-        source "zabbix_openstack.conf.erb"
-        owner node['bcpc']['zabbix']['user']
-        group "root"
-        mode 00600
-        only_if do get_cached_head_node_names.include?(node['hostname']) end
-        notifies :restart, "service[zabbix-agent]", :immediately
+    ruby_block "zabbix-openstack-template-lazy-wrapper" do
+      block do
+        template "/etc/zabbix/zabbix_agentd.d/zabbix-openstack.conf" do
+          source "zabbix_openstack.conf.erb"
+          owner node['bcpc']['zabbix']['user']
+          group "root"
+          mode 00600
+          only_if { get_cached_head_node_names.include?(node['hostname']) }
+          notifies :restart, "service[zabbix-agent]", :immediately
+        end
+      end
     end
 
     template "/etc/zabbix/zabbix_agentd.d/zabbix-rgw.conf" do
@@ -87,7 +91,7 @@ if node['bcpc']['enabled']['monitoring']
         group "root"
         mode 00600
         variables(
-            :rgw_frontend => node['bcpc']['ceph']['frontend']
+          :rgw_frontend => node['bcpc']['ceph']['frontend']
         )
         only_if 'test -f /usr/bin/radosgw'
         notifies :restart, "service[zabbix-agent]", :immediately
@@ -121,10 +125,14 @@ if node['bcpc']['enabled']['monitoring']
         action :install
     end
 
-    cookbook_file "/usr/local/bin/zabbix_discover_buckets" do
-        source "zabbix_discover_buckets"
-        owner "root"
-        mode "00755"
-        only_if do get_cached_head_node_names.include?(node['hostname']) end
+    ruby_block "zabbix_discover_buckets-lazy-wrapper" do
+      block do
+        cookbook_file "/usr/local/bin/zabbix_discover_buckets" do
+          source "zabbix_discover_buckets"
+          owner "root"
+          mode "00755"
+          only_if { get_cached_head_node_names.include?(node['hostname']) }
+        end
+      end
     end
 end

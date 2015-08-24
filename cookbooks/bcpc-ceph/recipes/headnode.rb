@@ -183,51 +183,51 @@ bash "ceph-add-crush-rules" do
 end
 
 # Beginning in Hammer these two are not automatically created
-# TODO reconfigure for lazy evaluation
-vms_optimal_pg = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['vms']['replicas']*node['bcpc']['ceph']['vms']['portion']/100)
+ruby_block "create-ceph-pools" do
+  block do
+    vms_optimal_pg = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['vms']['replicas']*node['bcpc']['ceph']['vms']['portion']/100)
 
-# Create the VMs pool and any others that may need creating
-vms_rule = (node['bcpc']['ceph']['vms']['type'] == "ssd") ? node['bcpc']['ceph']['ssd']['ruleset'] : node['bcpc']['ceph']['hdd']['ruleset']
+    # Create the VMs pool and any others that may need creating
+    vms_rule = (node['bcpc']['ceph']['vms']['type'] == "ssd") ? node['bcpc']['ceph']['ssd']['ruleset'] : node['bcpc']['ceph']['hdd']['ruleset']
 
-bash "create-rados-pool-#{node['bcpc']['ceph']['vms']['name']}" do
-    user "root"
-    code <<-EOH
-        ceph osd pool create #{node['bcpc']['ceph']['vms']['name']} #{vms_optimal_pg}
-        ceph osd pool set #{node['bcpc']['ceph']['vms']['name']} crush_ruleset #{vms_rule}
-        sleep 15
-    EOH
-    not_if "rados lspools | grep ^#{node['bcpc']['ceph']['vms']['name']}$"
-end
-#     notifies :run, "bash[wait-for-pgs-creating]", :immediately
-
-
-# Commented out 'data' and 'metadata' since the number of pools can impact pgs
-# data metadata - removed from loop below - After firefly data and metadata are no longer default pools
-# TODO reconfigure for lazy evaluation
-if get_head_nodes.length == 1; then
-    rule = (node['bcpc']['ceph']['default']['type'] == "ssd") ? node['bcpc']['ceph']['ssd']['ruleset'] : node['bcpc']['ceph']['hdd']['ruleset']
-    ["rbd"].each do |pool|
-        bash "move-#{pool}-rados-pool" do
-            user "root"
-            code "ceph osd pool set #{pool} crush_ruleset #{rule}"
-        end
+    replicas = [get_nodes_with_recipe('bcpc-ceph::osd').length, node['bcpc']['ceph']['default']['replicas']].min
+    if replicas < 1; then
+        replicas = 1
     end
-end
 
-# TODO reconfigure for lazy evaluation
-replicas = [get_nodes_with_recipe('bcpc-ceph::osd').length, node['bcpc']['ceph']['default']['replicas']].min
-if replicas < 1; then
-    replicas = 1
-end
+    bash "create-rados-pool-#{node['bcpc']['ceph']['vms']['name']}" do
+      user "root"
+      code <<-EOH
+          ceph osd pool create #{node['bcpc']['ceph']['vms']['name']} #{vms_optimal_pg}
+          ceph osd pool set #{node['bcpc']['ceph']['vms']['name']} crush_ruleset #{vms_rule}
+          sleep 15
+      EOH
+      not_if "rados lspools | grep ^#{node['bcpc']['ceph']['vms']['name']}$"
+    end
 
-# data metadata - removed from list since they are no longer created by default in ceph
-["rbd", node['bcpc']['ceph']['vms']['name']].each do |pool|
-    bash "set-#{pool}-rados-pool-replicas" do
+    # Commented out 'data' and 'metadata' since the number of pools can impact pgs
+    # data metadata - removed from loop below - After firefly data and metadata are no longer default pools
+    if get_head_nodes.length == 1
+      rule = (node['bcpc']['ceph']['default']['type'] == "ssd") ? node['bcpc']['ceph']['ssd']['ruleset'] : node['bcpc']['ceph']['hdd']['ruleset']
+      ["rbd"].each do |pool|
+        bash "move-#{pool}-rados-pool" do
+          user "root"
+          code "ceph osd pool set #{pool} crush_ruleset #{rule}"
+        end
+      end
+    end
+
+    # data metadata - removed from list since they are no longer created by default in ceph
+    ["rbd", node['bcpc']['ceph']['vms']['name']].each do |pool|
+      bash "set-#{pool}-rados-pool-replicas" do
         user "root"
         code "ceph osd pool set #{pool} size #{replicas}"
         not_if "ceph osd pool get #{pool} size | grep #{replicas}"
+      end
     end
+  end
 end
+
 
 # mds is only used by CephFS so need for it here at this time but will remain until mds is removed
 %w{mon}.each do |svc|

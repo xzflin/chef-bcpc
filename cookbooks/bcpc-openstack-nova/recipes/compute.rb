@@ -105,18 +105,17 @@ template "/var/lib/nova/.ssh/authorized_keys" do
     mode 00644
 end
 
-# TODO reconfigure for lazy evaluation
 template "/var/lib/nova/.ssh/known_hosts" do
-    source "known_hosts.erb"
-    cookbook 'bcpc-foundation'
-    owner "nova"
-    group "nova"
-    mode 00644
-    variables(
-      lazy {
-        {:servers => get_nodes_with_recipe('bcpc-openstack-nova::compute')}
-      }
-    )
+  source "known_hosts.erb"
+  cookbook 'bcpc-foundation'
+  owner "nova"
+  group "nova"
+  mode 00644
+  variables(
+    lazy {
+      {:servers => get_nodes_with_recipe('bcpc-openstack-nova::compute')}
+    }
+  )
 end
 
 template "/var/lib/nova/.ssh/id_rsa" do

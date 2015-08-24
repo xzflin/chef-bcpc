@@ -44,12 +44,16 @@ include_recipe 'bcpc-health-check'
     end
   end
 
-  template "/usr/local/bin/zabbix_bucket_stats" do
-    source "zabbix_bucket_stats.erb"
-    cookbook 'bcpc-zabbix'
-    owner "root"
-    group "root"
-    mode "00755"
-    only_if do get_cached_head_node_names.include?(node['hostname']) end
+  ruby_block "zabbix_bucket_stats-runtime-wrapper" do
+    block do
+      template "/usr/local/bin/zabbix_bucket_stats" do
+        source "zabbix_bucket_stats.erb"
+        cookbook 'bcpc-zabbix'
+        owner "root"
+        group "root"
+        mode "00755"
+        only_if { get_cached_head_node_names.include?(node['hostname']) }
+      end
+    end
   end
 end
