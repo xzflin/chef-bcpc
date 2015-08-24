@@ -536,6 +536,8 @@ default['bcpc']['nova']['scheduler_host_subset_size'] = 3
 default['bcpc']['nova']['workers'] = 5
 # Patch toggle for https://github.com/bloomberg/chef-bcpc/pull/493
 default['bcpc']['nova']['live_migration_patch'] = false
+# Verbose logging (level INFO)
+default['bcpc']['nova']['verbose'] = false
 # Nova debug toggle
 default['bcpc']['nova']['debug'] = false
 # Nova scheduler default filters
@@ -981,6 +983,8 @@ default['bcpc']['nova']['policy'] = {
 #  Cinder Settings
 #
 ###########################################
+# Verbose logging (level INFO)
+default['bcpc']['cinder']['verbose'] = false
 default['bcpc']['cinder']['workers'] = 5
 default['bcpc']['cinder']['quota'] = {
   "volumes" => 10,
@@ -1086,6 +1090,8 @@ default['bcpc']['cinder']['policy'] = {
 #  Glance policy Settings
 #
 ###########################################
+# Verbose logging (level INFO)
+default['bcpc']['glance']['verbose'] = false
 default['bcpc']['glance']['workers'] = 5
 default['bcpc']['glance']['policy'] = {
   "context_is_admin" => "role:admin",
@@ -1458,3 +1464,9 @@ default['bcpc']['kibana']['fqdn'] = "kibana.#{node['bcpc']['cluster_domain']}"
 default['bcpc']['elasticsearch']['heap_size'] = '256m'
 # Additional Java options
 default['bcpc']['elasticsearch']['java_opts'] = '-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -verbose:gc -Xloggc:/var/log/elasticsearch/gc.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=10m'
+###########################################
+#
+#  Getty settings
+#
+###########################################
+default['bcpc']['getty']['ttys'] = %w( ttyS0 ttyS1 )
