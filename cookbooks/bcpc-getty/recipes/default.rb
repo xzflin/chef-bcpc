@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: getty
+# Cookbook Name:: bcpc-getting
+# Recipe:: default
 #
-# Copyright 2014, Bloomberg Finance L.P.
+# Copyright 2015, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ node['bcpc']['getty']['ttys'].each do |ttyname|
       variables({ :ttyname => ttyname })
   end
 
-  service "#{ttyname}" do
+  service ttyname do
       provider Chef::Provider::Service::Upstart
       action [ :enable, :start ]
   end
