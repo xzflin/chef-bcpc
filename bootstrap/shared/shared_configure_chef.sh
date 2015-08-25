@@ -63,9 +63,7 @@ do_on_node bootstrap "sudo apt-get update \
 
 # upload all cookbooks and our chosen environment to the Chef server
 # (cookbook upload uses the cookbook_path set when configuring knife on the bootstrap node)
-# upload cookbooks twice because knife tends to complain the first time
-do_on_node bootstrap "$KNIFE cookbook upload -a || true && sleep 3"
-do_on_node bootstrap "$KNIFE cookbook upload -a || true"
+do_on_node bootstrap "$KNIFE cookbook upload -a"
 do_on_node bootstrap "cd \$HOME/chef-bcpc/environments && $KNIFE environment from file $BOOTSTRAP_CHEF_ENV.json"
 
 # install and bootstrap Chef on cluster nodes
