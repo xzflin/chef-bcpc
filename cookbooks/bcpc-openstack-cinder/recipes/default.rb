@@ -26,7 +26,7 @@ ruby_block "initialize-cinder-config" do
     block do
         make_config('mysql-cinder-user', "cinder")
         make_config('mysql-cinder-password', secure_password)
-        make_config('libvirt-secret-uuid', %x[uuidgen -r].strip)
+        make_config('libvirt-secret-uuid', generate_uuid)
     end
 end
 

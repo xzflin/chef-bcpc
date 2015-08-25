@@ -17,10 +17,11 @@
 # limitations under the License.
 #
 
-require 'openssl'
 require 'base64'
-require 'thread'
 require 'ipaddr'
+require 'openssl'
+require 'securerandom'
+require 'thread'
 
 # this horrid little blob was stolen from https://tickets.opscode.com/browse/CHEF-2756
 # to allow accessing the DSL inside ruby_block resources, so that resources that depend
@@ -81,6 +82,13 @@ def make_config(key, value, force=false)
     end
 end
 
+def make_config_from_cmd(key, command, force=false)
+  mlscmd = Mixlib::ShellOut.new(command)
+  mlscmd.run_command
+  mlscmd.error!
+  make_config(key, mlscmd.stdout.strip, force)
+end
+
 def config_defined(key)
     init_config if $dbi.nil?
     Chef::Log.info("------------ Checking if key \"#{key}\" is defined")
@@ -124,7 +132,7 @@ end
 
 # this gets all nodes except the bootstrap node
 def get_all_nodes
-  get_nodes_with_recipe('component-bcpc-node-common::default')
+  get_nodes_with_recipe('component-bcpc-node-common')
 end
 
 def get_ceph_osd_nodes
@@ -197,6 +205,10 @@ def secure_password_alphanum_upper(len=20)
         pw << alphanum_upper[raw_pw.bytes().to_a()[pw.length] % alphanum_upper.length]
     end
     pw
+end
+
+def generate_uuid
+  SecureRandom.uuid()
 end
 
 def ceph_keygen()

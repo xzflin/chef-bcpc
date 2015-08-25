@@ -275,7 +275,7 @@ end
 
 ruby_block "store-cinder-ceph-key" do
   block do
-    make_config("cinder-ceph-key", `ceph auth get-key client.cinder`, force=true)
+    make_config_from_cmd("cinder-ceph-key", 'ceph auth get-key client.cinder', force=true)
   end
   only_if { File.exist?('/etc/ceph/ceph.client.cinder.keyring') and ((config_defined('cinder-ceph-key') and (get_config('cinder-ceph-key') != `ceph auth get-key client.cinder`)) or (not config_defined('cinder-ceph-key'))) }
 end
@@ -288,7 +288,7 @@ end
 
 ruby_block "store-glance-ceph-key" do
   block do
-    make_config("glance-ceph-key", `ceph auth get-key client.glance`, force=true)
+    make_config_from_cmd("glance-ceph-key", 'ceph auth get-key client.glance', force=true)
   end
   only_if { File.exist?('/etc/ceph/ceph.client.glance.keyring') and ((config_defined('glance-ceph-key') and (get_config('glance-ceph-key') != `ceph auth get-key client.glance`)) or (not config_defined('glance-ceph-key'))) }
 end

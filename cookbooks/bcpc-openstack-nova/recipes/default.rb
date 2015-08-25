@@ -30,7 +30,7 @@ ruby_block "initialize-nova-config" do
         make_config('ssh-nova-public-key', pubkey)
         make_config('mysql-nova-user', "nova")
         make_config('mysql-nova-password', secure_password)
-        make_config('glance-cloudpipe-uuid', %x[uuidgen -r].strip)
+        make_config('glance-cloudpipe-uuid', generate_uuid)
     end
 end
 

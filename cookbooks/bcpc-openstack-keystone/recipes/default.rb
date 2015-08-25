@@ -32,8 +32,8 @@ ruby_block "initialize-keystone-config" do
             get_config('keystone-pki-certificate')
         rescue
             temp = %x[openssl req -new -x509 -passout pass:temp_passwd -newkey rsa:2048 -out /dev/stdout -keyout /dev/stdout -days 1095 -subj "/C=#{node['bcpc']['country']}/ST=#{node['bcpc']['state']}/L=#{node['bcpc']['location']}/O=#{node['bcpc']['organization']}/OU=#{node['bcpc']['region_name']}/CN=keystone.#{node['bcpc']['cluster_domain']}/emailAddress=#{node['bcpc']['admin_email']}"]
-            make_config('keystone-pki-private-key', %x[echo "#{temp}" | openssl rsa -passin pass:temp_passwd -out /dev/stdout])
-            make_config('keystone-pki-certificate', %x[echo "#{temp}" | openssl x509])
+            make_config_from_cmd('keystone-pki-private-key', "echo \"#{temp}\" | openssl rsa -passin pass:temp_passwd -out /dev/stdout")
+            make_config_from_cmd('keystone-pki-certificate', "echo \"#{temp}\" | openssl x509")
         end
 
     end

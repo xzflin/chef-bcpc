@@ -21,13 +21,13 @@
 package "whois"
 
 ruby_block "initialize-cobbler-config" do
-    block do
-        make_config('cobbler-web-user', "cobbler")
-        make_config('cobbler-web-password', secure_password)
-        make_config('cobbler-web-password-digest', %x[ printf "#{get_config('cobbler-web-user')}:Cobbler:#{get_config('cobbler-web-password')}" | md5sum | awk '{print $1}' ])
-        make_config('cobbler-root-password', secure_password)
-        make_config('cobbler-root-password-salted', %x[ printf "#{get_config('cobbler-root-password')}" | mkpasswd -s -m sha-512 ])
-    end
+  block do
+    make_config('cobbler-web-user', "cobbler")
+    make_config('cobbler-web-password', secure_password)
+    make_config_from_cmd('cobbler-web-password-digest', "printf \"#{get_config('cobbler-web-user')}:Cobbler:#{get_config('cobbler-web-password')}\" | md5sum | awk '{print $1}'")
+    make_config('cobbler-root-password', secure_password)
+    make_config_from_cmd('cobbler-root-password-salted', "printf \"#{get_config('cobbler-root-password')}\" | mkpasswd -s -m sha-512")
+  end
 end
 
 package "isc-dhcp-server"
