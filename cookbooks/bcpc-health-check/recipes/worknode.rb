@@ -28,7 +28,7 @@ include_recipe 'bcpc-health-check'
   end
 
   cookbook_file "/usr/local/bin/checks/#{cc}" do
-    source "#{cc}"
+    source cc
     owner "root"
     mode "00755"
   end

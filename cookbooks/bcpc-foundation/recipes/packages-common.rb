@@ -38,11 +38,10 @@ if node['bcpc']['enabled']['apt_upgrade'] then
 end
 
 # run apt-get update at the start of every Chef run if so configured
-if node['bcpc']['enabled']['always_update_package_lists'] then
-    bash "run-apt-get-update" do
-        user "root"
-        code "DEBIAN_FRONTEND=noninteractive apt-get update"
-    end
+bash "run-apt-get-update" do
+  user "root"
+  code "DEBIAN_FRONTEND=noninteractive apt-get update"
+  only_if { node['bcpc']['enabled']['always_update_package_lists'] }
 end
 
 cookbook_file "/usr/local/bin/apt-pkg-check-version" do
