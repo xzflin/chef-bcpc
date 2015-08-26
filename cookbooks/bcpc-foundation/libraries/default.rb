@@ -134,7 +134,7 @@ def get_nodes_with_recipe(value)
   else
     # the map replaces the node that matches the current node with the node object,
     # which allows get_x_nodes.include?(node) to work in recipes
-    search(:node, search_pattern).map { |x| x.hostname == node.hostname ? node : x }
+    search(:node, search_pattern).map{ |x| x.hostname == node.hostname ? node : x }.sort{ |x,y| x.hostname <=> y.hostname }
   end
 end
 
