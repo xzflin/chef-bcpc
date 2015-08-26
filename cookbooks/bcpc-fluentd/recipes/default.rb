@@ -26,19 +26,6 @@ if node['bcpc']['enabled']['logging']
         key "fluentd.key"
     end
 
-    package "td-agent-v1" do
-        package_name "td-agent"
-        version "1.1.21-1"
-        action :purge
-    end
-
-    bash "clean-up-old-fluentd" do
-        code <<-EOH
-          rm -rf /usr/lib/fluent
-        EOH
-        only_if 'test -d /usr/lib/fluent'
-    end
-
     # Run td-agent as root
     cookbook_file "/etc/default/td-agent" do
         source "td-agent-default"

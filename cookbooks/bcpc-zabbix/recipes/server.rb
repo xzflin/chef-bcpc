@@ -33,24 +33,6 @@ if node['bcpc']['enabled']['monitoring']
         end
     end
 
-    # this script removes the old manually compiled Zabbix server installation
-    # (being a bit lazy and assuming the presence of the old server binary signals everything
-    # is still there)
-    bash "clean-up-old-zabbix-server" do
-        code <<-EOH
-          service zabbix-server stop
-          rm -f /usr/local/etc/zabbix_server.conf
-          rm -f /usr/local/sbin/zabbix_server
-          rm -f /usr/local/share/man/man8/zabbix_server.8
-          rm -rf /usr/local/share/zabbix
-          rm -rf /usr/local/etc/zabbix_server.conf.d
-          rm -f /tmp/zabbix-server.tar.gz
-          rm -f /etc/init/zabbix-server.conf
-          killall zabbix_server || true
-        EOH
-        only_if 'test -f /usr/local/sbin/zabbix_server'
-    end
-
     # Package is a soft dependency of zabbix-server
     package "snmp-mibs-downloader" do
         action :upgrade

@@ -20,30 +20,6 @@
 if node['bcpc']['enabled']['monitoring']
     include_recipe 'bcpc-zabbix'
 
-    # this script removes the old manually compiled Zabbix agent installation
-    # (being a bit lazy and assuming the presence of the old agent binary signals everything
-    # is still there)
-    bash "clean-up-old-zabbix-agent" do
-        code <<-EOH
-          service zabbix-agent stop
-          rm -f /tmp/zabbix_agentd.pid
-          rm -f /usr/local/etc/zabbix_agent.conf
-          rm -f /usr/local/etc/zabbix_agentd.conf
-          rm -f /usr/local/sbin/zabbix_agent
-          rm -f /usr/local/sbin/zabbix_agentd
-          rm -f /usr/local/share/man/man1/zabbix_get.1
-          rm -f /usr/local/share/man/man1/zabbix_sender.1
-          rm -f /usr/local/share/man/man8/zabbix_agentd.8
-          rm -f /usr/local/bin/zabbix_get
-          rm -f /usr/local/bin/zabbix_sender
-          rm -rf /usr/local/etc/zabbix_agentd.conf.d
-          rm -rf /usr/local/etc/zabbix_agent.conf.d
-          rm -f /tmp/zabbix-agent.tar.gz
-          rm -f /etc/init/zabbix-agent.conf
-        EOH
-        only_if 'test -f /usr/local/sbin/zabbix_agentd'
-    end
-
     %w{zabbix-agent zabbix-get zabbix-sender}.each do |zabbix_package|
       package zabbix_package do
         action :upgrade
