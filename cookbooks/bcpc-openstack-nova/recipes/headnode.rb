@@ -32,17 +32,26 @@ include_recipe 'bcpc-openstack-nova'
 end
 
 ruby_block "nova-database-creation" do
-    block do
-        %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
-            mysql -uroot -e "CREATE DATABASE #{node['bcpc']['dbname']['nova']};"
-            mysql -uroot -e "GRANT ALL ON #{node['bcpc']['dbname']['nova']}.* TO '#{get_config('mysql-nova-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-nova-password')}';"
-            mysql -uroot -e "GRANT ALL ON #{node['bcpc']['dbname']['nova']}.* TO '#{get_config('mysql-nova-user')}'@'localhost' IDENTIFIED BY '#{get_config('mysql-nova-password')}';"
-            mysql -uroot -e "FLUSH PRIVILEGES;"
-        ]
-        self.notifies :run, "bash[nova-database-sync]", :immediately
-        self.resolve_notification_references
-    end
-    not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['nova']}\"'|grep \"#{node['bcpc']['dbname']['nova']}\" >/dev/null" }
+  block do
+    cmd = Mixlib::ShellOut.new(<<-EOH
+      export MYSQL_PWD=#{get_config('mysql-root-password')};
+      mysql -uroot -e "CREATE DATABASE #{node['bcpc']['dbname']['nova']};"
+      mysql -uroot -e "GRANT ALL ON #{node['bcpc']['dbname']['nova']}.* TO '#{get_config('mysql-nova-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-nova-password')}';"
+      mysql -uroot -e "GRANT ALL ON #{node['bcpc']['dbname']['nova']}.* TO '#{get_config('mysql-nova-user')}'@'localhost' IDENTIFIED BY '#{get_config('mysql-nova-password')}';"
+      mysql -uroot -e "FLUSH PRIVILEGES;"
+      EOH
+    ).run_command
+    cmd.error!
+    self.notifies :run, "bash[nova-database-sync]", :immediately
+    self.resolve_notification_references
+  end
+  only_if {
+    cmd = Mixlib::ShellOut.new(<<-EOH
+      MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = "#{node['bcpc']['dbname']['nova']}"'
+      EOH
+    ).run_command
+    cmd.stdout.empty?
+  }
 end
 
 bash "nova-database-sync" do
@@ -56,18 +65,22 @@ bash "nova-database-sync" do
 end
 
 ruby_block "reap-dead-servers-from-nova" do
-    block do
-        all_hosts = get_nodes_with_recipe('bcpc-openstack-nova::compute').collect { |x| x['hostname'] }
-        nova_hosts = %x[nova-manage service list 2>/dev/null | awk '{print $2}' | grep -ve "^Host$" | uniq].split
-        nova_hosts.each do |host|
-            if not all_hosts.include?(host)
-                %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
-                    mysql -uroot #{node['bcpc']['dbname']['nova']} -e "DELETE FROM services WHERE host=\\"#{host}\\";"
-                    mysql -uroot #{node['bcpc']['dbname']['nova']} -e "DELETE FROM compute_nodes WHERE hypervisor_hostname=\\"#{host}\\";"
-                ]
-            end
-        end
+  block do
+    all_hosts = get_nodes_with_recipe('bcpc-openstack-nova::compute').collect { |x| x.hostname }
+    cmd = Mixlib::ShellOut.new("nova-manage service list 2>/dev/null | awk '{print $2}' | grep -ve '^Host$' | uniq").run_command
+    nova_hosts = cmd.stdout.split
+    nova_hosts.each do |host|
+      unless all_hosts.include?(host)
+        delete_cmd = Mixlib::ShellOut.new(<<-EOH
+          export MYSQL_PWD=#{get_config('mysql-root-password')};
+          mysql -uroot #{node['bcpc']['dbname']['nova']} -e 'DELETE FROM services WHERE host="#{host}";'
+          mysql -uroot #{node['bcpc']['dbname']['nova']} -e 'DELETE FROM compute_nodes WHERE hypervisor_node.hostname="#{host}";'
+          EOH
+        ).run_command
+        delete_cmd.error!
+      end
     end
+  end
 end
 
 include_recipe 'bcpc-openstack-nova::compute'

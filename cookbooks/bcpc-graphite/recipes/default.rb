@@ -114,7 +114,6 @@ if node['bcpc']['enabled']['metrics']
         notifies :restart, "service[carbon-cache]", :delayed
     end
 
-# TODO reconfigure for lazy evaluation
     template "/opt/graphite/conf/relay-rules.conf" do
         source "carbon-relay-rules.conf.erb"
         owner "root"
@@ -176,17 +175,25 @@ if node['bcpc']['enabled']['metrics']
     end
 
     ruby_block "graphite-database-creation" do
-        block do
-            %x[ export MYSQL_PWD=#{get_config('mysql-monitoring-root-password')};
-                mysql -uroot -e "CREATE DATABASE #{node['bcpc']['dbname']['graphite']};"
-                mysql -uroot -e "GRANT ALL ON #{node['bcpc']['dbname']['graphite']}.* TO '#{get_config('mysql-graphite-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-graphite-password')}';"
-                mysql -uroot -e "GRANT ALL ON #{node['bcpc']['dbname']['graphite']}.* TO '#{get_config('mysql-graphite-user')}'@'localhost' IDENTIFIED BY '#{get_config('mysql-graphite-password')}';"
-                mysql -uroot -e "FLUSH PRIVILEGES;"
-            ]
-            self.notifies :run, "bash[graphite-database-sync]", :immediately
-            self.resolve_notification_references
-        end
-        not_if { system "MYSQL_PWD=#{get_config('mysql-monitoring-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['graphite']}\"'|grep \"#{node['bcpc']['dbname']['graphite']}\" >/dev/null" }
+      block do
+        cmd = Mixlib::ShellOut.new(
+          "export MYSQL_PWD=#{get_config('mysql-monitoring-root-password')}; \
+            mysql -uroot -e \"CREATE DATABASE #{node['bcpc']['dbname']['graphite']};\"
+            mysql -uroot -e \"GRANT ALL ON #{node['bcpc']['dbname']['graphite']}.* TO \
+            '#{get_config('mysql-graphite-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-graphite-password')}';\"
+            mysql -uroot -e \"GRANT ALL ON #{node['bcpc']['dbname']['graphite']}.* TO \
+            '#{get_config('mysql-graphite-user')}'@'localhost' IDENTIFIED BY \
+            '#{get_config('mysql-graphite-password')}';\"
+            mysql -uroot -e \"FLUSH PRIVILEGES;\""
+        ).run_command
+        cmd.error!
+        self.notifies :run, "bash[graphite-database-sync]", :immediately
+        self.resolve_notification_references
+      end
+      only_if {
+        cmd = Mixlib::ShellOut.new("MYSQL_PWD=#{get_config('mysql-monitoring-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['graphite']}\"'").run_command
+        cmd.stdout.empty? # if empty, Graphite schema was not found
+      }
     end
 
     bash "graphite-database-sync" do
