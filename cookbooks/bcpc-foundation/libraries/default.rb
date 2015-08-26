@@ -104,6 +104,14 @@ def get_config(key)
     return result
 end
 
+def safe_parse_json(json)
+  begin
+    JSON.parse(json)
+  rescue JSON::ParserError
+    fail "Unable to parse supplied JSON: #{json}"
+  end
+end
+
 ###########################
 # IMPORTANT NOTE
 # #########################
@@ -174,12 +182,6 @@ def get_cached_head_node_names
     # assume first run
     end
     return headnodes
-end
-
-def power_of_2(number)
-    result = 1
-    while (result < number) do result <<= 1 end
-    return result
 end
 
 def secure_password(len=20)

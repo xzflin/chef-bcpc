@@ -42,20 +42,19 @@ execute "trigger-osd-startup" do
 end
 
 ruby_block "reap-ceph-disks-from-dead-servers" do
-    block do
-        storage_ips = get_nodes_with_recipe('bcpc-ceph::osd').collect { |x| x['bcpc']['storage']['ip'] }
-        status = JSON.parse(%x[ceph osd dump --format=json])
-        status['osds'].select { |x| x['up']==0 && x['in']==0 }.each do |osd|
-            osd_ip = osd['public_addr'][/[^:]*/]
-            if osd_ip != "" and not storage_ips.include?(osd_ip)
-                %x[
-                    ceph osd crush remove osd.#{osd['osd']}
-                    ceph osd rm osd.#{osd['osd']}
-                    ceph auth del osd.#{osd['osd']}
-                ]
-            end
+  block do
+    storage_ips = get_ceph_osd_nodes.collect { |x| x['bcpc']['storage']['ip'] }
+    status_cmd = Mixlib::ShellOut.new("ceph osd dump --format=json").run_command
+    status = safe_parse_json(status_cmd.stdout)
+    status['osds'].select { |x| x['up']==0 && x['in']==0 }.each do |osd|
+        osd_ip = osd['public_addr'][/[^:]*/]
+        if osd_ip != "" and not storage_ips.include?(osd_ip)
+          cmd = Mixlib::ShellOut.new("ceph osd crush remove osd.#{osd['osd']} && \
+          ceph osd rm osd.#{osd['osd']} && \
+          ceph auth del osd.#{osd['osd']}").run_command
         end
     end
+  end
 end
 
 template '/etc/init/ceph-osd-renice.conf' do
@@ -68,10 +67,4 @@ service 'ceph-osd-renice' do
   provider Chef::Provider::Service::Upstart
   action [:enable, :start]
   restart_command 'service ceph-osd-renice restart'
-end
-
-# this resource is to clean up leftovers from the CephFS resources that used to be here
-bash "clean-up-cephfs-mountpoint" do
-  code "sed -i 's/^-- \\/mnt fuse\\.ceph-fuse rw,nosuid,nodev,noexec,noatime,noauto 0 2$//g' /etc/fstab"
-  only_if { system "grep -q -e '^-- \\/mnt fuse\\.ceph-fuse rw,nosuid,nodev,noexec,noatime,noauto 0 2$' /etc/fstab" }
 end

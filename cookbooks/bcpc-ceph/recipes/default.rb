@@ -58,25 +58,25 @@ directory '/etc/ceph' do
 end
 
 ruby_block 'write-ceph-mon-key' do
-    block do
-        %x[ ceph-authtool "/etc/ceph/ceph.mon.keyring" \
-                --create-keyring \
-                --name=mon. \
-                --add-key="#{get_config('ceph-mon-key')}" \
-                --cap mon 'allow *'
-        ]
-    end
-    not_if "test -f /etc/ceph/ceph.mon.keyring"
+  block do
+    cmd = Mixlib::ShellOut.new("ceph-authtool '/etc/ceph/ceph.mon.keyring' \
+            --create-keyring \
+            --name=mon. \
+            --add-key='#{get_config('ceph-mon-key')}' \
+            --cap mon 'allow *'").run_command
+    cmd.error!
+  end
+  not_if "test -f /etc/ceph/ceph.mon.keyring"
 end
 
 template '/etc/ceph/ceph.conf' do
-    source 'ceph.conf.erb'
-    mode '0644'
-    variables(
-      lazy {
-        {:servers => get_head_nodes}
-      }
-    )
+  source 'ceph.conf.erb'
+  mode '0644'
+  variables(
+    lazy {
+      {:servers => get_head_nodes}
+    }
+  )
 end
 
 directory "/var/run/ceph/" do
@@ -132,5 +132,5 @@ end
 bash "wait-for-pgs-creating" do
     action :nothing
     user "root"
-    code "sleep 1; while ceph -s | grep -v mdsmap | grep creating >/dev/null 2>&1; do echo Waiting for new pgs to create...; sleep 1; done"
+    code "while ceph -s | grep -v mdsmap | grep creating >/dev/null 2>&1; do echo Waiting for new pgs to create...; sleep 1; done"
 end

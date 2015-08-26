@@ -44,35 +44,39 @@ execute "ceph-mon-start" do
 end
 
 ruby_block "add-ceph-mon-hints" do
-    block do
-        get_head_nodes.each do |server|
-            system "ceph --admin-daemon /var/run/ceph/ceph-mon.#{node['hostname']}.asok " +
-                "add_bootstrap_peer_hint #{server['bcpc']['storage']['ip']}:6789"
-        end
+  block do
+    get_head_nodes.each do |server|
+      cmd = Mixlib::ShellOut.new("ceph --admin-daemon /var/run/ceph/ceph-mon.#{node['hostname']}.asok \
+          add_bootstrap_peer_hint #{server['bcpc']['storage']['ip']}:6789").run_command
+      cmd.error!
     end
-    # not_if checks to see if all head node IPs are in the mon list
-    not_if {
-      mon_list = %x[ceph mon stat]
-      get_head_nodes.collect{ |x| x['bcpc']['storage']['ip'] }.map{ |ip| mon_list.include? ip }.uniq == [true]
-    }
+  end
+  # not_if checks to see if all head node IPs are in the mon list
+  not_if {
+    cmd = Mixlib::ShellOut.new('ceph mon stat').run_command
+    mon_list = cmd.stdout
+    get_head_nodes.collect{ |x| x['bcpc']['storage']['ip'] }.map{ |ip| mon_list.include? ip }.uniq == [true]
+  }
 end
 
 ruby_block "wait-for-mon-quorum" do
-    block do
-        clock = 0
-        sleep_time = 2
-        timeout = 120
-        status = { 'state' => '' }
-        until %w{leader peon}.include?(status['state']) do
-            if clock >= timeout
-              fail "Exceeded quorum wait timeout of #{timeout} seconds, check Ceph status with ceph -s and ceph health detail"
-            end
-            Chef::Log.warn("Waiting for ceph-mon to get quorum...")
-            status = JSON.parse(%x[ceph --admin-daemon /var/run/ceph/ceph-mon.#{node['hostname']}.asok mon_status])
-            clock += sleep_time
-            sleep sleep_time unless %w{leader peon}.include?(status['state'])
-        end
+  block do
+    clock = 0
+    sleep_time = 2
+    timeout = 120
+    status = { 'state' => '' }
+    until %w{leader peon}.include?(status['state']) do
+      if clock >= timeout
+        fail "Exceeded quorum wait timeout of #{timeout} seconds, check Ceph status with ceph -s and ceph health detail"
+      end
+      Chef::Log.warn("Waiting for ceph-mon to get quorum...")
+      cmd = Mixlib::ShellOut.new("ceph --admin-daemon /var/run/ceph/ceph-mon.#{node['hostname']}.asok mon_status").run_command
+      cmd.error!
+      status = safe_parse_json(cmd.stdout)
+      clock += sleep_time
+      sleep sleep_time unless %w{leader peon}.include?(status['state'])
     end
+  end
 end
 
 %w{get_monstatus if_leader if_not_leader if_quorum if_not_quorum}.each do |script|
@@ -92,15 +96,17 @@ template "/etc/sudoers.d/monstatus" do
 end
 
 ruby_block "reap-dead-ceph-mon-servers" do
-    block do
-        head_names = get_head_nodes.collect { |x| x['hostname'] }
-        status = JSON.parse(%x[ceph --admin-daemon /var/run/ceph/ceph-mon.#{node['hostname']}.asok mon_status])
-        status['monmap']['mons'].collect { |x| x['name'] }.each do |server|
-            if not head_names.include?(server)
-                %x[ ceph mon remove #{server} ]
-            end
-        end
+  block do
+    head_names = get_head_nodes.collect { |x| x['hostname'] }
+    cmd = Mixlib::ShellOut.new("ceph --admin-daemon /var/run/ceph/ceph-mon.#{node['hostname']}.asok mon_status").run_command
+    cmd.error!
+    status = safe_parse_json(cmd.stdout)
+    status['monmap']['mons'].collect { |x| x['name'] }.each do |server|
+      unless head_names.include?(server)
+        mon_remove_cmd = Mixlib::ShellOut.new("ceph mon remove #{server}").run_command
+      end
     end
+  end
 end
 
 bash "initialize-ceph-admin-and-osd-config" do
@@ -185,15 +191,12 @@ end
 # Beginning in Hammer these two are not automatically created
 ruby_block "create-ceph-pools" do
   block do
-    vms_optimal_pg = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['vms']['replicas']*node['bcpc']['ceph']['vms']['portion']/100)
+    vms_optimal_pg = optimal_pgs_per_node('vms')
 
     # Create the VMs pool and any others that may need creating
     vms_rule = (node['bcpc']['ceph']['vms']['type'] == "ssd") ? node['bcpc']['ceph']['ssd']['ruleset'] : node['bcpc']['ceph']['hdd']['ruleset']
 
-    replicas = [get_nodes_with_recipe('bcpc-ceph::osd').length, node['bcpc']['ceph']['default']['replicas']].min
-    if replicas < 1; then
-        replicas = 1
-    end
+    replicas = [[get_nodes_with_recipe('bcpc-ceph::osd').length, node['bcpc']['ceph']['default']['replicas']].min, 1].max
 
     bash "create-rados-pool-#{node['bcpc']['ceph']['vms']['name']}" do
       user "root"
@@ -277,7 +280,10 @@ ruby_block "store-cinder-ceph-key" do
   block do
     make_config_from_cmd("cinder-ceph-key", 'ceph auth get-key client.cinder', force=true)
   end
-  only_if { File.exist?('/etc/ceph/ceph.client.cinder.keyring') and ((config_defined('cinder-ceph-key') and (get_config('cinder-ceph-key') != `ceph auth get-key client.cinder`)) or (not config_defined('cinder-ceph-key'))) }
+  only_if {
+    cmd = Mixlib::ShellOut.new("ceph auth get-key client.cinder").run_command
+    ::File.exist?('/etc/ceph/ceph.client.cinder.keyring') and ((config_defined('cinder-ceph-key') and (get_config('cinder-ceph-key') != cmd.stdout)) or (not config_defined('cinder-ceph-key')))
+  }
 end
 
 bash "create-ceph-glance-keyring" do
@@ -290,5 +296,8 @@ ruby_block "store-glance-ceph-key" do
   block do
     make_config_from_cmd("glance-ceph-key", 'ceph auth get-key client.glance', force=true)
   end
-  only_if { File.exist?('/etc/ceph/ceph.client.glance.keyring') and ((config_defined('glance-ceph-key') and (get_config('glance-ceph-key') != `ceph auth get-key client.glance`)) or (not config_defined('glance-ceph-key'))) }
+  only_if {
+    cmd = Mixlib::ShellOut.new("ceph auth get-key client.glance").run_command
+    ::File.exist?('/etc/ceph/ceph.client.glance.keyring') and ((config_defined('glance-ceph-key') and (get_config('glance-ceph-key') != cmd.stdout)) or (not config_defined('glance-ceph-key')))
+  }
 end

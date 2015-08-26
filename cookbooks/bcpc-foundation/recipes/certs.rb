@@ -25,26 +25,26 @@ template "/tmp/openssl.cnf" do
 end
 
 ruby_block "read-ssl-certificate" do
-    block do
-      begin
-        require 'openssl'
-        if !node['bcpc']['ssl_certificate'].nil? and !node['bcpc']['ssl_private_key'].nil?
-          ssl_path = Chef::Config['file_cache_path'] + "/cookbooks/bcpc/files/default/"
-          cert = OpenSSL::X509::Certificate.new File.read(ssl_path + node['bcpc']['ssl_certificate'])
-          key  = OpenSSL::PKey::RSA.new File.read(ssl_path + node['bcpc']['ssl_private_key'])
-          make_config('ssl-private-key', key.to_pem)
-          make_config('ssl-certificate', cert.to_pem)
-	  if !node['bcpc']['ssl_intermediate_certificate'].nil?
-	      intermediate_cert = OpenSSL::X509::Certificate.new File.read(ssl_path + node['bcpc']['ssl_intermediate_certificate'])
-	      make_config('ssl-intermediate-certificate', intermediate_cert.to_pem)
-	  end
-        else
-          Chef::Log.warn("SSL certificate and/or key are not specified, will generate self-signed certificate")
+  block do
+    begin
+      require 'openssl'
+      if !node['bcpc']['ssl_certificate'].nil? and !node['bcpc']['ssl_private_key'].nil?
+        ssl_path = Chef::Config['file_cache_path'] + "/cookbooks/bcpc/files/default/"
+        cert = OpenSSL::X509::Certificate.new File.read(ssl_path + node['bcpc']['ssl_certificate'])
+        key  = OpenSSL::PKey::RSA.new File.read(ssl_path + node['bcpc']['ssl_private_key'])
+        make_config('ssl-private-key', key.to_pem)
+        make_config('ssl-certificate', cert.to_pem)
+        if !node['bcpc']['ssl_intermediate_certificate'].nil?
+          intermediate_cert = OpenSSL::X509::Certificate.new File.read(ssl_path + node['bcpc']['ssl_intermediate_certificate'])
+          make_config('ssl-intermediate-certificate', intermediate_cert.to_pem)
         end
-      rescue Exception => e
-        raise("Unable to process specified SSL certificate: " + e.message)
+      else
+        Chef::Log.warn("SSL certificate and/or key are not specified, will generate self-signed certificate")
       end
+    rescue Exception => e
+      raise("Unable to process specified SSL certificate: " + e.message)
     end
+  end
 end
 
 ruby_block "initialize-ssh-keys" do
@@ -53,8 +53,8 @@ ruby_block "initialize-ssh-keys" do
         require 'net/ssh'
         key = OpenSSL::PKey::RSA.new 2048;
         pubkey = "#{key.ssh_type} #{[key.to_blob].pack('m0')}"
-        make_config('ssh-private-key', key.to_pem)
-        make_config('ssh-public-key', pubkey)
+        make_config('ssh-private-key', key.to_pem.strip)
+        make_config('ssh-public-key', pubkey.strip)
         begin
             get_config('ssl-certificate')
         rescue
@@ -66,12 +66,13 @@ ruby_block "initialize-ssh-keys" do
 end
 
 ruby_block "set-ssh-host-key-reference" do
-    block do
-        if node['bcpc']['ssh_host_key'].nil? then
-            node.set['bcpc']['ssh_host_key'] = %x[ ssh-keyscan #{node['bcpc']['management']['ip']} #{node['hostname']} ]
-            node.save rescue nil
-        end
+  block do
+    if node['bcpc']['ssh_host_key'].nil?
+      cmd = Mixlib::ShellOut.new("ssh-keyscan #{node['bcpc']['management']['ip']} #{node['hostname']}").run_command
+      node.set['bcpc']['ssh_host_key'] = cmd.stdout
+      node.save rescue nil
     end
+  end
 end
 
 directory "/root/.ssh" do

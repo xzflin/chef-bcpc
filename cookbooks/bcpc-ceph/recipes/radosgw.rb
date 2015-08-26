@@ -61,41 +61,41 @@ end
 
 rgw_rule = (node['bcpc']['ceph']['rgw']['type'] == "ssd") ? node['bcpc']['ceph']['ssd']['ruleset'] : node['bcpc']['ceph']['hdd']['ruleset']
 
-%w{.rgw .rgw.control .rgw.gc .rgw.root .users.uid .users.email .users .usage .log .intent-log .rgw.buckets .rgw.buckets.index .rgw.buckets.extra}.each do |pool|
-  ruby_block "create-rados-pool-#{pool}" do
-    block do
-      rgw_optimal_pg = optimal_pgs_per_node
-      %x[ceph osd pool create #{pool} #{rgw_optimal_pg}]
-      %x[ceph osd pool set #{pool} crush_ruleset #{rgw_rule}]
-    end
-    not_if "rados lspools | grep ^#{pool}$"
-    notifies :run, "bash[wait-for-pgs-creating]", :immediately
-  end
-  ruby_block "set-#{pool}-rados-pool-replicas" do
-    block do
-      replicas = [get_ceph_osd_nodes.length, node['bcpc']['ceph']['rgw']['replicas']].min
-      replicas = 1 if replicas < 1
-      %x[ceph osd pool set #{pool} size #{replicas}]
-    end
-    not_if {
-      replicas = [get_ceph_osd_nodes.length, node['bcpc']['ceph']['rgw']['replicas']].min
-      %x[ceph osd pool get #{pool} size].strip == "size: #{replicas}"
-    }
-  end
-end
+ruby_block "rados-pool-wrapper" do
+  block do
+    rgw_optimal_pg = optimal_pgs_per_node('rgw')
+    replicas = [[get_ceph_osd_nodes.length, node['bcpc']['ceph']['rgw']['replicas']].min, 1].max
 
-# check to see if we should up the number of pg's now for the core buckets pool
-(node['bcpc']['ceph']['pgp_auto_adjust'] ? %w{pg_num pgp_num} : %w{pg_num}).each do |pg|
-  ruby_block "update-rgw-buckets-#{pg}" do
-    block do
-      rgw_optimal_pg = optimal_pgs_per_node
-      %x[ceph osd pool set .rgw.buckets #{pg} #{rgw_optimal_pg}]
+    %w{.rgw .rgw.control .rgw.gc .rgw.root .users.uid .users.email .users .usage .log .intent-log .rgw.buckets .rgw.buckets.index .rgw.buckets.extra}.each do |pool|
+      bash "create-rados-pool-#{pool}" do
+        code <<-EOH
+          ceph osd pool create #{pool} #{rgw_optimal_pg}
+          ceph osd pool set #{pool} crush_ruleset #{rgw_rule}
+        EOH
+        not_if "rados lspools | grep ^#{pool}$"
+        notifies :run, "bash[wait-for-pgs-creating]", :immediately
+      end
+
+      bash "set-#{pool}-rados-pool-replicas" do
+        code "ceph osd pool set #{pool} size #{replicas}"
+        not_if {
+          size_cmd = Mixlib::ShellOut.new("ceph osd pool get #{pool} size").run_command
+          size_cmd.stdout.strip == "size: #{replicas}"
+        }
+      end
     end
-    only_if {
-      rgw_optimal_pg = optimal_pgs_per_node
-      %x[ceph osd pool get .rgw.buckets #{pg} | awk '{print $2}'].to_i < rgw_optimal_pg
-    }
-    notifies :run, "bash[wait-for-pgs-creating]", :immediately
+
+    # check to see if we should up the number of pg's now for the core buckets pool
+    (node['bcpc']['ceph']['pgp_auto_adjust'] ? %w{pg_num pgp_num} : %w{pg_num}).each do |pg|
+      bash "update-rgw-buckets-#{pg}" do
+        code "ceph osd pool set .rgw.buckets #{pg} #{rgw_optimal_pg}"
+        only_if {
+          cmd = Mixlib::ShellOut.new("ceph osd pool get .rgw.buckets #{pg} | awk '{print $2}'").run_command
+          cmd.stdout.to_i < rgw_optimal_pg
+        }
+        notifies :run, "bash[wait-for-pgs-creating]", :immediately
+      end
+    end
   end
 end
 
@@ -131,23 +131,27 @@ service "radosgw-all" do
 end
 
 ruby_block "initialize-radosgw-admin-user" do
-    block do
-        make_config('radosgw-admin-user', "radosgw")
-        make_config('radosgw-admin-access-key', secure_password_alphanum_upper(20))
-        make_config('radosgw-admin-secret-key', secure_password(40))
-        rgw_admin = JSON.parse(%x[radosgw-admin user create --display-name="Admin" --uid="radosgw" --access_key=#{get_config('radosgw-admin-access-key')} --secret=#{get_config('radosgw-admin-secret-key')}])
-    end
-    not_if "radosgw-admin user info --uid='radosgw'"
+  block do
+    make_config('radosgw-admin-user', "radosgw")
+    make_config('radosgw-admin-access-key', secure_password_alphanum_upper(20))
+    make_config('radosgw-admin-secret-key', secure_password(40))
+
+    cmd = Mixlib::ShellOut.new("radosgw-admin user create --display-name='Admin' --uid='radosgw' --access_key=#{get_config('radosgw-admin-access-key')} --secret=#{get_config('radosgw-admin-secret-key')}").run_command
+    cmd.error!
+  end
+  not_if "radosgw-admin user info --uid='radosgw'"
 end
 
 ruby_block "initialize-radosgw-test-user" do
-    block do
-        make_config('radosgw-test-user', "tester")
-        make_config('radosgw-test-access-key', secure_password_alphanum_upper(20))
-        make_config('radosgw-test-secret-key', secure_password(40))
-        rgw_admin = JSON.parse(%x[radosgw-admin user create --display-name="Tester" --uid="tester" --max-buckets=3 --access_key=#{get_config('radosgw-test-access-key')} --secret=#{get_config('radosgw-test-secret-key')} --caps="usage=read; user=read; bucket=read;" ])
-    end
-    not_if "radosgw-admin user info --uid='tester'"
+  block do
+    make_config('radosgw-test-user', "tester")
+    make_config('radosgw-test-access-key', secure_password_alphanum_upper(20))
+    make_config('radosgw-test-secret-key', secure_password(40))
+
+    cmd = Mixlib::ShellOut.new("radosgw-admin user create --display-name='Tester' --uid='tester' --max-buckets=3 --access_key=#{get_config('radosgw-test-access-key')} --secret=#{get_config('radosgw-test-secret-key')} --caps='usage=read; user=read; bucket=read;'").run_command
+    cmd.error!
+  end
+  not_if "radosgw-admin user info --uid='tester'"
 end
 
 template "/usr/local/bin/radosgw_check.py" do
