@@ -67,7 +67,7 @@ template "/etc/keystone/keystone.conf" do
     group "keystone"
     mode 00600
     variables(:servers => get_head_nodes)
-    notifies :restart, "service[apache2]", :delayed
+    notifies :restart, "service[apache2]", :immediately
 end
 
 template "/etc/keystone/default_catalog.templates" do
