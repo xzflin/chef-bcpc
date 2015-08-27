@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-
+import syslog
 import socket
 import time
 import novaclient
@@ -10,6 +10,7 @@ from novaclient.v1_1 import client
 
 class TestNovaCompute(object):
     def __init__(self, config):
+        self.start = time.time()
         self.config = config
 
         self.client  = client.Client(config["user"], config["password"],
@@ -22,8 +23,7 @@ class TestNovaCompute(object):
             self.config["timeout" ] = 60.0
 
     def _wait_for_statechange(self, server, target):
-        start = time.time()
-        while time.time() - start < self.config["timeout"]:
+        while time.time() - self.start < self.config["timeout"]:
             server.get()
             if str(server.status) == target:
                 return True
@@ -34,11 +34,19 @@ class TestNovaCompute(object):
     # Associate floating IP
     #
     def _associate_floating_ip(self, server):
-        f = self._get_floating_ip()
-        try:
-            self.client.servers.add_floating_ip(server, f.ip)
-        except novaclient.exceptions.NotFound as e:
-            raise Exception("Unable to associate floating IP")
+        while time.time() - self.start < self.config["timeout"]:
+            f = self._get_floating_ip()
+            try:
+                self.client.servers.add_floating_ip(server, f.ip)
+            except novaclient.exceptions.BadRequest as e:
+                # Log to track if race condition is fixed per PR #801
+                syslog.syslog(syslog.LOG_INFO, str(e) + '. Wait for a bit before retrying...')
+                time.sleep(2)
+            except novaclient.exceptions.NotFound as e:
+                raise Exception("Unable to associate floating IP")
+            else:
+                return True
+        return False
 
     def _get_floating_ip(self):
         floating_ips = self.client.floating_ips.list()
