@@ -36,10 +36,8 @@ default['bcpc']['ssl_intermediate_certificate'] = nil
 #
 ###########################################
 default['bcpc']['elasticsearch']['version'] = '1.5.1'
-default['bcpc']['ceph']['version'] = '0.94.2-1trusty'
-default['bcpc']['ceph']['version_number'] = '0.94.2'
-# Ceph.com version number '0.94.2-1trusty'
-# Ubuntu cloud version number '0.94.1-0ubuntu1~cloud0'
+default['bcpc']['ceph']['version'] = '0.94.3-1trusty'
+default['bcpc']['ceph']['version_number'] = '0.94.3'
 default['bcpc']['erlang']['version'] = '1:17.5.3'
 default['bcpc']['haproxy']['version'] = '1.5.14-1ppa~trusty'
 default['bcpc']['kibana']['version'] = '4.0.2'
