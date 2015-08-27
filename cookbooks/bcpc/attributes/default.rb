@@ -586,7 +586,7 @@ default['bcpc']['nova']['policy'] = {
   "compute:reboot" => "rule:admin_or_owner",
   "compute:delete" => "rule:admin_or_owner",
   "compute:unlock_override" => "rule:admin_api",
-  
+
   "compute:get_instance_metadata" => "rule:admin_or_owner",
   "compute:update_instance_metadata" => "rule:admin_or_owner",
   "compute:delete_instance_metadata" => "rule:admin_or_owner",
@@ -986,6 +986,7 @@ default['bcpc']['nova']['policy'] = {
 # Verbose logging (level INFO)
 default['bcpc']['cinder']['verbose'] = false
 default['bcpc']['cinder']['workers'] = 5
+default['bcpc']['cinder']['allow_az_fallback'] = true
 default['bcpc']['cinder']['quota'] = {
   "volumes" => 10,
   "quota_snapshots" => 10,
@@ -1370,14 +1371,14 @@ default['bcpc']['flavors'] = {
       "vcpus" => 1,
       "memory_mb" => 512,
       "disk_gb" => 1,
-      "ephemeral_gb" => 5,     
+      "ephemeral_gb" => 5,
       "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
     },
     "e1.small" => {
       "vcpus" => 1,
       "memory_mb" => 2048,
       "disk_gb" => 20,
-      "ephemeral_gb" => 20,     
+      "ephemeral_gb" => 20,
       "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
     },
     "e1.medium" => {
@@ -1391,21 +1392,21 @@ default['bcpc']['flavors'] = {
       "vcpus" => 4,
       "memory_mb" => 8192,
       "disk_gb" => 40,
-      "ephemeral_gb" => 80,    
+      "ephemeral_gb" => 80,
       "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
     },
     "e1.xlarge" => {
       "vcpus" => 8,
       "memory_mb" => 16384,
       "disk_gb" => 40,
-      "ephemeral_gb" => 160,   
+      "ephemeral_gb" => 160,
       "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
     },
     "e1.2xlarge" => {
       "vcpus" => 8,
       "memory_mb" => 32768,
       "disk_gb" => 40,
-      "ephemeral_gb" => 320,     
+      "ephemeral_gb" => 320,
       "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
     }
 }
