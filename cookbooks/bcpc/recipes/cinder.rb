@@ -42,6 +42,40 @@ service "cinder-api" do
     restart_command "service cinder-api restart; sleep 5"
 end
 
+#  _   _  ____ _  __   __  ____   _  _____ ____ _   _
+# | | | |/ ___| | \ \ / / |  _ \ / \|_   _/ ___| | | |
+# | | | | |  _| |  \ V /  | |_) / _ \ | || |   | |_| |
+# | |_| | |_| | |___| |   |  __/ ___ \| || |___|  _  |
+#  \___/ \____|_____|_|   |_| /_/   \_\_| \____|_| |_|
+# this patch resolves BCPC issue #798 - patch will be
+# upstreamed to OpenStack after adding unit tests
+#
+# patch should apply cleanly to both 2015.1.0 and 2015.1.1 (SHA checksums
+# are identical for both files modified by the patch between the two versions)
+cookbook_file "/tmp/cinder_availability_zone_fallback.patch" do
+    source "cinder_availability_zone_fallback.patch"
+    owner "root"
+    mode 00644
+end
+
+bash "patch-for-cinder-availability-zone-fallback" do
+    user "root"
+    code <<-EOH
+       cd /usr/lib/python2.7/dist-packages
+       patch -p1 < /tmp/cinder_availability_zone_fallback.patch
+       rv=$?
+       if [ $rv -ne 0 ]; then
+         echo "Error applying patch ($rv) - aborting!"
+         exit $rv
+       fi
+       cp /tmp/cinder_availability_zone_fallback.patch .
+    EOH
+    only_if "shasum /usr/lib/python2.7/dist-packages/cinder/common/config.py | grep -q '^96b5ea3694440ca5fcc3c7fdea5992209aa1f1ed' && shasum /usr/lib/python2.7/dist-packages/cinder/volume/flows/api/create_volume.py | grep -q '^a18858b74d8d0cf747377dd89f6643667d4ec0ae'"
+    notifies :restart, "service[cinder-api]", :immediately
+    notifies :restart, "service[cinder-volume]", :immediately
+    notifies :restart, "service[cinder-scheduler]", :immediately
+end
+
 template "/etc/cinder/cinder.conf" do
     source "cinder.conf.erb"
     owner "cinder"
