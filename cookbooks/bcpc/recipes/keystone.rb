@@ -43,6 +43,11 @@ package 'keystone' do
     action :upgrade
 end
 
+# needed to parse openstack json output
+package 'jq' do
+    action :upgrade
+end
+
 # do not run or try to start standalone keystone service since it is now served by WSGI
 service "keystone" do
     action [:disable, :stop]
@@ -62,7 +67,7 @@ template "/etc/keystone/keystone.conf" do
     group "keystone"
     mode 00600
     variables(:servers => get_head_nodes)
-    notifies :restart, "service[apache2]", :delayed
+    notifies :restart, "service[apache2]", :immediately
 end
 
 template "/etc/keystone/default_catalog.templates" do
@@ -190,7 +195,7 @@ bash "keystone-create-admin-tenant" do
     code <<-EOH
         . /root/adminrc
         . /root/keystonerc
-        keystone tenant-create --name "#{node['bcpc']['admin_tenant']}" --description "Admin services" 
+        keystone tenant-create --name "#{node['bcpc']['admin_tenant']}" --description "Admin services"
     EOH
     not_if ". /root/keystonerc; . /root/adminrc; keystone tenant-get '#{node['bcpc']['admin_tenant']}'"
 end
@@ -200,7 +205,7 @@ bash "keystone-create-admin-role" do
     code <<-EOH
         . /root/adminrc
         . /root/keystonerc
-        keystone role-create --name "#{node['bcpc']['admin_role']}" 
+        keystone role-create --name "#{node['bcpc']['admin_role']}"
     EOH
     not_if ". /root/keystonerc; . /root/adminrc; keystone role-get '#{node['bcpc']['admin_role']}'"
 end
@@ -211,7 +216,7 @@ bash "keystone-create-member-role" do
     code <<-EOH
         . /root/adminrc
         . /root/keystonerc
-        keystone role-create --name "#{node['bcpc']['member_role']}" 
+        keystone role-create --name "#{node['bcpc']['member_role']}"
     EOH
     not_if ". /root/keystonerc; . /root/adminrc; keystone role-get '#{node['bcpc']['member_role']}'"
 end
@@ -222,7 +227,204 @@ bash "keystone-create-admin-user-role" do
     code <<-EOH
         . /root/adminrc
         . /root/keystonerc
-        keystone user-role-add --user  "$OS_USERNAME"  --role "#{node['bcpc']['admin_role']}" --tenant "#{node['bcpc']['admin_tenant']}" 
+        keystone user-role-add --user  "$OS_USERNAME"  --role "#{node['bcpc']['admin_role']}" --tenant "#{node['bcpc']['admin_tenant']}"
     EOH
     not_if ". /root/keystonerc; . /root/adminrc; keystone user-role-list --user  $OS_USERNAME  --tenant '#{node['bcpc']['admin_tenant']}'   | grep '#{node['bcpc']['admin_role']}'"
+end
+
+ruby_block "keystone-create-identity-service" do
+  block do
+  %x[
+        export OS_TOKEN="#{get_config('keystone-admin-token')}";
+        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/";
+        openstack service create --name 'keystone' --description 'OpenStack Identity' identity;
+  ]
+  end
+  not_if { system "export OS_TOKEN=\"#{get_config('keystone-admin-token')}\";
+                   export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/\";
+                   openstack service list -f json | jq '.[] | .Type==\"identity\"' | grep '^true$'"
+  }
+end
+
+ruby_block "keystone-create-compute-service" do
+  block do
+  %x[
+        export OS_TOKEN="#{get_config('keystone-admin-token')}";
+        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/";
+        openstack service create --name 'Compute Service' --description 'OpenStack Compute Service' compute
+  ]
+  end
+  not_if { system "
+        export OS_TOKEN=\"#{get_config('keystone-admin-token')}\";
+        export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/\";
+        openstack service list -f json | jq '.[] | .Type==\"compute\"' | grep '^true$';" }
+end
+
+ruby_block "keystone-create-ec2-service" do
+  block do
+  %x[
+        export OS_TOKEN="#{get_config('keystone-admin-token')}";
+        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/";
+        openstack service create --name 'EC2 Service' --description 'OpenStack EC2 Service' ec2
+  ]
+  end
+  not_if { system "
+        export OS_TOKEN=\"#{get_config('keystone-admin-token')}\";
+        export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/\";
+        openstack service list -f json | jq '.[] | .Type==\"ec2\"' | grep '^true$';" }
+end
+
+ruby_block "keystone-create-volume-service" do
+  block do
+  %x[
+        export OS_TOKEN="#{get_config('keystone-admin-token')}";
+        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/";
+        openstack service create --name 'Volume Service' --description 'OpenStack Volume Service' volume
+  ]
+  end
+  not_if { system "
+        export OS_TOKEN=\"#{get_config('keystone-admin-token')}\";
+        export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/\";
+        openstack service list -f json | jq '.[] | .Type==\"volume\"' | grep '^true$';" }
+end
+
+ruby_block "keystone-create-volumeV2-service" do
+  block do
+  %x[
+        export OS_TOKEN="#{get_config('keystone-admin-token')}";
+        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/";
+        openstack service create --name 'cinderv2' --description 'OpenStack Volume Service V2' volumev2
+  ]
+  end
+  not_if { system "
+        export OS_TOKEN=\"#{get_config('keystone-admin-token')}\";
+        export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/\";
+        openstack service list -f json | jq '.[] | .Type==\"volumev2\"' | grep '^true$';" }
+end
+
+ruby_block "keystone-create-image-service" do
+  block do
+  %x[
+        export OS_TOKEN="#{get_config('keystone-admin-token')}";
+        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/";
+        openstack service create --name 'Image Service' --description 'OpenStack Image Service' image
+  ]
+  end
+  not_if { system "
+        export OS_TOKEN=\"#{get_config('keystone-admin-token')}\";
+        export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/\";
+        openstack service list -f json | jq '.[] | .Type==\"image\"' | grep '^true$';" }
+end
+
+ruby_block "keystone-create-identity-endpoint" do
+  block do
+  %x[
+        export OS_TOKEN="#{get_config('keystone-admin-token')}";
+        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/";
+        openstack endpoint create \
+            --region '#{node['bcpc']['region_name']}' \
+            --publicurl '#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:5000/v2.0' \
+            --adminurl '#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0' \
+            --internalurl '#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:5000/v2.0' \
+            identity;
+  ]
+  end
+  not_if { system "
+        export OS_TOKEN=\"#{get_config('keystone-admin-token')}\";
+        export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/\";
+        openstack endpoint list -f json | jq '.[] | .[\"Service Type\"]==\"identity\"' | grep '^true$';" }
+end
+
+ruby_block "keystone-create-compute-endpoint" do
+  block do
+  %x[
+        export OS_TOKEN="#{get_config('keystone-admin-token')}";
+        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/";
+        openstack endpoint create \
+            --region '#{node['bcpc']['region_name']}' \
+            --publicurl '#{node['bcpc']['protocol']['nova']}://openstack.#{node['bcpc']['cluster_domain']}:8774/v1.1/$(tenant_id)s' \
+            --adminurl '#{node['bcpc']['protocol']['nova']}://openstack.#{node['bcpc']['cluster_domain']}:8774/v1.1/$(tenant_id)s' \
+            --internalurl '#{node['bcpc']['protocol']['nova']}://openstack.#{node['bcpc']['cluster_domain']}:8774/v1.1/$(tenant_id)s' \
+            compute;
+  ]
+  end
+  not_if { system "
+        export OS_TOKEN=\"#{get_config('keystone-admin-token')}\";
+        export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/\";
+        openstack endpoint list -f json | jq '.[] | .[\"Service Type\"]==\"compute\"' | grep '^true$';" }
+end
+
+ruby_block "keystone-create-volume-endpoint" do
+  block do
+  %x[
+        export OS_TOKEN="#{get_config('keystone-admin-token')}";
+        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/";
+        openstack endpoint create \
+            --region '#{node['bcpc']['region_name']}' \
+            --publicurl '#{node['bcpc']['protocol']['cinder']}://openstack.#{node['bcpc']['cluster_domain']}:8776/v1/$(tenant_id)s' \
+            --adminurl '#{node['bcpc']['protocol']['cinder']}://openstack.#{node['bcpc']['cluster_domain']}:8776/v1/$(tenant_id)s' \
+            --internalurl '#{node['bcpc']['protocol']['cinder']}://openstack.#{node['bcpc']['cluster_domain']}:8776/v1/$(tenant_id)s' \
+            volume;
+  ]
+  end
+  not_if { system "
+        export OS_TOKEN=\"#{get_config('keystone-admin-token')}\";
+        export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/\";
+        openstack endpoint list -f json | jq '.[] | .[\"Service Type\"]==\"volume\"' | grep '^true$';" }
+end
+
+ruby_block "keystone-create-volumeV2-endpoint" do
+  block do
+  %x[
+        export OS_TOKEN="#{get_config('keystone-admin-token')}";
+        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/";
+        openstack endpoint create \
+            --region '#{node['bcpc']['region_name']}' \
+            --publicurl '#{node['bcpc']['protocol']['cinder']}://openstack.#{node['bcpc']['cluster_domain']}:8776/v2/$(tenant_id)s' \
+            --adminurl '#{node['bcpc']['protocol']['cinder']}://openstack.#{node['bcpc']['cluster_domain']}:8776/v2/$(tenant_id)s' \
+            --internalurl '#{node['bcpc']['protocol']['cinder']}://openstack.#{node['bcpc']['cluster_domain']}:8776/v2/$(tenant_id)s' \
+            volumev2;
+  ]
+  end
+  not_if { system "
+        export OS_TOKEN=\"#{get_config('keystone-admin-token')}\";
+        export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/\";
+        openstack endpoint list -f json | jq '.[] | .[\"Service Type\"]==\"volumev2\"' | grep '^true$';" }
+end
+
+ruby_block "keystone-create-image-endpoint" do
+  block do
+  %x[
+        export OS_TOKEN="#{get_config('keystone-admin-token')}";
+        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/";
+        openstack endpoint create \
+            --region '#{node['bcpc']['region_name']}' \
+            --publicurl '#{node['bcpc']['protocol']['glance']}://openstack.#{node['bcpc']['cluster_domain']}:9292/v2' \
+            --adminurl '#{node['bcpc']['protocol']['glance']}://openstack.#{node['bcpc']['cluster_domain']}:9292/v2' \
+            --internalurl '#{node['bcpc']['protocol']['glance']}://openstack.#{node['bcpc']['cluster_domain']}:9292/v2' \
+            image;
+  ]
+  end
+  not_if { system "
+        export OS_TOKEN=\"#{get_config('keystone-admin-token')}\";
+        export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/\";
+        openstack endpoint list -f json | jq '.[] | .[\"Service Type\"]==\"image\"' | grep '^true$';" }
+end
+
+ruby_block "keystone-create-ec2-endpoint" do
+  block do
+  %x[
+        export OS_TOKEN="#{get_config('keystone-admin-token')}";
+        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/";
+        openstack endpoint create \
+            --region '#{node['bcpc']['region_name']}' \
+            --publicurl '#{node['bcpc']['protocol']['nova']}://openstack.#{node['bcpc']['cluster_domain']}:8773/services/Cloud' \
+            --adminurl '#{node['bcpc']['protocol']['nova']}://openstack.#{node['bcpc']['cluster_domain']}:8773/services/Admin' \
+            --internalurl '#{node['bcpc']['protocol']['nova']}://openstack.#{node['bcpc']['cluster_domain']}:8773/services/Cloud' \
+            ec2;
+  ]
+  end
+  not_if { system "export OS_TOKEN=\"#{get_config('keystone-admin-token')}\";
+        export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/\";
+        openstack endpoint list -f json | jq '.[] | .[\"Service Type\"]==\"ec2\"' | grep '^true$';" }
 end
