@@ -203,12 +203,14 @@ end
       :reverse_fixed_zone  => (node['bcpc']['fixed']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['fixed']['cidr'])),
       :reverse_float_zone  => (node['bcpc']['floating']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['floating']['cidr'])),
     })
+    notifies :run, 'ruby_block[powerdns-load-float-records]', :immediately
   end
 
   ruby_block "powerdns-load-float-records" do
     block do
       system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot #{node['bcpc']['dbname']['pdns']} < #{float_records_file}"
     end
+    action :nothing
   end
 
   # these files are added by the pdns-server package and will conflict with
