@@ -76,6 +76,25 @@ bash "patch-for-cinder-availability-zone-fallback" do
     notifies :restart, "service[cinder-scheduler]", :immediately
 end
 
+# Deal with quota update commands
+%w{ fix-quota-class-update.patch fix-quota-class-update.patch.SHASUMS }.each do |fname|
+    cookbook_file "#{Chef::Config[:file_cache_path]}/#{fname}" do
+      source fname
+      owner "root"
+      mode 0644
+    end
+end
+
+bcpc_patch "fix-quota-class-update" do
+    patch_file              'fix-quota-class-update.patch'
+    patch_root_dir          '/usr/lib/python2.7/dist-packages'
+    shasums_before_apply    'fix-quota-class-update.patch.BEFORE.SHASUMS'
+    shasums_after_apply     'fix-quota-class-update.patch.AFTER.SHASUMS'
+    notifies :restart, "service[cinder-api]", :immediately
+    notifies :restart, "service[cinder-volume]", :immediately
+    notifies :restart, "service[cinder-scheduler]", :immediately
+end
+
 template "/etc/cinder/cinder.conf" do
     source "cinder.conf.erb"
     owner "cinder"
