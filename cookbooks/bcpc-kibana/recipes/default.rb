@@ -18,18 +18,17 @@
 #
 
 if node['bcpc']['enabled']['logging']
-    pkg = "kibana_#{node['bcpc']['kibana']['version']}_amd64.deb"
-
-    cookbook_file "/tmp/#{pkg}" do
-        source pkg
-        cookbook "bcpc-binary-files"
-        owner "root"
-        mode 00444
+    apt_repository 'kibana' do
+        uri node['bcpc']['repos']['kibana']
+        distribution 'stable'
+        components ['main']
+        arch 'amd64'
+        key 'elasticsearch.key'
     end
 
-    dpkg_package "kibana" do
-        source "/tmp/#{pkg}"
-        action :install
+    package 'kibana' do
+        action :upgrade
+        options '-o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"'
     end
 
     template "/opt/kibana/config/kibana.yml" do
@@ -39,18 +38,17 @@ if node['bcpc']['enabled']['logging']
         mode 00644
     end
 
-    cookbook_file "kibana-upstart.conf" do
-        action :create_if_missing
-        mode 0644
-        path "/etc/init/kibana.conf"
-        owner "root"
-        group "root"
-        source "kibana-upstart.conf"
-    end
-
     service "kibana" do
-        provider Chef::Provider::Service::Upstart
+        provider Chef::Provider::Service::Init::Debian
         supports :status => true, :restart => true, :reload => false
         action [:enable, :start]
+    end
+
+    bash 'remove-old-kibana-upstart' do
+        code <<-EOH
+            stop kibana
+            rm -f /etc/init/kibana.conf
+        EOH
+        only_if 'test -f /etc/init/kibana.conf'
     end
 end

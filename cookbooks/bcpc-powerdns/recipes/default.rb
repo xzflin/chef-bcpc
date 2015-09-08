@@ -205,12 +205,14 @@ if node['bcpc']['enabled']['dns']
         }
       }
     )
+    notifies :run, 'ruby_block[powerdns-load-float-records]', :immediately
   end
 
   ruby_block "powerdns-load-float-records" do
     block do
       system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot #{node['bcpc']['dbname']['pdns']} < #{float_records_file}"
     end
+    action :nothing
   end
 
   # these files are added by the pdns-server package and will conflict with

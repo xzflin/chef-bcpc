@@ -65,7 +65,7 @@
 [client.radosgw.gateway]
     host = <%=node['hostname']%>
     keyring = /var/lib/ceph/radosgw/$cluster-$id/keyring
-    log file = /var/log/ceph/radosgw.log
+    log file = /var/log/radosgw/radosgw.log
     rgw data = /var/lib/ceph/radosgw/$cluser-$id
     rgw enable ops log = false
     rgw enable usage log = false

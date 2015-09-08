@@ -36,10 +36,8 @@ default['bcpc']['ssl_intermediate_certificate'] = nil
 #
 ###########################################
 default['bcpc']['elasticsearch']['version'] = '1.5.1'
-default['bcpc']['ceph']['version'] = '0.94.2-1trusty'
-default['bcpc']['ceph']['version_number'] = '0.94.2'
-# Ceph.com version number '0.94.2-1trusty'
-# Ubuntu cloud version number '0.94.1-0ubuntu1~cloud0'
+default['bcpc']['ceph']['version'] = '0.94.3-1trusty'
+default['bcpc']['ceph']['version_number'] = '0.94.3'
 default['bcpc']['erlang']['version'] = '1:17.5.3'
 default['bcpc']['haproxy']['version'] = '1.5.14-1ppa~trusty'
 default['bcpc']['kibana']['version'] = '4.0.2'
@@ -207,6 +205,7 @@ default['bcpc']['repos']['hwraid'] = "http://hwraid.le-vert.net/ubuntu"
 default['bcpc']['repos']['fluentd'] = "http://packages.treasure-data.com/2/ubuntu/#{node['lsb']['codename']}"
 default['bcpc']['repos']['gridcentric'] = "http://downloads.gridcentric.com/packages/%s/%s/ubuntu"
 default['bcpc']['repos']['elasticsearch'] = "http://packages.elasticsearch.org/elasticsearch/1.5/debian"
+default['bcpc']['repos']['kibana'] = "http://packages.elasticsearch.org/kibana/4.1/debian"
 default['bcpc']['repos']['erlang'] = "http://packages.erlang-solutions.com/ubuntu"
 default['bcpc']['repos']['ceph'] = "http://ceph.com/debian-hammer"
 default['bcpc']['repos']['zabbix'] = "http://repo.zabbix.com/zabbix/2.4/ubuntu"
@@ -306,7 +305,7 @@ default['bcpc']['keystone']['wait_for_keystone_timeout'] = 120
 # The driver section below allows either 'sql' or 'ldap' (or 'templated' for catalog)
 # Note that not all drivers may support SQL/LDAP, only tinker if you know what you're getting into
 default['bcpc']['keystone']['drivers']['assignment'] = 'sql'
-default['bcpc']['keystone']['drivers']['catalog'] = 'templated'
+default['bcpc']['keystone']['drivers']['catalog'] = 'sql'
 default['bcpc']['keystone']['drivers']['credential'] = 'sql'
 default['bcpc']['keystone']['drivers']['domain_config'] = 'sql'
 default['bcpc']['keystone']['drivers']['endpoint_filter'] = 'sql'
@@ -986,6 +985,7 @@ default['bcpc']['nova']['policy'] = {
 # Verbose logging (level INFO)
 default['bcpc']['cinder']['verbose'] = false
 default['bcpc']['cinder']['workers'] = 5
+default['bcpc']['cinder']['allow_az_fallback'] = true
 default['bcpc']['cinder']['quota'] = {
   "volumes" => 10,
   "quota_snapshots" => 10,
@@ -1377,7 +1377,7 @@ default['bcpc']['flavors'] = {
       "vcpus" => 1,
       "memory_mb" => 2048,
       "disk_gb" => 20,
-      "ephemeral_gb" => 20,     
+      "ephemeral_gb" => 20,
       "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
     },
     "e1.medium" => {
@@ -1391,21 +1391,21 @@ default['bcpc']['flavors'] = {
       "vcpus" => 4,
       "memory_mb" => 8192,
       "disk_gb" => 40,
-      "ephemeral_gb" => 80,    
+      "ephemeral_gb" => 80,
       "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
     },
     "e1.xlarge" => {
       "vcpus" => 8,
       "memory_mb" => 16384,
       "disk_gb" => 40,
-      "ephemeral_gb" => 160,   
+      "ephemeral_gb" => 160,
       "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
     },
     "e1.2xlarge" => {
       "vcpus" => 8,
       "memory_mb" => 32768,
       "disk_gb" => 40,
-      "ephemeral_gb" => 320,     
+      "ephemeral_gb" => 320,
       "extra_specs" => { "aggregate_instance_extra_specs:ephemeral_compute" => "yes"}
     }
 }
