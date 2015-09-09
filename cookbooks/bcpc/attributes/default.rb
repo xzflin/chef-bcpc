@@ -74,6 +74,8 @@ default['bcpc']['enabled']['radosgw_cache'] = false
 default['bcpc']['enabled']['tpm'] = false
 # This will block VMs from talking to the management network
 default['bcpc']['enabled']['secure_fixed_networks'] = true
+# Toggle to enable/disable swap memory
+default['bcpc']['enabled']['swap'] = true
 
 # If radosgw_cache is enabled, default to 20MB max file size
 default['bcpc']['radosgw']['cache_max_file_size'] = 20000000
