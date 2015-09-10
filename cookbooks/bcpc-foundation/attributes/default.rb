@@ -148,6 +148,8 @@ default['bcpc']['ceph']['mon_niceness'] = -10
 # if changing this setting, you will need to reset Mnesia
 # on all RabbitMQ nodes in the cluster
 default['bcpc']['rabbitmq']['durable_queues'] = true
+# ulimits for RabbitMQ server
+default['bcpc']['rabbitmq']['ulimit']['nofile'] = 4096
 
 ###########################################
 #

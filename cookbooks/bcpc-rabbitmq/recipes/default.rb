@@ -110,6 +110,14 @@ directory "/etc/rabbitmq/rabbitmq.conf.d" do
     group "root"
 end
 
+template "/etc/default/rabbitmq-server" do
+    source "rabbitmq-server-default.erb"
+    mode 00644
+    owner "root"
+    group "root"
+    notifies :restart, "service[rabbitmq-server]", :delayed
+end
+
 template "/etc/rabbitmq/rabbitmq.conf.d/bcpc.conf" do
     source "rabbitmq-bcpc.conf.erb"
     mode 00644

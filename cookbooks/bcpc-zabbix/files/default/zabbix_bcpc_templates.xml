@@ -4759,7 +4759,7 @@
             <dependencies/>
         </trigger>
         <trigger>
-            <expression>{BCPC-Headnode:rabbitmq.fd_usage.last()}&gt;700</expression>
+            <expression>{BCPC-Headnode:rabbitmq.fd_usage.last()}&gt;3000</expression>
             <name>RabbitMQ File Descriptor Usage Exceeds Threshold</name>
             <url/>
             <status>0</status>
