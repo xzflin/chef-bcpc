@@ -25,11 +25,34 @@ def load_bash_env_file(filename):
         envmap[k] = v
     return envmap
 
-def create_tenant(ks=None):
+def create_tenant(ks=None, **tenant_info):
     if ks is None:
         return None
-    # Create the tenancy
-    project = ks.tenants.create(**tenant_info)
+    return ks.tenants.create(**tenant_info)
+
+def create_user(ks=None, **user_info):
+    if ks is None:
+        return None
+    return ks.users.create(**user_info)
+
+
+# TODO: Use sessions. See: http://docs.openstack.org/developer/python-keystoneclient/using-sessions.html
+if __name__ == '__main__':
+    import os
+    import pprint
+    pp = pprint.PrettyPrinter(indent=2)
+
+    env = load_bash_env_file(os.sep.join([os.environ['HOME'], 'adminrc']))
+    os.environ.update(env)
+    ks = ksclient.Client(**credentials.get_keystone_creds())
+
+    # Create the tenant
+    tenant_info = {u'tenant_name': u'my-project',
+                   u'description': '',
+                   u'enabled': True}
+
+    project = create_tenant(ks, **tenant_info)
+
     # Create the user, role, and associate
     user_info = {u'name': u'someuser',
                  u'password': u'foobar',
@@ -37,35 +60,24 @@ def create_tenant(ks=None):
                  u'email': u'someuser@email.com',
                  u'enabled': True}
 
-    user = ks.users.create(**user_info)
-    print project.list_users()
+    user = create_user(ks, **user_info)
 
+    # Switch to new creds
+    # Authenticate as the new user and launch instance
+    os.environ['OS_TENANT_NAME'] = project.name
+    os.environ['OS_USERNAME'] = user.name
+    os.environ['OS_PASSWORD'] = user_info['password']
+    creds = credentials.get_nova_creds()
 
-if __name__ == '__main__':
-    import os
-    env = load_bash_env_file(os.sep.join([os.environ['HOME'], 'adminrc']))
-    os.environ.update(env)
+    nc = nclient.Client(**creds)
 
-    tenant_info = {u'tenant_name': u'my-project',
-                   u'description': '',
-                   u'enabled': True}
-
-    ks = ksclient.Client(**credentials.get_keystone_creds())
-
-    # Authenticate as the user and launch instance
-    nc = nclient.Client(**credentials.get_nova_creds())
     params = {u'minDisk': 0, u'minRam': 0}
     img = nc.images.find(**params)
-#    pp.pprint(img)
-#    for img in nc.images.list():
-#        pp.pprint(img.__dict__)
     flavor = nc.flavors.find(name=u'm1.tiny')
     instance_params = {u'name': u'test',
                     u'image': img,
                     u'flavor': flavor}
     instance = nc.servers.create(**instance_params)
-    import pprint
-    pp = pprint.PrettyPrinter(indent=2)
 
     status = instance.status
     while status == 'BUILD':
@@ -75,4 +87,8 @@ if __name__ == '__main__':
     if status != 'ACTIVE':
         print>>sys.stderr,'Something went wrong with instance %s' % instance.id
         sys.exit(-1)
-    pp.pprint(instance.__dict__)
+    pp.pprint(instance._info)
+
+    # Now delete the tenant
+    # N.B. - This uses original admin creds
+    ks.tenants.delete(project.id)
