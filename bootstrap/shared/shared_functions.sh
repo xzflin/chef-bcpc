@@ -4,7 +4,7 @@
 # via absolute paths.
 REPO_ROOT=$(git rev-parse --show-toplevel)
 
-if [[ $BOOTSTRAP_METHOD == "vagrant" ]]; then 
+if [[ $BOOTSTRAP_METHOD =~ ^vagrant ]]; then 
   do_on_node() {
     NODE=$1
     shift
