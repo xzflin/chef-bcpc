@@ -63,12 +63,11 @@
     Alias /elasticsearch /var/spool/apt-mirror/mirror/packages.elasticsearch.org/elasticsearch/<%=@node['bcpc']['mirror']['elasticsearch-dist']%>/debian
     Alias /fluentd /var/spool/apt-mirror/mirror/packages.treasure-data.com/2/ubuntu/trusty
     Alias /hwraid /var/spool/apt-mirror/mirror/hwraid.le-vert.net/ubuntu
+    Alias /kibana /var/spool/apt-mirror/mirror/packages.elasticsearch.org/kibana/<%=@node['bcpc']['mirror']['kibana-dist']%>/debian
     Alias /percona /var/spool/apt-mirror/mirror/repo.percona.com/apt
     Alias /ubuntu-cloud /var/spool/apt-mirror/mirror/ubuntu-cloud.archive.canonical.com/ubuntu
     Alias /rabbitmq /var/spool/apt-mirror/mirror/www.rabbitmq.com/debian
     Alias /ubuntu /var/spool/apt-mirror/mirror/<%=@node['bcpc']['mirror']['ubuntu']%>
     Alias /launchpad /var/spool/apt-mirror/mirror/ppa.launchpad.net
-    Alias /cassandra /var/spool/apt-mirror/mirror/www.apache.org/dist/cassandra/debian
-    Alias /hdp /var/spool/apt-mirror/mirror/public-repo-1.hortonworks.com/HDP/ubuntu12/2.x
-    Alias /hdp-utils /var/spool/apt-mirror/mirror/public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.16/repos/ubuntu12
+    Alias /zabbix /var/spool/apt-mirror/mirror/repo.zabbix.com/zabbix/2.4/ubuntu
 </VirtualHost>
