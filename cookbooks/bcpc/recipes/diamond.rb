@@ -81,6 +81,15 @@ if node['bcpc']['enabled']['metrics'] then
         notifies :restart, "service[diamond]", :delayed
     end
 
+    template "/etc/diamond/collectors/ElasticSearchCollector.conf" do
+        source "diamond-collector-elasticsearch.conf.erb"
+        owner "diamond"
+        group "root"
+        mode 00600
+        notifies :restart, "service[diamond]", :delayed
+        only_if "test -f /etc/init.d/elasticsearch"
+    end
+
     service "diamond" do
         action [:enable, :start]
     end
