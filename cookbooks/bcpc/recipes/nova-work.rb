@@ -165,7 +165,7 @@ template "/etc/ceph/ceph.client.cinder.keyring" do
   source "ceph-client-cinder-keyring.erb"
   mode "00644"
 end
-  
+
 ruby_block 'load-virsh-keys' do
     block do
         %x[ CINDER_KEY=`ceph --name mon. --keyring /etc/ceph/ceph.mon.keyring auth get-or-create-key client.cinder`
@@ -203,7 +203,7 @@ end
 service "apparmor" do
   action :nothing
 end
-  
+
 template "/etc/apparmor.d/abstractions/libvirt-qemu" do
   source "apparmor-libvirt-qemu.erb"
   notifies :restart, "service[libvirt-bin]", :delayed
@@ -239,7 +239,7 @@ cookbook_file "/tmp/nova_api_metadata_base.patch" do
     source "nova_api_metadata_base.patch"
     owner "root"
     mode 0644
-end 
+end
 
 bash "patch-for-ip-hostnames-metadata" do
     user "root"
@@ -256,13 +256,13 @@ bash "patch-for-ip-hostnames-metadata" do
     EOH
     not_if "grep -q 'THIS FILE PATCHED BY BCPC' /usr/lib/python2.7/dist-packages/nova/api/metadata/base.py"
     notifies :restart, "service[nova-api]", :immediately
-end 
+end
 
 cookbook_file "/tmp/nova_network_linux_net.patch" do
     source "nova_network_linux_net.patch"
     owner "root"
     mode 0644
-end 
+end
 
 bash "patch-for-ip-hostnames-networking" do
     user "root"
@@ -280,5 +280,14 @@ bash "patch-for-ip-hostnames-networking" do
     not_if "grep -q 'THIS FILE PATCHED BY BCPC' /usr/lib/python2.7/dist-packages/nova/network/linux_net.py"
     notifies :restart, "service[nova-compute]", :immediately
     notifies :restart, "service[nova-network]", :immediately
-end 
+end
 
+# this patch patches Nova to work correctly if you attempt to boot an instance from
+# a root volume larger than the root volume specified by the flavor
+bcpc_patch "nova-volume-boot-size" do
+  patch_file           'nova-volume-boot-size.patch'
+  patch_root_dir       '/usr/lib/python2.7/dist-packages'
+  shasums_before_apply 'nova-volume-boot-size-BEFORE.SHASUMS'
+  shasums_after_apply  'nova-volume-boot-size-AFTER.SHASUMS'
+  notifies :restart, 'service[nova-api]', :immediately
+end
