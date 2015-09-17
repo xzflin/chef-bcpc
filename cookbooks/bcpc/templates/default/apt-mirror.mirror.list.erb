@@ -34,8 +34,8 @@ deb http://<%=@node['bcpc']['mirror']['ubuntu']%> <%= @distro %><%= @repo %> mai
 <% end %>
 
 <% for @ceph_ver in @node['bcpc']['mirror']['ceph-dist'] %>
-deb http://ceph.com/debian-<%= @ceph_ver %> <%= @distro %> main
-deb-i386 http://ceph.com/debian-<%= @ceph_ver %> <%= @distro %> main
+deb http://download.ceph.com/debian-<%= @ceph_ver %> <%= @distro %> main
+deb-i386 http://download.ceph.com/debian-<%= @ceph_ver %> <%= @distro %> main
 <% end %>
 
 # no trusty packages yet (20140529)
