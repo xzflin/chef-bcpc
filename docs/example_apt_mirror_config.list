@@ -50,9 +50,9 @@ deb-i386 http://mirror.pnl.gov/ubuntu/ trusty-backports main restricted universe
 clean http://mirror.pnl.gov/ubuntu/
 
 # ceph repository in BCPC
-deb http://www.ceph.com/debian-hammer trusty main
-deb-i386 http://www.ceph.com/debian-hammer trusty main
-clean http://www.ceph.com/debian-hammer
+deb http://download.ceph.com/debian-hammer trusty main
+deb-i386 http://download.ceph.com/debian-hammer trusty main
+clean http://download.ceph.com/debian-hammer
 
 # mysql repository in BCPC
 deb http://repo.percona.com/apt trusty main
