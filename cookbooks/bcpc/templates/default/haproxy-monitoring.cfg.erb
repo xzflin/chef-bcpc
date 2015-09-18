@@ -84,7 +84,7 @@ backend kibana-backend
   option httpchk HEAD /elasticsearch/ HTTP/1.1\r\nHost: <%=node['bcpc']['monitoring']['vip']%>
   http-check expect status 200
   acl AuthOkay_kibana http_auth(admins)
-  http-request auth realm <%= "monitoring.openstack.#{node['bcpc']['domain_name']}" %> if !AuthOkay_kibana
+  http-request auth realm <%= node['bcpc']['kibana']['fqdn'] %> if !AuthOkay_kibana
   reqrep ^([^\ :]*)\ /kibana/(.*) \1\ /\2
 <% @servers.each do |server| -%>
   <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:5601 check inter 5s rise 1 fall 1" %>
