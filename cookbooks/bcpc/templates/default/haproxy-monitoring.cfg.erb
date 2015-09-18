@@ -31,6 +31,9 @@ defaults
   timeout client 30m
   timeout server 30m
 
+userlist admins
+  user <%= @monitoring_admin_username %> password <%= salt=secure_password_alphanum_upper(2); @monitoring_admin_password.crypt('$6$'+salt) %>
+
 listen mysql-galera <%=node['bcpc']['monitoring']['vip']%>:3306
   timeout client 24h
   timeout server 24h
@@ -80,6 +83,8 @@ backend kibana-backend
   balance source
   option httpchk HEAD /elasticsearch/ HTTP/1.1\r\nHost: <%=node['bcpc']['monitoring']['vip']%>
   http-check expect status 200
+  acl AuthOkay_kibana http_auth(admins)
+  http-request auth realm <%= node['bcpc']['kibana']['fqdn'] %> if !AuthOkay_kibana
   reqrep ^([^\ :]*)\ /kibana/(.*) \1\ /\2
 <% @servers.each do |server| -%>
   <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:5601 check inter 5s rise 1 fall 1" %>
