@@ -29,7 +29,7 @@ def stage_file(file_to_stage, file_cookbook)
 
   Chef::Log.debug("creating #{path}")
   @file_patch_path = Chef::Resource::CookbookFile.new(path, run_context)
-  @file_patch_path.source(patch_file)
+  @file_patch_path.source(file_to_stage)
   @file_patch_path.owner('root')
   @file_patch_path.mode(00644)
   @file_patch_path.cookbook(cookbook)
