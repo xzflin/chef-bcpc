@@ -8,6 +8,7 @@
       "recipe[bcpc::cobbler]",
       "recipe[bcpc::bootstrap]",
       "recipe[bcpc::ufw]",
+      "recipe[bcpc::backup-cluster]",
       "recipe[bcpc::rally]"
     ],
     "description": "A bootstrap node in a BCPC cluster",
