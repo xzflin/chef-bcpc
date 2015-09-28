@@ -32,7 +32,7 @@ defaults
   timeout server 30m
 
 userlist admins
-  user <%= @monitoring_admin_username %> password <%= salt=secure_password_alphanum_upper(2); @monitoring_admin_password.crypt('$6$'+salt) %>
+  user <%= @monitoring_admin_username %> password <%= @monitoring_admin_password_hash %>
 
 listen mysql-galera <%=node['bcpc']['monitoring']['vip']%>:3306
   timeout client 24h
