@@ -63,7 +63,7 @@ do_on_node bootstrap "sudo apt-get update \
 
 # upload all cookbooks, roles and our chosen environment to the Chef server
 # (cookbook upload uses the cookbook_path set when configuring knife on the bootstrap node)
-do_on_node bootstrap "$KNIFE cookbook upload apt bcpc chef-client cron hostsfile logrotate ntp ubuntu yum \
+do_on_node bootstrap "$KNIFE cookbook upload -a \
   && cd \$HOME/chef-bcpc/roles && $KNIFE role from file *.json \
   && cd \$HOME/chef-bcpc/environments && $KNIFE environment from file $BOOTSTRAP_CHEF_ENV.json"
 
