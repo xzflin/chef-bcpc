@@ -60,14 +60,15 @@ unless ENV['BOOTSTRAP_ADDITIONAL_CACERTS_DIR'].nil? or ENV['BOOTSTRAP_ADDITIONAL
       unless f.end_with? '.crt'
         fail "All files in #{ENV['BOOTSTRAP_ADDITIONAL_CACERTS_DIR']} must end in .crt due to update-ca-certificates restrictions."
       end
-      cert_raw = File.read(File.join(ENV['BOOTSTRAP_ADDITIONAL_CACERTS_DIR'], f))
+      # read in the certificate and normalize DOS line endings to UNIX
+      cert_raw = File.read(File.join(ENV['BOOTSTRAP_ADDITIONAL_CACERTS_DIR'], f)).gsub(/\r\n/, "\n")
       if cert_raw.scan('-----BEGIN CERTIFICATE-----').length > 1
         fail "Multiple certificates detected in #{File.join(ENV['BOOTSTRAP_ADDITIONAL_CACERTS_DIR'], f)}, please split them into separate certificates."
       end
       cert = OpenSSL::X509::Certificate.new(cert_raw) # test that the cert is valid
       dest_cert_path = File.join('/usr/local/share/ca-certificates', f)
       $update_ca_certificates_script << <<-EOH
-        echo -e "#{cert_raw}" > #{dest_cert_path}
+        echo -ne "#{cert_raw}" > #{dest_cert_path}
       EOH
     rescue OpenSSL::X509::CertificateError
       fail "Certificate #{File.join(ENV['BOOTSTRAP_ADDITIONAL_CACERTS_DIR'], f)} is not a valid PEM certificate, aborting."
