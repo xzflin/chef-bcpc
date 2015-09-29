@@ -151,11 +151,19 @@ EOH
 # (repartionining /dev/sda would be a dreadful chore)
 $add_swap_script = <<-EOH
   #!/bin/bash
+  swap_path='/swap'
+  # This could be a re-provision
+  if grep -w "^${swap_path}" /proc/swaps ; then
+    swapoff "${swap_path}"
+  fi
   fallocate -l 8192M /swap
   chmod 600 /swap
-  mkswap /swap
-  swapon /swap
-  echo '/swap none swap defaults 0 0' | tee -a /etc/fstab
+  mkswap -f "${swap_path}"
+  /bin/sync
+  swapon "${swap_path}"
+  if ! grep -w "^${swap_path}" /etc/fstab ; then
+    echo "${swap_path} none swap defaults 0 0" | tee -a /etc/fstab
+  fi
 EOH
 
 Vagrant.configure("2") do |config|
