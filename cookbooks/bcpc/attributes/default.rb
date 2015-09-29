@@ -1323,6 +1323,9 @@ default['bcpc']['diamond']['collectors']['rabbitmq']['queues'] = nil
 default['bcpc']['diamond']['collectors']['rabbitmq']['queues_ignored'] = '.*'
 # List of vhosts to report on. If nil, report none.
 default['bcpc']['diamond']['collectors']['rabbitmq']['vhosts'] = nil
+# Ceph Collector parameters
+default['bcpc']['diamond']['collectors']['CephCollector']['metrics_whitelist'] = "ceph.mon.#{node['hostname']}.cluster.*"
+
 
 ###########################################
 #
