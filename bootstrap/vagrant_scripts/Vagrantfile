@@ -68,7 +68,7 @@ unless ENV['BOOTSTRAP_ADDITIONAL_CACERTS_DIR'].nil? or ENV['BOOTSTRAP_ADDITIONAL
       cert = OpenSSL::X509::Certificate.new(cert_raw) # test that the cert is valid
       dest_cert_path = File.join('/usr/local/share/ca-certificates', f)
       $update_ca_certificates_script << <<-EOH
-        echo -e "#{cert_raw}" > #{dest_cert_path}
+        echo -ne "#{cert_raw}" > #{dest_cert_path}
       EOH
     rescue OpenSSL::X509::CertificateError
       fail "Certificate #{File.join(ENV['BOOTSTRAP_ADDITIONAL_CACERTS_DIR'], f)} is not a valid PEM certificate, aborting."
