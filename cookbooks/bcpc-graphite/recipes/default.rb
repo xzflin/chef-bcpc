@@ -44,7 +44,7 @@ if node['bcpc']['enabled']['metrics']
         end
     end
 
-    %w{python-pip python-cairo python-django python-django-tagging python-ldap python-twisted python-memcache memcached python-mysqldb}.each do |pkg|
+    %w{python-pip python-cairo python-django python-django-tagging python-ldap python-twisted python-memcache memcached python-mysqldb python-tz}.each do |pkg|
         package pkg do
             action :upgrade
         end

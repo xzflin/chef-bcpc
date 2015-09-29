@@ -55,6 +55,12 @@ bash "rally-db-recreate" do
     EOH
 end
 
+# Also required is a hostsfile (or DNS) entry for API endpoint hostname
+hostsfile_entry "#{node['bcpc']['management']['vip']}" do
+  hostname "openstack.#{node['bcpc']['cluster_domain']}"
+  action :create_if_missing
+end
+
 # (3) - Deployment Configuration
 # This step is very important since it reads (can also use environment variables) the json file that was
 # created in an earlier part of this recipe.

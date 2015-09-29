@@ -1,0 +1,78 @@
+From 9db3430ccd58370bf5c699f80c98f16e97df1877 Mon Sep 17 00:00:00 2001
+From: liyingjun <yingjun.li@kylin-cloud.com>
+Date: Mon, 2 Mar 2015 16:01:34 +0800
+Subject: [PATCH] Fixes quota-class-update commands
+
+The quota-class-update commands for v1 and v2 are both broken,
+Fix v1 by returning result for update method in QuotaClassSetManager,
+fix v2 by changing arg 'class-name' to 'class_name' for consistent
+with v1.
+
+Change-Id: Ic7188f485b914dc55048cf056a0685618134e87a
+Closes-bug: #1423884
+---
+ cinderclient/v1/quota_classes.py | 6 ++++--
+ cinderclient/v2/quota_classes.py | 6 ++++--
+ cinderclient/v2/shell.py         | 4 ++--
+ 3 files changed, 10 insertions(+), 6 deletions(-)
+
+diff --git a/cinderclient/v1/quota_classes.py b/cinderclient/v1/quota_classes.py
+index 9e81e2c..37441b3 100644
+--- a/cinderclient/v1/quota_classes.py
++++ b/cinderclient/v1/quota_classes.py
+@@ -26,7 +26,7 @@ class QuotaClassSet(base.Resource):
+         return self.class_name
+ 
+     def update(self, *args, **kwargs):
+-        self.manager.update(self.class_name, *args, **kwargs)
++        return self.manager.update(self.class_name, *args, **kwargs)
+ 
+ 
+ class QuotaClassSetManager(base.Manager):
+@@ -42,4 +42,6 @@ class QuotaClassSetManager(base.Manager):
+         for update in updates:
+             body['quota_class_set'][update] = updates[update]
+ 
+-        self._update('/os-quota-class-sets/%s' % (class_name), body)
++        result = self._update('/os-quota-class-sets/%s' % (class_name), body)
++        return self.resource_class(self,
++                                   result['quota_class_set'], loaded=True)
+diff --git a/cinderclient/v2/quota_classes.py b/cinderclient/v2/quota_classes.py
+index bf80db0..c9c40f1 100644
+--- a/cinderclient/v2/quota_classes.py
++++ b/cinderclient/v2/quota_classes.py
+@@ -24,7 +24,7 @@ class QuotaClassSet(base.Resource):
+         return self.class_name
+ 
+     def update(self, *args, **kwargs):
+-        self.manager.update(self.class_name, *args, **kwargs)
++        return self.manager.update(self.class_name, *args, **kwargs)
+ 
+ 
+ class QuotaClassSetManager(base.Manager):
+@@ -40,4 +40,6 @@ class QuotaClassSetManager(base.Manager):
+         for update in updates:
+             body['quota_class_set'][update] = updates[update]
+ 
+-        self._update('/os-quota-class-sets/%s' % (class_name), body)
++        result = self._update('/os-quota-class-sets/%s' % (class_name), body)
++        return self.resource_class(self,
++                                   result['quota_class_set'], loaded=True)
+diff --git a/cinderclient/v2/shell.py b/cinderclient/v2/shell.py
+index c2b8b38..6967463 100644
+--- a/cinderclient/v2/shell.py
++++ b/cinderclient/v2/shell.py
+@@ -997,8 +997,8 @@ def do_quota_class_show(cs, args):
+     _quota_show(cs.quota_classes.get(args.class_name))
+ 
+ 
+-@utils.arg('class-name',
+-           metavar='<class-name>',
++@utils.arg('class_name',
++           metavar='<class_name>',
+            help='Name of quota class for which to set quotas.')
+ @utils.arg('--volumes',
+            metavar='<volumes>',
+-- 
+2.3.2 (Apple Git-55)
+

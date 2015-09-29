@@ -77,6 +77,17 @@ bash "patch-for-cinder-availability-zone-fallback" do
     notifies :restart, "service[cinder-scheduler]", :immediately
 end
 
+# Deal with quota update commands
+bcpc_patch "fix-quota-class-update" do
+    patch_file              'fix-quota-class-update.patch'
+    patch_root_dir          '/usr/lib/python2.7/dist-packages'
+    shasums_before_apply    'fix-quota-class-update.patch.BEFORE.SHASUMS'
+    shasums_after_apply     'fix-quota-class-update.patch.AFTER.SHASUMS'
+    notifies :restart, "service[cinder-api]", :immediately
+    notifies :restart, "service[cinder-volume]", :immediately
+    notifies :restart, "service[cinder-scheduler]", :immediately
+end
+
 template "/etc/cinder/cinder.conf" do
     source "cinder.conf.erb"
     owner "cinder"

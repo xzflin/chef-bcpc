@@ -56,6 +56,8 @@ download_file cookbooks-r6/cron-1.6.1.tar.gz http://cookbooks.opscode.com/api/v1
 download_file cookbooks-r6/windows-1.38.1.tar.gz http://cookbooks.opscode.com/api/v1/cookbooks/windows/versions/1.38.1/download
 download_file cookbooks-r6/chef_handler-1.2.0.tar.gz http://cookbooks.opscode.com/api/v1/cookbooks/chef_handler/versions/1.2.0/download
 download_file cookbooks-r6/ubuntu-1.1.8.tar.gz http://cookbooks.opscode.com/api/v1/cookbooks/ubuntu/versions/1.1.8/download
+download_file cookbooks/hostsfile-2.4.5.tar.gz https://supermarket.chef.io/api/v1/cookbooks/hostsfile/versions/2.4.5/download
+download_file cookbooks/concat-0.3.0.tar.gz https://supermarket.chef.io/api/v1/cookbooks/concat/versions/0.3.0/download
 
 # Pull knife-acl gem.
 download_file knife-acl-0.0.12.gem https://rubygems.global.ssl.fastly.net/gems/knife-acl-0.0.12.gem

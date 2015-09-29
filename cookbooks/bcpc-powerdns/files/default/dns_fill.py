@@ -10,8 +10,9 @@ then creates a CNAME record to point to the public-X.X.X.X username
 
 import novaclient
 import keystoneclient
-from novaclient.v1_1 import client
+from novaclient.v2 import client
 from keystoneclient.v2_0 import client as kclient
+from keystoneclient import exceptions as kc_exceptions
 import MySQLdb as mdb
 import argparse
 import syslog 
@@ -55,17 +56,22 @@ class dns_popper(object):
 
          for v in server.addresses.values():
             for add in v:
-               if add["OS-EXT-IPS:type"] =="floating":
-                  # huzzah found a float
-                  tenant = self.keystone.tenants.get(tid)
+               try:
+                  if add["OS-EXT-IPS:type"] =="floating":
+                     # huzzah found a float
+                     tenant = self.keystone.tenants.get(tid)
 
-                  tname  = tenant.name
-                  sname = server.name
-                  for s, t in replacements:
-                     tname = tname.replace(s,t)
-                     sname = sname.replace(s,t)
-                  dnsname =  str(("%s.%s.%s" %(sname,  tname, self.config["domain"] )).lower())
-                  rc.append( (dnsname, "CNAME", "public-" + str(add["addr"]).replace(".", "-") + "."+self.config["domain"]) )
+                     tname  = tenant.name
+                     sname = server.name
+                     for s, t in replacements:
+                        tname = tname.replace(s,t)
+                        sname = sname.replace(s,t)
+                     dnsname =  str(("%s.%s.%s" %(sname,  tname, self.config["domain"] )).lower())
+                     rc.append( (dnsname, "CNAME", "public-" + str(add["addr"]).replace(".", "-") + "."+self.config["domain"]) )
+               except kc_exceptions.NotFound:
+                  syslog.syslog(syslog.LOG_NOTICE,
+                     "Non-existent project %s: " % tid +
+                     "Check that %s is not attached to orphaned instance." % add["addr"])
       return rc
 
    def get_records_from_db(self,):
@@ -87,7 +93,7 @@ class dns_popper(object):
             syslog.syslog(syslog.LOG_NOTICE, "Deleting %d CNAMEs from pdns" % (len(to_delete)))      
             c.executemany("""delete from records where name=%s and type=%s and content=%s and bcpc_record_type='DYNAMIC'""", to_delete)
          if to_add:
-            syslog.syslog(syslog.LOG_NOTICE, "Adding %d CNAMEs to pdns" % (len(to_delete)))
+            syslog.syslog(syslog.LOG_NOTICE, "Adding %d CNAMEs to pdns" % (len(to_add)))
             c.executemany("""insert into records  (domain_id, name, type, content, ttl, bcpc_record_type) values (%s, %s, %s, %s, 300, 'DYNAMIC')""",
                           [(self.domain_id, rec[0], rec[1], rec[2]) for rec in to_add] )
          self.db_con.commit()
@@ -127,6 +133,3 @@ if __name__ == '__main__':
    args = parser.parse_args()
    args.func(args) 
    sys.exit(0)
-
-
-

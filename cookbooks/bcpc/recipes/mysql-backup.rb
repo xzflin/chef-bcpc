@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: bcpc-haproxy
-# Recipe:: headnode
+# Cookbook Name:: bcpc
+# Recipe:: mysql-backup
 #
 # Copyright 2015, Bloomberg Finance L.P.
 #
@@ -17,27 +17,14 @@
 # limitations under the License.
 #
 
-include_recipe 'bcpc-haproxy'
-include_recipe 'bcpc-xinetd'
-
-concat_fragment "haproxy-main-config" do
-  order  "001"
-  target "/etc/haproxy/haproxy.cfg"
-  source "haproxy-head.cfg.erb"
-  variables(
-    lazy {
-      {
-        :servers => get_head_nodes,
-        :all_servers => get_ceph_osd_nodes
-      }
+ruby_block "initial-mysql-backup-config" do
+    block do
+        %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
+            mysql -u root -e "GRANT SELECT,EVENT ON *.* TO '#{get_config('mysql-backup-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-backup-password')}';"
+            mysql -u root -e "FLUSH PRIVILEGES;"
+        ]
+    end
+    only_if {
+      %x[MYSQL_PWD=#{get_config('mysql-root-password')} mysql -N --batch -uroot -e 'SELECT count(user) from mysql.user where user=\"#{get_config('mysql-backup-user')}\";'].to_i < 1
     }
-  )
-end
-
-concat "/etc/haproxy/haproxy.cfg" do
-  mode 00644
-  owner 'root'
-  group 'root'
-  notifies :restart, "service[haproxy]", :immediately
-  notifies :restart, "service[xinetd]", :immediately
 end

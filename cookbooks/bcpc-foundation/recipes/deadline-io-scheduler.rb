@@ -28,3 +28,24 @@ bash "set-deadline-io-scheduler" do
     EOH
     not_if "grep 'elevator=deadline' /etc/default/grub"
 end
+
+ruby_block "swap-toggle" do
+  block do
+    rc = Chef::Util::FileEdit.new("/etc/fstab")
+    if node['bcpc']['enabled']['swap'] then
+      rc.search_file_replace(
+        /^#([A-Z].*|\/.*)swap(.*)/,
+        '\\1swap\\2'
+      )
+      rc.write_file
+      system 'swapon -a'
+    else
+      system 'swapoff -a'
+      rc.search_file_replace(
+        /^([A-Z].*|\/.*)swap(.*)/,
+        '#\\1swap\\2'
+      )
+      rc.write_file
+    end
+  end
+end
