@@ -41,7 +41,7 @@ default['bcpc']['ceph']['version_number'] = '0.94.3'
 default['bcpc']['erlang']['version'] = '1:17.5.3'
 default['bcpc']['haproxy']['version'] = '1.5.14-1ppa~trusty'
 default['bcpc']['kibana']['version'] = '4.0.2'
-default['bcpc']['rabbitmq']['version'] = '3.5.4-1'
+default['bcpc']['rabbitmq']['version'] = '3.5.5-3'
 
 ###########################################
 #
@@ -74,6 +74,8 @@ default['bcpc']['enabled']['radosgw_cache'] = false
 default['bcpc']['enabled']['tpm'] = false
 # This will block VMs from talking to the management network
 default['bcpc']['enabled']['secure_fixed_networks'] = true
+# Toggle to enable/disable swap memory
+default['bcpc']['enabled']['swap'] = true
 
 # If radosgw_cache is enabled, default to 20MB max file size
 default['bcpc']['radosgw']['cache_max_file_size'] = 20000000
@@ -148,6 +150,8 @@ default['bcpc']['ceph']['mon_niceness'] = -10
 # if changing this setting, you will need to reset Mnesia
 # on all RabbitMQ nodes in the cluster
 default['bcpc']['rabbitmq']['durable_queues'] = true
+# ulimits for RabbitMQ server
+default['bcpc']['rabbitmq']['ulimit']['nofile'] = 4096
 
 ###########################################
 #
@@ -162,6 +166,11 @@ default['bcpc']['management']['interface'] = nil
 # if 'interface' is a VLAN interface, specifying a parent allows MTUs
 # to be set properly
 default['bcpc']['management']['interface-parent'] = nil
+# list of TCP ports that should be open on the management interface
+# (generally stuff served via HAProxy)
+default['bcpc']['management']['firewall_tcp_ports'] = [
+  80,443,8088,7480,5000,35357,9292,8776,8773,8774,8004,8000,8777
+]
 
 default['bcpc']['metadata']['ip'] = "169.254.169.254"
 
@@ -205,8 +214,9 @@ default['bcpc']['repos']['hwraid'] = "http://hwraid.le-vert.net/ubuntu"
 default['bcpc']['repos']['fluentd'] = "http://packages.treasure-data.com/2/ubuntu/#{node['lsb']['codename']}"
 default['bcpc']['repos']['gridcentric'] = "http://downloads.gridcentric.com/packages/%s/%s/ubuntu"
 default['bcpc']['repos']['elasticsearch'] = "http://packages.elasticsearch.org/elasticsearch/1.5/debian"
+default['bcpc']['repos']['kibana'] = "http://packages.elasticsearch.org/kibana/4.1/debian"
 default['bcpc']['repos']['erlang'] = "http://packages.erlang-solutions.com/ubuntu"
-default['bcpc']['repos']['ceph'] = "http://ceph.com/debian-hammer"
+default['bcpc']['repos']['ceph'] = "http://download.ceph.com/debian-hammer"
 default['bcpc']['repos']['zabbix'] = "http://repo.zabbix.com/zabbix/2.4/ubuntu"
 
 ###########################################
@@ -226,6 +236,7 @@ default['bcpc']['mirror']['ubuntu-dist'] = ['trusty']
 default['bcpc']['mirror']['ceph-dist'] = ['hammer']
 default['bcpc']['mirror']['os-dist'] = ['kilo']
 default['bcpc']['mirror']['elasticsearch-dist'] = '1.5'
+default['bcpc']['mirror']['kibana-dist'] = '4.1'
 
 ###########################################
 #
@@ -304,7 +315,7 @@ default['bcpc']['keystone']['wait_for_keystone_timeout'] = 120
 # The driver section below allows either 'sql' or 'ldap' (or 'templated' for catalog)
 # Note that not all drivers may support SQL/LDAP, only tinker if you know what you're getting into
 default['bcpc']['keystone']['drivers']['assignment'] = 'sql'
-default['bcpc']['keystone']['drivers']['catalog'] = 'templated'
+default['bcpc']['keystone']['drivers']['catalog'] = 'sql'
 default['bcpc']['keystone']['drivers']['credential'] = 'sql'
 default['bcpc']['keystone']['drivers']['domain_config'] = 'sql'
 default['bcpc']['keystone']['drivers']['endpoint_filter'] = 'sql'
@@ -986,7 +997,7 @@ default['bcpc']['cinder']['verbose'] = false
 default['bcpc']['cinder']['workers'] = 5
 default['bcpc']['cinder']['allow_az_fallback'] = true
 default['bcpc']['cinder']['quota'] = {
-  "volumes" => 10,
+  "volumes" => -1,
   "quota_snapshots" => 10,
   "consistencygroups" => 10,
   "gigabytes" => 1000
@@ -1312,6 +1323,9 @@ default['bcpc']['diamond']['collectors']['rabbitmq']['queues'] = nil
 default['bcpc']['diamond']['collectors']['rabbitmq']['queues_ignored'] = '.*'
 # List of vhosts to report on. If nil, report none.
 default['bcpc']['diamond']['collectors']['rabbitmq']['vhosts'] = nil
+# Ceph Collector parameters
+default['bcpc']['diamond']['collectors']['CephCollector']['metrics_whitelist'] = "ceph.mon.#{node['hostname']}.cluster.*"
+
 
 ###########################################
 #
@@ -1426,6 +1440,19 @@ default['bcpc']['host_aggregates'] = {
 }
 
 default['bcpc']['aggregate_membership'] = []
+
+###########################################
+#
+# RadosGW Quotas
+#
+###########################################
+default['bcpc']['rgw_quota'] = {
+    'user' => {
+        'default' => {
+           'max_size' => 10737418240
+        }
+    }
+}
 
 ###########################################
 #

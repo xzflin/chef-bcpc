@@ -104,7 +104,7 @@ end
 end
 
 %w{ storage floating }.each do |net|
-  if not node['bcpc'][net]['interface-parent'].nil? 
+  if not node['bcpc'][net]['interface-parent'].nil?
     template "/etc/network/interfaces.d/iface-#{node['bcpc'][net]['interface-parent']}" do
       source "network.iface-parent.erb"
       owner "root"
@@ -115,7 +115,7 @@ end
                 :mtu => node['bcpc'][net]['mtu'],
                 )
     end
-  end    
+  end
 end
 
 # set up the DNS resolvers
@@ -163,8 +163,8 @@ bash "interface-mgmt-make-static-if-dhcp" do
 end
 
 %w{ management storage floating }.each do |iface|
-  
-  if not node['bcpc'][iface]['interface-parent'].nil? 
+
+  if not node['bcpc'][iface]['interface-parent'].nil?
     bash "#{iface} up" do
       user "root"
       code <<-EOH
@@ -179,7 +179,7 @@ end
         end
     end
   end
-    
+
     bash "#{iface} up" do
         user "root"
         code <<-EOH

@@ -81,6 +81,42 @@ if node['bcpc']['enabled']['metrics'] then
         notifies :restart, "service[diamond]", :delayed
     end
 
+    template "/etc/diamond/collectors/ElasticSearchCollector.conf" do
+        source "diamond-collector-elasticsearch.conf.erb"
+        owner "diamond"
+        group "root"
+        mode 00600
+        notifies :restart, "service[diamond]", :delayed
+        only_if "test -f /etc/init.d/elasticsearch"
+    end
+
+    directory "/usr/share/diamond/collectors/cephpools" do
+        owner "root"
+        group "root"
+        mode 00755
+    end
+
+    cookbook_file "/usr/share/diamond/collectors/cephpools/cephpools.py" do
+        source "diamond-collector-cephpools.py"
+        owner "root"
+        group "root"
+        mode 00644
+    end
+
+    %w{CephPoolStatsCollector CephCollector}.each do |collector|
+        template "/etc/diamond/collectors/#{collector}.conf" do
+            source "diamond-collector.conf.erb"
+            owner "diamond"
+            group "root"
+            mode 00600
+            variables(
+                :parameters => node['bcpc']['diamond']['collectors'][collector]
+            )
+            notifies :restart, "service[diamond]", :delayed
+            only_if "test -d /var/lib/ceph/mon/ceph-#{node['hostname']}"
+        end
+    end
+
     service "diamond" do
         action [:enable, :start]
     end

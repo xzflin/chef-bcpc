@@ -48,13 +48,15 @@ end
 # fixes DHCP server assignment so that each fixed IP subnet gets its gateway
 # address as its DHCP server by default instead of all subnets getting the
 # gateway of the lowest subnet
+#
+# can be removed for 2015.1.1 - only applies to 2015.1.0
 cookbook_file "/tmp/nova-network-dhcp-server.patch" do
     source "nova-network-dhcp-server.patch"
     owner "root"
     mode 00644
 end
 
-bash "patch-for-nova-network-dhcp-server" do
+bash "patch-for-nova-network-dhcp-server-2015.1.0" do
     user "root"
     code <<-EOH
        cd /usr/lib/python2.7/dist-packages
@@ -68,6 +70,30 @@ bash "patch-for-nova-network-dhcp-server" do
     EOH
     only_if "shasum /usr/lib/python2.7/dist-packages/nova/network/manager.py | grep -q '^1da5cc12bc28f97e15e5f0e152d37b548766ee04'"
     notifies :restart, "service[nova-api]", :immediately
+end
+
+# backport of a patch to fix OpenStack issue #1484738 and BCPC issue #826
+# required for both 2015.1.0 and 2015.1.1
+# two resources, one to apply to 2015.1.0 and one to apply to 2015.1.1
+# (nova/compute/manager.py checksums differ between versions)
+
+# only_if clauses are required so that the resource for the version not installed will not blow up and fail the Chef run
+bcpc_patch "nova-fix-refresh-secgroups-2015.1.0" do
+  patch_file           'nova-fix-refresh-secgroups-2015.1.0.patch'
+  patch_root_dir       '/usr/lib/python2.7/dist-packages'
+  shasums_before_apply 'nova-fix-refresh-secgroups-2015.1.0-BEFORE.SHASUMS'
+  shasums_after_apply  'nova-fix-refresh-secgroups-2015.1.0-AFTER.SHASUMS'
+  only_if "dpkg -s python-nova | grep -q '^Version: 1:2015.1.0'"
+  notifies :restart, 'service[nova-compute]', :immediately
+end
+
+bcpc_patch "nova-fix-refresh-secgroups-2015.1.1" do
+  patch_file           'nova-fix-refresh-secgroups-2015.1.1.patch'
+  patch_root_dir       '/usr/lib/python2.7/dist-packages'
+  shasums_before_apply 'nova-fix-refresh-secgroups-2015.1.1-BEFORE.SHASUMS'
+  shasums_after_apply  'nova-fix-refresh-secgroups-2015.1.1-AFTER.SHASUMS'
+  only_if "dpkg -s python-nova | grep -q '^Version: 1:2015.1.1'"
+  notifies :restart, 'service[nova-compute]', :immediately
 end
 
 %w{novnc pm-utils memcached sysfsutils}.each do |pkg|
@@ -165,7 +191,7 @@ template "/etc/ceph/ceph.client.cinder.keyring" do
   source "ceph-client-cinder-keyring.erb"
   mode "00644"
 end
-  
+
 ruby_block 'load-virsh-keys' do
     block do
         %x[ CINDER_KEY=`ceph --name mon. --keyring /etc/ceph/ceph.mon.keyring auth get-or-create-key client.cinder`
@@ -203,7 +229,7 @@ end
 service "apparmor" do
   action :nothing
 end
-  
+
 template "/etc/apparmor.d/abstractions/libvirt-qemu" do
   source "apparmor-libvirt-qemu.erb"
   notifies :restart, "service[libvirt-bin]", :delayed
@@ -239,7 +265,7 @@ cookbook_file "/tmp/nova_api_metadata_base.patch" do
     source "nova_api_metadata_base.patch"
     owner "root"
     mode 0644
-end 
+end
 
 bash "patch-for-ip-hostnames-metadata" do
     user "root"
@@ -256,13 +282,13 @@ bash "patch-for-ip-hostnames-metadata" do
     EOH
     not_if "grep -q 'THIS FILE PATCHED BY BCPC' /usr/lib/python2.7/dist-packages/nova/api/metadata/base.py"
     notifies :restart, "service[nova-api]", :immediately
-end 
+end
 
 cookbook_file "/tmp/nova_network_linux_net.patch" do
     source "nova_network_linux_net.patch"
     owner "root"
     mode 0644
-end 
+end
 
 bash "patch-for-ip-hostnames-networking" do
     user "root"
@@ -280,5 +306,14 @@ bash "patch-for-ip-hostnames-networking" do
     not_if "grep -q 'THIS FILE PATCHED BY BCPC' /usr/lib/python2.7/dist-packages/nova/network/linux_net.py"
     notifies :restart, "service[nova-compute]", :immediately
     notifies :restart, "service[nova-network]", :immediately
-end 
+end
 
+# this patch patches Nova to work correctly if you attempt to boot an instance from
+# a root volume larger than the root volume specified by the flavor
+bcpc_patch "nova-volume-boot-size" do
+  patch_file           'nova-volume-boot-size.patch'
+  patch_root_dir       '/usr/lib/python2.7/dist-packages'
+  shasums_before_apply 'nova-volume-boot-size-BEFORE.SHASUMS'
+  shasums_after_apply  'nova-volume-boot-size-AFTER.SHASUMS'
+  notifies :restart, 'service[nova-api]', :immediately
+end

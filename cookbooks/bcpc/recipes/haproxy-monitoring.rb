@@ -20,11 +20,27 @@
 include_recipe "bcpc::default"
 include_recipe "bcpc::haproxy-common"
 
+ruby_block "initialize-haproxy-monitoring-config" do
+    block do
+        salt = secure_password_alphanum_upper(2)
+        mon_adm_pw = secure_password
+        make_config('monitoring-admin-user', "monitoring_admin")
+        make_config('monitoring-admin-password', mon_adm_pw)
+        make_config('monitoring-admin-password-hash', mon_adm_pw.crypt('$6$' + salt))
+    end
+end
+
 template "/etc/haproxy/haproxy.cfg" do
     source "haproxy-monitoring.cfg.erb"
     mode 00644
     variables(
-        :servers => search_nodes("role", "BCPC-Monitoring")
+        lazy {
+          {
+            :monitoring_admin_username => get_config("monitoring-admin-user"),
+            :monitoring_admin_password_hash => get_config("monitoring-admin-password-hash"),
+            :servers => search_nodes("role", "BCPC-Monitoring")
+          }
+        }
     )
     notifies :restart, "service[haproxy]", :immediately
 end

@@ -1,0 +1,6 @@
+enabled = True
+<% if not @parameters.nil? %>
+<% @parameters.each do |key, value| %>
+<%= key %> = <%= value %>
+<% end %>
+<% end %>

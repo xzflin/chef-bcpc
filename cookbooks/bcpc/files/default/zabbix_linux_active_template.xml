@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>2.0</version>
-    <date>2015-06-10T20:21:52Z</date>
+    <date>2015-09-11T16:25:44Z</date>
     <groups>
         <group>
             <name>Templates</name>
@@ -11,6 +11,7 @@
         <template>
             <template>Template OS Linux-active</template>
             <name>Template OS Linux-active</name>
+            <description/>
             <groups>
                 <group>
                     <name>Templates</name>
@@ -92,6 +93,7 @@
                     <valuemap>
                         <name>Zabbix agent ping status</name>
                     </valuemap>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>Available memory</name>
@@ -134,6 +136,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>Checksum of $1</name>
@@ -176,6 +179,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>Context switches per second</name>
@@ -221,6 +225,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>CPU $2 time</name>
@@ -266,6 +271,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>CPU $2 time</name>
@@ -311,6 +317,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>CPU $2 time</name>
@@ -356,6 +363,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>CPU $2 time</name>
@@ -401,6 +409,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>CPU $2 time</name>
@@ -446,6 +455,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>CPU $2 time</name>
@@ -491,6 +501,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>CPU $2 time</name>
@@ -536,6 +547,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>CPU $2 time</name>
@@ -581,6 +593,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>Free swap space</name>
@@ -623,6 +636,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>Free swap space in %</name>
@@ -665,6 +679,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>Host boot time</name>
@@ -710,6 +725,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>Host local time</name>
@@ -755,6 +771,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>Host name</name>
@@ -800,6 +817,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>Host name of zabbix_agentd running</name>
@@ -842,6 +860,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>Interrupts per second</name>
@@ -887,6 +906,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>Maximum number of opened files</name>
@@ -929,6 +949,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>Maximum number of processes</name>
@@ -971,6 +992,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>Number of logged in users</name>
@@ -1016,6 +1038,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>Number of processes</name>
@@ -1058,6 +1081,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>Number of running processes</name>
@@ -1100,6 +1124,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>Processor load (1 min average per core)</name>
@@ -1145,6 +1170,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>Processor load (5 min average per core)</name>
@@ -1190,6 +1216,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>Processor load (15 min average per core)</name>
@@ -1235,6 +1262,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>System information</name>
@@ -1280,6 +1308,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>System uptime</name>
@@ -1325,6 +1354,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>Total memory</name>
@@ -1367,6 +1397,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>Total swap space</name>
@@ -1409,6 +1440,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
                 <item>
                     <name>Version of zabbix_agent(d) running</name>
@@ -1451,6 +1483,7 @@
                         </application>
                     </applications>
                     <valuemap/>
+                    <logtimefmt/>
                 </item>
             </items>
             <discovery_rules>
@@ -1479,7 +1512,18 @@
                     <publickey/>
                     <privatekey/>
                     <port/>
-                    <filter>{#FSTYPE}:@File systems for discovery</filter>
+                    <filter>
+                        <evaltype>0</evaltype>
+                        <formula/>
+                        <conditions>
+                            <condition>
+                                <macro>{#FSTYPE}</macro>
+                                <value>@File systems for discovery</value>
+                                <operator>8</operator>
+                                <formulaid>A</formulaid>
+                            </condition>
+                        </conditions>
+                    </filter>
                     <lifetime>30</lifetime>
                     <description>Discovery of file systems of different types as defined in global regular expression &quot;File systems for discovery&quot;.</description>
                     <item_prototypes>
@@ -1524,6 +1568,7 @@
                                 </application>
                             </applications>
                             <valuemap/>
+                            <logtimefmt/>
                         </item_prototype>
                         <item_prototype>
                             <name>Free disk space on $1 (percentage)</name>
@@ -1566,6 +1611,7 @@
                                 </application>
                             </applications>
                             <valuemap/>
+                            <logtimefmt/>
                         </item_prototype>
                         <item_prototype>
                             <name>Free inodes on $1 (percentage)</name>
@@ -1608,6 +1654,7 @@
                                 </application>
                             </applications>
                             <valuemap/>
+                            <logtimefmt/>
                         </item_prototype>
                         <item_prototype>
                             <name>Total disk space on $1</name>
@@ -1650,6 +1697,7 @@
                                 </application>
                             </applications>
                             <valuemap/>
+                            <logtimefmt/>
                         </item_prototype>
                         <item_prototype>
                             <name>Used disk space on $1</name>
@@ -1692,6 +1740,7 @@
                                 </application>
                             </applications>
                             <valuemap/>
+                            <logtimefmt/>
                         </item_prototype>
                     </item_prototypes>
                     <trigger_prototypes>
@@ -1787,7 +1836,18 @@
                     <publickey/>
                     <privatekey/>
                     <port/>
-                    <filter>{#IFNAME}:@Network interfaces for discovery</filter>
+                    <filter>
+                        <evaltype>0</evaltype>
+                        <formula/>
+                        <conditions>
+                            <condition>
+                                <macro>{#IFNAME}</macro>
+                                <value>@Network interfaces for discovery</value>
+                                <operator>8</operator>
+                                <formulaid>A</formulaid>
+                            </condition>
+                        </conditions>
+                    </filter>
                     <lifetime>30</lifetime>
                     <description>Discovery of network interfaces as defined in global regular expression &quot;Network interfaces for discovery&quot;.</description>
                     <item_prototypes>
@@ -1832,6 +1892,7 @@
                                 </application>
                             </applications>
                             <valuemap/>
+                            <logtimefmt/>
                         </item_prototype>
                         <item_prototype>
                             <name>Outgoing network traffic on $1</name>
@@ -1874,6 +1935,7 @@
                                 </application>
                             </applications>
                             <valuemap/>
+                            <logtimefmt/>
                         </item_prototype>
                     </item_prototypes>
                     <trigger_prototypes/>
@@ -2013,7 +2075,7 @@
             <dependencies/>
         </trigger>
         <trigger>
-            <expression>{Template OS Linux-active:system.swap.size[,pfree].last(0)}&lt;50</expression>
+            <expression>{Template OS Linux-active:system.swap.size[,pfree].last(0)}&lt;50 and {Template OS Linux-active:system.swap.size[,total].last(0)}&gt;0</expression>
             <name>Lack of free swap space on {HOST.NAME}</name>
             <url/>
             <status>0</status>
@@ -2033,7 +2095,7 @@
             <dependencies/>
         </trigger>
         <trigger>
-            <expression>{Template OS Linux-active:proc.num[].last(0)}&gt;600</expression>
+            <expression>{Template OS Linux-active:proc.num[].last(0)}&gt;850</expression>
             <name>Too many processes on {HOST.NAME}</name>
             <url/>
             <status>0</status>

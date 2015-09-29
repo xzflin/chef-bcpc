@@ -20,13 +20,24 @@
 include_recipe "bcpc::default"
 include_recipe "bcpc::haproxy-common"
 
-template "/etc/haproxy/haproxy.cfg" do
-    source "haproxy-head.cfg.erb"
-    mode 00644
-    variables(
+concat_fragment "haproxy-main-config" do
+  order  "001"
+  target "/etc/haproxy/haproxy.cfg"
+  source "haproxy-head.cfg.erb"
+  variables(
+    lazy {
+      {
         :servers => get_head_nodes,
         :all_servers => get_ceph_osd_nodes
-    )
-    notifies :restart, "service[haproxy]", :immediately
-    notifies :restart, "service[xinetd]", :immediately
+      }
+    }
+  )
+end
+
+concat "/etc/haproxy/haproxy.cfg" do
+  mode 00644
+  owner 'root'
+  group 'root'
+  notifies :restart, "service[haproxy]", :immediately
+  notifies :restart, "service[xinetd]", :immediately
 end

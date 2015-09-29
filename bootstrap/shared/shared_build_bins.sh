@@ -37,14 +37,10 @@ if [ -z `gem list --local fpm | grep fpm | cut -f1 -d" "` ]; then
   popd
 fi
 
-# Build kibana 4 deb
-if [ ! -f kibana_${VER_KIBANA}_amd64.deb ]; then
-  cp -v $FILECACHE_MOUNT_POINT/kibana-${VER_KIBANA}-linux-x64.tar.gz kibana-${VER_KIBANA}.tar.gz
-  tar -zxf kibana-${VER_KIBANA}.tar.gz
-  fpm -s dir -t deb --prefix /opt/kibana -n kibana -v ${VER_KIBANA} -C kibana-${VER_KIBANA}-linux-x64
-  rm -rf kibana-${VER_KIBANA}-linux-x64{,.tar.gz}
+# Delete old kibana 4 deb
+if [ -f kibana_${VER_KIBANA}_amd64.deb ]; then
+  rm -f kibana_${VER_KIBANA}_amd64.deb kibana_${VER_KIBANA}.tar.gz
 fi
-FILES="kibana_${VER_KIBANA}_amd64.deb $FILES"
 
 # fluentd plugins and dependencies are fetched by shared_prereqs.sh, just copy them
 # in from the local cache and add them to $FILES
