@@ -166,6 +166,11 @@ default['bcpc']['management']['interface'] = nil
 # if 'interface' is a VLAN interface, specifying a parent allows MTUs
 # to be set properly
 default['bcpc']['management']['interface-parent'] = nil
+# list of TCP ports that should be open on the management interface
+# (generally stuff served via HAProxy)
+default['bcpc']['management']['firewall_tcp_ports'] = [
+  80,443,8088,7480,5000,35357,9292,8776,8773,8774,8004,8000,8777
+]
 
 default['bcpc']['metadata']['ip'] = "169.254.169.254"
 
