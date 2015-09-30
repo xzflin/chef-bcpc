@@ -14,6 +14,9 @@
         "ssd_disks" : [ "sdd", "sde" ],
         "chooseleaf" : "host"
       },
+      "graphite": {
+        "max_creates_per_min": "inf"
+      },
       "nova" : {
         "ram_allocation_ratio" : "20.0",
         "cpu_allocation_ratio": "20.0"
