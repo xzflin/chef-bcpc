@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: mysql-monitoring-backup
+# Cookbook Name:: bcpc-backup
+# Recipe:: headnode
 #
 # Copyright 2015, Bloomberg Finance L.P.
 #
@@ -17,14 +17,14 @@
 # limitations under the License.
 #
 
-ruby_block "initial-mysql-monitoring-backup-config" do
+ruby_block "initial-mysql-backup-config" do
     block do
-        %x[ export MYSQL_PWD=#{get_config('mysql-monitoring-root-password')};
+        %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
             mysql -u root -e "GRANT SELECT,EVENT ON *.* TO '#{get_config('mysql-backup-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-backup-password')}';"
             mysql -u root -e "FLUSH PRIVILEGES;"
         ]
     end
     only_if {
-      %x[MYSQL_PWD=#{get_config('mysql-monitoring-root-password')} mysql -N --batch -uroot -e 'SELECT count(user) from mysql.user where user=\"#{get_config('mysql-backup-user')}\";'].to_i < 1
+      %x[MYSQL_PWD=#{get_config('mysql-root-password')} mysql -N --batch -uroot -e 'SELECT count(user) from mysql.user where user=\"#{get_config('mysql-backup-user')}\";'].to_i < 1
     }
 end

@@ -1,4 +1,4 @@
-# Cookbook Name:: bcpc
+# Cookbook Name:: bcpc-ceph
 # Recipe:: rgw-quota
 #
 # Copyright 2015, Bloomberg Finance L.P.

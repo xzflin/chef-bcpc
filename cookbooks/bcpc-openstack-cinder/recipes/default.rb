@@ -78,7 +78,7 @@ bash "patch-for-cinder-availability-zone-fallback" do
 end
 
 # Deal with quota update commands
-bcpc_patch "fix-quota-class-update" do
+bcpc_foundation_patch "fix-quota-class-update" do
     patch_file              'fix-quota-class-update.patch'
     patch_root_dir          '/usr/lib/python2.7/dist-packages'
     shasums_before_apply    'fix-quota-class-update.patch.BEFORE.SHASUMS'

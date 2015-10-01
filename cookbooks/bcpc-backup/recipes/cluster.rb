@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: backup-cluster
+# Cookbook Name:: bcpc-backup
+# Recipe:: cluster
 #
 # Copyright 2015, Bloomberg Finance L.P.
 #
@@ -59,7 +59,7 @@ template backup_script do
   variables(
     lazy {
       {
-        :monitoring_servers => search_nodes("role", "BCPC-Monitoring")
+        :monitoring_servers => get_monitor_nodes
       }
     }
   )

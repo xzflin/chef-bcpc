@@ -24,7 +24,7 @@ sleep 2
 include_recipe 'component-bcpc-common'
 include_recipe 'component-bcpc-node-common'
 include_recipe 'bcpc-mysql::monitornode'
-include_recipe 'bcpc-backup::monitoring'
+include_recipe 'bcpc-backup::monitornode'
 include_recipe 'bcpc-haproxy::monitornode'
 include_recipe 'bcpc-keepalived::monitornode'
 include_recipe 'bcpc-graphite'
