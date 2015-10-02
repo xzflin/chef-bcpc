@@ -201,6 +201,10 @@ default['bcpc']['fixed']['dhcp_lease_time'] = "120"
 default['bcpc']['ntp_servers'] = ["pool.ntp.org"]
 default['bcpc']['dns_servers'] = ["8.8.8.8", "8.8.4.4"]
 
+# Proxy server URL for recipes to use
+# Example: http://proxy-hostname:port
+default['bcpc']['proxy_server_url'] = nil
+
 ###########################################
 #
 #  Repos for things we rely on
@@ -1296,6 +1300,10 @@ default['bcpc']['monitoring']['vip'] = "10.17.1.16"
 default['bcpc']['monitoring']['external_clients'] = []
 # Monitoring database settings
 default['bcpc']['monitoring']['mysql']['innodb_buffer_pool_size'] = nil
+# Pagerduty integration
+default['bcpc']['monitoring']['pagerduty']['enabled'] = false
+# Pagerduty service key
+default['bcpc']['monitoring']['pagerduty']['key'] = nil
 
 ###########################################
 #
@@ -1472,6 +1480,9 @@ default['bcpc']['zabbix']['php_settings'] = {
     'max_input_time' => 300,
     'date.timezone' => 'America/New_York'
 }
+# Zabbix severities to notify about.
+# https://www.zabbix.com/documentation/2.4/manual/api/reference/usermedia/object
+default['bcpc']['zabbix']['severity'] = 63
 ###########################################
 #
 # Kibana settings
