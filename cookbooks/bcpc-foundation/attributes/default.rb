@@ -1309,6 +1309,11 @@ default['bcpc']['graphite']['fqdn'] = "graphite.#{node['bcpc']['cluster_domain']
 # Default retention rates
 # http://graphite.readthedocs.org/en/latest/config-carbon.html#storage-schemas-conf
 default['bcpc']['graphite']['retention'] = '60s:1d'
+#
+# Maximum number of whisper files to create per minute. This is set low to avoid
+# I/O storm when new nodes are enrolled into cluster.
+# Set to 'inf' (infinite) to remove limit.
+default['bcpc']['graphite']['max_creates_per_min'] = '60'
 
 ###########################################
 #

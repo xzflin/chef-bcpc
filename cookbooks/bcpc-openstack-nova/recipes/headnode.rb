@@ -20,17 +20,6 @@
 include_recipe 'bcpc-mysql::headnode'
 include_recipe 'bcpc-openstack-nova'
 
-%w{nova-scheduler nova-cert nova-consoleauth nova-conductor}.each do |pkg|
-    package pkg do
-        action :upgrade
-    end
-    service pkg do
-        action [:enable, :start]
-        subscribes :restart, "template[/etc/nova/nova.conf]", :delayed
-        subscribes :restart, "template[/etc/nova/api-paste.ini]", :delayed
-    end
-end
-
 ruby_block "nova-database-creation" do
   block do
     cmd = Mixlib::ShellOut.new(<<-EOH
@@ -58,10 +47,17 @@ bash "nova-database-sync" do
     action :nothing
     user "root"
     code "nova-manage db sync"
-    notifies :restart, "service[nova-scheduler]", :immediately
-    notifies :restart, "service[nova-cert]", :immediately
-    notifies :restart, "service[nova-consoleauth]", :immediately
-    notifies :restart, "service[nova-conductor]", :immediately
+end
+
+%w{nova-scheduler nova-cert nova-consoleauth nova-conductor}.each do |pkg|
+    package pkg do
+        action :upgrade
+    end
+    service pkg do
+        action [:enable, :start]
+        subscribes :restart, "template[/etc/nova/nova.conf]", :delayed
+        subscribes :restart, "template[/etc/nova/api-paste.ini]", :delayed
+    end
 end
 
 ruby_block "reap-dead-servers-from-nova" do

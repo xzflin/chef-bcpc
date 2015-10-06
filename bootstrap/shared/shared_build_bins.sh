@@ -133,7 +133,7 @@ FILES="python-carbon_${VER_GRAPHITE_CARBON}_all.deb python-whisper_${VER_GRAPHIT
 # directory that we want and we need a good place to run our tests from.
 
 if [ ! -f rally.tar.gz ]; then
-  cp /chef-bcpc-files/rally/rally-${VER_RALLY}.tar.gz .
+  cp $FILECACHE_MOUNT_POINT/rally/rally-${VER_RALLY}.tar.gz .
   tar xvf rally-${VER_RALLY}.tar.gz
   tar zcf rally.tar.gz -C rally-${VER_RALLY}/ .
   rm -rf rally-${VER_RALLY}.tar.gz rally-${VER_RALLY}
