@@ -549,6 +549,8 @@ default['bcpc']['nova']['live_migration_patch'] = false
 default['bcpc']['nova']['verbose'] = false
 # Nova debug toggle
 default['bcpc']['nova']['debug'] = false
+# Nova default log levels
+default['bcpc']['nova']['default_log_levels'] = nil
 # Nova scheduler default filters
 default['bcpc']['nova']['scheduler_default_filters'] = ['AggregateInstanceExtraSpecsFilter', 'RetryFilter', 'AvailabilityZoneFilter', 'RamFilter', 'ComputeFilter', 'ComputeCapabilitiesFilter', 'ImagePropertiesFilter', 'ServerGroupAntiAffinityFilter', 'ServerGroupAffinityFilter']
 
