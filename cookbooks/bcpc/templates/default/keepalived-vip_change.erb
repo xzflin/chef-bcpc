@@ -15,39 +15,6 @@ if [ "$(pgrep -c $SCRIPT_NAME)" -gt "1" ]; then
   exit 0
 fi
 
-# Restart the fluentd logging daemon
-# this daemon is poorly behaved, takes a minute or more to restart,
-# and its init script loses track of processes
-# don't try to issue more restart commands for it if one is already running
-if [ "$(pgrep -c -f '/etc/init.d/td-agent restart')" -eq "0" ]; then
-  service td-agent restart
-  # clean up any processes lost because the PID file was overwritten
-  TDAGENT_PID_FILE=/var/run/td-agent/td-agent.pid
-  if [ -f $TDAGENT_PID_FILE ]; then
-    # td-agent spawns one parent and one child process
-    CURRENT_TDAGENT_PID=$(cat $TDAGENT_PID_FILE)
-    # delimit with | to make it easy to sub into an egrep pattern
-    CURRENT_TDAGENT_CHILDREN=$(pgrep -d '|' -P $CURRENT_TDAGENT_PID)
-    UNTRACKED_TDAGENT_PROCS=$(pgrep -f /usr/sbin/td-agent | egrep -v "($CURRENT_TDAGENT_PID|$CURRENT_TDAGENT_CHILDREN)")
-    for pid in ${UNTRACKED_TDAGENT_PROCS[@]}; do
-      # unfortunately SIGKILL is the only reliable way to stop the rogue processes
-      # other signals are not acknowledged consistently
-      # since legitimate td-agent processes are still running,
-      # they should overwrite any corrupt log pointers
-      echo "Killing untracked td-agent process $pid"
-      kill -9 $pid
-    done
-  fi
-else
-  echo "td-agent already restarting, skipping."
-fi
-
-# Restart the diamond service
-service diamond restart
-
-# Restart the Zabbix agent
-service zabbix-agent restart
-
 # Restart the PowerDNS service
 service pdns restart
 
