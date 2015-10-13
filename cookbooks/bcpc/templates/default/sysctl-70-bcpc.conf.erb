@@ -7,6 +7,10 @@
 # Increase ephermeral IP ports
 net.ipv4.ip_local_port_range = 10000 65000
 
+# Reserve additional ports
+<% default_reserved = [10050,10051,11211,15672,16509,16514,25672,35357,35358,55672] %>
+net.ipv4.ip_local_reserved_ports = <%= ( default_reserved + @additional_reserved_ports ).sort.join(',') %>
+
 # Increase Linux autotuning TCP buffer limits
 # Set max to 16MB for 1GE and 32M (33554432) or 54M (56623104) for 10GE
 # Don't set tcp_mem itself! Let the kernel scale it based on RAM.
