@@ -99,6 +99,7 @@ fi
 download_file pyrabbit-1.0.1.tar.gz https://pypi.python.org/packages/source/p/pyrabbit/pyrabbit-1.0.1.tar.gz
 download_file requests-aws-0.1.6.tar.gz https://pypi.python.org/packages/source/r/requests-aws/requests-aws-0.1.6.tar.gz
 download_file pyzabbix-0.7.3.tar.gz https://pypi.python.org/packages/source/p/pyzabbix/pyzabbix-0.7.3.tar.gz
+download_file pagerduty-zabbix-proxy.py https://gist.githubusercontent.com/ryanhoskin/202a1497c97b0072a83a/raw/96e54cecdd78e7990bb2a6cc8f84070599bdaf06/pd-zabbix-proxy.py
 
 download_file carbon-0.9.13.tar.gz http://pypi.python.org/packages/source/c/carbon/carbon-0.9.13.tar.gz
 download_file whisper-0.9.13.tar.gz http://pypi.python.org/packages/source/w/whisper/whisper-0.9.13.tar.gz
