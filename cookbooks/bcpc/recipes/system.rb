@@ -24,6 +24,7 @@ template "/etc/sysctl.d/70-bcpc.conf" do
     owner "root"
     group "root"
     mode 00644
+    variables(:additional_reserved_ports => node['bcpc']['system']['additional_reserved_ports'])
     notifies :run, "execute[reload-sysctl]", :immediately
 end
 
