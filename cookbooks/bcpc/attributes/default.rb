@@ -1275,13 +1275,15 @@ default['bcpc']['mysql-head']['max_connections'] = 0
 
 ###########################################
 #
-# BCPC system (systcl) settings
+# BCPC system (sysctl) settings
 #
 ###########################################
 #
-# Use this to *add* more reserved ports; i.e. modifiy value of
+# Use this to *add* more reserved ports; i.e. modify value of
 # net.ipv4.ip_local_reserved_ports
 default['bcpc']['system']['additional_reserved_ports'] = []
+# Any other sysctl parameters
+default['bcpc']['system']['parameters'] = {}
 
 ###########################################
 #
