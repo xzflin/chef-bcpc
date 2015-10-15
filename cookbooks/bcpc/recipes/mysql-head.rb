@@ -58,7 +58,7 @@ template "/etc/mysql/debian.cnf" do
 end
 
 if node['bcpc']['mysql-head']['max_connections'] == 0 then
-    node.default['bcpc']['mysql-head']['max_connections'] = [get_head_nodes.length*150+get_all_nodes.length*10, 200].max
+    node.default['bcpc']['mysql-head']['max_connections'] = [get_head_nodes.length*150+get_all_nodes.length*10, 450].max
 end
 
 template "/etc/mysql/conf.d/wsrep.cnf" do
