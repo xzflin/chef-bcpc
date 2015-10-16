@@ -1350,6 +1350,13 @@ default['bcpc']['diamond']['collectors']['rabbitmq']['queues_ignored'] = '.*'
 default['bcpc']['diamond']['collectors']['rabbitmq']['vhosts'] = nil
 # Ceph Collector parameters
 default['bcpc']['diamond']['collectors']['CephCollector']['metrics_whitelist'] = "ceph.mon.#{node['hostname']}.cluster.*"
+# BC2 Collecter parameters
+default['bcpc']['diamond']['collectors']['BC2'] = {
+  "interval" => "900",
+  "path" => "openstack",
+  "hostname" => "#{node['bcpc']['region_name']}",
+  "db_host" => "#{node['bcpc']['management']['vip']}",
+}
 
 
 ###########################################
