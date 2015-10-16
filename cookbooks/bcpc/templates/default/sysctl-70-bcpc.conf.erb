@@ -50,3 +50,9 @@ net.ipv4.ip_nonlocal_bind=1
 # Avoid swapping
 vm.swappiness = 0
 vm.min_free_kbytes = 135168
+<% if not @parameters.empty? %>
+# Customized parameters
+<% @parameters.sort.each do |key, value| %>
+<%= key %> = <%= value %>
+<% end %>
+<% end %>
