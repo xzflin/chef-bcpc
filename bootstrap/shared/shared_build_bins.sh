@@ -111,6 +111,12 @@ if [ ! -f python-pyzabbix_${VER_PYZABBIX}_all.deb ]; then
   rm -rf pyzabbix-${VER_PYZABBIX}.tar.gz pyzabbix-${VER_PYZABBIX}
 fi
 
+# Grab Zabbix-Pagerduty notification script
+if [ ! -f pagerduty-zabbix-proxy.py ]; then
+  cp -v $FILECACHE_MOUNT_POINT/pagerduty-zabbix-proxy.py .
+fi
+FILES="pagerduty-zabbix-proxy.py $FILES"
+
 # Build graphite packages
 if [ ! -f python-carbon_${VER_GRAPHITE_CARBON}_all.deb ] || [ ! -f python-whisper_${VER_GRAPHITE_WHISPER}_all.deb ] || [ ! -f python-graphite-web_${VER_GRAPHITE_WEB}_all.deb ]; then
   cp -v $FILECACHE_MOUNT_POINT/carbon-${VER_GRAPHITE_CARBON}.tar.gz .

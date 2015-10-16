@@ -41,7 +41,7 @@ default['bcpc']['ceph']['version_number'] = '0.94.3'
 default['bcpc']['erlang']['version'] = '1:17.5.3'
 default['bcpc']['haproxy']['version'] = '1.5.14-1ppa~trusty'
 default['bcpc']['kibana']['version'] = '4.0.2'
-default['bcpc']['rabbitmq']['version'] = '3.5.5-3'
+default['bcpc']['rabbitmq']['version'] = '3.5.6-1'
 
 ###########################################
 #
@@ -200,6 +200,10 @@ default['bcpc']['fixed']['dhcp_lease_time'] = "120"
 
 default['bcpc']['ntp_servers'] = ["pool.ntp.org"]
 default['bcpc']['dns_servers'] = ["8.8.8.8", "8.8.4.4"]
+
+# Proxy server URL for recipes to use
+# Example: http://proxy-hostname:port
+default['bcpc']['proxy_server_url'] = nil
 
 ###########################################
 #
@@ -549,6 +553,8 @@ default['bcpc']['nova']['live_migration_patch'] = false
 default['bcpc']['nova']['verbose'] = false
 # Nova debug toggle
 default['bcpc']['nova']['debug'] = false
+# Nova default log levels
+default['bcpc']['nova']['default_log_levels'] = nil
 # Nova scheduler default filters
 default['bcpc']['nova']['scheduler_default_filters'] = ['AggregateInstanceExtraSpecsFilter', 'RetryFilter', 'AvailabilityZoneFilter', 'RamFilter', 'ComputeFilter', 'ComputeCapabilitiesFilter', 'ImagePropertiesFilter', 'ServerGroupAntiAffinityFilter', 'ServerGroupAffinityFilter']
 
@@ -1269,6 +1275,18 @@ default['bcpc']['mysql-head']['max_connections'] = 0
 
 ###########################################
 #
+# BCPC system (sysctl) settings
+#
+###########################################
+#
+# Use this to *add* more reserved ports; i.e. modify value of
+# net.ipv4.ip_local_reserved_ports
+default['bcpc']['system']['additional_reserved_ports'] = []
+# Any other sysctl parameters
+default['bcpc']['system']['parameters'] = {}
+
+###########################################
+#
 # CPU governor settings
 #
 ###########################################
@@ -1296,6 +1314,10 @@ default['bcpc']['monitoring']['vip'] = "10.17.1.16"
 default['bcpc']['monitoring']['external_clients'] = []
 # Monitoring database settings
 default['bcpc']['monitoring']['mysql']['innodb_buffer_pool_size'] = nil
+# Pagerduty integration
+default['bcpc']['monitoring']['pagerduty']['enabled'] = false
+# Pagerduty service key
+default['bcpc']['monitoring']['pagerduty']['key'] = nil
 
 ###########################################
 #
@@ -1477,6 +1499,9 @@ default['bcpc']['zabbix']['php_settings'] = {
     'max_input_time' => 300,
     'date.timezone' => 'America/New_York'
 }
+# Zabbix severities to notify about.
+# https://www.zabbix.com/documentation/2.4/manual/api/reference/usermedia/object
+default['bcpc']['zabbix']['severity'] = 63
 ###########################################
 #
 # Kibana settings

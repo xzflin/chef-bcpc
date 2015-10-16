@@ -17,6 +17,23 @@
 # limitations under the License.
 #
 
+template "/etc/sysctl.d/70-bcpc.conf" do
+    source "sysctl-70-bcpc.conf.erb"
+    owner "root"
+    group "root"
+    mode 00644
+    variables(
+        :additional_reserved_ports => node['bcpc']['system']['additional_reserved_ports'],
+        :parameters                => node['bcpc']['system']['parameters']
+    )
+    notifies :run, "execute[reload-sysctl]", :immediately
+end
+
+execute "reload-sysctl" do
+    action :nothing
+    command "sysctl -p /etc/sysctl.d/70-bcpc.conf"
+end
+
 bash "set-deadline-io-scheduler" do
     user "root"
     code <<-EOH

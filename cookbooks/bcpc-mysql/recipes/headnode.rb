@@ -56,7 +56,7 @@ end
 ruby_block 'set-max-mysql-connections' do
   block do
     if node['bcpc']['mysql-head']['max_connections'] == 0
-      node.override['bcpc']['mysql-head']['max_connections'] = [get_head_nodes.length*150+get_all_nodes.length*10, 200].max
+      node.override['bcpc']['mysql-head']['max_connections'] = [get_head_nodes.length*150+get_all_nodes.length*10, 450].max
     end
   end
 end
