@@ -33,7 +33,7 @@ net.ipv4.tcp_fin_timeout = 10
 
 # Disable TCP slow start on idle connections
 net.ipv4.tcp_slow_start_after_idle = 0
- 
+
 # If your servers talk UDP, also up these limits
 net.ipv4.udp_rmem_min = 8192
 net.ipv4.udp_wmem_min = 8192
@@ -46,13 +46,3 @@ net.ipv4.tcp_keepalive_time=1800
 
 # Enable binding to non-local IP addresses
 net.ipv4.ip_nonlocal_bind=1
-
-# Avoid swapping
-vm.swappiness = 0
-vm.min_free_kbytes = 135168
-<% if not @parameters.empty? %>
-# Customized parameters
-<% @parameters.sort.each do |key, value| %>
-<%= key %> = <%= value %>
-<% end %>
-<% end %>

@@ -17,11 +17,14 @@
 # limitations under the License.
 #
 
-template "/etc/sysctl.d/70-bcpc.conf" do
-    source "sysctl-70-bcpc.conf.erb"
+template "/etc/sysctl.d/70-bcpc-network.conf" do
+    source "sysctl-70-bcpc-network.conf.erb"
     owner "root"
     group "root"
     mode 00644
+    variables(
+        :additional_reserved_ports => node['bcpc']['system']['additional_reserved_ports']
+    )
     notifies :run, "execute[reload-sysctl]", :immediately
 end
 
