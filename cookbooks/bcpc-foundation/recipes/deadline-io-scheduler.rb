@@ -30,7 +30,7 @@ end
 
 execute "reload-sysctl" do
     action :nothing
-    command "sysctl -p /etc/sysctl.d/70-bcpc.conf"
+    command "sysctl --system"
 end
 
 bash "set-deadline-io-scheduler" do

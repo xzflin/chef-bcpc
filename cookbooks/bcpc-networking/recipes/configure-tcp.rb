@@ -17,18 +17,15 @@
 # limitations under the License.
 #
 
+# due to hackeration this requires the reload-sysctl resource in bcpc-foundation::deadline-io-scheduler
+# TODO make that cleaner, maybe separate bcpc-sysctl cookbook to contain this stuff
 template "/etc/sysctl.d/70-bcpc-network.conf" do
-    source "sysctl-70-bcpc-network.conf.erb"
-    owner "root"
-    group "root"
-    mode 00644
-    variables(
-        :additional_reserved_ports => node['bcpc']['system']['additional_reserved_ports']
-    )
-    notifies :run, "execute[reload-sysctl]", :immediately
-end
-
-execute "reload-sysctl" do
-    action :nothing
-    command "sysctl -p /etc/sysctl.d/70-bcpc.conf"
+  source "sysctl-70-bcpc-network.conf.erb"
+  owner "root"
+  group "root"
+  mode 00644
+  variables(
+    :additional_reserved_ports => node['bcpc']['system']['additional_reserved_ports']
+  )
+  notifies :run, "execute[reload-sysctl]", :immediately
 end
