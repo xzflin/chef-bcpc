@@ -35,7 +35,7 @@ pushd $BUILD_DEST
 # (will not exist if this is the first time run with the new script)
 if [ -d $BUILD_CACHE_DIR ]; then
   echo "Copying cached build products..."
-  rsync -av $BUILD_CACHE_DIR/* $(pwd)
+  rsync -avxSH $BUILD_CACHE_DIR/* $(pwd -P)
 fi
 
 # Install tools needed for packaging
@@ -55,7 +55,7 @@ fi
 
 # fluentd plugins and dependencies are fetched by shared_prereqs.sh, just copy them
 # in from the local cache and add them to $FILES
-rsync -av $FILECACHE_MOUNT_POINT/fluentd_gems/* $(pwd)
+rsync -avxSH $FILECACHE_MOUNT_POINT/fluentd_gems/* $(pwd -P)
 FILES="$(ls -1 $FILECACHE_MOUNT_POINT/fluentd_gems/*.gem | xargs) $FILES"
 
 # Fetch the cirros image for testing
@@ -206,6 +206,6 @@ FILES="rally.tar.gz rally-pip.tar.gz rally-bin.tar.gz python-pip_${VER_PIP}_all.
 # End of Rally
 
 # rsync build products with cache directory
-mkdir -p $BUILD_CACHE_DIR && rsync -av $(pwd)/* $BUILD_CACHE_DIR
+mkdir -p $BUILD_CACHE_DIR && rsync -avxSH $(pwd -P)/* $BUILD_CACHE_DIR
 
 popd # $BUILD_DEST 
