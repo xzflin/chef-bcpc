@@ -29,9 +29,18 @@ ruby_block "initialize-horizon-config" do
     end
 end
 
+# this resource exists as a little trick to ensure the upgrade goes
+# smoothly even if the dashboard Apache configuration is in the old
+# place that blows up the postinst script
+file "/etc/apache2/conf-available/openstack-dashboard.conf" do
+  action :create_if_missing
+end
+
+# options specified to keep dpkg from complaining that the config file exists already
 package "openstack-dashboard" do
-    action :upgrade
-    notifies :run, "bash[dpkg-reconfigure-openstack-dashboard]", :delayed
+  action :upgrade
+  options "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
+  notifies :run, "bash[dpkg-reconfigure-openstack-dashboard]", :delayed
 end
 
 #  _   _  ____ _  __   __  ____   _  _____ ____ _   _
