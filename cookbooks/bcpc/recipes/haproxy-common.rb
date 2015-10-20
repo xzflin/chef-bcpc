@@ -55,6 +55,14 @@ template "/etc/haproxy/haproxy.pem" do
     notifies :restart, "service[haproxy]", :delayed
 end
 
+template "/etc/haproxy/haproxy.s3.pem" do
+    source "haproxy.s3.pem.erb"
+    owner "root"
+    group "root"
+    mode 00600
+    notifies :restart, "service[haproxy]", :delayed
+end
+
 service "haproxy" do
     restart_command "service haproxy stop && service haproxy start && sleep 5"
     action [:enable, :start]
