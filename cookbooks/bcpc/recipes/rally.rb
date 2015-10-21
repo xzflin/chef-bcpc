@@ -58,7 +58,7 @@ cookbook_file "/tmp/rally.tar.gz" do
     mode 00444
 end
 
-pip_version = node['bcpc']['use_bootstrap_v2'] ? '7.0.3' : '6.1.1'
+pip_version = '7.0.3'
 
 cookbook_file "/tmp/python-pip_#{pip_version}_all.deb" do
     source "bins/python-pip_#{pip_version}_all.deb"

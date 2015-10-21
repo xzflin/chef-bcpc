@@ -2,7 +2,6 @@
   "name": "Test-Laptop-Vagrant",
   "override_attributes": {
     "bcpc": {
-      "use_bootstrap_v2": true,
       "vagrant": {
         "nat_ip": "10.0.2.15"
       },
