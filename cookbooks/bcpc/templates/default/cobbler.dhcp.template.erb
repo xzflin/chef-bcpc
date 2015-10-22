@@ -31,6 +31,19 @@ subnet <%= @subnet %> netmask <%=node['bcpc']['management']['netmask']%> {
      default-lease-time         21600;
      max-lease-time             43200;
      next-server                $next_server;
+
+# Following was giving:
+#   tftp: client does not accept options
+#
+#     if option architecture-type = 00:00 {
+#         filename "bios/pxelinux.0";
+#         } elsif option architecture-type = 00:09 {
+#         filename "efi64/syslinux.efi";
+#         } elsif option architecture-type = 00:07 {
+#         filename "efi64/syslinux.efi";
+#         } else {
+#         filename "bios/pxelinux.0";
+#    }
 }
 
 #for dhcp_tag in $dhcp_tags.keys():
@@ -56,7 +69,8 @@ group {
         #if $iface.gateway:
         option routers $iface.gateway;
         #end if
-        filename "$iface.filename";
+	# Hard-coded for UEFI. :(
+        filename "efi64/syslinux.efi";
         ## Cobbler defaults to $next_server, but some users
         ## may like to use $iface.system.server for proxied setups
         next-server $next_server;
