@@ -72,9 +72,11 @@ end
 bash "import-ubuntu-distribution-cobbler" do
     user "root"
     code <<-EOH
-        mount -o loop -o ro /tmp/ubuntu-14.04-mini.iso /mnt
-        cobbler import --name=ubuntu-14.04-mini --path=/mnt --breed=ubuntu --os-version=trusty --arch=x86_64
-        umount /mnt
+        mkdir -p /mnt/iso
+        mount -o loop -o ro /tmp/ubuntu-14.04-mini.iso /mnt/iso
+        cobbler import --name=ubuntu-14.04-mini --path=/mnt/iso --breed=ubuntu --os-version=trusty --arch=x86_64
+        umount /mnt/iso
+        rmdir /mnt/iso
         cobbler sync
     EOH
     not_if "cobbler distro list | grep ubuntu-14.04-mini"
