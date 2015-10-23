@@ -106,6 +106,13 @@ end
     end
 end
 
+# Add post-sync trigger
+cookbook_file "/usr/lib/python2.7/dist-packages/cobbler/modules/sync_post_copy_pxe_configs.py" do
+    source "sync_post_copy_pxe_configs.py"
+    owner "root"
+    mode "0644"
+end
+
 bash "import-ubuntu-distribution-cobbler" do
     user "root"
     code <<-EOH
