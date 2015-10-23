@@ -36,6 +36,7 @@
     osd mount options xfs = noexec,nodev,noatime,nodiratime,barrier=0,discard
     osd crush update on start = false
     osd client op priority = 63
+    osd scrub load threshold = <%= @node['bcpc']['ceph']['osd_scrub_load_threshold'] %>
 <% if @node["bcpc"]["ceph"]["rebalance"] %>
     osd recovery max active = 1
     osd max backfills  = 1
