@@ -69,6 +69,43 @@ cookbook_file "/tmp/ubuntu-14.04-mini.iso" do
     mode 00444
 end
 
+# Get syslinux supporting files
+cookbook_file "#{Chef::Config[:file_cache_path]}/syslinux-6.03.tar.gz" do
+    source "bins/syslinux-6.03.tar.gz"
+    owner "root"
+    mode 00444
+end
+
+bash "unpack-syslinux-files" do
+    user "root"
+    code <<-EOH
+        cd #{Chef::Config[:file_cache_path]}
+        tar xzf syslinux-6.03.tar.gz
+    EOH
+end
+
+# Create boot-mode specific state dirs
+%w{ bios efi64 }.each do |bootmode|
+    directory "/var/lib/tftpboot/#{bootmode}" do
+        owner "root"
+        group "root"
+        mode "0755"
+        action "create"
+    end
+
+    bash "install-syslinux-#{bootmode}-files" do
+        code <<-EOH
+            cd #{Chef::Config[:file_cache_path]}
+            cp syslinux-6.03/#{bootmode}/core/pxelinux.0 /var/lib/tftpboot/#{bootmode}/
+            cp syslinux-6.03/#{bootmode}/com32/elflink/ldlinux/ldlinux.c32 /var/lib/tftpboot/#{bootmode}/
+            cp syslinux-6.03/#{bootmode}/com32/lib/libcom32.c32 /var/lib/tftpboot/#{bootmode}/
+            cp syslinux-6.03/#{bootmode}/com32/libutil/libutil.c32 /var/lib/tftpboot/#{bootmode}/
+            cp syslinux-6.03/#{bootmode}/com32/menu/vesamenu.c32 /var/lib/tftpboot/#{bootmode}/
+            cp syslinux-6.03/#{bootmode}/com32/modules/pxechn.c32 /var/lib/tftpboot/#{bootmode}/
+        EOH
+    end
+end
+
 bash "import-ubuntu-distribution-cobbler" do
     user "root"
     code <<-EOH
