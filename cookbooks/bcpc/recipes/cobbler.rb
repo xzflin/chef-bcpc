@@ -84,7 +84,22 @@ bash "unpack-syslinux-files" do
     EOH
 end
 
-# Create boot-mode specific state dirs
+# Add post-sync trigger
+cookbook_file "/usr/lib/python2.7/dist-packages/cobbler/modules/sync_post_copy_pxe_configs.py" do
+    source "sync_post_copy_pxe_configs.py"
+    owner "root"
+    mode "0644"
+    notifies :reload, "service[cobbler]", :delayed
+end
+
+# Create and populate boot-mode specific state dir structure
+directory "/var/lib/tftpboot" do
+    owner "root"
+    group "root"
+    mode "0755"
+    action "create"
+end
+
 %w{ bios efi64 }.each do |bootmode|
     directory "/var/lib/tftpboot/#{bootmode}" do
         owner "root"
@@ -104,14 +119,6 @@ end
             cp syslinux-6.03/#{bootmode}/com32/modules/pxechn.c32 /var/lib/tftpboot/#{bootmode}/
         EOH
     end
-end
-
-# Add post-sync trigger
-cookbook_file "/usr/lib/python2.7/dist-packages/cobbler/modules/sync_post_copy_pxe_configs.py" do
-    source "sync_post_copy_pxe_configs.py"
-    owner "root"
-    mode "0644"
-    notifies :reload, "service[cobbler]", :delayed
 end
 
 bash "import-ubuntu-distribution-cobbler" do
