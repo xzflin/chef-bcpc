@@ -63,7 +63,7 @@ template "/var/lib/cobbler/kickstarts/bcpc_ubuntu_host.preseed" do
     variables(:bootstrap_node => get_bootstrap_node)
 end
 
-cookbook_file "/tmp/ubuntu-14.04-mini.iso" do
+cookbook_file "#{Chef::Config[:file_cache_path]}/ubuntu-14.04-mini.iso" do
     source "bins/ubuntu-14.04-mini.iso"
     owner "root"
     mode 00444
@@ -111,6 +111,7 @@ cookbook_file "/usr/lib/python2.7/dist-packages/cobbler/modules/sync_post_copy_p
     source "sync_post_copy_pxe_configs.py"
     owner "root"
     mode "0644"
+    notifies :reload, "service[cobbler]", :delayed
 end
 
 bash "import-ubuntu-distribution-cobbler" do
@@ -132,7 +133,7 @@ bash "import-bcpc-profile-cobbler" do
         cobbler profile add --name=bcpc_host --distro=ubuntu-14.04-mini-x86_64 --kickstart=/var/lib/cobbler/kickstarts/bcpc_ubuntu_host.preseed --kopts="interface=auto"
         cobbler sync
     EOH
-    not_if "cobbler profile list | grep bcpc_host"
+    not_if "cobbler profile list | grep -w bcpc_host"
 end
 
 service "isc-dhcp-server" do
@@ -140,5 +141,6 @@ service "isc-dhcp-server" do
 end
 
 service "cobbler" do
+    provider Chef::Provider::Service::Upstart
     action [:enable, :start]
 end
