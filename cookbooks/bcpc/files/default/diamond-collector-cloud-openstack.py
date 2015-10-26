@@ -1,12 +1,12 @@
 import diamond.collector
 import MySQLdb as mysql
 
-class BC2Collector(diamond.collector.Collector):
+class CloudCollector(diamond.collector.Collector):
 
     def get_default_config_help(self):
-        config_help = super(BC2Collector, self).get_default_config_help()
+        config_help = super(CloudCollector, self).get_default_config_help()
         config_help.update({
-            'bc2_collector': 'Send BC2 openstack stats',
+            'cloud_collector': 'Send Openstack stats',
         })
         return config_help
 
@@ -14,7 +14,7 @@ class BC2Collector(diamond.collector.Collector):
         """
         Returns the default collector settings
         """
-        config = super(BC2Collector, self).get_default_config()
+        config = super(CloudCollector, self).get_default_config()
         config.update({
             'path':        'openstack',
             'path_prefix': '',

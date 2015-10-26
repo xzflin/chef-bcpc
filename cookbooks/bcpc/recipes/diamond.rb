@@ -117,26 +117,26 @@ if node['bcpc']['enabled']['metrics'] then
         end
     end
 
-    directory '/usr/share/diamond/collectors/BC2/' do
+    directory '/usr/share/diamond/collectors/Cloud/' do
         owner 'root'
         group 'root'
         mode 00755
         action :create
     end
 
-    cookbook_file "/usr/share/diamond/collectors/BC2/BC2.py" do
-        source "diamond-collector-BC2-openstack.py"
+    cookbook_file "/usr/share/diamond/collectors/Cloud/CloudCollector.py" do
+        source "diamond-collector-cloud-openstack.py"
         owner "root"
         mode 00644
     end
 
-    template "/etc/diamond/collectors/BC2Collector.conf" do
+    template "/etc/diamond/collectors/CloudCollector.conf" do
         source "diamond-collector.conf.erb"
         owner "diamond"
         group "root"
         mode 00600
         variables(lazy {
-          {:parameters => node['bcpc']['diamond']['collectors']['BC2'].merge(
+          {:parameters => node['bcpc']['diamond']['collectors']['cloud'].merge(
               "db_user" => get_config('mysql-root-user'),
               "db_password" => get_config('mysql-root-password'),
           )}
