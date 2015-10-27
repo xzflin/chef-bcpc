@@ -107,6 +107,11 @@ end
         mode "0755"
         action "create"
     end
+
+    # Need link for image loads. See `in.tftpd ... --verbose`
+    link "/var/lib/tftpboot/#{bootmode}/images" do
+        to "../images"
+    end
 end
 
 
