@@ -107,18 +107,31 @@ end
         mode "0755"
         action "create"
     end
+end
 
-    bash "install-syslinux-#{bootmode}-files" do
-        code <<-EOH
-            cd #{Chef::Config[:file_cache_path]}
-            cp syslinux-6.03/#{bootmode}/core/pxelinux.0 /var/lib/tftpboot/#{bootmode}/
-            cp syslinux-6.03/#{bootmode}/com32/elflink/ldlinux/ldlinux.c32 /var/lib/tftpboot/#{bootmode}/
-            cp syslinux-6.03/#{bootmode}/com32/lib/libcom32.c32 /var/lib/tftpboot/#{bootmode}/
-            cp syslinux-6.03/#{bootmode}/com32/libutil/libutil.c32 /var/lib/tftpboot/#{bootmode}/
-            cp syslinux-6.03/#{bootmode}/com32/menu/vesamenu.c32 /var/lib/tftpboot/#{bootmode}/
-            cp syslinux-6.03/#{bootmode}/com32/modules/pxechn.c32 /var/lib/tftpboot/#{bootmode}/
-        EOH
-    end
+
+bash "install-syslinux-bios-files" do
+    code <<-EOH
+        cd #{Chef::Config[:file_cache_path]}
+        cp syslinux-6.03/bios/core/pxelinux.0 /var/lib/tftpboot/bios/
+        cp syslinux-6.03/bios/com32/elflink/ldlinux/ldlinux.c32 /var/lib/tftpboot/bios/
+        cp syslinux-6.03/bios/com32/lib/libcom32.c32 /var/lib/tftpboot/bios/
+        cp syslinux-6.03/bios/com32/libutil/libutil.c32 /var/lib/tftpboot/bios/
+        cp syslinux-6.03/bios/com32/menu/vesamenu.c32 /var/lib/tftpboot/bios/
+        cp syslinux-6.03/bios/com32/modules/pxechn.c32 /var/lib/tftpboot/bios/
+    EOH
+end
+
+bash "install-syslinux-efi64-files" do
+    code <<-EOH
+        cd #{Chef::Config[:file_cache_path]}
+        cp syslinux-6.03/efi64/efi/syslinux.efi /var/lib/tftpboot/efi64/
+        cp syslinux-6.03/efi64/com32/elflink/ldlinux/ldlinux.e64 /var/lib/tftpboot/efi64/
+        cp syslinux-6.03/efi64/com32/lib/libcom32.c32 /var/lib/tftpboot/efi64/
+        cp syslinux-6.03/efi64/com32/libutil/libutil.c32 /var/lib/tftpboot/efi64/
+        cp syslinux-6.03/efi64/com32/menu/vesamenu.c32 /var/lib/tftpboot/efi64/
+        cp syslinux-6.03/efi64/com32/modules/pxechn.c32 /var/lib/tftpboot/efi64/
+    EOH
 end
 
 bash "import-ubuntu-distribution-cobbler" do
