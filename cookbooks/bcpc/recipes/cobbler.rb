@@ -94,6 +94,14 @@ end
     end
 end
 
+# Seems to be necessary... see (incomplete?) module
+# cobbler.modules.sync_post_restart_services
+cookbook_file "/var/lib/cobbler/triggers/sync/post/sync_post_restart_tftp.sh" do
+    source "sync_post_restart_tftp.sh"
+    owner "root"
+    mode "0744"
+end
+
 # Create and populate boot-mode specific state dir structure
 directory "/var/lib/tftpboot" do
     owner "root"
