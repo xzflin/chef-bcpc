@@ -1,0 +1,46 @@
+diff --git a/cinder/common/config.py b/cinder/common/config.py
+index f6a49c7..0be4332 100644
+--- a/cinder/common/config.py
++++ b/cinder/common/config.py
+@@ -139,6 +139,12 @@ global_opts = [
+                help='Default availability zone for new volumes. If not set, '
+                     'the storage_availability_zone option value is used as '
+                     'the default for new volumes.'),
++    cfg.BoolOpt('allow_availability_zone_fallback',
++                default=False,
++                help='If the requested Cinder availability zone is '
++                     'unavailable, fall back to the value of '
++                     'default_availability_zone, then '
++                     'storage_availability_zone, instead of failing.'),
+     cfg.StrOpt('default_volume_type',
+                default=None,
+                help='Default volume type to use'),
+diff --git a/cinder/volume/flows/api/create_volume.py b/cinder/volume/flows/api/create_volume.py
+index 5e8dd28..e809880 100644
+--- a/cinder/volume/flows/api/create_volume.py
++++ b/cinder/volume/flows/api/create_volume.py
+@@ -327,10 +327,21 @@ class ExtractVolumeRequestTask(flow_utils.CinderTask):
+             else:
+                 # For backwards compatibility use the storage_availability_zone
+                 availability_zone = CONF.storage_availability_zone
++
+         if availability_zone not in self.availability_zones:
+-            msg = _("Availability zone '%s' is invalid") % (availability_zone)
+-            LOG.warn(msg)
+-            raise exception.InvalidInput(reason=msg)
++            if CONF.allow_availability_zone_fallback:
++                original_az = availability_zone
++                availability_zone = (
++                    CONF.default_availability_zone or
++                    CONF.storage_availability_zone)
++                msg = _("Availability zone '%s' not found, falling back to "
++                        "'%s'" % (original_az, availability_zone))
++                LOG.warn(msg)
++            else:
++                msg = _(("Availability zone '%s' is invalid") %
++                        (availability_zone))
++                LOG.warn(msg)
++                raise exception.InvalidInput(reason=msg)
+ 
+         # If the configuration only allows cloning to the same availability
+         # zone then we need to enforce that.
