@@ -84,12 +84,14 @@ bash "unpack-syslinux-files" do
     EOH
 end
 
-# Add post-sync trigger
-cookbook_file "/usr/lib/python2.7/dist-packages/cobbler/modules/sync_post_copy_pxe_configs.py" do
-    source "sync_post_copy_pxe_configs.py"
-    owner "root"
-    mode "0644"
-    notifies :reload, "service[cobbler]", :delayed
+# Add sync triggers
+%w{ sync_post_link_pxe_configs.py sync_pre_unlink_pxe_configs.py }.each do |trigger|
+    cookbook_file "/usr/lib/python2.7/dist-packages/cobbler/modules/#{trigger}" do
+        source trigger
+        owner "root"
+        mode "0644"
+        notifies :reload, "service[cobbler]", :delayed
+    end
 end
 
 # Create and populate boot-mode specific state dir structure
