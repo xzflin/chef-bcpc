@@ -36,6 +36,17 @@ package "isc-dhcp-server"
 package "cobbler"
 package "cobbler-web"
 
+execute "cobbler-sync" do
+    command "cobbler sync"
+    action :nothing
+end
+
+# Always sync at the end at _most_ once
+ruby_block "schedule-terminal-cobbler-sync" do
+    block do nil ; end
+    notifies :run, "execute[cobbler-sync]", :delayed
+end
+
 template "/etc/cobbler/settings" do
     source "cobbler.settings.erb"
     mode 00644
@@ -82,6 +93,7 @@ bash "unpack-syslinux-files" do
         cd #{Chef::Config[:file_cache_path]}
         tar xzf syslinux-6.03.tar.gz
     EOH
+    not_if "cd #{Chef::Config[:file_cache_path]} && tar -df syslinux-6.03.tar.gz syslinux-6.03"
 end
 
 # Add sync triggers
@@ -134,7 +146,10 @@ bash "install-syslinux-bios-files" do
         cp syslinux-6.03/bios/com32/libutil/libutil.c32 /var/lib/tftpboot/bios/
         cp syslinux-6.03/bios/com32/menu/vesamenu.c32 /var/lib/tftpboot/bios/
         cp syslinux-6.03/bios/com32/modules/pxechn.c32 /var/lib/tftpboot/bios/
+        find /var/lib/tftpboot/bios -type f -print0 | \
+            xargs -0 shasum -p > #{Chef::Config[:file_cache_path]}/var_lib_tftpboot_bios.SHASUMS
     EOH
+    not_if "shasum -p -c #{Chef::Config[:file_cache_path]}/var_lib_tftpboot_bios.SHASUMS"
 end
 
 bash "install-syslinux-efi64-files" do
@@ -146,7 +161,10 @@ bash "install-syslinux-efi64-files" do
         cp syslinux-6.03/efi64/com32/libutil/libutil.c32 /var/lib/tftpboot/efi64/
         cp syslinux-6.03/efi64/com32/menu/vesamenu.c32 /var/lib/tftpboot/efi64/
         cp syslinux-6.03/efi64/com32/modules/pxechn.c32 /var/lib/tftpboot/efi64/
+        find /var/lib/tftpboot/efi64 -type f -print0 | \
+            xargs -0 shasum -p > #{Chef::Config[:file_cache_path]}/var_lib_tftpboot_efi64.SHASUMS
     EOH
+    not_if "shasum -p -c #{Chef::Config[:file_cache_path]}/var_lib_tftpboot_efi64.SHASUMS"
 end
 
 bash "import-ubuntu-distribution-cobbler" do
@@ -157,8 +175,8 @@ bash "import-ubuntu-distribution-cobbler" do
         cobbler import --name=ubuntu-14.04-mini --path=/mnt/iso --breed=ubuntu --os-version=trusty --arch=x86_64
         umount /mnt/iso
         rmdir /mnt/iso
-        cobbler sync
     EOH
+    notifies :run, "execute[cobbler-sync]", :delayed
     not_if "cobbler distro list | grep ubuntu-14.04-mini"
 end
 
@@ -166,8 +184,8 @@ bash "import-bcpc-profile-cobbler" do
     user "root"
     code <<-EOH
         cobbler profile add --name=bcpc_host --distro=ubuntu-14.04-mini-x86_64 --kickstart=/var/lib/cobbler/kickstarts/bcpc_ubuntu_host.preseed --kopts="interface=auto"
-        cobbler sync
     EOH
+    notifies :run, "execute[cobbler-sync]", :delayed
     not_if "cobbler profile list | grep -w bcpc_host"
 end
 
