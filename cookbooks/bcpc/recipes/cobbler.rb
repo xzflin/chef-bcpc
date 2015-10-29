@@ -171,7 +171,8 @@ bash "import-ubuntu-distribution-cobbler" do
     user "root"
     code <<-EOH
         mkdir -p /mnt/iso
-        mount -o loop -o ro /tmp/ubuntu-14.04-mini.iso /mnt/iso
+        # Following line doesn't seem to bail out bash block even if it fails!
+        mount -o loop -o ro #{Chef::Config[:file_cache_path]}/ubuntu-14.04-mini.iso /mnt/iso
         cobbler import --name=ubuntu-14.04-mini --path=/mnt/iso --breed=ubuntu --os-version=trusty --arch=x86_64
         umount /mnt/iso
         rmdir /mnt/iso
