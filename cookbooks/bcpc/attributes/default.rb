@@ -61,8 +61,6 @@ default['bcpc']['enabled']['always_update_package_lists'] = true
 default['bcpc']['enabled']['keepalived_checks'] = true
 # This will enable the networking test scripts
 default['bcpc']['enabled']['network_tests'] = true
-# This will enable httpd disk caching for radosgw in apache
-default['bcpc']['enabled']['radosgw_cache'] = false
 # This will enable using TPM-based hwrngd
 default['bcpc']['enabled']['tpm'] = false
 # This will block VMs from talking to the management network
@@ -71,9 +69,6 @@ default['bcpc']['enabled']['secure_fixed_networks'] = true
 default['bcpc']['enabled']['swap'] = true
 # Toggle to enable/disable Heat (OpenStack Cloud Formation)
 default['bcpc']['enabled']['heat'] = false
-
-# If radosgw_cache is enabled, default to 20MB max file size
-default['bcpc']['radosgw']['cache_max_file_size'] = 20000000
 
 ###########################################
 #
@@ -214,14 +209,9 @@ default['bcpc']['admin_email'] = "admin@localhost.com"
 default['bcpc']['zabbix']['user'] = "zabbix"
 default['bcpc']['zabbix']['group'] = "adm"
 
-# General ports for both Apache and Civetweb (no ssl for civetweb at this time)
+# General ports for Civetweb backend and HAProxy frontend
 default['bcpc']['ports']['radosgw'] = 8088
 default['bcpc']['ports']['radosgw_https'] = 443
-default['bcpc']['ports']['civetweb']['radosgw'] = 8088
-# Apache - Leave until Apache is removed
-default['bcpc']['ports']['apache']['radosgw'] = 80
-default['bcpc']['ports']['apache']['radosgw_https'] = 443
-
 default['bcpc']['ports']['haproxy']['radosgw'] = 80
 default['bcpc']['ports']['haproxy']['radosgw_https'] = 443
 

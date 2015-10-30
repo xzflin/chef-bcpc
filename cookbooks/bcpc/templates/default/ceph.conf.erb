@@ -72,12 +72,7 @@
     rgw enable usage log = false
     rgw print continue = false
     rgw socket path = /var/lib/ceph/radosgw/rgw.sock
-<% if @node['bcpc']['ceph']['frontend'] %>
-    rgw frontends = civetweb port=<%=node['bcpc']['ports']['civetweb']['radosgw']%>
-<% else %>
-    # For Apache
-    rgw socket path = /var/lib/ceph/radosgw/rgw_fcgi.sock
-<% end %>
+    rgw frontends = civetweb port=<%= node['bcpc']['ports']['radosgw'] %>
     # Increased to 1 to log HTTP return codes
     # http://tracker.ceph.com/issues/12432
     debug rgw = 1/0
@@ -85,7 +80,7 @@
 <% if config_defined('keystone-admin-token') %>
     rgw keystone url = openstack.<%=node['bcpc']['cluster_domain']%>:35358
     rgw keystone admin token = <%=get_config('keystone-admin-token')%>
-    rgw keystone accepted roles = admin Member _member_
+    rgw keystone accepted roles = Admin admin Member _member_
     rgw keystone token cache size = 1000
     rgw keystone revocation interval = 1200
     rgw s3 auth use keystone = true
