@@ -76,6 +76,8 @@ default['bcpc']['enabled']['tpm'] = false
 default['bcpc']['enabled']['secure_fixed_networks'] = true
 # Toggle to enable/disable swap memory
 default['bcpc']['enabled']['swap'] = true
+# Toggle to enable/disable Heat (OpenStack Cloud Formation)
+default['bcpc']['enabled']['heat'] = false
 
 # If radosgw_cache is enabled, default to 20MB max file size
 default['bcpc']['radosgw']['cache_max_file_size'] = 20000000
