@@ -204,7 +204,7 @@ frontend radosgw-http
   default_backend radosgw-http-backend
 
 frontend radosgw-https
-  bind <%="#{node['bcpc']['floating']['vip']}:#{node['bcpc']['ports']['haproxy']['radosgw_https']}"%> ssl crt /etc/haproxy/haproxy.pem
+  bind <%="#{node['bcpc']['floating']['vip']}:#{node['bcpc']['ports']['haproxy']['radosgw_https']}"%> ssl crt /etc/haproxy/haproxy.s3.pem
   option tcplog
   default_backend radosgw-http-backend
 

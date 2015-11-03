@@ -29,6 +29,10 @@ default['bcpc']['vms_key'] = nil
 default['bcpc']['ssl_certificate'] = nil
 default['bcpc']['ssl_private_key'] = nil
 default['bcpc']['ssl_intermediate_certificate'] = nil
+# custom SSL certificate for Rados Gateway (S3)
+default['bcpc']['s3_ssl_certificate'] = nil
+default['bcpc']['s3_ssl_private_key'] = nil
+default['bcpc']['s3_ssl_intermediate_certificate'] = nil
 
 ###########################################
 #
