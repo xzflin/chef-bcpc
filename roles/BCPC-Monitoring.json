@@ -21,7 +21,8 @@
       "recipe[bcpc::kibana]",
       "recipe[bcpc::fluentd]",
       "recipe[bcpc::zabbix-server]",
-      "recipe[bcpc::zabbix-agent]"
+      "recipe[bcpc::zabbix-agent]",
+      "recipe[bcpc::zabbix-pagerduty]"
     ],
     "description": "Monitoring/Metrics/Logging node in a BCPC cluster",
     "chef_type": "role",

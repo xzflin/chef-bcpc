@@ -170,6 +170,15 @@ bash "keystone-database-sync" do
     notifies :restart, "service[apache2]", :immediately
 end
 
+ruby_block "keystone-region-creation" do
+    block do
+        %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
+            mysql -uroot -e "INSERT INTO keystone.region (id, extra) VALUES(\'#{node['bcpc']['region_name']}\', '{}');"
+        ]
+    end
+    not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT id FROM keystone.region WHERE id = \"#{node['bcpc']['region_name']}\"' | grep \"#{node['bcpc']['region_name']}\" >/dev/null" }
+end
+
 # this is a synchronization resource that polls Keystone on the VIP to verify that it's not returning 503s,
 # if something above has restarted Apache and Keystone isn't ready to play yet
 bash "wait-for-keystone-to-become-operational" do
