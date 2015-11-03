@@ -21,3 +21,4 @@
 #
 
 package "emacs24-nox"
+package "vim"
