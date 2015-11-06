@@ -83,9 +83,6 @@ if node['bcpc']['enabled']['dns'] then
 
   ruby_block "powerdns-table-domains" do
     block do
-      reverse_fixed_zone = node['bcpc']['fixed']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['fixed']['cidr'])
-      reverse_float_zone = node['bcpc']['floating']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['floating']['cidr'])
-
       %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
           mysql -uroot #{node['bcpc']['dbname']['pdns']} <<-EOH
           CREATE TABLE IF NOT EXISTS domains (
@@ -98,36 +95,95 @@ if node['bcpc']['enabled']['dns'] then
               account VARCHAR(40) DEFAULT NULL,
               primary key (id)
           );
-          INSERT INTO domains (name, type) values ('#{node['bcpc']['cluster_domain']}', 'NATIVE');
-          INSERT INTO domains (name, type) values ('#{reverse_float_zone}', 'NATIVE');
-          INSERT INTO domains (name, type) values ('#{reverse_fixed_zone}', 'NATIVE');
           CREATE UNIQUE INDEX dom_name_index ON domains(name);
       ]
       self.notifies :restart, resources(:service => "pdns"), :delayed
       self.resolve_notification_references
     end
-    not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \"#{node['bcpc']['dbname']['pdns']}\" AND TABLE_NAME=\"domains\"' | grep -q \"domains\" >/dev/null" }
+    only_if {
+      %x[ MYSQL_PWD=#{get_config('mysql-root-password')} mysql -B --skip-column-names -uroot -e 'SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \"#{node['bcpc']['dbname']['pdns']}\" AND TABLE_NAME = \"domains\"' ].to_i.zero?
+    }
   end
 
-ruby_block "powerdns-function-ip4_to_ptr_name" do
-  block do
-    %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
-        mysql -uroot #{node['bcpc']['dbname']['pdns']} <<-EOH
-        delimiter //
-        CREATE FUNCTION ip4_to_ptr_name(ip4 VARCHAR(64) CHARACTER SET latin1) RETURNS VARCHAR(64)
-        COMMENT 'Returns the reversed IP with .in-addr.arpa appended, suitable for use in the name column of PTR records.'
-        DETERMINISTIC
-        BEGIN
-        return concat_ws( '.',  SUBSTRING_INDEX( SUBSTRING_INDEX(ip4, '.', 4), '.', -1),
-                                SUBSTRING_INDEX( SUBSTRING_INDEX(ip4, '.', 3), '.', -1),
-                                SUBSTRING_INDEX( SUBSTRING_INDEX(ip4, '.', 2), '.', -1),
-                                SUBSTRING_INDEX( SUBSTRING_INDEX(ip4, '.', 1), '.', -1), 'in-addr.arpa');
-        END//
-    ]
-    self.notifies :restart, resources(:service => "pdns"), :delayed
+  ruby_block "powerdns-table-domains-cluster-domain" do
+    block do
+      %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
+          mysql -uroot #{node['bcpc']['dbname']['pdns']} <<-EOH
+          INSERT INTO domains (name, type) values ('#{ node['bcpc']['cluster_domain'] }', 'NATIVE');
+      ]
+      self.notifies :restart, resources(:service => "pdns"), :delayed
+      self.resolve_notification_references
+    end
+    only_if {
+      %x[ MYSQL_PWD=#{get_config('mysql-root-password')} mysql -B --skip-column-names -uroot -e 'SELECT count(*) FROM pdns.domains WHERE name = \"#{ node['bcpc']['cluster_domain'] }\"' ].to_i.zero?
+    }
   end
-  not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT name FROM mysql.proc WHERE name = \"ip4_to_ptr_name\" AND db = \"#{node['bcpc']['dbname']['pdns']}\";' \"#{node['bcpc']['dbname']['pdns']}\" | grep -q \"ip4_to_ptr_name\" >/dev/null" }
-end
+
+  reverse_fixed_zone = node['bcpc']['fixed']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['fixed']['cidr'])
+  reverse_float_zone = node['bcpc']['floating']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['floating']['cidr'])
+  management_zone = calc_reverse_dns_zone(node['bcpc']['management']['cidr'])
+
+  ruby_block "powerdns-table-domains-reverse-fixed-zone" do
+    block do
+      %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
+          mysql -uroot #{node['bcpc']['dbname']['pdns']} <<-EOH
+          INSERT INTO domains (name, type) values ('#{ reverse_fixed_zone }', 'NATIVE');
+      ]
+      self.notifies :restart, resources(:service => "pdns"), :delayed
+      self.resolve_notification_references
+    end
+    only_if {
+      %x[ MYSQL_PWD=#{get_config('mysql-root-password')} mysql -B --skip-column-names -uroot -e 'SELECT count(*) FROM pdns.domains WHERE name = \"#{ reverse_fixed_zone }\"' ].to_i.zero?
+    }
+  end
+
+  ruby_block "powerdns-table-domains-reverse-float-zone" do
+    block do
+      %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
+          mysql -uroot #{node['bcpc']['dbname']['pdns']} <<-EOH
+          INSERT INTO domains (name, type) values ('#{ reverse_float_zone }', 'NATIVE');
+      ]
+      self.notifies :restart, resources(:service => "pdns"), :delayed
+      self.resolve_notification_references
+    end
+    only_if {
+      %x[ MYSQL_PWD=#{get_config('mysql-root-password')} mysql -B --skip-column-names -uroot -e 'SELECT count(*) FROM pdns.domains WHERE name = \"#{ reverse_float_zone }\"' ].to_i.zero?
+    }
+  end
+
+  ruby_block "powerdns-table-domains-management-zone" do
+    block do
+      %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
+          mysql -uroot #{node['bcpc']['dbname']['pdns']} <<-EOH
+          INSERT INTO domains (name, type) values ('#{management_zone}', 'NATIVE');
+      ]
+      self.notifies :restart, resources(:service => "pdns"), :delayed
+      self.resolve_notification_references
+    end
+    only_if {
+      %x[ MYSQL_PWD=#{get_config('mysql-root-password')} mysql -B --skip-column-names -uroot -e 'SELECT count(*) FROM pdns.domains WHERE name = \"#{ management_zone }\"' ].to_i.zero?
+    }
+  end
+
+  ruby_block "powerdns-function-ip4_to_ptr_name" do
+    block do
+      %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
+          mysql -uroot #{node['bcpc']['dbname']['pdns']} <<-EOH
+          delimiter //
+          CREATE FUNCTION ip4_to_ptr_name(ip4 VARCHAR(64) CHARACTER SET latin1) RETURNS VARCHAR(64)
+          COMMENT 'Returns the reversed IP with .in-addr.arpa appended, suitable for use in the name column of PTR records.'
+          DETERMINISTIC
+          BEGIN
+          return concat_ws( '.',  SUBSTRING_INDEX( SUBSTRING_INDEX(ip4, '.', 4), '.', -1),
+                                  SUBSTRING_INDEX( SUBSTRING_INDEX(ip4, '.', 3), '.', -1),
+                                  SUBSTRING_INDEX( SUBSTRING_INDEX(ip4, '.', 2), '.', -1),
+                                  SUBSTRING_INDEX( SUBSTRING_INDEX(ip4, '.', 1), '.', -1), 'in-addr.arpa');
+          END//
+      ]
+      self.notifies :restart, resources(:service => "pdns"), :delayed
+    end
+    not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT name FROM mysql.proc WHERE name = \"ip4_to_ptr_name\" AND db = \"#{node['bcpc']['dbname']['pdns']}\";' \"#{node['bcpc']['dbname']['pdns']}\" | grep -q \"ip4_to_ptr_name\" >/dev/null" }
+  end
 
   ruby_block "powerdns-function-dns-name" do
     block do
@@ -202,6 +258,7 @@ end
       :monitoring_vip      => node['bcpc']['monitoring']['vip'],
       :reverse_fixed_zone  => (node['bcpc']['fixed']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['fixed']['cidr'])),
       :reverse_float_zone  => (node['bcpc']['floating']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['floating']['cidr'])),
+      :management_zone     => calc_reverse_dns_zone(node['bcpc']['management']['cidr'])
     })
     notifies :run, 'ruby_block[powerdns-load-float-records]', :immediately
   end
