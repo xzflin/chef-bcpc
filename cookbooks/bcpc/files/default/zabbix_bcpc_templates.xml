@@ -4909,7 +4909,7 @@
             <dependencies/>
         </trigger>
         <trigger>
-            <expression>{BCPC-Worknode:proc.num[python,nova,,nova-network].last(0)}&lt;&gt;1</expression>
+            <expression>{BCPC-Worknode:proc.num[python,nova,,nova-network].last(0)}&lt;1 or {BCPC-Worknode:proc.num[python,nova,,nova-network].last(0)}&gt;2</expression>
             <name>Service Nova Network down on {HOST.NAME}</name>
             <url/>
             <status>0</status>
