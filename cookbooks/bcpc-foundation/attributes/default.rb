@@ -29,6 +29,10 @@ default['bcpc']['vms_key'] = nil
 default['bcpc']['ssl_certificate'] = nil
 default['bcpc']['ssl_private_key'] = nil
 default['bcpc']['ssl_intermediate_certificate'] = nil
+# custom SSL certificate for Rados Gateway (S3)
+default['bcpc']['s3_ssl_certificate'] = nil
+default['bcpc']['s3_ssl_private_key'] = nil
+default['bcpc']['s3_ssl_intermediate_certificate'] = nil
 
 ###########################################
 #
@@ -36,10 +40,10 @@ default['bcpc']['ssl_intermediate_certificate'] = nil
 #
 ###########################################
 default['bcpc']['elasticsearch']['version'] = '1.5.1'
-default['bcpc']['ceph']['version'] = '0.94.3-1trusty'
-default['bcpc']['ceph']['version_number'] = '0.94.3'
+default['bcpc']['ceph']['version'] = '0.94.5-1trusty'
+default['bcpc']['ceph']['version_number'] = '0.94.5'
 default['bcpc']['erlang']['version'] = '1:17.5.3'
-default['bcpc']['haproxy']['version'] = '1.5.14-1ppa~trusty'
+default['bcpc']['haproxy']['version'] = '1.5.15-1ppa1~trusty'
 default['bcpc']['kibana']['version'] = '4.0.2'
 default['bcpc']['rabbitmq']['version'] = '3.5.6-1'
 
@@ -76,6 +80,8 @@ default['bcpc']['enabled']['tpm'] = false
 default['bcpc']['enabled']['secure_fixed_networks'] = true
 # Toggle to enable/disable swap memory
 default['bcpc']['enabled']['swap'] = true
+# Toggle to enable/disable Heat (OpenStack Cloud Formation)
+default['bcpc']['enabled']['heat'] = false
 
 # If radosgw_cache is enabled, default to 20MB max file size
 default['bcpc']['radosgw']['cache_max_file_size'] = 20000000
@@ -1282,8 +1288,8 @@ default['bcpc']['mysql-head']['max_connections'] = 0
 # Use this to *add* more reserved ports; i.e. modify value of
 # net.ipv4.ip_local_reserved_ports
 default['bcpc']['system']['additional_reserved_ports'] = []
-# Any other sysctl parameters
-default['bcpc']['system']['parameters'] = {}
+# Any other sysctl parameters (register under parameters)
+default['bcpc']['system']['parameters']['kernel.pid_max'] = 4194303
 
 ###########################################
 #
@@ -1352,6 +1358,13 @@ default['bcpc']['diamond']['collectors']['rabbitmq']['queues_ignored'] = '.*'
 default['bcpc']['diamond']['collectors']['rabbitmq']['vhosts'] = nil
 # Ceph Collector parameters
 default['bcpc']['diamond']['collectors']['CephCollector']['metrics_whitelist'] = "ceph.mon.#{node['hostname']}.cluster.*"
+# Openstack Collector parameters
+default['bcpc']['diamond']['collectors']['cloud'] = {
+  "interval" => "900",
+  "path" => "openstack",
+  "hostname" => "#{node['bcpc']['region_name']}",
+  "db_host" => "#{node['bcpc']['management']['vip']}",
+}
 
 
 ###########################################

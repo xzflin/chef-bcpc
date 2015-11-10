@@ -318,10 +318,12 @@ end
 
 # this patch patches Nova to work correctly if you attempt to boot an instance from
 # a root volume larger than the root volume specified by the flavor
+# upstream bug #1457517 - only needed for 2015.1.0 and 2015.1.1
 bcpc_foundation_patch "nova-volume-boot-size" do
   patch_file           'nova-volume-boot-size.patch'
   patch_root_dir       '/usr/lib/python2.7/dist-packages'
   shasums_before_apply 'nova-volume-boot-size-BEFORE.SHASUMS'
   shasums_after_apply  'nova-volume-boot-size-AFTER.SHASUMS'
   notifies :restart, 'service[nova-api]', :immediately
+  only_if "dpkg -s python-nova | egrep -q '^Version: 1:2015.1.(0|1)'"
 end

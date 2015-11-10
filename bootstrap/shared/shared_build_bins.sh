@@ -16,7 +16,9 @@ if [[ -z $BUILD_DEST ]]; then
   BUILD_DEST=cookbooks/bcpc-binary-files/files/default
 fi
 
-pushd $BUILD_DEST
+# directory used for storing build cache products
+BUILD_CACHE_DIR=$FILECACHE_MOUNT_POINT/build_bins_cache
+
 # Define the appropriate version of each binary to grab/build
 VER_KIBANA=4.0.2
 VER_PIP=7.0.3
@@ -28,6 +30,15 @@ VER_GRAPHITE_WHISPER=0.9.13
 VER_GRAPHITE_WEB=0.9.13
 VER_DIAMOND=d6dbab7e9be05201f9109d83157c496dcab7c68b
 VER_ESPLUGIN=9c032b7c628d8da7745fbb1939dcd2db52629943
+
+pushd $BUILD_DEST
+
+# copy existing build products out of the cache if dir exists
+# (will not exist if this is the first time run with the new script)
+if [ -d $BUILD_CACHE_DIR ]; then
+  echo "Copying cached build products..."
+  rsync -avxSH $BUILD_CACHE_DIR/* $(pwd -P)
+fi
 
 # Install tools needed for packaging
 apt-get -y install git ruby-dev make pbuilder python-mock python-configobj python-support cdbs python-all-dev python-stdeb libmysqlclient-dev libldap2-dev libxml2-dev libxslt1-dev libpq-dev build-essential libssl-dev libffi-dev python-dev python-pip
@@ -46,7 +57,7 @@ fi
 
 # fluentd plugins and dependencies are fetched by shared_prereqs.sh, just copy them
 # in from the local cache and add them to $FILES
-cp $FILECACHE_MOUNT_POINT/fluentd_gems/*.gem .
+rsync -avxSH $FILECACHE_MOUNT_POINT/fluentd_gems/* $(pwd -P)
 FILES="$(ls -1 $FILECACHE_MOUNT_POINT/fluentd_gems/*.gem | xargs) $FILES"
 
 # Fetch the cirros image for testing
@@ -102,6 +113,7 @@ if [ ! -f python-requests-aws_${VER_REQUESTS_AWS}_all.deb ]; then
   fpm -s python -t deb -f requests-aws-${VER_REQUESTS_AWS}/setup.py
   rm -rf requests-aws-${VER_REQUESTS_AWS}.tar.gz requests-aws-${VER_REQUESTS_AWS}
 fi
+FILES="python-requests-aws_${VER_REQUESTS_AWS}_all.deb $FILES"
 
 # Build pyzabbix package
 if [ ! -f python-pyzabbix_${VER_PYZABBIX}_all.deb ]; then
@@ -110,6 +122,7 @@ if [ ! -f python-pyzabbix_${VER_PYZABBIX}_all.deb ]; then
   fpm -s python -t deb -f pyzabbix-${VER_PYZABBIX}/setup.py
   rm -rf pyzabbix-${VER_PYZABBIX}.tar.gz pyzabbix-${VER_PYZABBIX}
 fi
+FILES="python-pyzabbix_${VER_PYZABBIX}_all.deb $FILES"
 
 # Grab Zabbix-Pagerduty notification script
 if [ ! -f pagerduty-zabbix-proxy.py ]; then
@@ -118,19 +131,29 @@ fi
 FILES="pagerduty-zabbix-proxy.py $FILES"
 
 # Build graphite packages
-if [ ! -f python-carbon_${VER_GRAPHITE_CARBON}_all.deb ] || [ ! -f python-whisper_${VER_GRAPHITE_WHISPER}_all.deb ] || [ ! -f python-graphite-web_${VER_GRAPHITE_WEB}_all.deb ]; then
+if [ ! -f python-carbon_${VER_GRAPHITE_CARBON}_all.deb ]; then
   cp -v $FILECACHE_MOUNT_POINT/carbon-${VER_GRAPHITE_CARBON}.tar.gz .
-  cp -v $FILECACHE_MOUNT_POINT/whisper-${VER_GRAPHITE_WHISPER}.tar.gz .
-  cp -v $FILECACHE_MOUNT_POINT/graphite-web-${VER_GRAPHITE_WEB}.tar.gz .
   tar zxf carbon-${VER_GRAPHITE_CARBON}.tar.gz
-  tar zxf whisper-${VER_GRAPHITE_WHISPER}.tar.gz
-  tar zxf graphite-web-${VER_GRAPHITE_WEB}.tar.gz
   fpm --python-install-bin /opt/graphite/bin -s python -t deb -f carbon-${VER_GRAPHITE_CARBON}/setup.py
-  fpm --python-install-bin /opt/graphite/bin -s python -t deb -f whisper-${VER_GRAPHITE_WHISPER}/setup.py
-  fpm --python-install-lib /opt/graphite/webapp -s python -t deb -f graphite-web-${VER_GRAPHITE_WEB}/setup.py
-  rm -rf carbon-${VER_GRAPHITE_CARBON} carbon-${VER_GRAPHITE_CARBON}.tar.gz whisper-${VER_GRAPHITE_WHISPER} whisper-${VER_GRAPHITE_WHISPER}.tar.gz graphite-web-${VER_GRAPHITE_WEB} graphite-web-${VER_GRAPHITE_WEB}.tar.gz
+  rm -rf carbon-${VER_GRAPHITE_CARBON} carbon-${VER_GRAPHITE_CARBON}.tar.gz
 fi
-FILES="python-carbon_${VER_GRAPHITE_CARBON}_all.deb python-whisper_${VER_GRAPHITE_WHISPER}_all.deb python-graphite-web_${VER_GRAPHITE_WEB}_all.deb $FILES"
+FILES="python-carbon_${VER_GRAPHITE_CARBON}_all.deb $FILES"
+
+if [ ! -f python-whisper_${VER_GRAPHITE_WHISPER}_all.deb ]; then
+  cp -v $FILECACHE_MOUNT_POINT/whisper-${VER_GRAPHITE_WHISPER}.tar.gz .
+  tar zxf whisper-${VER_GRAPHITE_WHISPER}.tar.gz
+  fpm --python-install-bin /opt/graphite/bin -s python -t deb -f whisper-${VER_GRAPHITE_WHISPER}/setup.py
+  rm -rf whisper-${VER_GRAPHITE_WHISPER} whisper-${VER_GRAPHITE_WHISPER}.tar.gz
+fi
+FILES="python-whisper_${VER_GRAPHITE_WHISPER}_all.deb $FILES"
+
+if [ ! -f python-graphite-web_${VER_GRAPHITE_WEB}_all.deb ]; then
+  cp -v $FILECACHE_MOUNT_POINT/graphite-web-${VER_GRAPHITE_WEB}.tar.gz .
+  tar zxf graphite-web-${VER_GRAPHITE_WEB}.tar.gz
+  fpm --python-install-lib /opt/graphite/webapp -s python -t deb -f graphite-web-${VER_GRAPHITE_WEB}/setup.py
+  rm -rf graphite-web-${VER_GRAPHITE_WEB} graphite-web-${VER_GRAPHITE_WEB}.tar.gz
+fi
+FILES="python-graphite-web_${VER_GRAPHITE_WEB}_all.deb $FILES"
 
 # Rally has a number of dependencies. Some of the dependencies are in apt by default but some are not. Those that
 # are not are built here.
@@ -181,8 +204,10 @@ if [ ! -f rally-pip.tar.gz ] || [ ! -f rally-bin.tar.gz ] || [ ! -f python-pip_$
   tar zcf rally-pip.tar.gz -C /usr/local/lib/python2.7/dist-packages .
   tar zcf rally-bin.tar.gz --exclude="fpm" --exclude="ruby*" -C /usr/local/bin .
 fi
-
 FILES="rally.tar.gz rally-pip.tar.gz rally-bin.tar.gz python-pip_${VER_PIP}_all.deb $FILES"
-
 # End of Rally
+
+# rsync build products with cache directory
+mkdir -p $BUILD_CACHE_DIR && rsync -avxSH $(pwd -P)/* $BUILD_CACHE_DIR
+
 popd # $BUILD_DEST

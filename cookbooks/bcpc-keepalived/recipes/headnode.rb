@@ -26,9 +26,18 @@ ruby_block "initialize-keepalived-config" do
     end
 end
 
-%w{if_vip if_not_vip vip_change vip_won vip_lost}.each do |script|
+%w{if_vip if_not_vip vip_change}.each do |script|
     template "/usr/local/bin/#{script}" do
         source "keepalived-#{script}.erb"
+        mode 0755
+        owner "root"
+        group "root"
+    end
+end
+
+%w{vip_won vip_lost}.each do |symlink|
+    link "/usr/local/bin/#{symlink}" do
+        to "/usr/local/bin/vip_change"
         mode 0755
         owner "root"
         group "root"

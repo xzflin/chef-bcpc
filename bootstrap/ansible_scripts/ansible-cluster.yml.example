@@ -1,0 +1,31 @@
+---
+cluster_name: Test-Laptop-Ansible
+nodes:
+  bcpc-bootstrap:
+    domain: bcpc.example.com
+    hardware_type: Virtual
+    ip_address: 10.0.100.3
+    ipmi_address:
+    mac_address: -
+    role: bootstrap
+  bcpc-vm1:
+    domain: bcpc.example.com
+    hardware_type: Virtual
+    ip_address: 10.0.100.11
+    ipmi_address:
+    mac_address: -
+    role: head
+  bcpc-vm2:
+    domain: bcpc.example.com
+    hardware_type: Virtual
+    ip_address: 10.0.100.12
+    ipmi_address:
+    mac_address: -
+    role: work
+  bcpc-vm3:
+    domain: bcpc.example.com
+    hardware_type: Virtual
+    ip_address: 10.0.100.13
+    ipmi_address:
+    mac_address: -
+    role: work-ephemeral

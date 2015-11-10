@@ -119,6 +119,33 @@ if node['bcpc']['enabled']['metrics']
         end
     end
 
+    directory '/usr/share/diamond/collectors/Cloud/' do
+        owner 'root'
+        group 'root'
+        mode 00755
+        action :create
+    end
+
+    cookbook_file "/usr/share/diamond/collectors/Cloud/CloudCollector.py" do
+        source "diamond-collector-cloud-openstack.py"
+        owner "root"
+        mode 00644
+    end
+
+    template "/etc/diamond/collectors/CloudCollector.conf" do
+        source "diamond-collector.conf.erb"
+        owner "diamond"
+        group "root"
+        mode 00600
+        variables(lazy {
+          {:parameters => node['bcpc']['diamond']['collectors']['cloud'].merge(
+              "db_user" => get_config('mysql-root-user'),
+              "db_password" => get_config('mysql-root-password'),
+          )}
+        })
+        notifies :restart, "service[diamond]", :delayed
+    end
+
     service "diamond" do
         action [:enable, :start]
     end

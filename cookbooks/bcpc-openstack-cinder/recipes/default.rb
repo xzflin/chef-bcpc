@@ -48,18 +48,20 @@ end
 # | | | | |  _| |  \ V /  | |_) / _ \ | || |   | |_| |
 # | |_| | |_| | |___| |   |  __/ ___ \| || |___|  _  |
 #  \___/ \____|_____|_|   |_| /_/   \_\_| \____|_| |_|
-# this patch resolves BCPC issue #798 - patch will be
-# upstreamed to OpenStack after adding unit tests
+# this patch resolves BCPC issue #798 - upstreamed as #1489575 (note that
+# the upstream patch has a different form because it applied to Liberty and
+# not to Kilo)
 #
 # patch should apply cleanly to both 2015.1.0 and 2015.1.1 (SHA checksums
 # are identical for both files modified by the patch between the two versions)
+# this patch does NOT apply cleanly to 2015.1.2, separate patch resource below
 cookbook_file "/tmp/cinder_availability_zone_fallback.patch" do
     source "cinder_availability_zone_fallback.patch"
     owner "root"
     mode 00644
 end
 
-bash "patch-for-cinder-availability-zone-fallback" do
+bash "patch-for-cinder-availability-zone-fallback-2015.1.0-and-2015.1.1" do
     user "root"
     code <<-EOH
        cd /usr/lib/python2.7/dist-packages
@@ -77,7 +79,20 @@ bash "patch-for-cinder-availability-zone-fallback" do
     notifies :restart, "service[cinder-scheduler]", :immediately
 end
 
-# Deal with quota update commands
+# 2015.1.2 version of the above patch
+bcpc_foundation_patch "cinder-az-fallback-2015.1.2" do
+  patch_file 'cinder-az-fallback-2015.1.2.patch'
+  patch_root_dir '/usr/lib/python2.7/dist-packages'
+  shasums_before_apply 'cinder-az-fallback-2015.1.2.patch.BEFORE.SHASUMS'
+  shasums_after_apply 'cinder-az-fallback-2015.1.2.patch.AFTER.SHASUMS'
+  notifies :restart, 'service[cinder-api]', :immediately
+  notifies :restart, 'service[cinder-volume]', :immediately
+  notifies :restart, 'service[cinder-scheduler]', :immediately
+  not_if "dpkg -s python-cinder | egrep -q '^Version: 1:2015.1.(0|1)'"
+end
+
+# Deal with quota update commands (applies to cinderclient < 1.3.1)
+# upstream bug #1423884
 bcpc_foundation_patch "fix-quota-class-update" do
     patch_file              'fix-quota-class-update.patch'
     patch_root_dir          '/usr/lib/python2.7/dist-packages'
