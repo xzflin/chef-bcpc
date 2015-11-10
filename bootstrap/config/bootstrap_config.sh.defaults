@@ -2,9 +2,31 @@
 # copy this file to bootstrap_config.sh.overrides and change the variables you want
 # to change (comment out ones you do not want to change).
 
-# Sets the location to place virtual machine directories.
-# This does not have any effect when using Vagrant.
-export BCPC_VM_DIR=$HOME/BCPC-VMs
+##############################################
+# USED BY BOTH ANSIBLE AND VAGRANT BUILD PATHS
+##############################################
+
+# Sets the amount of memory (in MB) given to the bootstrap VM.
+export BOOTSTRAP_VM_MEM=2048
+
+# Sets the number of vCPUs given to the bootstrap VM.
+export BOOTSTRAP_VM_CPUS=2
+
+# Sets the size of the boot disk for the bootstrap VM.
+export BOOTSTRAP_VM_DRIVE_SIZE=20480
+
+# Sets the amount of memory given to cluster VMs.
+export CLUSTER_VM_MEM=3072
+
+# Sets the number of vCPUs given to cluster VMs.
+export CLUSTER_VM_CPUS=2
+
+# Sets the size of disks (in MB) given to cluster VMs.
+export CLUSTER_VM_DRIVE_SIZE=20480
+
+##############################################
+# USED BY VAGRANT BUILD PATH ONLY
+##############################################
 
 # Sets the domain name to use. Note that this must also be set independently in
 # the Chef environment file.
@@ -38,24 +60,6 @@ export BOOTSTRAP_CACHE_DIR=$HOME/.bcpc-cache
 # independently so that recipes will use the appropriate mirrors (see
 # environments/repository_template.json for a template to put your own mirror paths into).
 export BOOTSTRAP_APT_MIRROR=
-
-# Sets the amount of memory (in MB) given to the bootstrap VM.
-export BOOTSTRAP_VM_MEM=2048
-
-# Sets the number of vCPUs given to the bootstrap VM.
-export BOOTSTRAP_VM_CPUS=2
-
-# Sets the size of the boot disk for the bootstrap VM.
-export BOOTSTRAP_VM_DRIVE_SIZE=20480
-
-# Sets the amount of memory given to cluster VMs.
-export CLUSTER_VM_MEM=2560
-
-# Sets the number of vCPUs given to cluster VMs.
-export CLUSTER_VM_CPUS=2
-
-# Sets the size of disks (in MB) given to cluster VMs.
-export CLUSTER_VM_DRIVE_SIZE=20480
 
 # Sets the number of monitoring VMs to bootstrap. Please ensure you have
 # sufficient hardware resources to run these additional VMs.

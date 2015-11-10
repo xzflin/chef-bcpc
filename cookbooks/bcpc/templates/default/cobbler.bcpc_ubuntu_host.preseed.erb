@@ -62,22 +62,20 @@ d-i     user-setup/encrypt-home boolean false
 d-i     passwd/user-default-groups      string adm cdrom dialout lpadmin plugdev sambashare
 d-i     apt-setup/services-select       multiselect security
 <% if @node['bcpc']['bootstrap']['proxy'].nil? %>
-    d-i     mirror/http/proxy string
+d-i     mirror/http/proxy string
 <% else %>
-    d-i     mirror/http/proxy string <%= @node['bcpc']['bootstrap']['proxy'] %>
+d-i     mirror/http/proxy string <%= @node['bcpc']['bootstrap']['proxy'] %>
 <% end %>
+
 <% if @node['bcpc']['bootstrap']['mirror'].nil? %>
 d-i     apt-setup/security_host string security.ubuntu.com
 d-i     apt-setup/security_path string /ubuntu
 <% else %>
-    d-i     mirror/country string manual
-    d-i     mirror/http/hostname string    <%= @node['bcpc']['bootstrap']['mirror'] %>
-    d-i     mirror/http/directory string   <%= @node['bcpc']['bootstrap']['mirror_path'] %>
-    d-i     apt-setup/security_host        <%= @node['bcpc']['bootstrap']['mirror'] %>
-    d-i     apt-setup/security_path string <%= @node['bcpc']['bootstrap']['mirror_path'] %>
-    d-i     apt-setup/local0/comment string OpsCode Repo
-    d-i     apt-setup/local0/repository string \
-    deb http://<%= @node['bcpc']['bootstrap']['mirror'] %>/chef precise-0.10 main
+d-i     mirror/country string manual
+d-i     mirror/http/hostname string    <%= @node['bcpc']['bootstrap']['mirror'] %>
+d-i     mirror/http/directory string   <%= @node['bcpc']['bootstrap']['mirror_path'] %>
+d-i     apt-setup/security_host        <%= @node['bcpc']['bootstrap']['mirror'] %>
+d-i     apt-setup/security_path string <%= @node['bcpc']['bootstrap']['mirror_path'] %>
 <% end %>
 
 d-i     debian-installer/allow_unauthenticated  string false
