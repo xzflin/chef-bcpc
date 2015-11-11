@@ -32,3 +32,14 @@ template "/var/www/cobbler/pub/scripts/get-ssh-keys" do
     group "root"
     mode 00755
 end
+
+# Install some useful packages
+include_recipe "bcpc::packages-openstack"
+
+%w{ python-keystoneclient
+    python-openstackclient
+}.each do |pkg|
+    package pkg do
+        action :upgrade
+    end
+end
