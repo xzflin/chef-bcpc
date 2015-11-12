@@ -39,6 +39,8 @@ package "iotop"
 # System troubleshooting tools
 package "htop"
 package "sysstat"
+package "linux-tools-common"
+package "linux-tools-#{node['kernel']['release']}"
 
 # In precise, sosreport is only in backports.
 apt_repository "backports" do
