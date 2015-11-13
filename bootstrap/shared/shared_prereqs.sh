@@ -4,7 +4,7 @@ set -e
 
 . $REPO_ROOT/bootstrap/shared/shared_functions.sh
 
-REQUIRED_VARS=( BOOTSTRAP_CACHE_DIR )
+REQUIRED_VARS=( BOOTSTRAP_CACHE_DIR REPO_ROOT )
 check_for_envvars ${REQUIRED_VARS[@]}
 
 # Create directory for download cache.

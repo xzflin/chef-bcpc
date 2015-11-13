@@ -7,12 +7,6 @@ Yes! Please read the [Disconnected Build Guide](https://github.com/bloomberg/che
 
 Can I use VMware instead of VirtualBox for a local cluster?
 ---
-Not at present, but it is something we'd like to offer.
-
-Why can't I ssh to the monitoring VMs?
----
-The short answer is, `vagrant` requires the presence of MONITORING_NODES environment variable to track the mon VMs that have been built. Use the following example command to ssh to your mon VM(s):
- MONITORING_NODES=3 vagrant ssh vm6
 
 Why is it so slow when running locally?
 ---

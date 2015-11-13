@@ -80,6 +80,8 @@ default['bcpc']['enabled']['tpm'] = false
 default['bcpc']['enabled']['secure_fixed_networks'] = true
 # Toggle to enable/disable swap memory
 default['bcpc']['enabled']['swap'] = true
+# Toggle to enable/disable Heat (OpenStack Cloud Formation)
+default['bcpc']['enabled']['heat'] = false
 
 # If radosgw_cache is enabled, default to 20MB max file size
 default['bcpc']['radosgw']['cache_max_file_size'] = 20000000
@@ -1286,8 +1288,8 @@ default['bcpc']['mysql-head']['max_connections'] = 0
 # Use this to *add* more reserved ports; i.e. modify value of
 # net.ipv4.ip_local_reserved_ports
 default['bcpc']['system']['additional_reserved_ports'] = []
-# Any other sysctl parameters
-default['bcpc']['system']['parameters'] = {}
+# Any other sysctl parameters (register under parameters)
+default['bcpc']['system']['parameters']['kernel.pid_max'] = 4194303
 
 ###########################################
 #
