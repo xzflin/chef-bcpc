@@ -67,8 +67,10 @@ See the following links:
   ```
 
 ## Run a packet capture for BOOTP and DHCP traffic
-First, the network needs to be configured for QEMU to use, then the
-packet capture can be configured to simply wait for the exchanges.
+Run the packet capture on the bootstrap node
+```
+sudo tshark -i eth1 -p -Otftp,bootp,bootparams port 67 or 68
+```
 
 ### Configure the networking for QEMU
 To access the DHCP server on bcpc-bootstrap, the launched instance of qemu will need
@@ -112,31 +114,39 @@ if [[  $IFACE == "br0" ]] ; then
 fi
 ```
 
-Now, setup the packet capture:
-```
-$ sudo tshark -i br0 -p -O tftp,bootp,bootparams port 67 or 68
-```
-
 ## Boot a QEMU instance using the custom firmware
+
+### UEFI mode
 ```
-$ /usr/bin/qemu-system-x86_64 -serial stdio -bios \
+$ /usr/bin/qemu-system-x86_64 -serial stdio -boot n -bios \
 edk2/Build/OvmfX64/DEBUG_GCC48/FV/OVMF.fd -device \
 e1000,netdev=mynet0,id=net0,mac=fa:16:3e:28:5d:93,romfile= -netdev \
 tap,ifname=tun2,id=mynet0,script=/usr/local/share/qemu/qemu-ifup -debugcon \
 file:debug.log -global isa-debugcon.iobase=0x402 -m 768 -vnc 127.0.0.1:1
 ```
+### Legacy BIOS mode
+```
+$ /usr/bin/qemu-system-x86_64 -boot n -serial stdio -option-rom \
+/chef-bcpc-files/gpxe-1.0.1-80861004.rom -device \
+virtio-net-pci,netdev=mynet0,id=net0,mac=fa:16:3e:28:5d:93 -netdev \
+tap,ifname=tun2,id=mynet0,script=/usr/local/share/qemu/qemu-ifup -debugcon \
+file:debug.log -global isa-debugcon.iobase=0x402 -m 768 -vnc 127.0.0.1:1
+ ```
+
 It should be noted that any of the e1000-* nics available as parameters to
 -device should work.
 
 ## Analyze capture results
 
-Unfortunately, at the time of this writing, getting a QEMU instance configured
-with default SeaBIOS to PXE boot proved challenging. Additionally, in UEFI mode,
-the client does not move on to retrieve and load the PXE ROM. Either way, from
-the following capture, it should be suffice to observe that the correct boot
-filename is returned to the PXE client for UEFI case.
+Unfortunately, at the time of this writing, both invocations of qemu - one
+testing UEFI as well as the other testing Legacy BIOS booting do not result in
+a complete PXE boot sequence; i.e, the client does not move on to retrieve and
+load the boot image. Either way, from the following captures, it should suffice
+to observe that the correct boot filename is returned to the PXE client for
+in either case.
 
 In the shell running the capture, something similar to the following should appear:
+### UEFI mode
 ```
 Frame 31: 389 bytes on wire (3112 bits), 389 bytes captured (3112 bits) on interface 0
 Internet Protocol Version 4, Src: 0.0.0.0 (0.0.0.0), Dst: 255.255.255.255 (255.255.255.255)
@@ -399,8 +409,269 @@ Bootstrap Protocol
         Option End: 255
     Padding
 ```
+### Legacy BIOS Mode
+```
+Frame 1: 440 bytes on wire (3520 bits), 440 bytes captured (3520 bits) on interface 0
+Ethernet II, Src: fa:16:3e:28:5d:93 (fa:16:3e:28:5d:93), Dst: Broadcast (ff:ff:ff:ff:ff:ff)
+Internet Protocol Version 4, Src: 0.0.0.0 (0.0.0.0), Dst: 255.255.255.255 (255.255.255.255)
+User Datagram Protocol, Src Port: bootpc (68), Dst Port: bootps (67)
+Bootstrap Protocol
+    Message type: Boot Request (1)
+    Hardware type: Ethernet (0x01)
+    Hardware address length: 6
+    Hops: 0
+    Transaction ID: 0xa046c403
+    Seconds elapsed: 4
+    Bootp flags: 0x0000 (Unicast)
+        0... .... .... .... = Broadcast flag: Unicast
+        .000 0000 0000 0000 = Reserved flags: 0x0000
+    Client IP address: 0.0.0.0 (0.0.0.0)
+    Your (client) IP address: 0.0.0.0 (0.0.0.0)
+    Next server IP address: 0.0.0.0 (0.0.0.0)
+    Relay agent IP address: 0.0.0.0 (0.0.0.0)
+    Client MAC address: fa:16:3e:28:5d:93 (fa:16:3e:28:5d:93)
+    Client hardware address padding: 00000000000000000000
+    Server host name not given
+    Boot file name not given
+    Magic cookie: DHCP
+    Option: (53) DHCP Message Type
+        Length: 1
+        DHCP: Discover (1)
+    Option: (57) Maximum DHCP Message Size
+        Length: 2
+        Maximum DHCP Message Size: 1472
+    Option: (93) Client System Architecture
+        Length: 2
+        Client System Architecture: IA x86 PC (0)
+    Option: (94) Client Network Device Interface
+        Length: 3
+        Major Version: 2
+        Minor Version: 1
+    Option: (60) Vendor class identifier
+        Length: 32
+        Vendor class identifier: PXEClient:Arch:00000:UNDI:002001
+    Option: (77) User Class Information
+        Length: 4
+        Instance of User Class: [0]
+            User Class Length: 105
+            [Expert Info (Error/Protocol): User Class Information: malformed option]
+                [Message: User Class Information: malformed option]
+                [Severity level: Error]
+                [Group: Protocol]
+    Option: (55) Parameter Request List
+        Length: 21
+        Parameter Request List Item: (1) Subnet Mask
+        Parameter Request List Item: (3) Router
+        Parameter Request List Item: (6) Domain Name Server
+        Parameter Request List Item: (7) Log Server
+        Parameter Request List Item: (12) Host Name
+        Parameter Request List Item: (15) Domain Name
+        Parameter Request List Item: (17) Root Path
+        Parameter Request List Item: (43) Vendor-Specific Information
+        Parameter Request List Item: (60) Vendor class identifier
+        Parameter Request List Item: (66) TFTP Server Name
+        Parameter Request List Item: (67) Bootfile name
+        Parameter Request List Item: (128) DOCSIS full security server IP [TODO]
+        Parameter Request List Item: (129) PXE - undefined (vendor specific)
+        Parameter Request List Item: (130) PXE - undefined (vendor specific)
+        Parameter Request List Item: (131) PXE - undefined (vendor specific)
+        Parameter Request List Item: (132) PXE - undefined (vendor specific)
+        Parameter Request List Item: (133) PXE - undefined (vendor specific)
+        Parameter Request List Item: (134) PXE - undefined (vendor specific)
+        Parameter Request List Item: (135) PXE - undefined (vendor specific)
+        Parameter Request List Item: (175) Etherboot
+        Parameter Request List Item: (203) Unassigned
+    Option: (175) Etherboot
+        Length: 48
+        Value: b105018086100e180101220101190101210101100102eb03...
+    Option: (61) Client identifier
+        Length: 7
+        Hardware type: Ethernet (0x01)
+        Client MAC address: fa:16:3e:28:5d:93 (fa:16:3e:28:5d:93)
+    Option: (97) UUID/GUID-based Client Identifier
+        Length: 17
+        Client Identifier (UUID): 00000000-0000-0000-0000-000000000000
+    Option: (255) End
+        Option End: 255
+
+1 Frame 2: 342 bytes on wire (2736 bits), 342 bytes captured (2736 bits) on interface 0
+Ethernet II, Src: CadmusCo_b3:f9:c0 (08:00:27:b3:f9:c0), Dst: fa:16:3e:28:5d:93 (fa:16:3e:28:5d:93)
+Internet Protocol Version 4, Src: 10.0.100.3 (10.0.100.3), Dst: 10.0.100.99 (10.0.100.99)
+User Datagram Protocol, Src Port: bootps (67), Dst Port: bootpc (68)
+Bootstrap Protocol
+    Message type: Boot Reply (2)
+    Hardware type: Ethernet (0x01)
+    Hardware address length: 6
+    Hops: 0
+    Transaction ID: 0xa046c403
+    Seconds elapsed: 4
+    Bootp flags: 0x0000 (Unicast)
+        0... .... .... .... = Broadcast flag: Unicast
+        .000 0000 0000 0000 = Reserved flags: 0x0000
+    Client IP address: 0.0.0.0 (0.0.0.0)
+    Your (client) IP address: 10.0.100.99 (10.0.100.99)
+    Next server IP address: 10.0.100.3 (10.0.100.3)
+    Relay agent IP address: 0.0.0.0 (0.0.0.0)
+    Client MAC address: fa:16:3e:28:5d:93 (fa:16:3e:28:5d:93)
+    Client hardware address padding: 00000000000000000000
+    Server host name not given
+    Boot file name: bios/pxelinux.0
+    Magic cookie: DHCP
+    Option: (53) DHCP Message Type
+        Length: 1
+        DHCP: Offer (2)
+    Option: (54) DHCP Server Identifier
+        Length: 4
+        DHCP Server Identifier: 10.0.100.3 (10.0.100.3)
+    Option: (51) IP Address Lease Time
+        Length: 4
+        IP Address Lease Time: (21600s) 6 hours
+    Option: (1) Subnet Mask
+        Length: 4
+        Subnet Mask: 255.255.255.0 (255.255.255.0)
+    Option: (3) Router
+        Length: 4
+        Router: 10.0.100.3 (10.0.100.3)
+    Option: (6) Domain Name Server
+        Length: 8
+        Domain Name Server: 8.8.8.8 (8.8.8.8)
+        Domain Name Server: 8.8.4.4 (8.8.4.4)
+    Option: (255) End
+        Option End: 255
+    Padding
+
+2 Frame 3: 440 bytes on wire (3520 bits), 440 bytes captured (3520 bits) on interface 0
+Ethernet II, Src: fa:16:3e:28:5d:93 (fa:16:3e:28:5d:93), Dst: Broadcast (ff:ff:ff:ff:ff:ff)
+Internet Protocol Version 4, Src: 0.0.0.0 (0.0.0.0), Dst: 255.255.255.255 (255.255.255.255)
+User Datagram Protocol, Src Port: bootpc (68), Dst Port: bootps (67)
+Bootstrap Protocol
+    Message type: Boot Request (1)
+    Hardware type: Ethernet (0x01)
+    Hardware address length: 6
+    Hops: 0
+    Transaction ID: 0xa046c403
+    Seconds elapsed: 8
+    Bootp flags: 0x0000 (Unicast)
+        0... .... .... .... = Broadcast flag: Unicast
+        .000 0000 0000 0000 = Reserved flags: 0x0000
+    Client IP address: 0.0.0.0 (0.0.0.0)
+    Your (client) IP address: 0.0.0.0 (0.0.0.0)
+    Next server IP address: 0.0.0.0 (0.0.0.0)
+    Relay agent IP address: 0.0.0.0 (0.0.0.0)
+    Client MAC address: fa:16:3e:28:5d:93 (fa:16:3e:28:5d:93)
+    Client hardware address padding: 00000000000000000000
+    Server host name not given
+    Boot file name not given
+    Magic cookie: DHCP
+    Option: (53) DHCP Message Type
+        Length: 1
+        DHCP: Discover (1)
+    Option: (57) Maximum DHCP Message Size
+        Length: 2
+        Maximum DHCP Message Size: 1472
+    Option: (93) Client System Architecture
+        Length: 2
+        Client System Architecture: IA x86 PC (0)
+    Option: (94) Client Network Device Interface
+        Length: 3
+        Major Version: 2
+        Minor Version: 1
+    Option: (60) Vendor class identifier
+        Length: 32
+        Vendor class identifier: PXEClient:Arch:00000:UNDI:002001
+    Option: (77) User Class Information
+        Length: 4
+        Instance of User Class: [0]
+            User Class Length: 105
+            [Expert Info (Error/Protocol): User Class Information: malformed option]
+                [Message: User Class Information: malformed option]
+                [Severity level: Error]
+                [Group: Protocol]
+    Option: (55) Parameter Request List
+        Length: 21
+        Parameter Request List Item: (1) Subnet Mask
+        Parameter Request List Item: (3) Router
+        Parameter Request List Item: (6) Domain Name Server
+        Parameter Request List Item: (7) Log Server
+        Parameter Request List Item: (12) Host Name
+        Parameter Request List Item: (15) Domain Name
+        Parameter Request List Item: (17) Root Path
+        Parameter Request List Item: (43) Vendor-Specific Information
+        Parameter Request List Item: (60) Vendor class identifier
+        Parameter Request List Item: (66) TFTP Server Name
+        Parameter Request List Item: (67) Bootfile name
+        Parameter Request List Item: (128) DOCSIS full security server IP [TODO]
+        Parameter Request List Item: (129) PXE - undefined (vendor specific)
+        Parameter Request List Item: (130) PXE - undefined (vendor specific)
+        Parameter Request List Item: (131) PXE - undefined (vendor specific)
+        Parameter Request List Item: (132) PXE - undefined (vendor specific)
+        Parameter Request List Item: (133) PXE - undefined (vendor specific)
+        Parameter Request List Item: (134) PXE - undefined (vendor specific)
+        Parameter Request List Item: (135) PXE - undefined (vendor specific)
+        Parameter Request List Item: (175) Etherboot
+        Parameter Request List Item: (203) Unassigned
+    Option: (175) Etherboot
+        Length: 48
+        Value: b105018086100e180101220101190101210101100102eb03...
+    Option: (61) Client identifier
+        Length: 7
+        Hardware type: Ethernet (0x01)
+        Client MAC address: fa:16:3e:28:5d:93 (fa:16:3e:28:5d:93)
+    Option: (97) UUID/GUID-based Client Identifier
+        Length: 17
+        Client Identifier (UUID): 00000000-0000-0000-0000-000000000000
+    Option: (255) End
+        Option End: 255
+
+Frame 4: 342 bytes on wire (2736 bits), 342 bytes captured (2736 bits) on interface 0
+Ethernet II, Src: CadmusCo_b3:f9:c0 (08:00:27:b3:f9:c0), Dst: fa:16:3e:28:5d:93 (fa:16:3e:28:5d:93)
+Internet Protocol Version 4, Src: 10.0.100.3 (10.0.100.3), Dst: 10.0.100.99 (10.0.100.99)
+User Datagram Protocol, Src Port: bootps (67), Dst Port: bootpc (68)
+Bootstrap Protocol
+    Message type: Boot Reply (2)
+    Hardware type: Ethernet (0x01)
+    Hardware address length: 6
+    Hops: 0
+    Transaction ID: 0xa046c403
+    Seconds elapsed: 8
+    Bootp flags: 0x0000 (Unicast)
+        0... .... .... .... = Broadcast flag: Unicast
+        .000 0000 0000 0000 = Reserved flags: 0x0000
+    Client IP address: 0.0.0.0 (0.0.0.0)
+    Your (client) IP address: 10.0.100.99 (10.0.100.99)
+    Next server IP address: 10.0.100.3 (10.0.100.3)
+    Relay agent IP address: 0.0.0.0 (0.0.0.0)
+    Client MAC address: fa:16:3e:28:5d:93 (fa:16:3e:28:5d:93)
+    Client hardware address padding: 00000000000000000000
+    Server host name not given
+    Boot file name: bios/pxelinux.0
+    Magic cookie: DHCP
+    Option: (53) DHCP Message Type
+        Length: 1
+        DHCP: Offer (2)
+    Option: (54) DHCP Server Identifier
+        Length: 4
+        DHCP Server Identifier: 10.0.100.3 (10.0.100.3)
+    Option: (51) IP Address Lease Time
+        Length: 4
+        IP Address Lease Time: (21600s) 6 hours
+    Option: (1) Subnet Mask
+        Length: 4
+        Subnet Mask: 255.255.255.0 (255.255.255.0)
+    Option: (3) Router
+        Length: 4
+        Router: 10.0.100.3 (10.0.100.3)
+    Option: (6) Domain Name Server
+        Length: 8
+        Domain Name Server: 8.8.8.8 (8.8.8.8)
+        Domain Name Server: 8.8.4.4 (8.8.4.4)
+    Option: (255) End
+        Option End: 255
+    Padding
+```
+
 As intended, the Boot file name is `efi64/syslinux.efi` when the value of
-Option (93) is `EFI BC (7)`
+Option (93) is `EFI BC (7)`, and `bios/pxelinux.0` when `IA x86 PC (0)`
 
 ## Tearing down the test setup
 Since the host's network configuration has been messed with, the proper settings
