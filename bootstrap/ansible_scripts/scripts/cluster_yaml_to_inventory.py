@@ -102,6 +102,10 @@ def render_inventory(path, ssh_user):
     f.close()
     cluster = yaml.safe_load(cluster_yaml)
 
+    # if it's a string and not a dict, something not YAML was loaded
+    if type(cluster) != dict:
+        sys.exit("ERROR: %s did not parse as YAML. Exiting." % path)
+
     env = jinja2.Environment(trim_blocks=True, lstrip_blocks=True)
     template = env.from_string(INVENTORY_TEMPLATE)
 
@@ -126,7 +130,9 @@ def render_inventory(path, ssh_user):
     # if None is detected as a hardware_type, the person needs to update
     # the YAML to actually have real hardware types
     if None in hardware_types:
-        sys.exit("null is not a valid hardware type, please fix the YAML")
+        err = "ERROR: null is not a valid hardware type. "
+        err += "Please set valid hardware types."
+        sys.exit(err)
     # if only one hardware type was detected, we can avoid writing it out
     # for each node separately (Ansible doesn't care, but it reduces
     # visual clutter)

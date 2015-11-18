@@ -46,9 +46,16 @@ def to_yaml(path, cluster_name):
     for line in cluster_txt:
         if line.strip() == "end":
             break
-        name, mac, ip, ipmi, domain, role = line.strip().split()
+        try:
+            name, mac, ip, ipmi, domain, role = line.strip().split()
+        except ValueError, e:
+            err = "ERROR: failure unpacking line '%s' into 6 values: %s. "
+            err += "Is this a valid cluster.txt file? Exiting."
+            sys.exit(err % (line.strip(), e))
         if name in cluster['nodes']:
             sys.exit("ERROR: %s found more than once in cluster.txt" % name)
+        if ipmi == "-":
+            ipmi = None
         cluster['nodes'][name] = {
             'mac_address': mac,
             'ip_address': ip,
@@ -71,10 +78,13 @@ def to_text(path):
     f.close()
 
     cluster = yaml.safe_load(cluster_yaml)
+    # if it's a string and not a dict, something not YAML was loaded
+    if type(cluster) != dict:
+        sys.exit("ERROR: %s did not parse as YAML. Exiting." % path)
+
     buf = ""
 
     for node in sorted(cluster['nodes'].keys()):
-
         if cluster['nodes'][node]['ipmi_address'] is None:
             ipmi_address = "-"
         else:
