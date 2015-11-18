@@ -9,6 +9,7 @@ if [[ $BOOTSTRAP_METHOD == "vagrant" ]]; then
     NODE=$1
     shift
     COMMAND="${*}"
+    echo "EXECUTING on $NODE"
     vagrant ssh $NODE -c "$COMMAND"
   }
 else
