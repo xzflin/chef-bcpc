@@ -58,6 +58,13 @@ template "/etc/cobbler/users.digest" do
     mode 00600
 end
 
+# overridden so SYSLINUX 6.03 chainloader works correctly
+# (no-op on the previous chainloader version)
+template "/etc/cobbler/pxe/pxelocal.template" do
+    source "cobbler.pxelocal.template.erb"
+    mode 00644
+end
+
 template "/etc/cobbler/dhcp.template" do
     source "cobbler.dhcp.template.erb"
     mode 00644
@@ -142,6 +149,7 @@ bash "install-syslinux-bios-files" do
         cd #{Chef::Config[:file_cache_path]}
         cp syslinux-6.03/bios/core/pxelinux.0 /var/lib/tftpboot/bios/
         cp syslinux-6.03/bios/com32/elflink/ldlinux/ldlinux.c32 /var/lib/tftpboot/bios/
+        cp syslinux-6.03/bios/com32/chain/chain.c32 /var/lib/tftpboot/bios/
         cp syslinux-6.03/bios/com32/lib/libcom32.c32 /var/lib/tftpboot/bios/
         cp syslinux-6.03/bios/com32/libutil/libutil.c32 /var/lib/tftpboot/bios/
         cp syslinux-6.03/bios/com32/menu/vesamenu.c32 /var/lib/tftpboot/bios/
