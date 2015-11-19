@@ -10,6 +10,13 @@
     tags:
       - synchronize
 
+  - name: Create directory to serve package mirrors from for Apache
+    file: path={{ bootstrap_mirror_root_dir }} state=directory owner=root group=root mode=0755
+
+  - name: Optimistically map mirror paths into serving directory (some may not exist, but don't freak out)
+    file: path={{ bootstrap_mirror_root_dir }}/{{ item.key }} state=link src={{ bootstrap_apt_mirror_dir }}/mirror/{{ item.value }} force=yes
+    with_dict: "{{ mirror_path_map }}"
+
   - name: Move default Ubuntu sources.list away
     command: mv /etc/apt/sources.list /etc/apt/sources.list.orig creates=/etc/apt/sources.list.orig
 
@@ -42,9 +49,6 @@
   - name: Install Apache web server to serve package mirrors
     apt: name=apache2 state=present
 
-  - name: Create directory to serve package mirrors from for Apache
-    file: path={{ bootstrap_mirror_root_dir }} state=directory owner=root group=root mode=0755
-
   - name: Create Apache web site
     template: src=templates/apache_apt_mirror.j2 dest=/etc/apache2/sites-available/apt-mirror.conf owner=root group=root mode=0644
 
@@ -53,10 +57,6 @@
 
   - name: Enable Apache2 apt-mirror web site
     command: a2ensite apt-mirror creates=/etc/apache2/sites-enabled/apt-mirror.conf
-
-  - name: Optimistically map mirror paths into serving directory (some may not exist, but don't freak out)
-    file: path={{ bootstrap_mirror_root_dir }}/{{ item.key }} state=link src={{ bootstrap_apt_mirror_dir }}/mirror/{{ item.value }} force=yes
-    with_dict: "{{ mirror_path_map }}"
 
   - name: Restart Apache
     service: name=apache2 state=restarted
