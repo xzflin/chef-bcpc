@@ -55,6 +55,7 @@ template "/etc/cobbler/dhcp.template" do
         :subnet => node['bcpc']['bootstrap']['dhcp_subnet']
     )
     notifies :restart, "service[cobbler]", :delayed
+    notifies :run, "bash[run-cobbler-sync]", :immediately
 end
 
 template "/var/lib/cobbler/kickstarts/bcpc_ubuntu_host.preseed" do
@@ -75,18 +76,18 @@ bash "import-ubuntu-distribution-cobbler" do
         mount -o loop -o ro /tmp/ubuntu-14.04-mini.iso /mnt
         cobbler import --name=ubuntu-14.04-mini --path=/mnt --breed=ubuntu --os-version=trusty --arch=x86_64
         umount /mnt
-        cobbler sync
     EOH
     not_if "cobbler distro list | grep ubuntu-14.04-mini"
+    notifies :run, "bash[run-cobbler-sync]", :immediately
 end
 
 bash "import-bcpc-profile-cobbler" do
     user "root"
     code <<-EOH
         cobbler profile add --name=bcpc_host --distro=ubuntu-14.04-mini-x86_64 --kickstart=/var/lib/cobbler/kickstarts/bcpc_ubuntu_host.preseed --kopts="interface=auto"
-        cobbler sync
     EOH
     not_if "cobbler profile list | grep bcpc_host"
+    notifies :run, "bash[run-cobbler-sync]", :immediately
 end
 
 service "isc-dhcp-server" do
@@ -95,4 +96,9 @@ end
 
 service "cobbler" do
     action [:enable, :start]
+end
+
+bash "run-cobbler-sync" do
+  code "cobbler sync"
+  action :nothing
 end
