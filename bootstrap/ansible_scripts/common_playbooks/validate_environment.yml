@@ -64,6 +64,15 @@
   - fail: msg="Directory {{ controlnode_apt_mirror_dir }} does not exist"
     when: not apt_mirror_dir_stat.stat.exists
 
+  - name: check for presence of local SSH keys directory
+    local_action: stat path={{ controlnode_ssl_key_dir }}
+    register: ssl_key_dir_stat
+    become: no
+    run_once: true
+
+  - fail: msg="Directory {{ controlnode_ssl_key_dir }} does not exist"
+    when: not ssl_key_dir_stat.stat.exists
+
   - name: check for presence of chef-bcpc ZIP file
     local_action: stat path={{ controlnode_git_staging_dir }}/chef-bcpc-{{ chef_bcpc_version }}.zip
     register: chef_bcpc_stat
