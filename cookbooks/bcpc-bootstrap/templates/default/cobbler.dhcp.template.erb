@@ -31,6 +31,7 @@ subnet <%= @subnet %> netmask <%=node['bcpc']['management']['netmask']%> {
      default-lease-time         21600;
      max-lease-time             43200;
      next-server                $next_server;
+     deny                       unknown-clients;
 }
 
 #for dhcp_tag in $dhcp_tags.keys():
@@ -65,4 +66,3 @@ group {
         #end for
 }
 #end for
-

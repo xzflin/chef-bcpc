@@ -24,3 +24,14 @@ ruby_block "check-gateways" do
   end
   only_if { node['bcpc']['enabled']['network_tests'] }
 end
+
+# Install some useful packages
+include_recipe "bcpc::packages-openstack"
+
+%w{ python-keystoneclient
+    python-openstackclient
+}.each do |pkg|
+    package pkg do
+        action :upgrade
+    end
+end

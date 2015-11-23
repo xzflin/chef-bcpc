@@ -82,9 +82,6 @@ if node['bcpc']['enabled']['dns']
 
   ruby_block "powerdns-table-domains" do
     block do
-      reverse_fixed_zone = node['bcpc']['fixed']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['fixed']['cidr'])
-      reverse_float_zone = node['bcpc']['floating']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['floating']['cidr'])
-
       %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
           mysql -uroot #{node['bcpc']['dbname']['pdns']} <<-EOH
           CREATE TABLE IF NOT EXISTS domains (
@@ -97,15 +94,74 @@ if node['bcpc']['enabled']['dns']
               account VARCHAR(40) DEFAULT NULL,
               primary key (id)
           );
-          INSERT INTO domains (name, type) values ('#{node['bcpc']['cluster_domain']}', 'NATIVE');
-          INSERT INTO domains (name, type) values ('#{reverse_float_zone}', 'NATIVE');
-          INSERT INTO domains (name, type) values ('#{reverse_fixed_zone}', 'NATIVE');
           CREATE UNIQUE INDEX dom_name_index ON domains(name);
       ]
       self.notifies :restart, resources(:service => "pdns"), :delayed
       self.resolve_notification_references
     end
-    not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \"#{node['bcpc']['dbname']['pdns']}\" AND TABLE_NAME=\"domains\"' | grep -q \"domains\" >/dev/null" }
+    only_if {
+      %x[ MYSQL_PWD=#{get_config('mysql-root-password')} mysql -B --skip-column-names -uroot -e 'SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \"#{node['bcpc']['dbname']['pdns']}\" AND TABLE_NAME = \"domains\"' ].to_i.zero?
+    }
+  end
+
+  ruby_block "powerdns-table-domains-cluster-domain" do
+    block do
+      %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
+          mysql -uroot #{node['bcpc']['dbname']['pdns']} <<-EOH
+          INSERT INTO domains (name, type) values ('#{ node['bcpc']['cluster_domain'] }', 'NATIVE');
+      ]
+      self.notifies :restart, resources(:service => "pdns"), :delayed
+      self.resolve_notification_references
+    end
+    only_if {
+      %x[ MYSQL_PWD=#{get_config('mysql-root-password')} mysql -B --skip-column-names -uroot -e 'SELECT count(*) FROM pdns.domains WHERE name = \"#{ node['bcpc']['cluster_domain'] }\"' ].to_i.zero?
+    }
+  end
+
+  reverse_fixed_zone = node['bcpc']['fixed']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['fixed']['cidr'])
+  reverse_float_zone = node['bcpc']['floating']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['floating']['cidr'])
+  management_zone = calc_reverse_dns_zone(node['bcpc']['management']['cidr'])
+
+  ruby_block "powerdns-table-domains-reverse-fixed-zone" do
+    block do
+      %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
+          mysql -uroot #{node['bcpc']['dbname']['pdns']} <<-EOH
+          INSERT INTO domains (name, type) values ('#{ reverse_fixed_zone }', 'NATIVE');
+      ]
+      self.notifies :restart, resources(:service => "pdns"), :delayed
+      self.resolve_notification_references
+    end
+    only_if {
+      %x[ MYSQL_PWD=#{get_config('mysql-root-password')} mysql -B --skip-column-names -uroot -e 'SELECT count(*) FROM pdns.domains WHERE name = \"#{ reverse_fixed_zone }\"' ].to_i.zero?
+    }
+  end
+
+  ruby_block "powerdns-table-domains-reverse-float-zone" do
+    block do
+      %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
+          mysql -uroot #{node['bcpc']['dbname']['pdns']} <<-EOH
+          INSERT INTO domains (name, type) values ('#{ reverse_float_zone }', 'NATIVE');
+      ]
+      self.notifies :restart, resources(:service => "pdns"), :delayed
+      self.resolve_notification_references
+    end
+    only_if {
+      %x[ MYSQL_PWD=#{get_config('mysql-root-password')} mysql -B --skip-column-names -uroot -e 'SELECT count(*) FROM pdns.domains WHERE name = \"#{ reverse_float_zone }\"' ].to_i.zero?
+    }
+  end
+
+  ruby_block "powerdns-table-domains-management-zone" do
+    block do
+      %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
+          mysql -uroot #{node['bcpc']['dbname']['pdns']} <<-EOH
+          INSERT INTO domains (name, type) values ('#{management_zone}', 'NATIVE');
+      ]
+      self.notifies :restart, resources(:service => "pdns"), :delayed
+      self.resolve_notification_references
+    end
+    only_if {
+      %x[ MYSQL_PWD=#{get_config('mysql-root-password')} mysql -B --skip-column-names -uroot -e 'SELECT count(*) FROM pdns.domains WHERE name = \"#{ management_zone }\"' ].to_i.zero?
+    }
   end
 
   ruby_block "powerdns-function-ip4_to_ptr_name" do
@@ -190,18 +246,20 @@ if node['bcpc']['enabled']['dns']
     owner "root"
     group "root"
     mode 00644
+    # result of get_all_nodes is passed in here because Chef can't get context for running Chef::Search::Query#search inside the template generator
     variables(
       lazy {
         {
-          :all_servers               => get_all_nodes,
-          :float_cidr                => IPAddr.new(node['bcpc']['floating']['available_subnet']),
-          :database_name             => node['bcpc']['dbname']['pdns'],
-          :cluster_domain            => node['bcpc']['cluster_domain'],
-          :floating_vip              => node['bcpc']['floating']['vip'],
-          :management_vip            => node['bcpc']['management']['vip'],
-          :monitoring_vip            => node['bcpc']['monitoring']['vip'],
-          :reverse_fixed_zone        => (node['bcpc']['fixed']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['fixed']['cidr'])),
-          :reverse_float_zone        => (node['bcpc']['floating']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['floating']['cidr'])),
+          :all_servers         => get_all_nodes,
+          :float_cidr          => IPAddr.new(node['bcpc']['floating']['available_subnet']),
+          :database_name       => node['bcpc']['dbname']['pdns'],
+          :cluster_domain      => node['bcpc']['cluster_domain'],
+          :floating_vip        => node['bcpc']['floating']['vip'],
+          :management_vip      => node['bcpc']['management']['vip'],
+          :monitoring_vip      => node['bcpc']['monitoring']['vip'],
+          :reverse_fixed_zone  => (node['bcpc']['fixed']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['fixed']['cidr'])),
+          :reverse_float_zone  => (node['bcpc']['floating']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['floating']['cidr'])),
+          :management_zone     => calc_reverse_dns_zone(node['bcpc']['management']['cidr'])
         }
       }
     )

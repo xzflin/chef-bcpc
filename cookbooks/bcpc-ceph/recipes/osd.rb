@@ -41,22 +41,6 @@ execute "trigger-osd-startup" do
     command "udevadm trigger --subsystem-match=block --action=add"
 end
 
-ruby_block "reap-ceph-disks-from-dead-servers" do
-  block do
-    storage_ips = get_ceph_osd_nodes.collect { |x| x['bcpc']['storage']['ip'] }
-    status_cmd = Mixlib::ShellOut.new("ceph osd dump --format=json").run_command
-    status = safe_parse_json(status_cmd.stdout)
-    status['osds'].select { |x| x['up']==0 && x['in']==0 }.each do |osd|
-        osd_ip = osd['public_addr'][/[^:]*/]
-        if osd_ip != "" and not storage_ips.include?(osd_ip)
-          cmd = Mixlib::ShellOut.new("ceph osd crush remove osd.#{osd['osd']} && \
-          ceph osd rm osd.#{osd['osd']} && \
-          ceph auth del osd.#{osd['osd']}").run_command
-        end
-    end
-  end
-end
-
 template '/etc/init/ceph-osd-renice.conf' do
   source 'ceph-upstart.ceph-osd-renice.conf.erb'
   mode 00644

@@ -60,25 +60,6 @@ end
     end
 end
 
-ruby_block "reap-dead-servers-from-nova" do
-  block do
-    all_hosts = get_nodes_with_recipe('bcpc-openstack-nova::compute').collect { |x| x.hostname }
-    cmd = Mixlib::ShellOut.new("nova-manage service list 2>/dev/null | awk '{print $2}' | grep -ve '^Host$' | uniq").run_command
-    nova_hosts = cmd.stdout.split
-    nova_hosts.each do |host|
-      unless all_hosts.include?(host)
-        delete_cmd = Mixlib::ShellOut.new(<<-EOH
-          export MYSQL_PWD=#{get_config('mysql-root-password')};
-          mysql -uroot #{node['bcpc']['dbname']['nova']} -e 'DELETE FROM services WHERE host="#{host}";'
-          mysql -uroot #{node['bcpc']['dbname']['nova']} -e 'DELETE FROM compute_nodes WHERE hypervisor_node.hostname="#{host}";'
-          EOH
-        ).run_command
-        delete_cmd.error!
-      end
-    end
-  end
-end
-
 include_recipe 'bcpc-openstack-nova::compute'
 include_recipe 'bcpc-openstack-nova::network-setup'
 include_recipe 'bcpc-openstack-nova::flavors'

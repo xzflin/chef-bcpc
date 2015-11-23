@@ -95,20 +95,6 @@ template "/etc/sudoers.d/monstatus" do
     mode 00440
 end
 
-ruby_block "reap-dead-ceph-mon-servers" do
-  block do
-    head_names = get_head_nodes.collect { |x| x['hostname'] }
-    cmd = Mixlib::ShellOut.new("ceph --admin-daemon /var/run/ceph/ceph-mon.#{node['hostname']}.asok mon_status").run_command
-    cmd.error!
-    status = safe_parse_json(cmd.stdout)
-    status['monmap']['mons'].collect { |x| x['name'] }.each do |server|
-      unless head_names.include?(server)
-        mon_remove_cmd = Mixlib::ShellOut.new("ceph mon remove #{server}").run_command
-      end
-    end
-  end
-end
-
 bash "initialize-ceph-admin-and-osd-config" do
     code <<-EOH
         ceph --name mon. --keyring /var/lib/ceph/mon/ceph-#{node['hostname']}/keyring \

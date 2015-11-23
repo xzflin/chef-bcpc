@@ -144,6 +144,7 @@ if node['bcpc']['enabled']['metrics']
           )}
         })
         notifies :restart, "service[diamond]", :delayed
+        only_if "test -d /var/lib/mysql/nova"
     end
 
     service "diamond" do

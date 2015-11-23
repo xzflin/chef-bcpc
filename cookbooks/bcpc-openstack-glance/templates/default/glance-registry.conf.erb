@@ -35,6 +35,11 @@ backlog = 4096
 # package.
 #data_api = glance.db.sqlalchemy.api
 
+#The number of child process workers that will be
+# created to service Registry requests. The default will be
+# equal to the number of CPUs available. (integer value)
+workers = <%= node['bcpc']['glance']['workers'] %>
+
 # Enable Registry API versions individually or simultaneously
 #enable_v1_registry = True
 #enable_v2_registry = True
