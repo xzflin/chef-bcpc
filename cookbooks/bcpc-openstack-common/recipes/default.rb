@@ -17,16 +17,7 @@
 # limitations under the License.
 #
 
-package "ubuntu-cloud-keyring" do
-  action :upgrade
-end
-
-apt_repository "openstack" do
-  uri node['bcpc']['repos']['openstack']
-  distribution "#{node['lsb']['codename']}-#{node['bcpc']['openstack_branch']}/#{node['bcpc']['openstack_release']}"
-  components ["main"]
-  key "ubuntu-cloud.key"
-end
+include_recipe "bcpc-openstack-common::repository"
 
 %w{ python-novaclient
     python-cinderclient

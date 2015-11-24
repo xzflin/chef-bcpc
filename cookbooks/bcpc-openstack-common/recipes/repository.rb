@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: bcpc-bootstrap
-# Recipe:: default
+# Cookbook Name:: bcpc-openstack-common
+# Recipe:: repository
 #
 # Copyright 2015, Bloomberg Finance L.P.
 #
@@ -16,6 +16,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-include_recipe 'bcpc-bootstrap::ufw'
-include_recipe 'bcpc-bootstrap::cobbler'
-include_recipe 'bcpc-bootstrap::openstack-clients'
+
+package "ubuntu-cloud-keyring" do
+  action :upgrade
+end
+
+apt_repository "openstack" do
+  uri node['bcpc']['repos']['openstack']
+  distribution "#{node['lsb']['codename']}-#{node['bcpc']['openstack_branch']}/#{node['bcpc']['openstack_release']}"
+  components ["main"]
+  key "ubuntu-cloud.key"
+end

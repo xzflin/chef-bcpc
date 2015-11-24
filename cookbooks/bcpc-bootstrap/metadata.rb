@@ -8,3 +8,4 @@ version          '6.0.0'
 
 depends          'bcpc-binary-files', '>= 6.0.0'
 depends          'bcpc-foundation', '>= 6.0.0'
+depends          'bcpc-openstack-common', '>= 6.0.0'
