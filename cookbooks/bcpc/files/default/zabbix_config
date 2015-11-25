@@ -12,12 +12,20 @@ templates = [ "/tmp/zabbix_linux_active_template.xml",
               "/tmp/zabbix_bcpc_templates.xml"]
 groups = ["BCPC-Headnode",
           "BCPC-Worknode",
+          "BCPC-EphemeralWorknode",
           "BCPC-Monitoring"]
 
 zapi = ZabbixAPI(config["ip"])
 # Disable SSL certificate verification
 zapi.session.verify = False
 zapi.login(config["user"], config["password"])
+
+for name in groups:
+        hostg = zapi.hostgroup.exists(name=name)
+        if not hostg:
+                r = zapi.hostgroup.create(name=name)
+                if not r.get("groupids", None):
+                        raise Exception("Unable to create")
 
 for template in templates:
         fcontents = open(template).read()
@@ -41,12 +49,5 @@ templates = zapi.hostgroup.get(filter = {"name" : "Templates"} )
 if not templates:
         raise Exception("Failed to find templates group")
 template_id  = templates[0]["groupid"]
-
-for name in groups:
-        hostg = zapi.hostgroup.exists(name=name)
-        if not hostg:
-                r = zapi.hostgroup.create(name=name)
-                if not r.get("groupids", None):
-                        raise Exception("Unable to create")
 
 sys.exit(0)
