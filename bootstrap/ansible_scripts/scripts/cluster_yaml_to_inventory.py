@@ -9,6 +9,7 @@ import jinja2
 import os
 import sys
 import yaml
+import re
 
 
 INVENTORY_TEMPLATE = """[localhost]
@@ -77,6 +78,27 @@ hardware_type={{ cluster_hardware_type }}
 {{ node }}
 {% endfor %}
 
+{% for group_space in group_map|dictsort %}
+{% set group_space_key = group_space[0] %}
+{% for group_set in group_space[1]|dictsort %}
+{% set group_set_key = group_set[0] %}
+{% set prefix = group_opts_map[group_space_key].prefix %}
+[{{ cluster_name }}-{{ prefix }}{{ group_set_key }}]
+{% for item in group_set[1]|dictsort %}
+{% set node = item[0] + " ansible_ssh_host=" + item[1].ip_address %}
+{% if item[1].ipmi_address %}
+{% set node = node + " ipmi_address=" + item[1].ipmi_address %}
+{% endif %}
+{% if not cluster_hardware_type %}
+{% set node = node + " hardware_type=" + item[1].hardware_type %}
+{% endif %}
+{{ node }}
+{% endfor %}
+
+{% endfor %}
+
+{% endfor %}
+
 [cluster:children]
 headnodes
 worknodes
@@ -93,10 +115,63 @@ ephemeral-worknodes
 
 [ephemeral-worknodes:children]
 {{ cluster_name }}-ephemeral-worknodes
+
+{% for group_space in group_map|dictsort %}
+{% set group_space_key = group_space[0] %}
+{% for group_set in group_space[1]|dictsort %}
+{% set group_set_key = group_set[0] %}
+{% set prefix = group_opts_map[group_space_key].prefix %}
+[{{ prefix }}{{ group_set_key }}:children]
+{{ cluster_name }}-{{ prefix }}{{ group_set_key }}
+
+{% endfor %}
+{% endfor %}
+
 """
 
 
-def render_inventory(path, ssh_user):
+def parse_grouping_opts(groupstr=None):
+    REQUIRED_KEYS = ['prefix', 'grouping_key', 'host_pattern']
+    set_delim = ';'
+    set_label_delim = ':'
+    kvp_delim = ','
+    param_delim = '='
+    opts = {}
+
+    if groupstr:
+        try:
+            for oset in groupstr.split(set_delim):
+                split_line = oset.split(set_label_delim)
+                if len(split_line) != 2 or split_line[1].strip() == '':
+                    sys.exit('malformed grouping option string')
+                set_label = split_line[0]
+                opts[set_label] = {}
+                for kvp in split_line[1].split(kvp_delim):
+                    k, v = kvp.split(param_delim)
+                    opts[set_label][k] = v
+        except ValueError as x:
+            sys.exit('grouping parsing error: %s' % x.message)
+
+        for k in REQUIRED_KEYS:
+            if k not in opts[set_label]:
+                sys.exit('%s is missing for grouping \'%s\'' % (k, set_label))
+
+        try:
+            pattern = opts[set_label]['host_pattern']
+            opts[set_label]['regex'] = re.compile(pattern)
+        except re.error as ex:
+            sys.exit('%s:<host_pattern>: %s' % (set_label, ex.message))
+        # Verify that grouping makes sense with the supplied key
+        k = opts[set_label]['grouping_key']
+        if k not in opts[set_label]['regex'].groupindex:
+            sys.exit("grouping_key \'%s\' must match a named group "
+                     "given by host_pattern" % opts[set_label]['grouping_key'])
+    return opts
+
+
+def render_inventory(path, ssh_user, opts={}):
+    g_opts = parse_grouping_opts(opts['grouping'])
+
     f = open(path)
     cluster_yaml = f.read()
     f.close()
@@ -111,9 +186,11 @@ def render_inventory(path, ssh_user):
     worknodes = {}
     eworknodes = {}
     cluster_hardware_type = None
+    group_map = {}
 
     for node in cluster['nodes']:
         hardware_types.add(cluster['nodes'][node]['hardware_type'])
+
         if cluster['nodes'][node]['role'] == 'bootstrap':
             bootstraps[node] = cluster['nodes'][node]
         elif cluster['nodes'][node]['role'] == 'head':
@@ -122,7 +199,18 @@ def render_inventory(path, ssh_user):
             worknodes[node] = cluster['nodes'][node]
         elif cluster['nodes'][node]['role'] == 'work-ephemeral':
             eworknodes[node] = cluster['nodes'][node]
-
+        # Do the grouping here
+        for group_name, group_params in g_opts.iteritems():
+            if group_name not in group_map:
+                group_map[group_name] = {}
+            grouping_key = group_params['grouping_key']
+            m = group_params['regex'].match(node)
+            if m and grouping_key in m.groupdict():
+                group_item_key = m.groupdict()[grouping_key]
+                if group_item_key not in group_map[group_name]:
+                    group_map[group_name][group_item_key] = {}
+                group_map[group_name][group_item_key][node] = \
+                    cluster['nodes'][node]
     # if None is detected as a hardware_type, the person needs to update
     # the YAML to actually have real hardware types
     if None in hardware_types:
@@ -133,21 +221,41 @@ def render_inventory(path, ssh_user):
     if len(hardware_types) == 1:
         cluster_hardware_type = hardware_types.pop()
 
-    return template.render(
-        cluster_name=cluster['cluster_name'],
-        cluster_hardware_type=cluster_hardware_type,
-        cluster_ssh_user=ssh_user,
-        bootstraps=bootstraps,
-        headnodes=headnodes,
-        worknodes=worknodes,
-        eworknodes=eworknodes
-    )
+    template_vars = {
+                        'cluster_name': cluster['cluster_name'],
+                        'cluster_hardware_type': cluster_hardware_type,
+                        'cluster_ssh_user': ssh_user,
+                        'bootstraps': bootstraps,
+                        'headnodes': headnodes,
+                        'worknodes': worknodes,
+                        'eworknodes': eworknodes,
+                        'group_map': group_map,
+                        'group_opts_map': g_opts
+                    }
+    return template.render(template_vars)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Takes cluster.yaml and emits an Ansible inventory.')
+        description='Takes cluster.yaml and emits an Ansible inventory.',
+        formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('path', help='path to cluster.yaml')
+    parser.add_argument('-G', '--grouping',
+        help='''set the grouping options
+
+If appears multiple times, last occurring value takes precedence
+The format is as follows:
+<label>:grouping_key=<str>,host_pattern=<some_regex>,prefix=<some_prefix>
+
+The grouping_key needs to correspond to a named group specified inside the
+regex supplied for host_pattern.
+
+For example if using test data generated by `create_random_cluster_txt.py`
+and wanting to group by rack, try the following argument:
+
+--grouping rack:grouping_key='rack_id',host_pattern='fake-node-r(?P<rack_id>\d+)n\d',prefix='rack-'
+             '''
+                        )
     parser.add_argument('-s', '--ssh_user',
         help='write this as ansible_ssh_user (default: %(default)s)',
         default='operations')
@@ -156,7 +264,7 @@ def main():
     if not os.path.exists(args.path) or not os.access(args.path, os.R_OK):
         sys.exit("ERROR: Unable to open %s" % args.path)
 
-    print(render_inventory(args.path, args.ssh_user))
+    print(render_inventory(args.path, args.ssh_user, args.__dict__))
 
 
 if __name__ == "__main__":
