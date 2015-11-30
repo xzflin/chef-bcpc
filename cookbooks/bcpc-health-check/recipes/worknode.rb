@@ -19,7 +19,9 @@
 
 include_recipe 'bcpc-health-check'
 
-%w{ float_ips }.each do |cc|
+# Apache check will fail on ephemeral nodes because it has been removed there
+# as they do not serve RADOSgw requests
+%w{ float_ips apache }.each do |cc|
   template  "/usr/local/etc/checks/#{cc}.yml" do
     source "#{cc}.yml.erb"
     owner "root"
