@@ -229,7 +229,7 @@ if [[ -f cluster.txt ]]; then
         vftrace "$HOST %20s %s\n" "$SERVICE" "$STAT"
         
         # Finally, check well-known BCPC services run out of upstart
-        for SERVICE in keystone glance-api glance-registry cinder-scheduler cinder-volume cinder-api nova-api nova-novncproxy nova-scheduler nova-consoleauth nova-cert nova-conductor nova-compute nova-network haproxy apache2 routemon tpm; do
+        for SERVICE in glance-api glance-registry cinder-scheduler cinder-volume cinder-api nova-api nova-novncproxy nova-scheduler nova-consoleauth nova-cert nova-conductor nova-compute nova-network haproxy apache2 tpm; do
             STAT=`$SSH "service $SERVICE status 2>&1"`
             if [[ ! "$STAT" =~ "unrecognized" ]]; then
                 
