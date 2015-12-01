@@ -158,6 +158,8 @@ default['bcpc']['ceph']['mon_niceness'] = -10
 default['bcpc']['rabbitmq']['durable_queues'] = true
 # ulimits for RabbitMQ server
 default['bcpc']['rabbitmq']['ulimit']['nofile'] = 4096
+# Heartbeat timeout to detect dead RabbitMQ brokers
+default['bcpc']['rabbitmq']['heartbeat'] = 60
 
 ###########################################
 #
