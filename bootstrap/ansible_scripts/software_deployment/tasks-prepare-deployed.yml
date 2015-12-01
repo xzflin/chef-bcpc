@@ -66,6 +66,10 @@
   command: tar xvzf {{ bootstrap_files_dir }}/{{ chef_bcpc_version }}/cookbooks/{{ item.cookbook }}-{{ item.version }}.tar.gz -C {{ bootstrap_deployed_dir }}/cookbooks/
   with_items: "{{ dependency_cookbooks }}"
 
+- name: Copy named SSL keys into bcpc cookbook
+  copy: src={{ controlnode_ssl_key_dir }}/{{ item }} dest={{ bootstrap_deployed_dir }}/cookbooks/bcpc/files/default/{{ item }} owner={{ ansible_ssh_user }} mode=0644 validate='openssl rsa -in %s -noout'
+  with_items: "{{ ssl_key_list }}"
+
 - name: Copy prebuilt binaries into bcpc cookbook
   shell: mkdir -p {{ bootstrap_deployed_dir }}/cookbooks/bcpc/files/default/bins && cp -r {{ bootstrap_files_dir }}/{{ chef_bcpc_version }}-prebuilt/* {{ bootstrap_deployed_dir }}/cookbooks/bcpc/files/default/bins
   when: use_prebuilt_binaries

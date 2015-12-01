@@ -1,13 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>2.0</version>
-    <date>2015-08-07T15:44:19Z</date>
+    <date>2015-11-25T18:43:43Z</date>
     <groups>
         <group>
             <name>Templates</name>
         </group>
     </groups>
     <templates>
+        <template>
+            <template>BCPC-EphemeralWorknode</template>
+            <name>BCPC-EphemeralWorknode</name>
+            <description/>
+            <groups>
+                <group>
+                    <name>Templates</name>
+                </group>
+            </groups>
+            <applications/>
+            <items/>
+            <discovery_rules/>
+            <macros/>
+            <templates>
+                <template>
+                    <name>Template BCPC Compute</name>
+                </template>
+            </templates>
+            <screens/>
+        </template>
         <template>
             <template>BCPC-Headnode</template>
             <name>BCPC-Headnode</name>
@@ -626,11 +646,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Performance</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -669,11 +685,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Performance</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -712,11 +724,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Performance</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -755,11 +763,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Performance</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -798,11 +802,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Performance</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -841,11 +841,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Performance</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -884,11 +880,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Performance</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -927,11 +919,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Performance</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -970,11 +958,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Performance</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -1013,11 +997,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Performance</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -1056,11 +1036,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Performance</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -1099,11 +1075,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Performance</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -1142,11 +1114,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Performance</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -1185,11 +1153,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Performance</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -1228,11 +1192,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Performance</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -1271,11 +1231,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Performance</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -1615,11 +1571,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Processes</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -1658,11 +1610,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Processes</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -1701,11 +1649,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Processes</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -1744,11 +1688,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Processes</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -1787,11 +1727,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Processes</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -1830,11 +1766,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Processes</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -1873,11 +1805,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Processes</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -1916,11 +1844,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Processes</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -1959,11 +1883,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Processes</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -2002,11 +1922,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Processes</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -2045,11 +1961,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Processes</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -2088,11 +2000,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Processes</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -2131,11 +2039,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Processes</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -2174,11 +2078,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Processes</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -2217,11 +2117,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Processes</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -2260,11 +2156,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Processes</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -2303,11 +2195,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Processes</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -2346,11 +2234,7 @@
                     <port/>
                     <description/>
                     <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Processes</name>
-                        </application>
-                    </applications>
+                    <applications/>
                     <valuemap/>
                     <logtimefmt/>
                 </item>
@@ -3770,11 +3654,229 @@
                     <name>Templates</name>
                 </group>
             </groups>
+            <applications/>
+            <items/>
+            <discovery_rules/>
+            <macros/>
+            <templates>
+                <template>
+                    <name>Template App Ceph Node</name>
+                </template>
+                <template>
+                    <name>Template BCPC Compute</name>
+                </template>
+            </templates>
+            <screens/>
+        </template>
+        <template>
+            <template>Template App Ceph Node</template>
+            <name>Template App Ceph Node</name>
+            <description/>
+            <groups>
+                <group>
+                    <name>Templates</name>
+                </group>
+            </groups>
             <applications>
+                <application>
+                    <name>Performance</name>
+                </application>
+                <application>
+                    <name>Processes</name>
+                </application>
                 <application>
                     <name>RGW</name>
                 </application>
             </applications>
+            <items>
+                <item>
+                    <name>Memory check: Ceph OSD</name>
+                    <type>7</type>
+                    <snmp_community/>
+                    <multiplier>0</multiplier>
+                    <snmp_oid/>
+                    <key>proc.mem[ceph-osd,root]</key>
+                    <delay>90</delay>
+                    <history>3</history>
+                    <trends>30</trends>
+                    <status>0</status>
+                    <value_type>3</value_type>
+                    <allowed_hosts/>
+                    <units/>
+                    <delta>0</delta>
+                    <snmpv3_contextname/>
+                    <snmpv3_securityname/>
+                    <snmpv3_securitylevel>0</snmpv3_securitylevel>
+                    <snmpv3_authprotocol>0</snmpv3_authprotocol>
+                    <snmpv3_authpassphrase/>
+                    <snmpv3_privprotocol>0</snmpv3_privprotocol>
+                    <snmpv3_privpassphrase/>
+                    <formula>1</formula>
+                    <delay_flex/>
+                    <params/>
+                    <ipmi_sensor/>
+                    <data_type>0</data_type>
+                    <authtype>0</authtype>
+                    <username/>
+                    <password/>
+                    <publickey/>
+                    <privatekey/>
+                    <port/>
+                    <description/>
+                    <inventory_link>0</inventory_link>
+                    <applications>
+                        <application>
+                            <name>Performance</name>
+                        </application>
+                    </applications>
+                    <valuemap/>
+                    <logtimefmt/>
+                </item>
+                <item>
+                    <name>Process check: Ceph OSD</name>
+                    <type>7</type>
+                    <snmp_community/>
+                    <multiplier>0</multiplier>
+                    <snmp_oid/>
+                    <key>proc.num[ceph-osd,root]</key>
+                    <delay>90</delay>
+                    <history>3</history>
+                    <trends>30</trends>
+                    <status>0</status>
+                    <value_type>3</value_type>
+                    <allowed_hosts/>
+                    <units/>
+                    <delta>0</delta>
+                    <snmpv3_contextname/>
+                    <snmpv3_securityname/>
+                    <snmpv3_securitylevel>0</snmpv3_securitylevel>
+                    <snmpv3_authprotocol>0</snmpv3_authprotocol>
+                    <snmpv3_authpassphrase/>
+                    <snmpv3_privprotocol>0</snmpv3_privprotocol>
+                    <snmpv3_privpassphrase/>
+                    <formula>1</formula>
+                    <delay_flex/>
+                    <params/>
+                    <ipmi_sensor/>
+                    <data_type>0</data_type>
+                    <authtype>0</authtype>
+                    <username/>
+                    <password/>
+                    <publickey/>
+                    <privatekey/>
+                    <port/>
+                    <description/>
+                    <inventory_link>0</inventory_link>
+                    <applications>
+                        <application>
+                            <name>Processes</name>
+                        </application>
+                    </applications>
+                    <valuemap/>
+                    <logtimefmt/>
+                </item>
+                <item>
+                    <name>RGW: HAProxy Pings / m</name>
+                    <type>7</type>
+                    <snmp_community/>
+                    <multiplier>0</multiplier>
+                    <snmp_oid/>
+                    <key>ceph.rgw.haproxy</key>
+                    <delay>90</delay>
+                    <history>3</history>
+                    <trends>30</trends>
+                    <status>0</status>
+                    <value_type>3</value_type>
+                    <allowed_hosts/>
+                    <units/>
+                    <delta>0</delta>
+                    <snmpv3_contextname/>
+                    <snmpv3_securityname/>
+                    <snmpv3_securitylevel>0</snmpv3_securitylevel>
+                    <snmpv3_authprotocol>0</snmpv3_authprotocol>
+                    <snmpv3_authpassphrase/>
+                    <snmpv3_privprotocol>0</snmpv3_privprotocol>
+                    <snmpv3_privpassphrase/>
+                    <formula>1</formula>
+                    <delay_flex/>
+                    <params/>
+                    <ipmi_sensor/>
+                    <data_type>0</data_type>
+                    <authtype>0</authtype>
+                    <username/>
+                    <password/>
+                    <publickey/>
+                    <privatekey/>
+                    <port/>
+                    <description>Number of HAProxy pings per min</description>
+                    <inventory_link>0</inventory_link>
+                    <applications>
+                        <application>
+                            <name>RGW</name>
+                        </application>
+                    </applications>
+                    <valuemap/>
+                    <logtimefmt/>
+                </item>
+                <item>
+                    <name>RGW: HTTP 500 Errors / m</name>
+                    <type>7</type>
+                    <snmp_community/>
+                    <multiplier>0</multiplier>
+                    <snmp_oid/>
+                    <key>ceph.rgw.http500</key>
+                    <delay>90</delay>
+                    <history>3</history>
+                    <trends>30</trends>
+                    <status>0</status>
+                    <value_type>3</value_type>
+                    <allowed_hosts/>
+                    <units/>
+                    <delta>0</delta>
+                    <snmpv3_contextname/>
+                    <snmpv3_securityname/>
+                    <snmpv3_securitylevel>0</snmpv3_securitylevel>
+                    <snmpv3_authprotocol>0</snmpv3_authprotocol>
+                    <snmpv3_authpassphrase/>
+                    <snmpv3_privprotocol>0</snmpv3_privprotocol>
+                    <snmpv3_privpassphrase/>
+                    <formula>1</formula>
+                    <delay_flex/>
+                    <params/>
+                    <ipmi_sensor/>
+                    <data_type>0</data_type>
+                    <authtype>0</authtype>
+                    <username/>
+                    <password/>
+                    <publickey/>
+                    <privatekey/>
+                    <port/>
+                    <description/>
+                    <inventory_link>0</inventory_link>
+                    <applications>
+                        <application>
+                            <name>RGW</name>
+                        </application>
+                    </applications>
+                    <valuemap/>
+                    <logtimefmt/>
+                </item>
+            </items>
+            <discovery_rules/>
+            <macros/>
+            <templates/>
+            <screens/>
+        </template>
+        <template>
+            <template>Template BCPC Compute</template>
+            <name>Template BCPC Compute</name>
+            <description/>
+            <groups>
+                <group>
+                    <name>Templates</name>
+                </group>
+            </groups>
+            <applications/>
             <items>
                 <item>
                     <name>IP Route: MGMT</name>
@@ -3857,49 +3959,6 @@
                     <applications>
                         <application>
                             <name>Network interfaces</name>
-                        </application>
-                    </applications>
-                    <valuemap/>
-                    <logtimefmt/>
-                </item>
-                <item>
-                    <name>Memory check: Ceph OSD</name>
-                    <type>7</type>
-                    <snmp_community/>
-                    <multiplier>0</multiplier>
-                    <snmp_oid/>
-                    <key>proc.mem[ceph-osd,root]</key>
-                    <delay>90</delay>
-                    <history>3</history>
-                    <trends>30</trends>
-                    <status>0</status>
-                    <value_type>3</value_type>
-                    <allowed_hosts/>
-                    <units/>
-                    <delta>0</delta>
-                    <snmpv3_contextname/>
-                    <snmpv3_securityname/>
-                    <snmpv3_securitylevel>0</snmpv3_securitylevel>
-                    <snmpv3_authprotocol>0</snmpv3_authprotocol>
-                    <snmpv3_authpassphrase/>
-                    <snmpv3_privprotocol>0</snmpv3_privprotocol>
-                    <snmpv3_privpassphrase/>
-                    <formula>1</formula>
-                    <delay_flex/>
-                    <params/>
-                    <ipmi_sensor/>
-                    <data_type>0</data_type>
-                    <authtype>0</authtype>
-                    <username/>
-                    <password/>
-                    <publickey/>
-                    <privatekey/>
-                    <port/>
-                    <description/>
-                    <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Performance</name>
                         </application>
                     </applications>
                     <valuemap/>
@@ -4158,49 +4217,6 @@
                     <applications>
                         <application>
                             <name>Performance</name>
-                        </application>
-                    </applications>
-                    <valuemap/>
-                    <logtimefmt/>
-                </item>
-                <item>
-                    <name>Process check: Ceph OSD</name>
-                    <type>7</type>
-                    <snmp_community/>
-                    <multiplier>0</multiplier>
-                    <snmp_oid/>
-                    <key>proc.num[ceph-osd,root]</key>
-                    <delay>90</delay>
-                    <history>3</history>
-                    <trends>30</trends>
-                    <status>0</status>
-                    <value_type>3</value_type>
-                    <allowed_hosts/>
-                    <units/>
-                    <delta>0</delta>
-                    <snmpv3_contextname/>
-                    <snmpv3_securityname/>
-                    <snmpv3_securitylevel>0</snmpv3_securitylevel>
-                    <snmpv3_authprotocol>0</snmpv3_authprotocol>
-                    <snmpv3_authpassphrase/>
-                    <snmpv3_privprotocol>0</snmpv3_privprotocol>
-                    <snmpv3_privpassphrase/>
-                    <formula>1</formula>
-                    <delay_flex/>
-                    <params/>
-                    <ipmi_sensor/>
-                    <data_type>0</data_type>
-                    <authtype>0</authtype>
-                    <username/>
-                    <password/>
-                    <publickey/>
-                    <privatekey/>
-                    <port/>
-                    <description/>
-                    <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Processes</name>
                         </application>
                     </applications>
                     <valuemap/>
@@ -4550,92 +4566,6 @@
                     <valuemap/>
                     <logtimefmt/>
                 </item>
-                <item>
-                    <name>RGW: HAProxy Pings / m</name>
-                    <type>7</type>
-                    <snmp_community/>
-                    <multiplier>0</multiplier>
-                    <snmp_oid/>
-                    <key>ceph.rgw.haproxy</key>
-                    <delay>90</delay>
-                    <history>3</history>
-                    <trends>30</trends>
-                    <status>0</status>
-                    <value_type>3</value_type>
-                    <allowed_hosts/>
-                    <units/>
-                    <delta>0</delta>
-                    <snmpv3_contextname/>
-                    <snmpv3_securityname/>
-                    <snmpv3_securitylevel>0</snmpv3_securitylevel>
-                    <snmpv3_authprotocol>0</snmpv3_authprotocol>
-                    <snmpv3_authpassphrase/>
-                    <snmpv3_privprotocol>0</snmpv3_privprotocol>
-                    <snmpv3_privpassphrase/>
-                    <formula>1</formula>
-                    <delay_flex/>
-                    <params/>
-                    <ipmi_sensor/>
-                    <data_type>0</data_type>
-                    <authtype>0</authtype>
-                    <username/>
-                    <password/>
-                    <publickey/>
-                    <privatekey/>
-                    <port/>
-                    <description>Number of HAProxy pings per min</description>
-                    <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>RGW</name>
-                        </application>
-                    </applications>
-                    <valuemap/>
-                    <logtimefmt/>
-                </item>
-                <item>
-                    <name>RGW: HTTP 500 Errors / m</name>
-                    <type>7</type>
-                    <snmp_community/>
-                    <multiplier>0</multiplier>
-                    <snmp_oid/>
-                    <key>ceph.rgw.http500</key>
-                    <delay>90</delay>
-                    <history>3</history>
-                    <trends>30</trends>
-                    <status>0</status>
-                    <value_type>3</value_type>
-                    <allowed_hosts/>
-                    <units/>
-                    <delta>0</delta>
-                    <snmpv3_contextname/>
-                    <snmpv3_securityname/>
-                    <snmpv3_securitylevel>0</snmpv3_securitylevel>
-                    <snmpv3_authprotocol>0</snmpv3_authprotocol>
-                    <snmpv3_authpassphrase/>
-                    <snmpv3_privprotocol>0</snmpv3_privprotocol>
-                    <snmpv3_privpassphrase/>
-                    <formula>1</formula>
-                    <delay_flex/>
-                    <params/>
-                    <ipmi_sensor/>
-                    <data_type>0</data_type>
-                    <authtype>0</authtype>
-                    <username/>
-                    <password/>
-                    <publickey/>
-                    <privatekey/>
-                    <port/>
-                    <description/>
-                    <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>RGW</name>
-                        </application>
-                    </applications>
-                    <valuemap/>
-                    <logtimefmt/>
-                </item>
             </items>
             <discovery_rules/>
             <macros/>
@@ -4673,7 +4603,7 @@
             <name>Ceph: Drop in number of active PGs</name>
             <url/>
             <status>0</status>
-            <priority>4</priority>
+            <priority>3</priority>
             <description/>
             <type>0</type>
             <dependencies/>
@@ -4729,7 +4659,7 @@
             <dependencies/>
         </trigger>
         <trigger>
-            <expression>{BCPC-Worknode:system.run[ip route show table mgmt].str(default)}=0</expression>
+            <expression>{Template BCPC Compute:system.run[ip route show table mgmt].str(default)}=0</expression>
             <name>IP Route Check for MGMT failed on {HOST.NAME}</name>
             <url/>
             <status>0</status>
@@ -4739,7 +4669,7 @@
             <dependencies/>
         </trigger>
         <trigger>
-            <expression>{BCPC-Worknode:system.run[ip route show table storage].str(scope)}=0</expression>
+            <expression>{Template BCPC Compute:system.run[ip route show table storage].str(scope)}=0</expression>
             <name>IP Route Check for STORAGE failed on {HOST.NAME}</name>
             <url/>
             <status>0</status>
@@ -4753,7 +4683,7 @@
             <name>MySQL is not pingable from {HOST.NAME}</name>
             <url/>
             <status>0</status>
-            <priority>4</priority>
+            <priority>3</priority>
             <description/>
             <type>0</type>
             <dependencies/>
@@ -4779,7 +4709,7 @@
             <dependencies/>
         </trigger>
         <trigger>
-            <expression>{BCPC-Worknode:ceph.rgw.haproxy.avg(300)}&lt;10</expression>
+            <expression>{Template App Ceph Node:ceph.rgw.haproxy.avg(300)}&lt;10</expression>
             <name>RGW: HAProxy no longer pingging</name>
             <url/>
             <status>0</status>
@@ -4793,7 +4723,7 @@
             <name>Service: Cinder API</name>
             <url/>
             <status>0</status>
-            <priority>4</priority>
+            <priority>3</priority>
             <description/>
             <type>0</type>
             <dependencies/>
@@ -4803,7 +4733,7 @@
             <name>Service: Cinder Scheduler</name>
             <url/>
             <status>0</status>
-            <priority>4</priority>
+            <priority>3</priority>
             <description/>
             <type>0</type>
             <dependencies/>
@@ -4813,7 +4743,7 @@
             <name>Service: Cinder Volume</name>
             <url/>
             <status>0</status>
-            <priority>4</priority>
+            <priority>3</priority>
             <description/>
             <type>0</type>
             <dependencies/>
@@ -4823,7 +4753,7 @@
             <name>Service: Glance-API</name>
             <url/>
             <status>0</status>
-            <priority>4</priority>
+            <priority>3</priority>
             <description/>
             <type>0</type>
             <dependencies/>
@@ -4833,7 +4763,7 @@
             <name>Service: Glance Registry</name>
             <url/>
             <status>0</status>
-            <priority>4</priority>
+            <priority>3</priority>
             <description/>
             <type>0</type>
             <dependencies/>
@@ -4843,7 +4773,7 @@
             <name>Service: Keystone</name>
             <url/>
             <status>0</status>
-            <priority>4</priority>
+            <priority>3</priority>
             <description/>
             <type>0</type>
             <dependencies/>
@@ -4853,13 +4783,13 @@
             <name>Service HAProxy down on {HOST.NAME}</name>
             <url/>
             <status>0</status>
-            <priority>4</priority>
+            <priority>3</priority>
             <description/>
             <type>0</type>
             <dependencies/>
         </trigger>
         <trigger>
-            <expression>{BCPC-Worknode:proc.num[python,nova,,nova-api].last(0)}=0</expression>
+            <expression>{Template BCPC Compute:proc.num[python,nova,,nova-api].last(0)}=0</expression>
             <name>Service Nova API down on {HOST.NAME}</name>
             <url/>
             <status>0</status>
@@ -4873,13 +4803,13 @@
             <name>Service Nova Cert down on {HOST.NAME}</name>
             <url/>
             <status>0</status>
-            <priority>4</priority>
+            <priority>3</priority>
             <description/>
             <type>0</type>
             <dependencies/>
         </trigger>
         <trigger>
-            <expression>{BCPC-Worknode:proc.num[python,nova,,nova-compute].last(0)}&lt;1 or {BCPC-Worknode:proc.num[python,nova,,nova-compute].last(0)}&gt;2</expression>
+            <expression>{Template BCPC Compute:proc.num[python,nova,,nova-compute].last(0)}&lt;1 or {Template BCPC Compute:proc.num[python,nova,,nova-compute].last(0)}&gt;2</expression>
             <name>Service Nova Compute down on {HOST.NAME}</name>
             <url/>
             <status>0</status>
@@ -4893,7 +4823,7 @@
             <name>Service Nova Conductor down on {HOST.NAME}</name>
             <url/>
             <status>0</status>
-            <priority>4</priority>
+            <priority>3</priority>
             <description/>
             <type>0</type>
             <dependencies/>
@@ -4903,13 +4833,13 @@
             <name>Service Nova ConsoleAuth down on {HOST.NAME}</name>
             <url/>
             <status>0</status>
-            <priority>4</priority>
+            <priority>3</priority>
             <description/>
             <type>0</type>
             <dependencies/>
         </trigger>
         <trigger>
-            <expression>{BCPC-Worknode:proc.num[python,nova,,nova-network].last(0)}&lt;1 or {BCPC-Worknode:proc.num[python,nova,,nova-network].last(0)}&gt;2</expression>
+            <expression>{Template BCPC Compute:proc.num[python,nova,,nova-network].last(0)}&lt;1 or {Template BCPC Compute:proc.num[python,nova,,nova-network].last(0)}&gt;2</expression>
             <name>Service Nova Network down on {HOST.NAME}</name>
             <url/>
             <status>0</status>
@@ -4919,21 +4849,11 @@
             <dependencies/>
         </trigger>
         <trigger>
-            <expression>{BCPC-Headnode:proc.num[python,nova,,nova-novncproxy].last(0)}&lt;&gt;1</expression>
-            <name>Service Nova NoVNCProxy down on {HOST.NAME}</name>
-            <url/>
-            <status>0</status>
-            <priority>4</priority>
-            <description/>
-            <type>0</type>
-            <dependencies/>
-        </trigger>
-        <trigger>
             <expression>{BCPC-Headnode:proc.num[python,nova,,nova-scheduler].last(0)}&lt;&gt;1</expression>
             <name>Service Nova Scheduler down on {HOST.NAME}</name>
             <url/>
             <status>0</status>
-            <priority>4</priority>
+            <priority>3</priority>
             <description/>
             <type>0</type>
             <dependencies/>
