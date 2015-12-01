@@ -19,7 +19,22 @@
 
 include_recipe 'bcpc-health-check'
 
-%w{rgw}.each do |cc|
+%w{ apache }.each do |cc|
+  template  "/usr/local/etc/checks/#{cc}.yml" do
+    source "#{cc}.yml.erb"
+    owner "root"
+    group "root"
+    mode 00640
+  end
+
+  cookbook_file "/usr/local/bin/checks/#{cc}" do
+    source cc
+    owner "root"
+    mode "00755"
+  end
+end
+
+%w{ rgw }.each do |cc|
   template  "/usr/local/etc/checks/#{cc}.yml" do
     source "#{cc}.yml.erb"
     owner "root"
