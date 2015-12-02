@@ -156,7 +156,7 @@ lock_path = /var/lock/glance/
 # Configuration options if sending notifications via rabbitmq (these are
 # the defaults)
 #rabbit_host = <%=node['bcpc']['management']['vip']%>
-rabbit_hosts=<%=get_shuffled_servers(@servers).map{|x| x['bcpc']['management']['ip'] + ":5672"}.join(',')%>
+rabbit_hosts=<%=get_shuffled_servers(@servers, prefer_local=true).map{|x| x['bcpc']['management']['ip'] + ":5672"}.join(',')%>
 rabbit_port = 5672
 rabbit_use_ssl = false
 rabbit_userid = guest

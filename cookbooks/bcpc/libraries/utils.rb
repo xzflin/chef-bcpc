@@ -134,8 +134,14 @@ end
 
 # shuffles a list of servers deterministically to avoid stacking all connections up on a single node
 # (e.g., RabbitMQ, where OpenStack will pile on to the first server in the list)
-def get_shuffled_servers(server_list)
-  server_list.shuffle(random: Random.new(IPAddr.new(node['bcpc']['management']['ip']).to_i))
+def get_shuffled_servers(server_list, prefer_local=false)
+  shuffled_servers = server_list.shuffle(random: Random.new(IPAddr.new(node['bcpc']['management']['ip']).to_i))
+  # prefer_local == reorder the array so that the local node appears first (remainder of array stays the same)
+  if prefer_local
+    us = shuffled_servers.delete_at(shuffled_servers.index { |x| x['bcpc']['management']['ip'] == node['bcpc']['management']['ip'] })
+    shuffled_servers.insert(0, us)
+  end
+  shuffled_servers
 end
 
 def get_cached_head_node_names
@@ -150,7 +156,7 @@ def get_cached_head_node_names
             end
         end
     rescue Errno::ENOENT
-    # assume first run   
+    # assume first run
     end
     return headnodes
 end
@@ -194,7 +200,7 @@ def ceph_keygen()
     Base64.encode64(key).strip
 end
 
-# requires cidr in form '1.2.3.0/24', where 1.2.3.0 is a dotted quad ip4 address 
+# requires cidr in form '1.2.3.0/24', where 1.2.3.0 is a dotted quad ip4 address
 # and 24 is a number of netmask bits (e.g. 8, 16, 24)
 def calc_reverse_dns_zone(cidr)
 
