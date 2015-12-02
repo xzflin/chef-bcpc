@@ -35,11 +35,11 @@ config_defaults = File.join(config_path, 'bootstrap_config.sh.defaults')
 config_overrides = File.join(config_path, 'bootstrap_config.sh.overrides')
 
 File.open(config_defaults).each do |line|
-    extract_and_export_envvar(line)
+  extract_and_export_envvar(line)
 end
 if File.exist?(config_overrides)
   File.open(config_overrides).each do |line|
-      extract_and_export_envvar(line)
+    extract_and_export_envvar(line)
   end
 end
 
@@ -222,6 +222,15 @@ Vagrant.configure("2") do |config|
       m.vm.provision "configure-proxy-servers", type: "shell" do |s|
         s.privileged = false
         s.inline = $proxy_configuration_script
+      end
+
+      # if a local package mirror is set, try it early so that the user can be
+      # warned and fix it instead of waiting until all the VMs are set up
+      unless ENV['BOOTSTRAP_APT_MIRROR'].nil? or ENV['BOOTSTRAP_APT_MIRROR'].empty?
+        m.vm.provision "test-local-package-mirror", type: "shell" do |s|
+          s.privileged = false
+          s.inline = "curl --connect-timeout 5 -s -S #{ENV['BOOTSTRAP_APT_MIRROR']} 1>/dev/null"
+        end
       end
 
       # from bootstrap node only: test proxy servers from inside to determine whether
