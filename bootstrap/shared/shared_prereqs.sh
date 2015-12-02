@@ -2,7 +2,10 @@
 # Exit immediately if anything goes wrong, instead of making things worse.
 set -e
 
-. $REPO_ROOT/bootstrap/shared/shared_functions.sh
+if [[ ! -z $BOOTSTRAP_HTTP_PROXY ]] || [[ ! -z $BOOTSTRAP_HTTPS_PROXY ]] ; then
+  echo "Testing configured proxies..."
+  source $REPO_ROOT/bootstrap/shared/shared_proxy_setup.sh
+fi
 
 REQUIRED_VARS=( BOOTSTRAP_CACHE_DIR REPO_ROOT )
 check_for_envvars ${REQUIRED_VARS[@]}
