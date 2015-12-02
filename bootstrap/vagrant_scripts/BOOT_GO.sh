@@ -29,28 +29,7 @@ done
 source ../shared/shared_functions.sh
 export REPO_ROOT=$REPO_ROOT
 
-# Source the bootstrap configuration defaults and overrides.
-# If the overrides file is at the previous expected location of bootstrap.sh,
-# move it and notify the user.
-if [[ -f "$REPO_ROOT/bootstrap/config/bootstrap_config.sh" ]]; then
-  if [[ ! -f "$REPO_ROOT/bootstrap/config/bootstrap_config.sh.overrides" ]]; then
-    echo "Performing one-time move of bootstrap_config.sh to bootstrap_config.sh.overrides..."
-    mv $REPO_ROOT/bootstrap/config/bootstrap_config.sh $REPO_ROOT/bootstrap/config/bootstrap_config.sh.overrides
-  else
-    echo "ERROR: both bootstrap_config.sh and bootstrap_config.sh.overrides exist!" >&2
-    echo "Please move all overrides to bootstrap_config.sh.overrides and remove bootstrap_config.sh!" >&2
-    exit 1
-  fi
-fi
-
-BOOTSTRAP_CONFIG_DEFAULTS="$REPO_ROOT/bootstrap/config/bootstrap_config.sh.defaults"
-BOOTSTRAP_CONFIG_OVERRIDES="$REPO_ROOT/bootstrap/config/bootstrap_config.sh.overrides"
-if [[ ! -f $BOOTSTRAP_CONFIG_DEFAULTS ]]; then
-  echo "Bootstrap configuration defaults are missing! Your repository is corrupt; please restore $REPO_ROOT/bootstrap/config/bootstrap_config.sh.overrides." >&2
-  exit 1
-fi
-source $BOOTSTRAP_CONFIG_DEFAULTS
-if [[ -f $BOOTSTRAP_CONFIG_OVERRIDES ]]; then source $BOOTSTRAP_CONFIG_OVERRIDES; fi
+load_configs
 
 # Perform preflight checks to validate environment sanity as much as possible.
 echo "Performing preflight environment validation..."
@@ -60,14 +39,8 @@ source $REPO_ROOT/bootstrap/shared/shared_validate_env.sh
 echo "Checking VirtualBox and Vagrant..."
 source $REPO_ROOT/bootstrap/vagrant_scripts/vagrant_test.sh
 
-# Configure and test any proxies configured.
-if [[ ! -z $BOOTSTRAP_HTTP_PROXY ]] || [[ ! -z $BOOTSTRAP_HTTPS_PROXY ]] ; then
-  echo "Testing configured proxies..."
-  source $REPO_ROOT/bootstrap/shared/shared_proxy_setup.sh
-fi
-
 # Do prerequisite work prior to starting build, downloading files and
-# creating local directories.
+# creating local directories. Proxy configuration is handled there as well.
 echo "Downloading necessary files to local cache..."
 source $REPO_ROOT/bootstrap/shared/shared_prereqs.sh
 
