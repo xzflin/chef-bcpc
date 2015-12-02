@@ -229,7 +229,7 @@ Vagrant.configure("2") do |config|
       unless ENV['BOOTSTRAP_APT_MIRROR'].nil? or ENV['BOOTSTRAP_APT_MIRROR'].empty?
         m.vm.provision "test-local-package-mirror", type: "shell" do |s|
           s.privileged = false
-          s.inline = "curl -s -S #{ENV['BOOTSTRAP_APT_MIRROR']} 1>/dev/null"
+          s.inline = "curl --connect-timeout 5 -s -S #{ENV['BOOTSTRAP_APT_MIRROR']} 1>/dev/null"
         end
       end
 
