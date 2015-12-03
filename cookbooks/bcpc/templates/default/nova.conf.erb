@@ -132,9 +132,10 @@ lock_path=/var/lock/nova
 [oslo_messaging_rabbit]
 # Rabbit message queue settings
 #rabbit_host=<%=node['bcpc']['management']['vip']%>
-rabbit_hosts=<%=get_shuffled_servers(@servers).map{|x| x['bcpc']['management']['ip'] + ":5672"}.join(',')%>
+rabbit_hosts=<%=get_shuffled_servers(@servers, prefer_local=true).map{|x| x['bcpc']['management']['ip'] + ":5672"}.join(',')%>
 rabbit_password=<%=get_config('rabbitmq-password')%>
 rabbit_ha_queues=True
+heartbeat_timeout_threshold=<%=node['bcpc']['rabbitmq']['heartbeat']%>
 amqp_durable_queues=<%=node['bcpc']['rabbitmq']['durable_queues']%>
 
 [database]
@@ -185,7 +186,7 @@ inject_key=false
 inject_partition=-2
 # Set flags for libvirt live migration
 live_migration_flag="VIR_MIGRATE_UNDEFINE_SOURCE,VIR_MIGRATE_PEER2PEER,VIR_MIGRATE_LIVE,VIR_MIGRATE_PERSIST_DEST,VIR_MIGRATE_TUNNELLED"
-<% end %> 
+<% end %>
 virt_type=<%=node['bcpc']['virt_type']%>
 use_virtio_for_bridges=True
 hw_disk_discard = unmap
@@ -197,4 +198,3 @@ hw_disk_discard = unmap
 <%=k %>=<%=v %>
 <% end %>
 <% end %>
-
