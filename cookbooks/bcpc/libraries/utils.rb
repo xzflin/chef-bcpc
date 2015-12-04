@@ -138,8 +138,9 @@ def get_shuffled_servers(server_list, prefer_local=false)
   shuffled_servers = server_list.shuffle(random: Random.new(IPAddr.new(node['bcpc']['management']['ip']).to_i))
   # prefer_local == reorder the array so that the local node appears first (remainder of array stays the same)
   if prefer_local
-    us = shuffled_servers.delete_at(shuffled_servers.index { |x| x['bcpc']['management']['ip'] == node['bcpc']['management']['ip'] })
-    shuffled_servers.insert(0, us)
+    # if converging on a node that is not in the given list, index will be nil, so don't modify list order
+    this_server_idx = shuffled_servers.index { |x| x['bcpc']['management']['ip'] == node['bcpc']['management']['ip'] }
+    shuffled_servers.insert(0, shuffled_servers.delete_at(this_server_idx)) unless this_server_idx.nil?
   end
   shuffled_servers
 end
