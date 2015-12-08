@@ -2,7 +2,7 @@ Listen <%=node['bcpc']['management']['ip']%>:5000
 Listen <%=node['bcpc']['management']['ip']%>:35357
 
 <VirtualHost <%=node['bcpc']['management']['ip']%>:5000>
-    WSGIDaemonProcess keystone-public processes=5 threads=1 user=keystone display-name=%{GROUP}
+    WSGIDaemonProcess keystone-public processes=<%= @processes %> threads=<%= @threads %> user=keystone display-name=%{GROUP}
     WSGIProcessGroup keystone-public
     WSGIScriptAlias / /var/www/cgi-bin/keystone/main
     WSGIApplicationGroup %{GLOBAL}
