@@ -12,4 +12,4 @@ UserParameter=ceph.total.usage[*],HOME=/var/lib/zabbix rados df | egrep "total u
 UserParameter=ceph.total.space[*],HOME=/var/lib/zabbix rados df | egrep "total space" | awk '{}{print $$3}' | tr -d '\n'
 UserParameter=ceph.total.objects[*],HOME=/var/lib/zabbix rados df | egrep "total used" | awk '{}{print $$4}' | tr -d '\n'
 UserParameter=rabbitmq.fd_usage,HOME=/var/lib/zabbix sudo -u rabbitmq /usr/sbin/rabbitmqctl status 2>/dev/null | egrep -o 'total_used,[0-9]{1,}' | awk -F',' '{print $2}'
-UserParameter=rabbitmq.partition,HOME=/var/lib/zabbix sudo -u rabbitmq /usr/sbin/rabbitmqctl cluster_status 2>/dev/null | egrep -c '{partitions,\[\]}'
+UserParameter=rabbitmq.partition,HOME=/var/lib/zabbix sudo -u rabbitmq /usr/sbin/rabbitmqctl cluster_status 2>/dev/null | egrep -c '{partitions,\[\{'
