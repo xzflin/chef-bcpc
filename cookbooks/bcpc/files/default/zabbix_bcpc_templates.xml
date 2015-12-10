@@ -4699,7 +4699,7 @@
             <dependencies/>
         </trigger>
         <trigger>
-            <expression>{BCPC-Headnode:rabbitmq.partition.last()}&lt;&gt;1</expression>
+            <expression>{BCPC-Headnode:rabbitmq.partition.last()}=1</expression>
             <name>RabbitMQ Partitioning detected</name>
             <url/>
             <status>0</status>
