@@ -158,6 +158,8 @@ default['bcpc']['ceph']['mon_niceness'] = -10
 default['bcpc']['rabbitmq']['durable_queues'] = true
 # ulimits for RabbitMQ server
 default['bcpc']['rabbitmq']['ulimit']['nofile'] = 4096
+# Heartbeat timeout to detect dead RabbitMQ brokers
+default['bcpc']['rabbitmq']['heartbeat'] = 60
 
 ###########################################
 #
@@ -322,6 +324,11 @@ default['bcpc']['keystone']['verbose'] = false
 # before failing (configures timeout on the wait-for-keystone-to-be-operational
 # spinlock guard).
 default['bcpc']['keystone']['wait_for_keystone_timeout'] = 120
+# Set the number of Keystone WSGI processes and threads to use by default on the 
+# public API (experimentally threads > 1 may cause problems with the service
+# catalog, for now we recommend scaling only in the processes dimension)
+default['bcpc']['keystone']['wsgi']['processes'] = 5
+default['bcpc']['keystone']['wsgi']['threads'] = 1
 # The driver section below allows either 'sql' or 'ldap' (or 'templated' for catalog)
 # Note that not all drivers may support SQL/LDAP, only tinker if you know what you're getting into
 default['bcpc']['keystone']['drivers']['assignment'] = 'sql'

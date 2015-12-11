@@ -66,7 +66,7 @@ ruby_block "wait-for-mon-quorum" do
         status = { 'state' => '' }
         until %w{leader peon}.include?(status['state']) do
             if clock >= timeout
-              fail "Exceeded quorum wait timeout of #{timeout} seconds, check Ceph status with ceph -s and ceph health detail" 
+              fail "Exceeded quorum wait timeout of #{timeout} seconds, check Ceph status with ceph -s and ceph health detail"
             end
             Chef::Log.warn("Waiting for ceph-mon to get quorum...")
             status = JSON.parse(%x[ceph --admin-daemon /var/run/ceph/ceph-mon.#{node['hostname']}.asok mon_status])
@@ -90,18 +90,6 @@ template "/etc/sudoers.d/monstatus" do
     user "root"
     group "root"
     mode 00440
-end
-
-ruby_block "reap-dead-ceph-mon-servers" do
-    block do
-        head_names = get_head_nodes.collect { |x| x['hostname'] }
-        status = JSON.parse(%x[ceph --admin-daemon /var/run/ceph/ceph-mon.#{node['hostname']}.asok mon_status])
-        status['monmap']['mons'].collect { |x| x['name'] }.each do |server|
-            if not head_names.include?(server)
-                %x[ ceph mon remove #{server} ]
-            end
-        end
-    end
 end
 
 bash "initialize-ceph-admin-and-osd-config" do
@@ -240,10 +228,10 @@ end
 end
 
 %w{noscrub nodeep-scrub}.each do |flag|
-  if node['bcpc']['ceph']['rebalance'] 
+  if node['bcpc']['ceph']['rebalance']
     execute "ceph-osd-set-#{flag}" do
       command "ceph osd set #{flag}"
-      only_if "ceph health"    
+      only_if "ceph health"
     end
   else
     execute "ceph-osd-unset-#{flag}" do

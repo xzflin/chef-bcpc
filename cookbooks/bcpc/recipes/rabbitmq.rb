@@ -194,18 +194,6 @@ template "/etc/xinetd.d/amqpchk" do
     notifies :restart, "service[xinetd]", :immediately
 end
 
-ruby_block "reap-dead-rabbitmq-servers" do
-    block do
-        head_names = get_head_nodes.collect { |x| x['hostname'] }
-        status = %x[ rabbitmqctl cluster_status | grep nodes | grep disc ].strip
-        status.scan(/(?:'rabbit@([a-zA-Z0-9-]+)',?)+?/).each do |server|
-            if not head_names.include?(server[0])
-                %x[ rabbitmqctl forget_cluster_node rabbit@#{server[0]} ]
-            end
-        end
-    end
-end
-
 template "/etc/sudoers.d/rabbitmqctl" do
     source "sudoers-rabbitmqctl.erb"
     user "root"

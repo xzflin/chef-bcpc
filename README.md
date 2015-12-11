@@ -22,7 +22,7 @@ Setup
 =====
 To get going in a hurry, we recommend the Vagrant mechanism for building your cluster. Please read the [Vagrant Bootstrap Guide](https://github.com/bloomberg/chef-bcpc/blob/master/docs/building_with_vagrant.md) for information on getting BCPC set up locally with Vagrant.
 
-If you are interested in building your cluster the hard way without Vagrant, there are Ansible scripts in `bootstrap/ansible_scripts` for creating a hardware cluster that can be applied to a virtualized cluster (manual work will be required). The Ansible scripts are documented at [Using Ansible](https://github.com/bloomberg/chef-bcpc/blob/master/docs/using_ansible.md).
+If you are interested in building your cluster the hard way without Vagrant, there are Ansible scripts in `bootstrap/ansible_scripts` for creating a hardware cluster that can be applied to a virtualized cluster (manual work will be required). The Ansible scripts are documented at [Using Ansible (hardware build)](https://github.com/bloomberg/chef-bcpc/blob/master/docs/ansible_hardware_build_guide.md) and [Using Ansible (local build)](https://github.com/bloomberg/chef-bcpc/blob/master/docs/ansible_local_build_guide.md).
 
 BCPC Services
 -------------

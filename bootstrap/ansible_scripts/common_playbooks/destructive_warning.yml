@@ -18,6 +18,10 @@
   tasks:
   - fail: msg="Acknowledgement of danger not received, exiting"
     when: acknowledge_danger != "YES"
+    tags:
+      - always
 
   - fail: msg="{{ information_on_target }}"
     when: target is not defined
+    tags:
+      - always

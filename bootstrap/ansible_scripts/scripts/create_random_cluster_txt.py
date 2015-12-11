@@ -44,8 +44,12 @@ def generate_random_cluster_list(
             ["%02x" % random.randint(0, 255) for i in range(0, 6)])
         ip_address = ".".join(
             [str(random.randint(1, 255)) for i in range(0, 4)])
-        ipmi_address = ".".join(
-            [str(random.randint(1, 255)) for i in range(0, 4)])
+        # don't always add an IPMI address, virtual nodes don't have them
+        if random.randint(0,1):
+            ipmi_address = ".".join(
+                [str(random.randint(1, 255)) for i in range(0, 4)])
+        else:
+            ipmi_address = '-'
         role = random.choice(possible_roles)
 
         # hack to avoid multiple bootstrap nodes or too many head nodes

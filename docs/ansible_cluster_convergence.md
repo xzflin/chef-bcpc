@@ -39,7 +39,7 @@ Join other nodes into the cluster
 ---
 * Create **operations** user on newly booted nodes:
 ```
-ansible-playbook -i inventory-file -k -K -e 'ansible_ssh_user=ubuntu' cluster_management/create-operations-user-everywhere.yml
+ansible-playbook -i inventory-file -k -K -e 'ansible_ssh_user=ubuntu' software_deployment/create-operations-user-everywhere.yml
 ```
   * The password for the **ubuntu** user can be obtained from the data bag on the bootstrap node with `knife data bag show configs ENVIRONMENT`.
   * The **ubuntu** user on cluster nodes is not deleted, but using the **operations** user for access is recommended.

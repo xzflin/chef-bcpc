@@ -139,6 +139,10 @@ template "/etc/apache2/sites-available/wsgi-keystone.conf" do
   owner    "root"
   group    "root"
   mode     00644
+  variables(
+    :processes => node['bcpc']['keystone']['wsgi']['processes'],
+    :threads   => node['bcpc']['keystone']['wsgi']['threads']
+  )
   notifies :reload, "service[apache2]", :immediately
 end
 

@@ -195,7 +195,9 @@ Hostname=<%=node['hostname']%>
 HostMetadata=BCPC-Headnode
 <% elsif node["roles"].include? "BCPC-Monitoring" -%>
 HostMetadata=BCPC-Monitoring
-<% else -%>
+<% elsif node["roles"].include? "BCPC-EphemeralWorknode" -%>
+HostMetadata=BCPC-EphemeralWorknode
+<% elsif node["roles"].include? "BCPC-Worknode" -%>
 HostMetadata=BCPC-Worknode
 <% end -%>
 

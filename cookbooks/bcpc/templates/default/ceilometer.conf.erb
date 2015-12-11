@@ -340,7 +340,7 @@ amqp_durable_queues=<%=node['bcpc']['rabbitmq']['durable_queues']%>
 #rabbit_port=5672
 
 # RabbitMQ HA cluster host:port pairs (list value)
-rabbit_hosts=<%=get_shuffled_servers(@servers).map{|x| x['bcpc']['management']['ip'] + ":5672"}.join(',')%>
+rabbit_hosts=<%=get_shuffled_servers(@servers, prefer_local=true).map{|x| x['bcpc']['management']['ip'] + ":5672"}.join(',')%>
 
 # connect over SSL for RabbitMQ (boolean value)
 #rabbit_use_ssl=false
@@ -861,5 +861,3 @@ signing_dir = /var/lib/ceilometer
 
 # Password for Redis server. (optional) (string value)
 #password=<None>
-
-
