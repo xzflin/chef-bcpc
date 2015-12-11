@@ -16,7 +16,6 @@
       "recipe[bcpc::diamond]",
       "recipe[bcpc::fluentd]",
       "recipe[bcpc::tpm]",
-      "recipe[bcpc::host-aggregates]",
       "recipe[bcpc::checks-work]",
       "recipe[bcpc::zabbix-agent]",
       "recipe[bcpc::host-aggregates]"
