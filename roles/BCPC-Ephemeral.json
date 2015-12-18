@@ -9,6 +9,7 @@
       "recipe[bcpc::networking-link-test]",
       "recipe[bcpc::networking-gw-test]",
       "recipe[bcpc::networking-route-test]",
+      "recipe[bcpc::software-raid]",
       "recipe[bcpc::lvm]",
       "recipe[bcpc::ceph-work]",
       "recipe[bcpc::nova-work]",
@@ -22,6 +23,3 @@
     "description": "Run list for a general ephemeral compute function. Building block, not designed as an applied role.",
     "chef_type": "role"
 }
-
-
-

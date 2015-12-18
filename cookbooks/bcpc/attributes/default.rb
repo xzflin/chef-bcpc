@@ -571,8 +571,16 @@ default['bcpc']['nova']['default_log_levels'] = nil
 # Nova scheduler default filters
 default['bcpc']['nova']['scheduler_default_filters'] = ['AggregateInstanceExtraSpecsFilter', 'RetryFilter', 'AvailabilityZoneFilter', 'RamFilter', 'ComputeFilter', 'ComputeCapabilitiesFilter', 'ImagePropertiesFilter', 'ServerGroupAntiAffinityFilter', 'ServerGroupAffinityFilter']
 
+# settings pertaining to ephemeral storage via mdadm/LVM
+# (software RAID settings are here for logical grouping)
+default['bcpc']['software_raid']['enabled'] = false
+# define devices to RAID together in the hardware role for a type (e.g., BCPC-Hardware-Virtual)
+default['bcpc']['software_raid']['devices'] = []
+default['bcpc']['software_raid']['md_device'] = '/dev/md/md0'
+default['bcpc']['software_raid']['chunk_size'] = 512
 default['bcpc']['nova']['ephemeral'] = false
-
+default['bcpc']['nova']['ephemeral_vg_name'] = 'nova_disk'
+default['bcpc']['nova']['ephemeral_disks'] = [default['bcpc']['software_raid']['md_device']]
 
 default['bcpc']['nova']['quota'] = {
   "cores" => 4,

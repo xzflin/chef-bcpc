@@ -172,7 +172,7 @@ api_insecure=True
 # Always boot nova VMs from RBD
 <% if node['bcpc']['nova']['ephemeral'] %>
 images_type=lvm
-images_volume_group=nova_disk
+images_volume_group=<%= node['bcpc']['nova']['ephemeral_vg_name'] %>
 <% else %>
 images_type=rbd
 images_rbd_pool=<%=node['bcpc']['ceph']['vms']['name']%>

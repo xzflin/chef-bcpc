@@ -44,7 +44,7 @@ if node['bcpc']['enabled']['monitoring'] then
         EOH
         only_if 'test -f /usr/local/sbin/zabbix_agentd'
     end
-  
+
     %w{zabbix-agent zabbix-get zabbix-sender}.each do |zabbix_package|
       package zabbix_package do
         action :upgrade
@@ -102,6 +102,21 @@ if node['bcpc']['enabled']['monitoring'] then
         mode 00600
         only_if 'test -f /etc/mysql/debian.cnf'
         notifies :restart, "service[zabbix-agent]", :immediately
+    end
+
+    # it would be preferable to include this with the software-raid recipe
+    # but is here in order to avoid duplicating work that this recipe does in
+    # the software-raid recipe
+    template "/etc/zabbix/zabbix_agentd.d/userparameter_ephemeral.conf" do
+      source "zabbix_agentd_userparameters_ephemeral.conf.erb"
+      owner node['bcpc']['zabbix']['user']
+      group "root"
+      mode 00600
+      variables(
+        :ephemeral_vg_name => node['bcpc']['nova']['ephemeral_vg_name']
+      )
+      only_if { node['bcpc']['software_raid']['enabled'] }
+      notifies :restart, "service[zabbix-agent]", :immediately
     end
 
     service "zabbix-agent" do
