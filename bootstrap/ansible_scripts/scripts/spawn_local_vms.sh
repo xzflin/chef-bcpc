@@ -154,6 +154,35 @@ for VM in bcpc-bootstrap $VMS; do
   VBoxManage modifyvm $VM --uartmode2 disconnected
 done
 
+# functions to act like associative arrays
+function get_node_role {
+  if [[ $1 == 'bcpc-bootstrap' ]]; then
+    echo 'bootstrap'
+  elif [[ $1 == 'bcpc-vm1' ]]; then
+    echo 'head'
+  elif [[ $1 == 'bcpc-vm2' ]]; then
+    echo 'work'
+  elif [[ $1 == "bcpc-vm3" ]]; then
+    echo 'work-ephemeral'
+  else
+    echo 'reserved'
+  fi
+}
+
+function get_node_ip {
+  if [[ $1 == 'bcpc-bootstrap' ]]; then
+    echo '10.0.100.3'
+  elif [[ $1 == 'bcpc-vm1' ]]; then
+    echo '10.0.100.11'
+  elif [[ $1 == 'bcpc-vm2' ]]; then
+    echo '10.0.100.12'
+  elif [[ $1 == "bcpc-vm3" ]]; then
+    echo '10.0.100.13'
+  else
+    echo '169.254.1.1'
+  fi
+}
+
 # print out MAC addresses for cluster.txt
 echo "-------------------------------------------"
 echo "Generated below is a sample cluster.yml file"
@@ -164,25 +193,16 @@ cat <<YAML_HEAD
 cluster_name: Test-Laptop-Ansible
 nodes:
 YAML_HEAD
-# This is a bash4-ism
-$DECLARE_ASSOC_ARRAY DEFAULT_ROLE_MAPPING DEFAULT_IP_MAPPING
-DEFAULT_ROLE_MAPPING=( [bcpc-bootstrap]='bootstrap'
-                                  [bcpc-vm1]='head'
-                                  [bcpc-vm2]='work'
-                                  [bcpc-vm3]='work-ephemeral' )
-DEFAULT_IP_MAPPING=(   [bcpc-bootstrap]='bootstrap'
-                                  [bcpc-vm1]='10.0.100.11'
-                                  [bcpc-vm2]='10.0.100.12'
-                                  [bcpc-vm3]='10.0.100.13')
+
 for VM in bcpc-bootstrap $VMS; do
   MAC_ADDRESS=$(VBoxManage showvminfo --machinereadable $VM | pcregrep -o1 -M '^hostonlyadapter\d="vboxnet0"$\n*^macaddress\d="(.+)"' | $SED 's/^(..)(..)(..)(..)(..)(..)$/\1:\2:\3:\4:\5:\6/')
   cat << EoF
   $VM:
     domain: bcpc.example.com
     hardware_type: Virtual
-    ip_address: ${DEFAULT_ROLE_MAPPING[$VM]}
+    ip_address: $(get_node_ip $VM)
     ipmi_address:
     mac_address: $MAC_ADDRESS
-    role: ${DEFAULT_ROLE_MAPPING[$VM]}
+    role: $(get_node_role $VM)
 EoF
 done
