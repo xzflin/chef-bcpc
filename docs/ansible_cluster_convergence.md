@@ -17,7 +17,7 @@ ansible-playbook -i inventory-file -k -K -e 'ansible_ssh_user=ubuntu' bootstrap_
 ```
 ansible-playbook -i inventory-file bootstrap_deployment/converge-bootstrap.yml
 ```
-  * If you get an error saying that the `ubuntu` user cannot be deleted because a process is using it, log in as the `operations` user and kill the PID manually.
+  * Remember to save the generated password for the `ubuntu` user somewhere, in case you need emergency access to the bootstrap node (the password can be found in `/root/UBUNTU_PASSWORD`).
   * This playbook calls various tasks in the `bootstrap_deployment` and `software_deployment` directories.
   * This playbook is very complex and does a lot of things that can break, but it is safe to run from the beginning repeatedly if you need to fix things in-flight.
   * As part of package configuration, this will mirror the entire apt repository over to the bootstrap node, which can take several hours.
@@ -42,7 +42,7 @@ Join other nodes into the cluster
 ansible-playbook -i inventory-file -k -K -e 'ansible_ssh_user=ubuntu' software_deployment/create-operations-user-everywhere.yml
 ```
   * The password for the **ubuntu** user can be obtained from the data bag on the bootstrap node with `knife data bag show configs ENVIRONMENT`.
-  * The **ubuntu** user on cluster nodes is not deleted, but using the **operations** user for access is recommended.
+  * Using the **operations** user for access is recommended.
 * Enroll nodes in Chef using `software_deployment/enroll-target-in-chef-server.yml`:
 ```
 ansible-playbook -i inventory-file -e target=xxxx software_deployment/enroll-target-in-chef-server.yml
