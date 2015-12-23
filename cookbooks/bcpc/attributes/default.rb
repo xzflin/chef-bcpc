@@ -45,7 +45,7 @@ default['bcpc']['ceph']['version_number'] = '0.94.5'
 default['bcpc']['erlang']['version'] = '1:17.5.3'
 default['bcpc']['haproxy']['version'] = '1.5.15-1ppa1~trusty'
 default['bcpc']['kibana']['version'] = '4.0.2'
-default['bcpc']['rabbitmq']['version'] = '3.5.7-1'
+default['bcpc']['rabbitmq']['version'] = '3.6.0-1'
 
 ###########################################
 #
