@@ -53,11 +53,15 @@ DATE=$(date +%Y%m%d)
 log "Backing up for date $DATE."
 
 BACKUP_PATH=$1/$2/$DATE
+MAIN_DB_BACKUP_PATH=$BACKUP_PATH/main_db
+CHEF_SERVER_BACKUP_PATH=$BACKUP_PATH/chef_server
 if [ ! -d $BACKUP_PATH ]; then
   mkdir -p $BACKUP_PATH
-  mkdir -p $BACKUP_PATH/main_db
+  mkdir -p $MAIN_DB_BACKUP_PATH
+  mkdir -p $CHEF_SERVER_BACKUP_PATH
   <% if @monitoring_servers.length > 0 %>
-  mkdir -p $BACKUP_PATH/monitoring_db
+  MONITORING_DB_BACKUP_PATH=$BACKUP_PATH/monitoring_db
+  mkdir -p $MONITORING_DB_BACKUP_PATH
   <% end %>
 else
   warn "Directory $BACKUP_PATH already exists, attempting to continue."
@@ -93,7 +97,7 @@ fi
 
 MAIN_DATABASES=( $MAIN_DATABASES_RAW )
 for DATABASE in ${MAIN_DATABASES[@]}; do
-  DB_BACKUP_PATH=$BACKUP_PATH/main_db/$DATABASE.sql.gz
+  DB_BACKUP_PATH=$MAIN_DB_BACKUP_PATH/$DATABASE.sql.gz
   if [ ! -f $DB_BACKUP_PATH ]; then
     $MYSQLDUMP --defaults-file=$HOME/.my.main.cnf --single-transaction --events $DATABASE | gzip > $DB_BACKUP_PATH
     log "Backed up database $DATABASE to $DB_BACKUP_PATH."
@@ -111,7 +115,7 @@ fi
 
 MONITORING_DATABASES=( $MONITORING_DATABASES_RAW )
 for DATABASE in ${MONITORING_DATABASES[@]}; do
-  DB_BACKUP_PATH=$BACKUP_PATH/monitoring_db/$DATABASE.sql.gz
+  DB_BACKUP_PATH=$MONITORING_DB_BACKUP_PATH/$DATABASE.sql.gz
   if [ ! -f $DB_BACKUP_PATH ]; then
     $MYSQLDUMP --defaults-file=$HOME/.my.monitoring.cnf --single-transaction --events $DATABASE | gzip > $DB_BACKUP_PATH
     log "Backed up database $DATABASE to $DB_BACKUP_PATH."
@@ -149,6 +153,18 @@ for CHEF_ENV in ${CHEF_ENVS[@]}; do
     error "File $ENVIRONMENT_BACKUP_PATH already exists, refusing to overwrite."
   fi
 done
+
+# back up Chef server assets per Chef documentation at
+# https://docs.chef.io/server_backup_restore.html
+CHEF_PG_DUMPALL=/opt/opscode/embedded/bin/pg_dumpall
+check_for_bin $CHEF_PG_DUMPALL
+
+PG_BACKUP_TMP=/tmp/chef-pgsql-$DATE.sql.bz2
+sudo -E -u opscode-pgsql $CHEF_PG_DUMPALL -c 2>/dev/null | bzip2 > $PG_BACKUP_TMP
+mv $PG_BACKUP_TMP $CHEF_SERVER_BACKUP_PATH
+
+tar cjf $CHEF_SERVER_BACKUP_PATH/etc-opscode.tar.bz2 /etc/opscode 2>/dev/null
+tar cjf $CHEF_SERVER_BACKUP_PATH/var-opt-opscode.tar.bz2 /var/opt/opscode 2>/dev/null
 
 # prune old backups for currently given retention ($2)
 
