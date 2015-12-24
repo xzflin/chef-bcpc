@@ -24,6 +24,14 @@ apt_repository "ceph" do
   distribution node['lsb']['codename']
   components ["main"]
   key "ceph-release.key"
+  notifies :run, "execute[apt-get update]", :immediately
+end
+
+# delete the compromised Ceph signing key (17ED316D)
+# if the new Ceph release key is installed (460F3994)
+bash "remove-old-ceph-key" do
+  code "apt-key del 17ED316D"
+  only_if "apt-key list | grep -q 460F3994 && apt-key list | grep -q 17ED316D"
 end
 
 if platform?("debian", "ubuntu")
@@ -43,14 +51,12 @@ bash "check-ceph-version" do
 	EOH
 end
 
-# Installing CephFS but not activating it
-%w{librados2 librbd1 libcephfs1 python-ceph ceph ceph-common ceph-fs-common ceph-mds}.each do |pkg|
-    package pkg do
-        action :install
-        version node['bcpc']['ceph']['version']
-    end
+%w{librados2 librbd1 libcephfs1 python-ceph ceph ceph-common ceph-fs-common ceph-mds ceph-fuse}.each do |pkg|
+  package pkg do
+    action :upgrade
+    version node['bcpc']['ceph']['version']
+  end
 end
-
 
 ruby_block "initialize-ceph-common-config" do
     block do
@@ -77,51 +83,51 @@ template '/etc/ceph/ceph.conf' do
     variables(:servers => get_head_nodes)
 end
 
-directory "/var/run/ceph/" do  
+directory "/var/run/ceph/" do
   owner "root"
   group "root"
-  mode  "0755"  
+  mode  "0755"
 end
 
-directory "/var/run/ceph/guests/" do  
+directory "/var/run/ceph/guests/" do
   owner "libvirt-qemu"
   group "libvirtd"
-  mode  "0755"  
+  mode  "0755"
 end
 
 directory "/var/log/qemu/" do
   owner "libvirt-qemu"
   group "libvirtd"
-  mode  "0755"  
+  mode  "0755"
 
-end 
+end
 
-bcpc_cephconfig 'paxos_propose_interval' do  
+bcpc_cephconfig 'paxos_propose_interval' do
   value node["bcpc"]["ceph"]["rebalance"] ? "60" : "1"
   target "ceph-mon*"
 end
 
-bcpc_cephconfig 'osd_recovery_max_active' do  
+bcpc_cephconfig 'osd_recovery_max_active' do
   value node["bcpc"]["ceph"]["rebalance"] ? "1" : "15"
   target "ceph-osd*"
 end
 
-bcpc_cephconfig 'osd_max_backfills' do  
+bcpc_cephconfig 'osd_max_backfills' do
   value node["bcpc"]["ceph"]["rebalance"] ? "1" : "10"
   target "ceph-osd*"
 end
 
-bcpc_cephconfig 'osd_op_threads' do  
+bcpc_cephconfig 'osd_op_threads' do
   value node["bcpc"]["ceph"]["rebalance"] ? "10" : "2"
   target "ceph-osd*"
 end
 
-bcpc_cephconfig 'osd_recovery_op_priority' do  
+bcpc_cephconfig 'osd_recovery_op_priority' do
   value node["bcpc"]["ceph"]["rebalance"] ? "1" : "10"
   target "ceph-osd*"
 end
 
-bcpc_cephconfig 'osd_mon_report_interval_min' do  
+bcpc_cephconfig 'osd_mon_report_interval_min' do
   value node["bcpc"]["ceph"]["rebalance"] ? "30" : "5"
   target "ceph-osd*"
 end

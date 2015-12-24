@@ -63,7 +63,7 @@ Bootstrap host preparation
   * `sdb` is mounted at `/mnt` (scratch space)
   * `sdc` is mounted at `/bcpc` (contains everything used by the bootstrap process)
 * Manually install Ubuntu 14.04 LTS on the bootstrap node using your preferred mechanism (LOM virtual media, USB key, disc, etc.).
-* It is recommended that you create a user named **ubuntu** during setup, as this user will be needed to create the **operations** user and will then be disabled by `tasks-create-bootstrap-users.yml`.
+* It is recommended that you create a user named **ubuntu** during setup, as this user will be needed to create the **operations** user. The password for the **ubuntu** user will be reset to a strong password by the playbook that creates the **operations** user; this password should be saved somewhere secure in the event you need emergency access to the bootstrap node via the console.
 
 The rest
 ---

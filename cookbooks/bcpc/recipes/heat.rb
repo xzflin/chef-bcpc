@@ -28,13 +28,17 @@ if node['bcpc']['enabled']['heat']
       end
   end
 
-  %w{heat-api heat-api-cfn heat-engine}.each do |pkg|
-      package pkg do
-          action :upgrade
-      end
-      service pkg do
-          action [:enable, :start]
-      end
+  %w{heat-common heat-api heat-api-cfn heat-engine}.each do |pkg|
+    package pkg do
+      action :upgrade
+      options "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
+    end
+  end
+
+  %w{heat-api heat-api-cfn heat-engine}.each do |svc|
+    service svc do
+      action [:enable, :start]
+    end
   end
 
   service "heat-api" do

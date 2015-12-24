@@ -45,7 +45,7 @@ default['bcpc']['ceph']['version_number'] = '0.94.5'
 default['bcpc']['erlang']['version'] = '1:17.5.3'
 default['bcpc']['haproxy']['version'] = '1.5.15-1ppa1~trusty'
 default['bcpc']['kibana']['version'] = '4.0.2'
-default['bcpc']['rabbitmq']['version'] = '3.5.6-1'
+default['bcpc']['rabbitmq']['version'] = '3.6.0-1'
 
 ###########################################
 #
@@ -571,8 +571,16 @@ default['bcpc']['nova']['default_log_levels'] = nil
 # Nova scheduler default filters
 default['bcpc']['nova']['scheduler_default_filters'] = ['AggregateInstanceExtraSpecsFilter', 'RetryFilter', 'AvailabilityZoneFilter', 'RamFilter', 'ComputeFilter', 'ComputeCapabilitiesFilter', 'ImagePropertiesFilter', 'ServerGroupAntiAffinityFilter', 'ServerGroupAffinityFilter']
 
+# settings pertaining to ephemeral storage via mdadm/LVM
+# (software RAID settings are here for logical grouping)
+default['bcpc']['software_raid']['enabled'] = false
+# define devices to RAID together in the hardware role for a type (e.g., BCPC-Hardware-Virtual)
+default['bcpc']['software_raid']['devices'] = []
+default['bcpc']['software_raid']['md_device'] = '/dev/md/md0'
+default['bcpc']['software_raid']['chunk_size'] = 512
 default['bcpc']['nova']['ephemeral'] = false
-
+default['bcpc']['nova']['ephemeral_vg_name'] = 'nova_disk'
+default['bcpc']['nova']['ephemeral_disks'] = [default['bcpc']['software_raid']['md_device']]
 
 default['bcpc']['nova']['quota'] = {
   "cores" => 4,
@@ -1497,6 +1505,18 @@ default['bcpc']['rgw_quota'] = {
     'user' => {
         'default' => {
            'max_size' => 10737418240
+        }
+    }
+}
+###########################################
+#
+# Openstack Project Quotas
+#
+###########################################
+default['bcpc']['quota'] = {
+    'nova' => {
+        'AdminTenant' => {
+           'cores' => -1
         }
     }
 }
