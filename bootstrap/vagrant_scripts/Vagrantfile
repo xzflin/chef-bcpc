@@ -152,17 +152,19 @@ EOH
 $add_swap_script = <<-EOH
   #!/bin/bash
   swap_path='/swap'
+  swap_size="#{ENV['VM_SWAP_SIZE'] ||= 8192}M"
   # This could be a re-provision
-  if grep -w "^${swap_path}" /proc/swaps ; then
-    swapoff "${swap_path}"
+  if grep -qw "^${swap_path}" /proc/swaps ; then
+    swapoff "$swap_path"
   fi
-  fallocate -l 8192M /swap
-  chmod 600 /swap
-  mkswap -f "${swap_path}"
+  fallocate -l $swap_size "$swap_path"
+  truncate -s $swap_size "$swap_path"
+  chmod 600 "$swap_path"
+  mkswap -f "$swap_path"
   /bin/sync
-  swapon "${swap_path}"
-  if ! grep -w "^${swap_path}" /etc/fstab ; then
-    echo "${swap_path} none swap defaults 0 0" | tee -a /etc/fstab
+  swapon "$swap_path"
+  if ! grep -qw "^${swap_path}" /etc/fstab ; then
+    echo "$swap_path none swap defaults 0 0" | tee -a /etc/fstab
   fi
 EOH
 
