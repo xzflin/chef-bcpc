@@ -11,7 +11,7 @@
 # in an entirely automated fashion, you will need to use Vagrant.)
 ##########################################################
 
-set -e
+set -eu
 
 for CMD in VBoxManage git pcregrep; do
   if ! which $CMD >/dev/null; then
@@ -102,7 +102,7 @@ VBoxManage createhd --filename "$DMF_PATH/ansible-bcpc-bootstrap/ansible-bcpc-bo
 VBoxManage storageattach ansible-bcpc-bootstrap --storagectl "SATA" --device 0 --port 0 --type hdd --medium "$DMF_PATH/ansible-bcpc-bootstrap/ansible-bcpc-bootstrap-sda.vdi"
 VBoxManage createhd --filename "$DMF_PATH/ansible-bcpc-bootstrap/ansible-bcpc-bootstrap-sdb.vdi" --size 8192
 VBoxManage storageattach ansible-bcpc-bootstrap --storagectl "SATA" --device 0 --port 1 --type hdd --medium "$DMF_PATH/ansible-bcpc-bootstrap/ansible-bcpc-bootstrap-sdb.vdi"
-VBoxManage createhd --filename "$DMF_PATH/ansible-bcpc-bootstrap/ansible-bcpc-bootstrap-sdc.vdi" --size 204800
+VBoxManage createhd --filename "$DMF_PATH/ansible-bcpc-bootstrap/ansible-bcpc-bootstrap-sdc.vdi" --size $BOOTSTRAP_VM_DRIVE_SIZE
 VBoxManage storageattach ansible-bcpc-bootstrap --storagectl "SATA" --device 0 --port 2 --type hdd --medium "$DMF_PATH/ansible-bcpc-bootstrap/ansible-bcpc-bootstrap-sdc.vdi"
 # configure DVD drive to boot from and set boot device to DVD drive (user must attach boot medium)
 VBoxManage storagectl ansible-bcpc-bootstrap --name "IDE" --add ide
