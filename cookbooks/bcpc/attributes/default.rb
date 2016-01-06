@@ -177,7 +177,7 @@ default['bcpc']['management']['interface-parent'] = nil
 # list of TCP ports that should be open on the management interface
 # (generally stuff served via HAProxy)
 default['bcpc']['management']['firewall_tcp_ports'] = [
-  80,443,8088,7480,5000,35357,9292,8776,8773,8774,8004,8000,8777
+  80,443,8088,7480,5000,35357,9292,8776,8773,8774,8004,8000,8777,6080
 ]
 
 default['bcpc']['metadata']['ip'] = "169.254.169.254"
@@ -324,7 +324,7 @@ default['bcpc']['keystone']['verbose'] = false
 # before failing (configures timeout on the wait-for-keystone-to-be-operational
 # spinlock guard).
 default['bcpc']['keystone']['wait_for_keystone_timeout'] = 120
-# Set the number of Keystone WSGI processes and threads to use by default on the 
+# Set the number of Keystone WSGI processes and threads to use by default on the
 # public API (experimentally threads > 1 may cause problems with the service
 # catalog, for now we recommend scaling only in the processes dimension)
 default['bcpc']['keystone']['wsgi']['processes'] = 5
