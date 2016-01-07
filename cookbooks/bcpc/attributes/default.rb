@@ -1023,6 +1023,10 @@ default['bcpc']['nova']['policy'] = {
 default['bcpc']['cinder']['verbose'] = false
 default['bcpc']['cinder']['workers'] = 5
 default['bcpc']['cinder']['allow_az_fallback'] = true
+default['bcpc']['cinder']['rbd_flatten_volume_from_snapshot'] = true
+# NOTE: rbd_max_clone_depth is not honored in Kilo
+# see https://bugs.launchpad.net/cinder/+bug/1477706
+default['bcpc']['cinder']['rbd_max_clone_depth'] = 5
 default['bcpc']['cinder']['quota'] = {
   "volumes" => -1,
   "quota_snapshots" => 10,
