@@ -5,5 +5,9 @@
   gather_facts: no
   serial: "{{ serial }}"
   tasks:
-    - name: Run chef-client on {{ target }}
+    - name: Run chef-client on target
       command: chef-client
+      register: chef_client_result
+      retries: 1
+      delay: 2
+      until: chef_client_result.rc == 0
