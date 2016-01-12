@@ -3,11 +3,13 @@
 ---
 - name: Perform synchronization of Git staging
   synchronize: src={{ controlnode_git_staging_dir }}/ dest={{ bootstrap_git_staging_dir }}/
+  become: no
   tags:
     - synchronize
 
 - name: Perform synchronization of local bootstrap files
   synchronize: src={{ controlnode_files_dir }}/ dest={{ bootstrap_files_dir }}/
+  become: no
   tags:
     - synchronize
 
@@ -32,11 +34,11 @@
   register: staging_location
 
 - name: Decompress chef-bcpc to temporary location
-  command: unzip -d {{ staging_location.path }} {{ bootstrap_git_staging_dir}}/chef-bcpc-{{ chef_bcpc_version }}.zip
+  unarchive: copy=no src={{ bootstrap_git_staging_dir}}/chef-bcpc-{{ chef_bcpc_version }}.zip dest={{ staging_location.path }}
   when: chef_bcpc_deploy_from_dir is not defined
 
 - name: Move chef-bcpc contents from temporary location to deployment directory
-  command: rsync -a {{ staging_location.path }}/chef-bcpc-{{ chef_bcpc_version }}/ {{ bootstrap_deployed_dir }}/
+  command: warn=false rsync -a {{ staging_location.path }}/chef-bcpc-{{ chef_bcpc_version }}/ {{ bootstrap_deployed_dir }}/
   when: chef_bcpc_deploy_from_dir is not defined
 
 - name: Synchronize chef-bcpc deployment directory contents (chef_bcpc_deploy_from_dir is defined)
@@ -44,15 +46,15 @@
   when: chef_bcpc_deploy_from_dir is defined
 
 - name: Decompress chef-bcpc-prop to temporary location
-  command: unzip -d {{ staging_location.path }} {{ bootstrap_git_staging_dir}}/chef-bcpc-prop-{{ chef_bcpc_prop_version }}.zip
+  unarchive: copy=no src={{ bootstrap_git_staging_dir}}/chef-bcpc-prop-{{ chef_bcpc_prop_version }}.zip dest={{ staging_location.path }}
   when: chef_bcpc_prop_version is defined
 
 - name: Overlay chef-bcpc-prop onto chef-bcpc in deployment directory
-  command: rsync -a {{ staging_location.path }}/chef-bcpc-prop-{{ chef_bcpc_prop_version }}/ {{ bootstrap_deployed_dir }}/
+  command: warn=false rsync -a {{ staging_location.path }}/chef-bcpc-prop-{{ chef_bcpc_prop_version }}/ {{ bootstrap_deployed_dir }}/
   when: chef_bcpc_prop_version is defined
 
 - name: Decompress additional internal cookbooks to temporary location
-  command: unzip -d {{ staging_location.path }} {{ bootstrap_git_staging_dir}}/{{ item.cookbook }}-{{ item.version }}.zip
+  unarchive: copy=no src={{ bootstrap_git_staging_dir}}/{{ item.cookbook }}-{{ item.version }}.zip dest={{ staging_location.path }}
   with_items: "{{ internal_cookbooks }}"
 
 - name: Move additional internal cookbooks into deployment directory cookbooks
@@ -70,8 +72,11 @@
   copy: src={{ controlnode_ssl_key_dir }}/{{ item }} dest={{ bootstrap_deployed_dir }}/cookbooks/bcpc/files/default/{{ item }} owner={{ ansible_ssh_user }} mode=0644 validate='openssl rsa -in %s -noout'
   with_items: "{{ ssl_key_list }}"
 
+- name: Create cookbook bins directory
+  file: path={{ bootstrap_deployed_dir }}/cookbooks/bcpc/files/default/bins state=directory owner=operations group=operators
+
 - name: Copy prebuilt binaries into bcpc cookbook
-  shell: mkdir -p {{ bootstrap_deployed_dir }}/cookbooks/bcpc/files/default/bins && cp -r {{ bootstrap_files_dir }}/{{ chef_bcpc_version }}-prebuilt/* {{ bootstrap_deployed_dir }}/cookbooks/bcpc/files/default/bins
+  shell: cp -r {{ bootstrap_files_dir }}/{{ chef_bcpc_version }}-prebuilt/* {{ bootstrap_deployed_dir }}/cookbooks/bcpc/files/default/bins
   when: use_prebuilt_binaries
 
 - name: Check for /chef-bcpc-files
@@ -94,7 +99,7 @@
     FILECACHE_MOUNT_POINT: "{{ bootstrap_files_dir }}/{{ chef_bcpc_version }}"
 
 - name: Fix permissions on {{ bootstrap_deployed_dir }}
-  command: chown -R operations {{ bootstrap_deployed_dir }}
+  file: path={{ bootstrap_deployed_dir }} owner=operations group=operators recurse=yes
 
   # tasks below here must run as operations and not root
 - name: Upload cookbooks to Chef server
