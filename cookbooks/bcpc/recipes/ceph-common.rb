@@ -35,7 +35,7 @@ bash "remove-old-ceph-key" do
 end
 
 if platform?("debian", "ubuntu")
-    include_recipe "bcpc::networking"
+    include_recipe "bcpc::networking-prereqs"
 end
 
 cookbook_file "/usr/local/bin/apt-pkg-check-version" do

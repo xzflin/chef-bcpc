@@ -8,10 +8,12 @@ auto <%= @interface %>
 iface <%= @interface %> inet static
  address <%= @ip %>
  netmask <%= @netmask %>
+ <% if @gateway %>
  gateway <%= @gateway %>
+ <% end %>
  metric <%= @metric %>
 <% if @mtu %>
- mtu <%= @mtu %>
+mtu <%= @mtu %>
 <% end %>
 <% if @dns %>
  dns-nameservers <%= @dns.join(' ') %>
