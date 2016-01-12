@@ -5,7 +5,7 @@
       "role[Basic]",
       "recipe[bcpc]",
       "recipe[bcpc::system]",
-      "recipe[bcpc::networking]",
+      "recipe[bcpc::networking-prereqs]",
       "recipe[bcpc::networking-link-test]",
       "recipe[bcpc::networking-gw-test]",
       "recipe[bcpc::networking-route-test]",

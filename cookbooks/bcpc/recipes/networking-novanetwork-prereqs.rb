@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: bcpc
-# Recipe:: networking
+# Recipe:: networking-novanetwork-prereqs
 #
 # Copyright 2013, Bloomberg Finance L.P.
 #
@@ -16,49 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-include_recipe "bcpc::default"
-include_recipe "bcpc::system"
-include_recipe "bcpc::certs"
-
-template "/etc/hosts" do
-    source "hosts.erb"
-    mode 00644
-    variables(:servers => get_all_nodes, :bootstrap_node => get_bootstrap_node)
-end
-
-template "/etc/ssh/sshd_config" do
-    source "sshd_config.erb"
-    mode 00644
-    notifies :restart, "service[ssh]", :immediately
-end
-
-service "ssh" do
-    action [:enable, :start]
-end
-
-service "cron" do
-    action [:enable, :start]
-end
-
-# Core networking package
-package "vlan"
-
-# Enable LLDP - see https://github.com/bloomberg/chef-bcpc/pull/120
-package "lldpd"
-
-bash "enable-mellanox" do
-    user "root"
-    code <<-EOH
-        if [ -z "`lsmod | grep mlx4_en`" ]; then
-            modprobe mlx4_en
-        fi
-        if [ -z "`grep mlx4_en /etc/modules`" ]; then
-            echo "mlx4_en" >> /etc/modules
-        fi
-    EOH
-    only_if "lspci | grep Mellanox"
-end
 
 bash "enable-8021q" do
     user "root"
@@ -163,7 +120,6 @@ bash "interface-mgmt-make-static-if-dhcp" do
 end
 
 %w{ management storage floating }.each do |iface|
-
   if not node['bcpc'][iface]['interface-parent'].nil?
     bash "#{iface} up" do
       user "root"
@@ -255,11 +211,8 @@ end
     end
 end
 
-
 bash "disable-noninteractive-pam-logging" do
     user "root"
     code "sed --in-place 's/^\\(session\\s*required\\s*pam_unix.so\\)/#\\1/' /etc/pam.d/common-session-noninteractive"
     only_if "grep -e '^session\\s*required\\s*pam_unix.so' /etc/pam.d/common-session-noninteractive"
 end
-
-include_recipe "bcpc::apache2"
