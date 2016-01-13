@@ -31,7 +31,7 @@ package 'neutron-common' do
   options "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
 end
 
-%w{/etc/neutron /etc/neutron/plugins/ml2 /etc/neutron/plugins/openvswitch}.each do |d|
+%w{/etc/neutron /etc/neutron/plugins/ml2}.each do |d|
   directory d do
     owner 'neutron'
     group 'neutron'
@@ -63,9 +63,9 @@ link '/etc/neutron/plugin.ini' do
   to '/etc/neutron/plugins/ml2/ml2_conf.ini'
 end
 
-template "/etc/neutron/plugins/openvswitch/ovs_neutron_plugin.ini" do
-  source "neutron.ovs_neutron_plugin.ini.erb"
-  owner "neutron"
-  group "neutron"
-  mode 00600
-end
+#template "/etc/neutron/plugins/openvswitch/ovs_neutron_plugin.ini" do
+#  source "neutron.ovs_neutron_plugin.ini.erb"
+#  owner "neutron"
+#  group "neutron"
+#  mode 00600
+#end
