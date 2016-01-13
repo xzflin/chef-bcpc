@@ -45,31 +45,6 @@ reserved_host_memory_mb=<%=node['bcpc']['nova']['reserved_host_memory_mb']%>
 cpu_allocation_ratio=<%=node['bcpc']['nova']['cpu_allocation_ratio']%>
 scheduler_host_subset_size=<%= node['bcpc']['nova']['scheduler_host_subset_size'] %>
 
-# Nova Network settings
-network_manager=nova.network.manager.VlanManager
-firewall_driver=nova.virt.libvirt.firewall.IptablesFirewallDriver
-allow_same_net_traffic=False
-public_interface=<%=node['bcpc']['floating']['interface']%>
-vlan_interface=<%=node['bcpc']['fixed']['vlan_interface']%>
-vlan_start=<%=node['bcpc']['fixed']['vlan_start']%>
-multi_host=True
-fixed_range=<%=node['bcpc']['fixed']['cidr']%>
-floating_range=<%=node['bcpc']['floating']['cidr']%>
-network_size=<%=node['bcpc']['fixed']['network_size']%>
-flat_network_dns=<%=node['bcpc']['management']['vip']%>
-dhcpbridge_flagfile=/etc/nova/nova.conf
-dhcpbridge=/usr/bin/nova-dhcpbridge
-force_dhcp_release=False
-share_dhcp_address=True
-teardown_unused_network_gateway=True
-fixed_ip_disassociate_timeout=30
-dhcp_lease_time=<%=node['bcpc']['fixed']['dhcp_lease_time']%>
-send_arp_for_ha=True
-my_ip=<%=node['bcpc']['management']['ip']%>
-routing_source_ip=<%=node['bcpc']['floating']['ip']%>
-dhcp_domain=<%=node['bcpc']['cluster_domain']%>
-default_availability_zone=
-
 # Nova Compute settings
 compute_driver=libvirt.LibvirtDriver
 use_cow_images=True
@@ -126,6 +101,48 @@ quota_<%=key%> = <%= value %>
 <% end %>
 max_age = 28800
 until_refresh = 10
+
+# Networking settings
+network_manager=nova.network.manager.VlanManager
+firewall_driver=nova.virt.libvirt.firewall.IptablesFirewallDriver
+allow_same_net_traffic=False
+public_interface=<%=node['bcpc']['floating']['interface']%>
+vlan_interface=<%=node['bcpc']['fixed']['vlan_interface']%>
+vlan_start=<%=node['bcpc']['fixed']['vlan_start']%>
+multi_host=True
+fixed_range=<%=node['bcpc']['fixed']['cidr']%>
+floating_range=<%=node['bcpc']['floating']['cidr']%>
+network_size=<%=node['bcpc']['fixed']['network_size']%>
+flat_network_dns=<%=node['bcpc']['management']['vip']%>
+dhcpbridge_flagfile=/etc/nova/nova.conf
+dhcpbridge=/usr/bin/nova-dhcpbridge
+force_dhcp_release=False
+share_dhcp_address=True
+teardown_unused_network_gateway=True
+fixed_ip_disassociate_timeout=30
+dhcp_lease_time=<%=node['bcpc']['fixed']['dhcp_lease_time']%>
+send_arp_for_ha=True
+my_ip=<%=node['bcpc']['management']['ip']%>
+routing_source_ip=<%=node['bcpc']['floating']['ip']%>
+dhcp_domain=<%=node['bcpc']['cluster_domain']%>
+default_availability_zone=
+
+<% if node['bcpc']['enabled']['neutron'] %>
+network_api_class = nova.network.neutronv2.api.API
+linuxnet_interface_driver = nova.network.linux_net.NeutronLinuxBridgeInterfaceDriver
+vif_plugging_is_fatal = False
+vif_plugging_timeout = 0
+
+[neutron]
+url = <%= node['bcpc']['protocol']['neutron'] %>://openstack.<%= node['bcpc']['cluster_domain'] %>:9696
+admin_tenant_name = <%= node['bcpc']['admin_tenant'] %>
+auth_strategy = keystone
+admin_auth_url = <%= node['bcpc']['protocol']['keystone'] %>://openstack.<%= node['bcpc']['cluster_domain'] %>:35357/v2.0/
+admin_username = <%= get_config('keystone-admin-user') %>
+admin_password = <%= get_config('keystone-admin-password') %>
+<% else %>
+network_api_class = nova.network.api.API
+<% end %>
 
 [oslo_concurrency]
 lock_path=/var/lock/nova
