@@ -19,14 +19,14 @@
 
 include_recipe "bcpc::neutron-common"
 
-%w{neutron-dhcp-agent neutron-plugin-ml2 neutron-plugin-openvswitch-agent}.each do |pkg|
+%w{neutron-dhcp-agent neutron-plugin-ml2 neutron-plugin-linuxbridge-agent}.each do |pkg|
   package pkg do
     action :upgrade
     options "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
   end
 end
 
-%w{neutron-dhcp-agent neutron-plugin-openvswitch-agent}.each do |svc|
+%w{neutron-dhcp-agent neutron-plugin-linuxbridge-agent}.each do |svc|
   service svc do
     action [:enable, :start]
   end
