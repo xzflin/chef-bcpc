@@ -18,7 +18,8 @@ for i in apache2 \
          nova-cert \
          nova-conductor \
          nova-consoleauth \
-         nova-scheduler
+         nova-scheduler \
+         neutron-server
 do
     service $i restart
 done
@@ -30,7 +31,11 @@ echo "# WORK NODE SERVICES"
 for i in nova-api \
          nova-compute \
          nova-network \
-         nova-novncproxy
+         nova-novncproxy \
+         neutron-plugin-linuxbridge-agent \
+         neutron-dhcp-agent \
+         neutron-l3-agent \
+         neutron-metadata-agent
 do
     service $i restart
 done

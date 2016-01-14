@@ -47,7 +47,10 @@ template '/etc/neutron/neutron.conf' do
   mode 00600
   variables(
     lazy {
-      {:servers => get_head_nodes}
+      {
+        :headnodes => get_head_nodes,
+        :servers   => get_all_nodes
+      }
     }
   )
 end

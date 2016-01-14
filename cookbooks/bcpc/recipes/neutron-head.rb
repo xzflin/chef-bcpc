@@ -19,20 +19,6 @@
 
 include_recipe "bcpc::neutron-common"
 
-%w{neutron-server neutron-metadata-agent}.each do |pkg|
-  package pkg do
-    action :upgrade
-    options "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
-  end
-
-  service pkg do
-    action [:enable, :start]
-    subscribes :restart, "template[/etc/neutron/neutron.conf]", :delayed
-    subscribes :restart, "template[/etc/neutron/plugins/ml2/ml2_conf.ini]", :delayed
-    subscribes :restart, "template[/etc/neutron/policy.json]", :delayed
-  end
-end
-
 ruby_block "neutron-database-creation" do
   block do
     %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
@@ -45,6 +31,18 @@ ruby_block "neutron-database-creation" do
     self.resolve_notification_references
   end
   not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['neutron']}\"'|grep \"#{node['bcpc']['dbname']['neutron']}\" >/dev/null" }
+end
+
+package 'neutron-server' do
+  action :upgrade
+  options "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
+end
+
+service 'neutron-server' do
+  action [:enable, :start]
+  subscribes :restart, "template[/etc/neutron/neutron.conf]", :delayed
+  subscribes :restart, "template[/etc/neutron/plugins/ml2/ml2_conf.ini]", :delayed
+  subscribes :restart, "template[/etc/neutron/policy.json]", :delayed
 end
 
 bash "neutron-database-sync" do
