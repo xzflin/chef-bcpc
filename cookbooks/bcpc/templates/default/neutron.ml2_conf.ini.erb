@@ -99,6 +99,8 @@ network_vlan_ranges = int-net1:1000:2999
 # Example: vxlan_group = 239.1.1.1
 
 [securitygroup]
+firewall_driver = neutron.agent.linux.iptables_firewall.IptablesFirewallDriver
+
 # Controls if neutron security group is enabled or not.
 # It should be false when you use nova security group.
 enable_security_group = True
@@ -108,4 +110,5 @@ enable_security_group = True
 # enable_ipset = True
 
 [linux_bridge]
-physical_interface_mapping = int-net1:eth3,ext-net1:eth3
+# cannot bind multiple networks to the same physical adapter
+physical_interface_mappings = int-net1:eth3,ext-net1:eth2
