@@ -17,15 +17,19 @@ Minimum Prerequisites
 
 Preparation
 ---
-* Create a staging location on your build host (e.g., `$HOME/bcpc-deployment`). This directory is useful for storing various files used by the build process, as well as a virtualenv for Ansible.
+#### Configure files and retrieve artifacts
+* Download an Ubuntu server ISO from [http://www.ubuntu.com/download/server] to boot the bootstrap node from.
 * Copy `bootstrap/ansible_scripts/group_vars/vars.template` to `Test-Laptop-Ansible` within that same directory. This file will be referred to as the **group variables** file.
-* Create a `git-staging` directory underneath this directory. Set the value of `controlnode_git_staging_dir` in the group variables to this value.
-* Create a `bootstrap-files` directory underneath this directory. Set the value of `controlnode_files_dir` in the group variables to this value.
-* Copy the contents of your BCPC bootstrap cache (by default, `$HOME/.bcpc-cache`) to `bootstrap-files/master`. Symlinks will **not** work. If you do not have a local BCPC cache, run `BOOTSTRAP_CACHE_DIR=$HOME/.bcpc-cache REPO_ROOT=$(git rev-parse --show-toplevel) bootstrap/shared/shared_prereqs.sh` from the root of the repository to populate the cache.
+* Create a staging location on your build host (e.g., `$HOME/bcpc-deployment`). This directory is useful for storing various files used by the build process, as well as a virtualenv for Ansible.
 * Locate the root of your apt mirror. Set the value of `controlnode_apt_mirror_dir` in the group variables to this value.
-* Generate an SSH key pair in your staging directory with `ssh-keygen -f test-laptop-ansible`. Set the value of `ansible_ssh_private_key_file` in the group variables to the path to the private key. Set the value of `operations_key` to the public key itself (copy and paste it in there, don't provide the path).
 * Uncomment `chef_bcpc_deploy_from_dir` and set it to the path of the root of the **chef-bcpc** repository.
+ * Create a `git-staging` directory underneath this directory. Set the value of `controlnode_git_staging_dir` in the group variables to this value.
+     * Create a `bootstrap-files` directory underneath this directory. Set the value of `controlnode_files_dir` in the group variables file to this value.
+     * Copy the contents of your BCPC bootstrap cache (by default, `$HOME/.bcpc-cache`) to `bootstrap-files/master`. Symlinks will **not** work. If you do not have a local BCPC cache, run `BOOTSTRAP_CACHE_DIR=$HOME/.bcpc-cache REPO_ROOT=$(git rev-parse --show-toplevel) bootstrap/shared/shared_prereqs.sh` from the root of the repository to populate the cache.
+     * Generate an SSH key pair in your staging directory with `ssh-keygen -f test-laptop-ansible`. Set the value of `ansible_ssh_private_key_file` in the group variables to the path to the private key. Set the value of `operations_key` to the public key itself (copy and paste it in there, don't provide the path).
 * Review the group variables for any additional settings you may wish to or need to change.
+
+#### Install ansible
 * Install **virtualenv** via `pip install virtualenv` or operating system packages so that you may install Ansible and its support packages without interfering with Python on your system.
 * Create a virtualenv in the staging directory with `virtualenv path/to/staging-dir` (if you are in the directory, `virtualenv .` will suffice). The virtualenv must be using Python 2.x and not Python 3.x because of Ansible restrictions, so if the virtualenv is set up with the wrong Python interpreter, please recreate it with the `-p` setting.
 * Activate the virtualenv from within the staging directory with `source bin/activate`.
@@ -33,7 +37,16 @@ Preparation
   * yaml
   * Jinja2
   * MarkupSafe
-* Download an Ubuntu server ISO from [http://www.ubuntu.com/download/server] to boot the bootstrap node from.
+
+At this point your `staging-dir` should appear something like the following:
+```
+bcpc-deployment
+└── git-staging
+    ├── bin
+    ├── bootstrap-files
+    ├── include
+	    └── lib
+```
 
 Creating VMs
 ---
@@ -46,15 +59,14 @@ Installing the OS on the bootstrap node
 ---
 * Attach the ISO to the DVD drive of the **bcpc-bootstrap** node.
 * Boot the bootstrap node and install the operating system.
-* Select **eth0** as the primary network interface (additional interfaces will be configured manually after installation).
-  * **eth0** is the VirtualBox NAT interface that allows the bootstrap node to access the Internet.
-  * In actual hardware builds, an Internet connection is not necessary or expected to be present; this interface's presence is a concession to convenience so that DNS works properly, otherwise every SSH connection will take ~10 seconds due to reverse DNS lookup timeouts.
-  * If you have a local DNS server on your build host, you can remove this interface from the VM; remember to update the Chef environment and change the value of the **bcpc.bootstrap.pxe_interface** key to move it up one spot.
-* Enter **bcpc-bootstrap** as the hostname.
-* Create an account named **ubuntu** (password can be whatever you like).
-* Partition `/dev/sda` using the **Guided - use entire disk** method. The other disks do not need to be partitioned or formatted at this time.
-* Select only **OpenSSH server** when asked to make a software selection.
-* GRUB can go in the MBR.
+  * Select **eth0** as the primary network interface (additional interfaces will be configured manually after installation). **eth0** is the VirtualBox NAT interface that allows the bootstrap node to access the Internet.
+     * In actual hardware builds, an Internet connection is not necessary or expected to be present; this interface's presence is a concession to convenience so that DNS works properly, otherwise every SSH connection will take ~10 seconds due to reverse DNS lookup timeouts.
+     * If you have a local DNS server on your build host, you can remove this interface from the VM; remember to update the Chef environment and change the value of the **bcpc.bootstrap.pxe_interface** key to move it up one spot.
+  * Enter **bcpc-bootstrap** as the hostname.
+  * Create an account named **ubuntu** (password can be whatever you like).
+  * Partition `/dev/sda` using the **Guided - use entire disk** method. The other disks do not need to be partitioned or formatted at this time.
+  * Select only **OpenSSH server** when asked to make a software selection.
+  * GRUB can go in the MBR.
 
 Manually configuring bootstrap node network
 ---
