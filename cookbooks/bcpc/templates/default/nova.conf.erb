@@ -85,7 +85,11 @@ ssl_only=false
 key=/etc/nova/ssl-bcpc.key
 cert=/etc/nova/ssl-bcpc.pem
 novnc_enabled=True
+<% if node['bcpc']['vnc']['proxy_use_vip'] %>
+novncproxy_base_url=https://<%=node['bcpc']['management']['vip']%>:6080/vnc_auto.html
+<% else %>
 novncproxy_base_url=https://openstack.<%=node['bcpc']['cluster_domain']%>:6080/vnc_auto.html
+<% end %>
 vncserver_proxyclient_address=<%=node['bcpc']['management']['ip']%>
 novncproxy_host=<%=node['bcpc']['management']['ip']%>
 vncserver_listen=<%=node['bcpc']['management']['ip']%>

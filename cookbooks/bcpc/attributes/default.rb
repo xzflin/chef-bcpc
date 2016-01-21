@@ -559,3 +559,12 @@ default['bcpc']['quota'] = {
 #
 ###########################################
 default['bcpc']['getty']['ttys'] = %w( ttyS0 ttyS1 )
+###########################################
+#
+#  VNC settings
+#
+###########################################
+#
+# VNC uses cluster domain name by default
+# for proxy base url. Set to 'true' to use vip
+default['bcpc']['vnc']['proxy_use_vip'] = false
