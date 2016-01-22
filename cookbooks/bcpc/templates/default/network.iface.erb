@@ -5,15 +5,21 @@
 ################################################
 
 auto <%= @interface %>
-iface <%= @interface %> inet static
+iface <%= @interface %> inet <%= @type %>
+<% if @ip %>
  address <%= @ip %>
+<% end %>
+<% if @netmask %>
  netmask <%= @netmask %>
- <% if @gateway %>
+<% end %>
+<% if @gateway %>
  gateway <%= @gateway %>
- <% end %>
+<% end %>
+<% if @metric %>
  metric <%= @metric %>
+<% end %>
 <% if @mtu %>
-mtu <%= @mtu %>
+ mtu <%= @mtu %>
 <% end %>
 <% if @dns %>
  dns-nameservers <%= @dns.join(' ') %>

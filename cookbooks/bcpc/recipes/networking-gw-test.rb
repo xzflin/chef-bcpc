@@ -22,7 +22,7 @@ if node['bcpc']['enabled']['network_tests'] then
     ruby_block "check-gateways" do
         block do
             ping_node("storage gateway", node['bcpc']['storage']['gateway'])
-            ping_node("floating gateway", node['bcpc']['floating']['gateway'])
+            ping_node("floating gateway", node['bcpc']['floating']['gateway']) unless node['bcpc']['enabled']['neutron']
         end
     end
 

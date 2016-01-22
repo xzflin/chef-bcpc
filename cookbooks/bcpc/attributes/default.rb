@@ -104,7 +104,7 @@ default['bcpc']['ceph']['pgp_auto_adjust'] = false
 # Need to review...
 default['bcpc']['ceph']['pgs_per_node'] = 1024
 default['bcpc']['ceph']['max_pgs_per_osd'] = 300
-# Set to 0 to disable. See http://tracker.ceph.com/issues/8103 
+# Set to 0 to disable. See http://tracker.ceph.com/issues/8103
 default['bcpc']['ceph']['pg_warn_max_obj_skew'] = 10
 # Journal size could be 10GB or higher in some cases
 default['bcpc']['ceph']['journal_size'] = 2048
@@ -178,6 +178,7 @@ default['bcpc']['metadata']['ip'] = "169.254.169.254"
 default['bcpc']['storage']['netmask'] = "255.255.255.0"
 default['bcpc']['storage']['cidr'] = "100.100.0.0/24"
 default['bcpc']['storage']['gateway'] = "100.100.0.1"
+default['bcpc']['storage']['vip'] = "100.100.0.5"
 default['bcpc']['storage']['interface'] = nil
 # if 'interface' is a VLAN interface, specifying a parent allows MTUs
 # to be set properly

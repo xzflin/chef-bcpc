@@ -4,18 +4,17 @@
 #
 ################################################
 
-NameVirtualHost <%="#{node['bcpc']['floating']['ip']}:#{node['bcpc']['ports']['apache']['radosgw']}"%>
+NameVirtualHost <%="#{node['bcpc']['storage']['ip']}:#{node['bcpc']['ports']['apache']['radosgw']}"%>
 
-
-Listen <%="#{node['bcpc']['floating']['ip']}:#{node['bcpc']['ports']['apache']['radosgw']}"%>
-Listen <%="#{node['bcpc']['floating']['ip']}:#{node['bcpc']['ports']['apache']['radosgw_https']}"%>
+Listen <%="#{node['bcpc']['storage']['ip']}:#{node['bcpc']['ports']['apache']['radosgw']}"%>
+Listen <%="#{node['bcpc']['storage']['ip']}:#{node['bcpc']['ports']['apache']['radosgw_https']}"%>
 
 FastCgiExternalServer /var/www/s3gw.fcgi -socket /var/lib/ceph/radosgw/rgw_fcgi.sock -idle-timeout 60
 
-<VirtualHost  <%="#{node['bcpc']['floating']['ip']}:#{node['bcpc']['ports']['apache']['radosgw']}"%> >
+<VirtualHost  <%="#{node['bcpc']['storage']['ip']}:#{node['bcpc']['ports']['apache']['radosgw']}"%> >
         ServerName <%="s3.#{node['bcpc']['cluster_domain']}"%>
         ServerAlias <%=node['hostname']%>
-        ServerAlias <%="#{node['bcpc']['floating']['ip']}:#{node['bcpc']['ports']['apache']['radosgw']}"%>
+        ServerAlias <%="#{node['bcpc']['storage']['ip']}:#{node['bcpc']['ports']['apache']['radosgw']}"%>
         ServerAdmin <%=node['bcpc']['admin_email']%>
         DocumentRoot /var/www
 
@@ -42,12 +41,12 @@ FastCgiExternalServer /var/www/s3gw.fcgi -socket /var/lib/ceph/radosgw/rgw_fcgi.
         ServerSignature Off
 </VirtualHost>
 
-NameVirtualHost <%="#{node['bcpc']['floating']['ip']}:#{node['bcpc']['ports']['apache']['radosgw_https']}"%>
+NameVirtualHost <%="#{node['bcpc']['storage']['ip']}:#{node['bcpc']['ports']['apache']['radosgw_https']}"%>
 
-<VirtualHost  <%="#{node['bcpc']['floating']['ip']}:#{node['bcpc']['ports']['apache']['radosgw_https']}"%> >
+<VirtualHost  <%="#{node['bcpc']['storage']['ip']}:#{node['bcpc']['ports']['apache']['radosgw_https']}"%> >
         ServerName <%="s3.#{node['bcpc']['cluster_domain']}"%>
         ServerAlias <%=node['hostname']%>
-        ServerAlias <%="#{node['bcpc']['floating']['ip']}:#{node['bcpc']['ports']['apache']['radosgw_https']}"%>
+        ServerAlias <%="#{node['bcpc']['storage']['ip']}:#{node['bcpc']['ports']['apache']['radosgw_https']}"%>
         ServerAdmin <%=node['bcpc']['admin_email']%>
         DocumentRoot /var/www
 
@@ -77,4 +76,3 @@ NameVirtualHost <%="#{node['bcpc']['floating']['ip']}:#{node['bcpc']['ports']['a
         CustomLog /var/log/apache2/rgw_access.log combined
         ServerSignature Off
 </VirtualHost>
-

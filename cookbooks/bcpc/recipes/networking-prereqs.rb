@@ -67,12 +67,13 @@ directory "/etc/network/interfaces.d" do
   action :create
 end
 
+# changed to be *.cfg to align this with what Vagrant does
 bash "setup-interfaces-source" do
   user "root"
   code <<-EOH
-    echo "source /etc/network/interfaces.d/iface-*" >> /etc/network/interfaces
+    echo "source /etc/network/interfaces.d/*.cfg" >> /etc/network/interfaces
   EOH
-  not_if "grep '^source /etc/network/interfaces.d/' /etc/network/interfaces"
+  not_if "grep '^source /etc/network/interfaces.d/*.cfg' /etc/network/interfaces"
 end
 
 bash "enable-8021q" do
@@ -85,15 +86,15 @@ bash "enable-8021q" do
   not_if "grep -e '^8021q' /etc/modules"
 end
 
-# for Neutron, do not set a gateway on the storage interface
 if node['bcpc']['enabled']['neutron']
-  template "/etc/network/interfaces.d/iface-#{node['bcpc']['management']['interface']}" do
+  template "/etc/network/interfaces.d/iface-#{node['bcpc']['management']['interface']}.cfg" do
     source "network.iface.erb"
     owner "root"
     group "root"
     mode 00644
     variables(
       :interface => node['bcpc']['management']['interface'],
+      :type => 'static',
       :ip => node['bcpc']['management']['ip'],
       :netmask => node['bcpc']['management']['netmask'],
       :gateway => node['bcpc']['management']['gateway'],
@@ -102,22 +103,39 @@ if node['bcpc']['enabled']['neutron']
     )
   end
 
-  template "/etc/network/interfaces.d/iface-#{node['bcpc']['storage']['interface']}" do
+  # storage interface split from above while tinkering with whether it should have a gateway
+  template "/etc/network/interfaces.d/iface-#{node['bcpc']['storage']['interface']}.cfg" do
     source "network.iface.erb"
     owner "root"
     group "root"
     mode 00644
     variables(
       :interface => node['bcpc']['storage']['interface'],
+      :type => 'static',
       :ip => node['bcpc']['storage']['ip'],
       :netmask => node['bcpc']['storage']['netmask'],
+      :gateway => node['bcpc']['storage']['gateway'],
       :mtu => node['bcpc']['storage']['mtu'],
       :metric => 300
     )
   end
+
+  # for Neutron, configure the floating network as a manual interface (so that it can be up but
+  # does not get an address)
+  template "/etc/network/interfaces.d/iface-#{node['bcpc']['floating']['interface']}.cfg" do
+    source "network.iface.erb"
+    owner "root"
+    group "root"
+    mode 00644
+    variables(
+      :interface => node['bcpc']['floating']['interface'],
+      :type => 'manual',
+      :mtu => node['bcpc']['floating']['mtu'],
+    )
+  end
 else
   [['management', 100], ['storage', 300]].each do |net, metric|
-    template "/etc/network/interfaces.d/iface-#{node['bcpc'][net]['interface']}" do
+    template "/etc/network/interfaces.d/iface-#{node['bcpc'][net]['interface']}.cfg" do
       source "network.iface.erb"
       owner "root"
       group "root"
@@ -136,7 +154,7 @@ end
 
 %w{ storage floating }.each do |net|
   unless node['bcpc'][net]['interface-parent'].nil?
-    template "/etc/network/interfaces.d/iface-#{node['bcpc'][net]['interface-parent']}" do
+    template "/etc/network/interfaces.d/iface-#{node['bcpc'][net]['interface-parent']}.cfg" do
       source "network.iface-parent.erb"
       owner "root"
       group "root"
