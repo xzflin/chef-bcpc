@@ -20,9 +20,10 @@
 include_recipe "bcpc::default"
 
 # FOR NEUTRON WIP
-# stupid hack to install bridge-utils before setting some sysctl stuff that isn't there
-# until bridge stuff is installed
-package 'bridge-utils'
+# hack to ensure bridge sysctl items can be set
+bash 'modprobe-bridge' do
+  code 'modprobe bridge'
+end
 
 template "/etc/sysctl.d/70-bcpc.conf" do
     source "sysctl-70-bcpc.conf.erb"
