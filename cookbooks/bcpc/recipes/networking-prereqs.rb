@@ -120,8 +120,7 @@ if node['bcpc']['enabled']['neutron']
     )
   end
 
-  # for Neutron, configure the floating network as a manual interface (so that it can be up but
-  # does not get an address)
+  # storage interface split from above while tinkering with whether it should have a gateway
   template "/etc/network/interfaces.d/iface-#{node['bcpc']['floating']['interface']}.cfg" do
     source "network.iface.erb"
     owner "root"
@@ -129,9 +128,31 @@ if node['bcpc']['enabled']['neutron']
     mode 00644
     variables(
       :interface => node['bcpc']['floating']['interface'],
+      :type => 'static',
+      :ip => node['bcpc']['floating']['ip'],
+      :netmask => node['bcpc']['floating']['netmask'],
+      :gateway => node['bcpc']['floating']['gateway'],
+      :mtu => node['bcpc']['floating']['mtu'],
+      :metric => 300
+    )
+  end
+
+  # for Neutron, configure eth4 as a manual interface (so that it can be up but
+  # does not get an address)
+  template "/etc/network/interfaces.d/iface-eth4.cfg" do
+    source "network.iface.erb"
+    owner "root"
+    group "root"
+    mode 00644
+    variables(
+      :interface => 'eth4',
       :type => 'manual',
       :mtu => node['bcpc']['floating']['mtu'],
     )
+  end
+
+  bash 'ifup-eth4' do
+    code 'ifup eth4'
   end
 else
   [['management', 100], ['storage', 300]].each do |net, metric|

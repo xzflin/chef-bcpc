@@ -52,3 +52,4 @@ bash "neutron-database-sync" do
 end
 
 include_recipe "bcpc::neutron-work"
+include_recipe "bcpc::neutron-setup"

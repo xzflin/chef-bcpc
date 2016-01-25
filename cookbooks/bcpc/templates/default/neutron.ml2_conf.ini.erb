@@ -11,7 +11,7 @@
 # type_drivers = local,flat,vlan,gre,vxlan
 # Example: type_drivers = flat,vlan,gre,vxlan
 
-type_drivers = local,flat,vlan
+type_drivers = local,flat,vlan,gre,vxlan
 
 # (ListOpt) Ordered list of network_types to allocate as tenant
 # networks. The default value 'local' is useful for single-box testing
@@ -20,7 +20,7 @@ type_drivers = local,flat,vlan
 # tenant_network_types = local
 # Example: tenant_network_types = vlan,gre,vxlan
 
-tenant_network_types = vlan
+tenant_network_types = vlan,gre,vxlan
 
 # (ListOpt) Ordered list of networking mechanism driver entrypoints
 # to be loaded from the neutron.ml2.mechanism_drivers namespace.
@@ -31,7 +31,7 @@ tenant_network_types = vlan
 # Example: mechanism_drivers = openvswitch,brocade
 # Example: mechanism_drivers = linuxbridge,brocade
 
-mechanism_drivers = linuxbridge
+mechanism_drivers = linuxbridge,l2population
 
 # (ListOpt) Ordered list of extension driver entrypoints
 # to be loaded from the neutron.ml2.extension_drivers namespace.
@@ -79,17 +79,18 @@ flat_networks = ext-net1
 #
 # network_vlan_ranges =
 # Example: network_vlan_ranges = physnet1:1000:2999,physnet2
-network_vlan_ranges = int-net1:1000:2999
+network_vlan_ranges = int-net1:1000:1400
 
 [ml2_type_gre]
 # (ListOpt) Comma-separated list of <tun_min>:<tun_max> tuples enumerating ranges of GRE tunnel IDs that are available for tenant network allocation
-# tunnel_id_ranges =
+tunnel_id_ranges = 1:10000
 
 [ml2_type_vxlan]
 # (ListOpt) Comma-separated list of <vni_min>:<vni_max> tuples enumerating
 # ranges of VXLAN VNI IDs that are available for tenant network allocation.
 #
 # vni_ranges =
+vni_ranges = 1:10000
 
 # (StrOpt) Multicast group for the VXLAN interface. When configured, will
 # enable sending all broadcast traffic to this multicast group. When left
@@ -97,6 +98,7 @@ network_vlan_ranges = int-net1:1000:2999
 #
 # vxlan_group =
 # Example: vxlan_group = 239.1.1.1
+vxlan_group = 239.1.1.1
 
 [securitygroup]
 firewall_driver = neutron.agent.linux.iptables_firewall.IptablesFirewallDriver
@@ -107,8 +109,13 @@ enable_security_group = True
 
 # Use ipset to speed-up the iptables security groups. Enabling ipset support
 # requires that ipset is installed on L2 agent node.
-# enable_ipset = True
+enable_ipset = True
 
 [linux_bridge]
 # cannot bind multiple networks to the same physical adapter
-physical_interface_mappings = int-net1:eth3,ext-net1:eth2
+physical_interface_mappings = int-net1:eth4,ext-net1:eth3
+
+[vxlan]
+enable_vxlan = True
+local_ip = <%= node['bcpc']['floating']['ip'] %>
+l2_population = True
