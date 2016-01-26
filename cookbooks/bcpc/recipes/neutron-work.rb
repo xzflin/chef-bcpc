@@ -37,6 +37,13 @@ template '/etc/neutron/dhcp_agent.ini' do
   mode 00600
 end
 
+template '/etc/neutron/metadata_agent.ini' do
+  source 'neutron.metadata_agent.ini.erb'
+  owner 'neutron'
+  group 'neutron'
+  mode 00600
+end
+
 template '/etc/neutron/l3_agent.ini' do
   source 'neutron.l3_agent.ini.erb'
   owner 'neutron'
@@ -83,6 +90,6 @@ end
 service 'neutron-metadata-agent' do
   action [:enable, :start]
   subscribes :restart, "template[/etc/neutron/neutron.conf]", :delayed
-  subscribes :restart, "template[/etc/neutron/plugins/ml2/ml2_conf.ini]", :delayed
+  subscribes :restart, "template[/etc/neutron/metadata_agent.ini]", :delayed
   subscribes :restart, "template[/etc/neutron/policy.json]", :delayed
 end
