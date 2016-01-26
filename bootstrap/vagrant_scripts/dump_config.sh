@@ -10,5 +10,6 @@ confdir="$(cd "$DIR/../config" &&  pwd -P)"
 defaults="$confdir/bootstrap_config.sh.defaults"
 override="$confdir/bootstrap_config.sh.overrides"
 
-env - /bin/bash -c "export -n PWD SHLVL  ; source $defaults && source $override && printenv | \
-    sed '/^_=/d' | sort"
+env -i HOME="$HOME" /bin/bash -c \
+    "export -n PWD SHLVL ; source $defaults && source $override && printenv | \
+        sed -E '/^(_|HOME)=/d' | sort"
