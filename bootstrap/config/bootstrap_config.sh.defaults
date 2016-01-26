@@ -66,6 +66,9 @@ export BOOTSTRAP_APT_MIRROR=
 # Valid range is 0-3 (default 0).
 export MONITORING_NODES=0
 
+# Sets the size of the swapfile allocated (in MiB) to created VMs
+export VM_SWAP_SIZE=8192
+
 # These directories are where the repository and file cache will be mounted via
 # shared folders inside each VM.
 export REPO_MOUNT_POINT=/chef-bcpc-host
