@@ -102,7 +102,7 @@ default['bcpc']['ceph']['pgp_auto_adjust'] = false
 # Need to review...
 default['bcpc']['ceph']['pgs_per_node'] = 1024
 default['bcpc']['ceph']['max_pgs_per_osd'] = 300
-# Set to 0 to disable. See http://tracker.ceph.com/issues/8103 
+# Set to 0 to disable. See http://tracker.ceph.com/issues/8103
 default['bcpc']['ceph']['pg_warn_max_obj_skew'] = 10
 # Journal size could be 10GB or higher in some cases
 default['bcpc']['ceph']['journal_size'] = 2048
@@ -578,7 +578,7 @@ default['bcpc']['nova']['quota'] = {
   "floating_ips" => 10,
   "gigabytes"=> 1000,
   "instances" => 10,
-  "ram" => 51200
+  "ram" => 8192
 }
 # load a custom vendor driver,
 # e.g. "nova.api.metadata.bcpc_metadata.BcpcMetadata",
