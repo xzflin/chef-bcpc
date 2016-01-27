@@ -306,9 +306,9 @@ Vagrant.configure("2") do |config|
         if idx.zero?
           # on the bootstrap node these disks are not used by pure Vagrant, but will be used by Ansible scripts
           # sdb is /mnt and sdc is /bcpc
-          disks = {'b' => 20480, 'c' => 204800}
+          disks = {'b' => ( ENV["BOOTSTRAP_VM_DRIVE_SIZE"] or "20480" ), 'c' => 204800}
         else
-          disks = Hash[('b'..'e').collect {|x| [x, 20480]}]
+          disks = Hash[('b'..'e').collect {|x| [x, disk_size]}]
         end
 
         disks.each_with_index do |disk, disk_idx|

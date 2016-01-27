@@ -25,6 +25,13 @@ export CLUSTER_VM_CPUS=2
 export CLUSTER_VM_DRIVE_SIZE=20480
 
 ##############################################
+# USED BY ANSIBLE BUILD PATH ONLY
+##############################################
+
+# Sets the VirtualBox VM machine folder (Property machinefolder).
+export ANSIBLE_VM_DIR=$HOME/.ansible-bcpc-vms
+
+##############################################
 # USED BY VAGRANT BUILD PATH ONLY
 ##############################################
 

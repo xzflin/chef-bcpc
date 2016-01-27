@@ -11,7 +11,7 @@
 # in an entirely automated fashion, you will need to use Vagrant.)
 ##########################################################
 
-set -e
+set -eu
 
 for CMD in VBoxManage git pcregrep; do
   if ! which $CMD >/dev/null; then
@@ -31,13 +31,17 @@ if [[ -f $CONFIG_OVERRIDES ]]; then
   source $CONFIG_OVERRIDES
 fi
 
-# destroy existing BCPC VMs
-for VM in bcpc-bootstrap bcpc-vm1 bcpc-vm2 bcpc-vm3 bcpc-vm4 bcpc-vm5 bcpc-vm6; do
-  if VBoxManage list vms | grep -q $VM; then
-    VBoxManage controlvm $VM poweroff && true
-    VBoxManage unregistervm $VM --delete
-  fi
-done
+# get the location of the default machine folder
+if [[ $(uname) == "Darwin" ]]; then
+  SED="sed -E"
+else
+  SED="sed -r"
+fi
+DMF_SET=$(VBoxManage list systemproperties | grep '^Default machine folder:')
+OLD_DMF_PATH=$(echo "$DMF_SET" | $SED 's/^Default machine folder:[[:space:]]+(.+)$/\1/')
+DMF_PATH="${ANSIBLE_VM_DIR:-$OLD_DMF_PATH}"
+
+$REPO_ROOT/bootstrap/ansible_scripts/scripts/vbox_clean.sh
 
 # destroy and recreate host-only networks
 VBoxManage hostonlyif remove vboxnet0 && true
@@ -59,62 +63,51 @@ VBoxManage dhcpserver remove --ifname vboxnet1 && true
 VBoxManage dhcpserver remove --ifname vboxnet2 && true
 
 # Initialize VM lists
-VMS="bcpc-vm1 bcpc-vm2 bcpc-vm3"
+VMS="ansible-bcpc-vm1 ansible-bcpc-vm2 ansible-bcpc-vm3"
 if [ $MONITORING_NODES -gt 0 ]; then
   i=1
   while [ $i -le $MONITORING_NODES ]; do
-    MON_VM="bcpc-vm`expr 3 + $i`"
+    MON_VM="ansible-bcpc-vm`expr 3 + $i`"
     VMS="$VMS $MON_VM"
     i=`expr $i + 1`
   done
 fi
 
-# get the location of the default machine folder
-if [[ $(uname) == "Darwin" ]]; then
-  SED="sed -E"
-  DECLARE_ASSOC_ARRAY="declare -a"
-else
-  SED="sed -r"
-  DECLARE_ASSOC_ARRAY="declare -A"
-fi
-DMF_SET=$(VBoxManage list systemproperties | grep '^Default machine folder:')
-DMF_PATH=$(echo "$DMF_SET" | $SED 's/^Default machine folder:[[:space:]]+(.+)$/\1/')
-
 # spawn and configure bootstrap VM
 echo "Creating bootstrap VM"
-VBoxManage createvm --name bcpc-bootstrap --register
-VBoxManage modifyvm bcpc-bootstrap --ostype Ubuntu_64
-VBoxManage modifyvm bcpc-bootstrap --memory $BOOTSTRAP_VM_MEM
-VBoxManage modifyvm bcpc-bootstrap --cpus $BOOTSTRAP_VM_CPUS
-VBoxManage modifyvm bcpc-bootstrap --nic1 nat
-VBoxManage modifyvm bcpc-bootstrap --nictype1 82543GC
-VBoxManage modifyvm bcpc-bootstrap --nic2 hostonly
-VBoxManage modifyvm bcpc-bootstrap --nictype2 82543GC
-VBoxManage modifyvm bcpc-bootstrap --hostonlyadapter2 vboxnet0
-VBoxManage modifyvm bcpc-bootstrap --nic3 hostonly
-VBoxManage modifyvm bcpc-bootstrap --nictype3 82543GC
-VBoxManage modifyvm bcpc-bootstrap --hostonlyadapter3 vboxnet1
-VBoxManage modifyvm bcpc-bootstrap --nic4 hostonly
-VBoxManage modifyvm bcpc-bootstrap --nictype4 82543GC
-VBoxManage modifyvm bcpc-bootstrap --hostonlyadapter4 vboxnet2
+VBoxManage createvm --basefolder "$DMF_PATH" --name ansible-bcpc-bootstrap --register
+VBoxManage modifyvm ansible-bcpc-bootstrap --ostype Ubuntu_64
+VBoxManage modifyvm ansible-bcpc-bootstrap --memory $BOOTSTRAP_VM_MEM
+VBoxManage modifyvm ansible-bcpc-bootstrap --cpus $BOOTSTRAP_VM_CPUS
+VBoxManage modifyvm ansible-bcpc-bootstrap --nic1 nat
+VBoxManage modifyvm ansible-bcpc-bootstrap --nictype1 82543GC
+VBoxManage modifyvm ansible-bcpc-bootstrap --nic2 hostonly
+VBoxManage modifyvm ansible-bcpc-bootstrap --nictype2 82543GC
+VBoxManage modifyvm ansible-bcpc-bootstrap --hostonlyadapter2 vboxnet0
+VBoxManage modifyvm ansible-bcpc-bootstrap --nic3 hostonly
+VBoxManage modifyvm ansible-bcpc-bootstrap --nictype3 82543GC
+VBoxManage modifyvm ansible-bcpc-bootstrap --hostonlyadapter3 vboxnet1
+VBoxManage modifyvm ansible-bcpc-bootstrap --nic4 hostonly
+VBoxManage modifyvm ansible-bcpc-bootstrap --nictype4 82543GC
+VBoxManage modifyvm ansible-bcpc-bootstrap --hostonlyadapter4 vboxnet2
 # configure storage devices for bootstrap VM
-VBoxManage storagectl bcpc-bootstrap --name "SATA" --add sata --portcount 3 --hostiocache on
-VBoxManage createhd --filename "$DMF_PATH/bcpc-bootstrap/bcpc-bootstrap-sda.vdi" --size $BOOTSTRAP_VM_DRIVE_SIZE
-VBoxManage storageattach bcpc-bootstrap --storagectl "SATA" --device 0 --port 0 --type hdd --medium "$DMF_PATH/bcpc-bootstrap/bcpc-bootstrap-sda.vdi"
-VBoxManage createhd --filename "$DMF_PATH/bcpc-bootstrap/bcpc-bootstrap-sdb.vdi" --size 8192
-VBoxManage storageattach bcpc-bootstrap --storagectl "SATA" --device 0 --port 1 --type hdd --medium "$DMF_PATH/bcpc-bootstrap/bcpc-bootstrap-sdb.vdi"
-VBoxManage createhd --filename "$DMF_PATH/bcpc-bootstrap/bcpc-bootstrap-sdc.vdi" --size 204800
-VBoxManage storageattach bcpc-bootstrap --storagectl "SATA" --device 0 --port 2 --type hdd --medium "$DMF_PATH/bcpc-bootstrap/bcpc-bootstrap-sdc.vdi"
+VBoxManage storagectl ansible-bcpc-bootstrap --name "SATA" --add sata --portcount 3 --hostiocache on
+VBoxManage createhd --filename "$DMF_PATH/ansible-bcpc-bootstrap/ansible-bcpc-bootstrap-sda.vdi" --size $BOOTSTRAP_VM_DRIVE_SIZE
+VBoxManage storageattach ansible-bcpc-bootstrap --storagectl "SATA" --device 0 --port 0 --type hdd --medium "$DMF_PATH/ansible-bcpc-bootstrap/ansible-bcpc-bootstrap-sda.vdi"
+VBoxManage createhd --filename "$DMF_PATH/ansible-bcpc-bootstrap/ansible-bcpc-bootstrap-sdb.vdi" --size 8192
+VBoxManage storageattach ansible-bcpc-bootstrap --storagectl "SATA" --device 0 --port 1 --type hdd --medium "$DMF_PATH/ansible-bcpc-bootstrap/ansible-bcpc-bootstrap-sdb.vdi"
+VBoxManage createhd --filename "$DMF_PATH/ansible-bcpc-bootstrap/ansible-bcpc-bootstrap-sdc.vdi" --size $BOOTSTRAP_VM_DRIVE_SIZE
+VBoxManage storageattach ansible-bcpc-bootstrap --storagectl "SATA" --device 0 --port 2 --type hdd --medium "$DMF_PATH/ansible-bcpc-bootstrap/ansible-bcpc-bootstrap-sdc.vdi"
 # configure DVD drive to boot from and set boot device to DVD drive (user must attach boot medium)
-VBoxManage storagectl bcpc-bootstrap --name "IDE" --add ide
-VBoxManage storageattach bcpc-bootstrap --storagectl "IDE" --device 0 --port 0 --type dvddrive --medium emptydrive
-VBoxManage modifyvm bcpc-bootstrap --boot1 dvd
+VBoxManage storagectl ansible-bcpc-bootstrap --name "IDE" --add ide
+VBoxManage storageattach ansible-bcpc-bootstrap --storagectl "IDE" --device 0 --port 0 --type dvddrive --medium emptydrive
+VBoxManage modifyvm ansible-bcpc-bootstrap --boot1 dvd
 
 # spawn and configure cluster VMs
 # note: NIC type 82543GC is required for PXE boot to work
 for VM in $VMS; do
   echo "Creating cluster VM $VM"
-  VBoxManage createvm --name $VM --register
+  VBoxManage createvm --basefolder "$DMF_PATH" --name $VM --register
   VBoxManage modifyvm $VM --ostype Ubuntu_64
   VBoxManage modifyvm $VM --memory $CLUSTER_VM_MEM
   VBoxManage modifyvm $VM --cpus $CLUSTER_VM_CPUS
@@ -141,7 +134,7 @@ for VM in $VMS; do
 done
 
 # common changes to execute on all VMs
-for VM in bcpc-bootstrap $VMS; do
+for VM in ansible-bcpc-bootstrap $VMS; do
   VBoxManage modifyvm $VM --vram 16
   VBoxManage modifyvm $VM --largepages on
   VBoxManage modifyvm $VM --nestedpaging on
@@ -156,13 +149,13 @@ done
 
 # functions to act like associative arrays
 function get_node_role {
-  if [[ $1 == 'bcpc-bootstrap' ]]; then
+  if [[ $1 == 'ansible-bcpc-bootstrap' ]]; then
     echo 'bootstrap'
-  elif [[ $1 == 'bcpc-vm1' ]]; then
+  elif [[ $1 == 'ansible-bcpc-vm1' ]]; then
     echo 'head'
-  elif [[ $1 == 'bcpc-vm2' ]]; then
+  elif [[ $1 == 'ansible-bcpc-vm2' ]]; then
     echo 'work'
-  elif [[ $1 == "bcpc-vm3" ]]; then
+  elif [[ $1 == "ansible-bcpc-vm3" ]]; then
     echo 'work-ephemeral'
   else
     echo 'reserved'
@@ -170,13 +163,13 @@ function get_node_role {
 }
 
 function get_node_ip {
-  if [[ $1 == 'bcpc-bootstrap' ]]; then
+  if [[ $1 == 'ansible-bcpc-bootstrap' ]]; then
     echo '10.0.100.3'
-  elif [[ $1 == 'bcpc-vm1' ]]; then
+  elif [[ $1 == 'ansible-bcpc-vm1' ]]; then
     echo '10.0.100.11'
-  elif [[ $1 == 'bcpc-vm2' ]]; then
+  elif [[ $1 == 'ansible-bcpc-vm2' ]]; then
     echo '10.0.100.12'
-  elif [[ $1 == "bcpc-vm3" ]]; then
+  elif [[ $1 == "ansible-bcpc-vm3" ]]; then
     echo '10.0.100.13'
   else
     echo '169.254.1.1'
@@ -194,7 +187,7 @@ cluster_name: Test-Laptop-Ansible
 nodes:
 YAML_HEAD
 
-for VM in bcpc-bootstrap $VMS; do
+for VM in ansible-bcpc-bootstrap $VMS; do
   MAC_ADDRESS=$(VBoxManage showvminfo --machinereadable $VM | pcregrep -o1 -M '^hostonlyadapter\d="vboxnet0"$\n*^macaddress\d="(.+)"' | $SED 's/^(..)(..)(..)(..)(..)(..)$/\1:\2:\3:\4:\5:\6/')
   cat << EoF
   $VM:
