@@ -34,6 +34,8 @@ default['bcpc']['graphite']['retention'] = '60s:1d'
 # I/O storm when new nodes are enrolled into cluster.
 # Set to 'inf' (infinite) to remove limit.
 default['bcpc']['graphite']['max_creates_per_min'] = '60'
+# Limit the number of updates to prevent over-utilizing the disk
+default['bcpc']['graphite']['max_updates_per_sec'] = '500'
 
 ###########################################
 #
