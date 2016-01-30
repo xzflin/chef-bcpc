@@ -327,7 +327,7 @@ default['bcpc']['nova']['quota'] = {
   "cores" => 4,
   "floating_ips" => 10,
   "gigabytes"=> 1000,
-  "instances" => 10,
+  "instances" => -1,
   "ram" => 8192
 }
 # load a custom vendor driver,
