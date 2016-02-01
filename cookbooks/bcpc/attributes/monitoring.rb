@@ -81,6 +81,11 @@ default['bcpc']['zabbix']['php_settings'] = {
 # Zabbix severities to notify about.
 # https://www.zabbix.com/documentation/2.4/manual/api/reference/usermedia/object
 default['bcpc']['zabbix']['severity'] = 63
+# Timeout for Zabbix agentd
+default['bcpc']['zabbix']['agentd_timeout'] = 10
+# Timeout for Zabbix server. It is slightly higher than agentd to better detect
+# cause of timeout.
+default['bcpc']['zabbix']['server_timeout'] = node['bcpc']['zabbix']['agentd_timeout'] + 1
 
 ###########################################
 #
