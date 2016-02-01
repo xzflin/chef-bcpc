@@ -303,6 +303,10 @@ default['bcpc']['nova']['scheduler_host_subset_size'] = 3
 default['bcpc']['nova']['workers'] = 5
 # Patch toggle for https://github.com/bloomberg/chef-bcpc/pull/493
 default['bcpc']['nova']['live_migration_patch'] = false
+# frequency of syncing power states between hypervisor and database
+default['bcpc']['nova']['sync_power_state_interval'] = 600
+# automatically restart guests that were running when hypervisor was rebooted
+default['bcpc']['nova']['resume_guests_state_on_host_boot'] = false
 # Verbose logging (level INFO)
 default['bcpc']['nova']['verbose'] = false
 # Nova debug toggle

@@ -74,8 +74,8 @@ default_availability_zone=
 compute_driver=libvirt.LibvirtDriver
 use_cow_images=True
 #snapshot_image_format=qcow2
-#start_guests_on_host_boot=True
-#resume_guests_state_on_host_boot=True
+sync_power_state_interval=<%= node['bcpc']['nova']['sync_power_state_interval'] %>
+resume_guests_state_on_host_boot=<%= node['bcpc']['nova']['resume_guests_state_on_host_boot'] %>
 
 # Nova Volume settings
 volume_api_class=nova.volume.cinder.API
