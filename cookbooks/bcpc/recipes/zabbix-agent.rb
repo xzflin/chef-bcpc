@@ -88,9 +88,6 @@ if node['bcpc']['enabled']['monitoring'] then
         owner node['bcpc']['zabbix']['user']
         group "root"
         mode 00600
-        variables(
-            :rgw_frontend => node['bcpc']['ceph']['frontend']
-        )
         only_if 'test -f /usr/bin/radosgw'
         notifies :restart, "service[zabbix-agent]", :immediately
     end

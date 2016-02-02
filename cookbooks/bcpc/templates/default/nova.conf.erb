@@ -74,20 +74,25 @@ default_availability_zone=
 compute_driver=libvirt.LibvirtDriver
 use_cow_images=True
 #snapshot_image_format=qcow2
-#start_guests_on_host_boot=True
-#resume_guests_state_on_host_boot=True
+sync_power_state_interval=<%= node['bcpc']['nova']['sync_power_state_interval'] %>
+resume_guests_state_on_host_boot=<%= node['bcpc']['nova']['resume_guests_state_on_host_boot'] %>
 
 # Nova Volume settings
 volume_api_class=nova.volume.cinder.API
 
 # Nova VNC settings
-ssl_only=True
+ssl_only=false
 key=/etc/nova/ssl-bcpc.key
 cert=/etc/nova/ssl-bcpc.pem
 novnc_enabled=True
-novncproxy_base_url=https://<%=node['bcpc']['management']['ip']%>:6080/vnc_auto.html
-vncserver_proxyclient_address=127.0.0.1
+<% if node['bcpc']['vnc']['proxy_use_vip'] %>
+novncproxy_base_url=https://<%=node['bcpc']['management']['vip']%>:6080/vnc_auto.html
+<% else %>
+novncproxy_base_url=https://openstack.<%=node['bcpc']['cluster_domain']%>:6080/vnc_auto.html
+<% end %>
+vncserver_proxyclient_address=<%=node['bcpc']['management']['ip']%>
 novncproxy_host=<%=node['bcpc']['management']['ip']%>
+vncserver_listen=<%=node['bcpc']['management']['ip']%>
 
 # Glance settings
 image_service=nova.image.glance.GlanceImageService
