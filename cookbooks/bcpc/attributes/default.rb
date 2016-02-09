@@ -316,6 +316,12 @@ default['bcpc']['nova']['default_log_levels'] = nil
 # Nova scheduler default filters
 default['bcpc']['nova']['scheduler_default_filters'] = ['AggregateInstanceExtraSpecsFilter', 'RetryFilter', 'AvailabilityZoneFilter', 'RamFilter', 'ComputeFilter', 'ComputeCapabilitiesFilter', 'ImagePropertiesFilter', 'ServerGroupAntiAffinityFilter', 'ServerGroupAffinityFilter']
 
+# configure optional Nova notification system
+default['bcpc']['nova']['notifications']['enabled'] = false
+default['bcpc']['nova']['notifications']['notification_topics'] = 'notifications'
+default['bcpc']['nova']['notifications']['notification_driver'] = 'messagingv2'
+default['bcpc']['nova']['notifications']['notify_on_state_change'] = 'vm_state'
+
 # settings pertaining to ephemeral storage via mdadm/LVM
 # (software RAID settings are here for logical grouping)
 default['bcpc']['software_raid']['enabled'] = false
