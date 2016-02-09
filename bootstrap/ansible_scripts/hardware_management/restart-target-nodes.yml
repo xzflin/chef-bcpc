@@ -1,11 +1,17 @@
 # USAGE:
 # - specify the nodes to be rebooted via -e target=blah, where
-#   blah is a hosts pattern (start with ~, e.g. "~blah" for 
+#   blah is a hosts pattern (start with ~, e.g. "~blah" for
 #   a regex pattern)
 # - specify a particular head node to use to execute the
-#   Ceph/nova management commands (strictly speaking it does
-#   not have to be a head node, but it must have access to Ceph
+#   Ceph/nova management commands via -e control_headnode=blah
+#   (strictly speaking it does not have to be a head node,
+#   but it must have access to Ceph
 #   and have /root/adminrc present with admin credentials)
+# - specify the number of nodes to work on at once via -e serial=#
+#   WARNING: for serial higher than 1 it is strongly recommended to also
+#   specify -c paramiko to avoid Ansible tripping over itself and closing
+#   the SSH shared connection for the delegation, which will require all
+#   sorts of obnoxious cleanup
 ---
 - include: ../common_playbooks/validate_environment.yml
 
@@ -33,7 +39,7 @@
 - hosts: "{{ target }}"
   become: yes
   gather_facts: no
-  serial: 1
+  serial: "{{ serial|default(1) }}"
   tasks:
     - name: Get running instances on hypervisor
       command: virsh list --state-running --uuid
@@ -72,7 +78,7 @@
     - name: Remove node from ephemeral compute aggregate
       shell: ". /root/adminrc && nova aggregate-remove-host ephemeral_compute {{ inventory_hostname }}"
       when: ephemeral_compute_agg.stdout | search("{{ inventory_hostname }}")
-      register: ephemeral_compute_agg_remove 
+      register: ephemeral_compute_agg_remove
       failed_when: ephemeral_compute_agg_remove.rc != 0 and "404" not in ephemeral_compute_agg_remove.stderr
       delegate_to: "{{ control_headnode }}"
       tags:
@@ -138,7 +144,7 @@
 - hosts: "{{ target }}"
   become: yes
   gather_facts: no
-  serial: 1
+  serial: "{{ serial|default(1) }}"
   tasks:
     - name: Restart OpenStack services
       command: /usr/local/bin/hup_openstack
@@ -153,4 +159,3 @@
   tasks:
     - name: Unset noout
       command: ceph osd unset noout
-
