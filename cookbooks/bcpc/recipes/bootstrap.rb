@@ -43,3 +43,11 @@ include_recipe "bcpc::packages-openstack"
         action :upgrade
     end
 end
+
+# sudo for zabbix checks
+template '/etc/sudoers.d/zabbix' do
+    source 'sudoers-bootstrap.erb'
+    owner  'root'
+    group  'root'
+    mode   00440
+end

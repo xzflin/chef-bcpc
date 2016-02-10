@@ -9,7 +9,10 @@
       "recipe[bcpc::bootstrap]",
       "recipe[bcpc::ufw]",
       "recipe[bcpc::backup-cluster]",
-      "recipe[bcpc::rally]"
+      "recipe[bcpc::rally]",
+      "recipe[bcpc::diamond]",
+      "recipe[bcpc::fluentd]",
+      "recipe[bcpc::zabbix-agent]"
     ],
     "description": "A bootstrap node in a BCPC cluster",
     "chef_type": "role",
