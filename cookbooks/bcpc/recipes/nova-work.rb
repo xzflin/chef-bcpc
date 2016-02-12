@@ -23,6 +23,11 @@ package "nova-compute-#{node['bcpc']['virt_type']}" do
     action :upgrade
 end
 
+unless is_kilo?
+  # used by nova-network in Liberty
+  package "conntrack"
+end
+
 %w{nova-api nova-network nova-compute nova-novncproxy}.each do |pkg|
     package pkg do
         action :upgrade

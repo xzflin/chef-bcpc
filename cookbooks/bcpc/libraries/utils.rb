@@ -22,6 +22,10 @@ require 'base64'
 require 'thread'
 require 'ipaddr'
 
+def is_kilo?
+  return node['bcpc']['openstack_release'] == 'kilo'
+end
+
 def is_vip?
     ipaddr = `ip addr show dev #{node['bcpc']['management']['interface']}`
     return ipaddr.include? node['bcpc']['management']['vip']
