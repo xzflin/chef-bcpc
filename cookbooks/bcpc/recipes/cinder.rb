@@ -87,7 +87,7 @@ bcpc_patch "cinder-az-fallback-2015.1.2" do
   notifies :restart, 'service[cinder-api]', :immediately
   notifies :restart, 'service[cinder-volume]', :immediately
   notifies :restart, 'service[cinder-scheduler]', :immediately
-  not_if "dpkg -s python-cinder | egrep -q '^Version: 1:2015.1.(0|1)'"
+  only_if "dpkg --compare-versions $(dpkg -s python-cinder | egrep '^Version:' | awk '{ print $NF }') ge 1:2015.1.2 && dpkg --compare-versions $(dpkg -s python-cinder | egrep '^Version:' | awk '{ print $NF }') lt 2:7.0"
 end
 
 # Deal with quota update commands (applies to cinderclient < 1.3.1)
@@ -100,6 +100,7 @@ bcpc_patch "fix-quota-class-update" do
     notifies :restart, "service[cinder-api]", :immediately
     notifies :restart, "service[cinder-volume]", :immediately
     notifies :restart, "service[cinder-scheduler]", :immediately
+    only_if "dpkg --compare-versions $(dpkg -s python-cinderclient | egrep '^Version:' | awk '{ print $NF }') lt 1:1.3.1"
 end
 
 template "/etc/cinder/cinder.conf" do
