@@ -136,7 +136,6 @@ ruby_block "cinder-database-creation" do
     not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['cinder']}\"'|grep \"#{node['bcpc']['dbname']['cinder']}\" >/dev/null" }
 end
 
-
 bash "cinder-database-sync" do
     action :nothing
     user "root"
@@ -193,6 +192,18 @@ node['bcpc']['ceph']['enabled_pools'].each do |type|
         EOH
         not_if ". /root/adminrc; cinder type-list | grep #{type.upcase}"
     end
+end
+
+node['bcpc']['cinder']['quota'].each do |k, v|
+  bash "cinder-set-default-#{k}-quota" do
+    user "root"
+    code <<-EOH
+      . /root/adminrc
+      cinder quota-class-update --#{k} #{v} default
+    EOH
+  end
+  # figure this out later
+  #not_if ". /root/adminrc; cinder quota-class-show
 end
 
 service "tgt" do

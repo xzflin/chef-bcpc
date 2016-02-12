@@ -352,6 +352,7 @@ default['bcpc']['nova']['quota'] = {
 ###########################################
 # Verbose logging (level INFO)
 default['bcpc']['cinder']['verbose'] = false
+default['bcpc']['cinder']['debug'] = false
 default['bcpc']['cinder']['workers'] = 5
 default['bcpc']['cinder']['allow_az_fallback'] = true
 default['bcpc']['cinder']['rbd_flatten_volume_from_snapshot'] = true
@@ -360,8 +361,7 @@ default['bcpc']['cinder']['rbd_flatten_volume_from_snapshot'] = true
 default['bcpc']['cinder']['rbd_max_clone_depth'] = 5
 default['bcpc']['cinder']['quota'] = {
   "volumes" => -1,
-  "quota_snapshots" => 10,
-  "consistencygroups" => 10,
+  "snapshots" => 10,
   "gigabytes" => 1000
 }
 

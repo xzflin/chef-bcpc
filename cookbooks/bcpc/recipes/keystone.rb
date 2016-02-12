@@ -367,23 +367,45 @@ ruby_block "keystone-create-compute-endpoint" do
         openstack endpoint list -f json | jq '.[] | .[\"Service Type\"]==\"compute\"' | grep '^true$';" }
 end
 
-ruby_block "keystone-create-volume-endpoint" do
-  block do
-  %x[
-        export OS_TOKEN="#{get_config('keystone-admin-token')}";
-        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/";
-        openstack endpoint create \
-            --region '#{node['bcpc']['region_name']}' \
-            --publicurl '#{node['bcpc']['protocol']['cinder']}://openstack.#{node['bcpc']['cluster_domain']}:8776/v1/$(tenant_id)s' \
-            --adminurl '#{node['bcpc']['protocol']['cinder']}://openstack.#{node['bcpc']['cluster_domain']}:8776/v1/$(tenant_id)s' \
-            --internalurl '#{node['bcpc']['protocol']['cinder']}://openstack.#{node['bcpc']['cluster_domain']}:8776/v1/$(tenant_id)s' \
-            volume;
-  ]
+# Cinder v1 is gone in Liberty, set up both endpoints and point them at the v2 API
+if is_kilo?
+  ruby_block "keystone-create-volume-endpoint" do
+    block do
+    %x[
+          export OS_TOKEN="#{get_config('keystone-admin-token')}";
+          export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/";
+          openstack endpoint create \
+              --region '#{node['bcpc']['region_name']}' \
+              --publicurl '#{node['bcpc']['protocol']['cinder']}://openstack.#{node['bcpc']['cluster_domain']}:8776/v1/$(tenant_id)s' \
+              --adminurl '#{node['bcpc']['protocol']['cinder']}://openstack.#{node['bcpc']['cluster_domain']}:8776/v1/$(tenant_id)s' \
+              --internalurl '#{node['bcpc']['protocol']['cinder']}://openstack.#{node['bcpc']['cluster_domain']}:8776/v1/$(tenant_id)s' \
+              volume;
+    ]
+    end
+    not_if { system "
+          export OS_TOKEN=\"#{get_config('keystone-admin-token')}\";
+          export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/\";
+          openstack endpoint list -f json | jq '.[] | .[\"Service Type\"]==\"volume\"' | grep '^true$';" }
   end
-  not_if { system "
-        export OS_TOKEN=\"#{get_config('keystone-admin-token')}\";
-        export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/\";
-        openstack endpoint list -f json | jq '.[] | .[\"Service Type\"]==\"volume\"' | grep '^true$';" }
+else
+  ruby_block "keystone-create-volume-endpoint" do
+    block do
+    %x[
+          export OS_TOKEN="#{get_config('keystone-admin-token')}";
+          export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/";
+          openstack endpoint create \
+              --region '#{node['bcpc']['region_name']}' \
+              --publicurl '#{node['bcpc']['protocol']['cinder']}://openstack.#{node['bcpc']['cluster_domain']}:8776/v2/$(tenant_id)s' \
+              --adminurl '#{node['bcpc']['protocol']['cinder']}://openstack.#{node['bcpc']['cluster_domain']}:8776/v2/$(tenant_id)s' \
+              --internalurl '#{node['bcpc']['protocol']['cinder']}://openstack.#{node['bcpc']['cluster_domain']}:8776/v2/$(tenant_id)s' \
+              volume;
+    ]
+    end
+    not_if { system "
+          export OS_TOKEN=\"#{get_config('keystone-admin-token')}\";
+          export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:35357/v2.0/\";
+          openstack endpoint list -f json | jq '.[] | .[\"Service Type\"]==\"volume\"' | grep '^true$';" }
+  end
 end
 
 ruby_block "keystone-create-volumeV2-endpoint" do
