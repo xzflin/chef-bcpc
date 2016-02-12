@@ -30,6 +30,10 @@
   owner @{PROC}/*/auxv r,
   @{PROC}/sys/vm/overcommit_memory r,
 
+  /sys/devices/system/node/ r,
+  /sys/devices/system/node/node[0-9]*/meminfo r,
+  /sys/devices/system/cpu/ r,
+
   # For hostdev access. The actual devices will be added dynamically
   /sys/bus/usb/devices/ r,
   /sys/devices/**/usb[0-9]*/** r,
@@ -140,11 +144,16 @@
 
   # for rbd
   /etc/ceph/ceph.conf r,
-  capability mknod,
-  # for rbd
-  /var/log/qemu/* rw,
-  /{,var/}run/ceph/guests/** rw,
+############ THE FOUR LINES BELOW WERE IN THE OLD LIBVIRT APPARMOR CONFIG BUT NOT IN THE NEW ONE
+  #capability mknod,
+  ## for rbd
+  # /var/log/qemu/* rw,
+  # /{,var/}run/ceph/guests/** rw,
+######## END OLD LINES
+  /usr/lib/x86_64-linux-gnu/qemu/block-rbd.so rm,
 
+  # for curl
+  /usr/lib/x86_64-linux-gnu/qemu/block-curl.so rm,
 
   # for access to hugepages
   owner "/run/hugepages/kvm/libvirt/qemu/**" rw,
@@ -171,6 +180,10 @@
 
   # silence refusals to open lttng files (see lp#1432644)
   deny /dev/shm/lttng-ust-wait-* r,
+
+  # allow serial console backed by pts chardev (LP: #1342083)
+  /usr/lib/pt_chown ix,
+  owner @{PROC}/0-9*/fd/ r,
 
   /usr/{lib,libexec}/qemu-bridge-helper Cx -> qemu_bridge_helper,
   # child profile for bridge helper process
