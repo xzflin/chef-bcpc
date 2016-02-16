@@ -96,14 +96,16 @@ class TestNovaCompute(object):
         #
         if 'host' in self.config:
             availability_zone = self.config["cluster"] + ':' + self.config["host"]
+            server = self.client.servers.create(self.instance_name,
+                                                images[0],
+                                                flavors[0],
+                                                availability_zone=availability_zone,
+                                               )
         else:
-            availability_zone = self.config["cluster"]
-
-        server = self.client.servers.create(self.instance_name,
-                                        images[0],
-                                        flavors[0],
-                                        availability_zone=availability_zone,
-                                        )
+            server = self.client.servers.create(self.instance_name,
+                                                images[0],
+                                                flavors[0]
+                                               )
 
         if self._wait_for_statechange(server, "ACTIVE"):
             self._associate_floating_ip(server)
