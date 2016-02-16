@@ -117,6 +117,15 @@ if node['bcpc']['enabled']['metrics'] then
         end
     end
 
+    template "/etc/diamond/collectors/ConnTrackCollector.conf" do
+        source "diamond-collector.conf.erb"
+        owner "diamond"
+        group "root"
+        mode 00600
+        notifies :restart, "service[diamond]", :delayed
+        only_if "lsmod | grep -q conntrack"
+    end
+
     directory '/usr/share/diamond/collectors/Cloud/' do
         owner 'root'
         group 'root'
