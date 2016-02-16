@@ -36,6 +36,13 @@ execute "reload-sysctl" do
     command "sysctl -p /etc/sysctl.d/70-bcpc.conf"
 end
 
+ruby_block "set-nf_conntrack-hashsize" do
+    block do
+        %x[ echo $((#{node['bcpc']['system']['parameters']['net.nf_conntrack_max']}/8)) > /sys/module/nf_conntrack/parameters/hashsize ]
+    end
+    not_if { system "grep -q ^$((#{node['bcpc']['system']['parameters']['net.nf_conntrack_max']}/8))$ /sys/module/nf_conntrack/parameters/hashsize" }
+end
+
 bash "set-deadline-io-scheduler" do
     user "root"
     code <<-EOH

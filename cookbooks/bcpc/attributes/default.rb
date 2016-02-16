@@ -400,6 +400,8 @@ default['bcpc']['mysql-head']['max_connections'] = 0
 default['bcpc']['system']['additional_reserved_ports'] = []
 # Any other sysctl parameters (register under parameters)
 default['bcpc']['system']['parameters']['kernel.pid_max'] = 4194303
+# Connection tracking table max size
+default['bcpc']['system']['parameters']['net.nf_conntrack_max'] = 262144
 
 ###########################################
 #
