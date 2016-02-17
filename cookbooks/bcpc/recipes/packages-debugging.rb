@@ -30,6 +30,7 @@ package "tshark"
 package "nmap"
 package "iperf"
 package "curl"
+package "conntrack"
 
 # I/O troubleshooting tools
 package "fio"
