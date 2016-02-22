@@ -7,7 +7,7 @@ default['bcpc']['country'] = "US"
 default['bcpc']['state'] = "NY"
 default['bcpc']['location'] = "New York"
 default['bcpc']['organization'] = "Bloomberg"
-default['bcpc']['openstack_release'] = "kilo"
+default['bcpc']['openstack_release'] = "liberty"
 # Can be "updates" or "proposed"
 default['bcpc']['openstack_branch'] = "proposed"
 # Should be kvm (or qemu if testing in VMs that don't support VT-x)
@@ -69,6 +69,8 @@ default['bcpc']['enabled']['secure_fixed_networks'] = true
 default['bcpc']['enabled']['swap'] = true
 # Toggle to enable/disable Heat (OpenStack Cloud Formation)
 default['bcpc']['enabled']['heat'] = false
+# Toggle to switch between Neutron and Nova networking
+default['bcpc']['enabled']['neutron'] = true
 
 ###########################################
 #
@@ -112,11 +114,12 @@ default['bcpc']['management']['interface-parent'] = nil
 # list of TCP ports that should be open on the management interface
 # (generally stuff served via HAProxy)
 default['bcpc']['management']['firewall_tcp_ports'] = [
-  80,443,8088,7480,5000,35357,9292,8776,8773,8774,8004,8000,8777,6080
+  80,443,8088,7480,5000,35357,9292,8776,8773,8774,8004,8000,8777,6080,9696
 ]
 
 default['bcpc']['metadata']['ip'] = "169.254.169.254"
 
+default['bcpc']['storage']['vip'] = "100.100.0.5"
 default['bcpc']['storage']['netmask'] = "255.255.255.0"
 default['bcpc']['storage']['cidr'] = "100.100.0.0/24"
 default['bcpc']['storage']['gateway'] = "100.100.0.1"
@@ -165,6 +168,8 @@ default['bcpc']['repos']['kibana'] = "http://packages.elasticsearch.org/kibana/4
 default['bcpc']['repos']['erlang'] = "http://packages.erlang-solutions.com/ubuntu"
 default['bcpc']['repos']['ceph'] = "http://download.ceph.com/debian-hammer"
 default['bcpc']['repos']['zabbix'] = "http://repo.zabbix.com/zabbix/2.4/ubuntu"
+default['bcpc']['repos']['calico'] = "http://ppa.launchpad.net/project-calico/stable/ubuntu"
+default['bcpc']['repos']['bird'] = "http://ppa.launchpad.net/cz.nic-labs/bird/ubuntu"
 
 ###########################################
 #
@@ -195,6 +200,7 @@ default['bcpc']['dbname']['cinder'] = "cinder"
 default['bcpc']['dbname']['glance'] = "glance"
 default['bcpc']['dbname']['horizon'] = "horizon"
 default['bcpc']['dbname']['keystone'] = "keystone"
+default['bcpc']['dbname']['neutron'] = "neutron"
 default['bcpc']['dbname']['heat'] = "heat"
 default['bcpc']['dbname']['ceilometer'] = "ceilometer"
 default['bcpc']['dbname']['graphite'] = "graphite"
@@ -220,6 +226,7 @@ default['bcpc']['protocol']['keystone'] = "https"
 default['bcpc']['protocol']['glance'] = "https"
 default['bcpc']['protocol']['nova'] = "https"
 default['bcpc']['protocol']['cinder'] = "https"
+default['bcpc']['protocol']['neutron'] = "https"
 default['bcpc']['protocol']['heat'] = "https"
 
 

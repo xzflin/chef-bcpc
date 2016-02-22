@@ -1,0 +1,19 @@
+# vim:set ft=upstart ts=2 et:
+description "etcd"
+author "etcd maintainers"
+
+start on stopped rc RUNLEVEL=[2345]
+stop on runlevel [!2345]
+
+respawn
+
+setuid etcd
+
+env ETCD_DATA_DIR=/var/lib/etcd
+export ETCD_DATA_DIR
+
+<% if node["roles"].include? "BCPC-Headnode" -%>
+exec /usr/bin/etcd --name="<%=node['fqdn']%>" --advertise-client-urls="http://<%=node['bcpc']['management']['ip']%>:2379,http://<%=node['bcpc']['management']['ip']%>:4001" --listen-client-urls="http://<%=node['bcpc']['management']['ip']%>:2379,http://<%=node['bcpc']['management']['ip']%>:4001,http://127.0.0.1:4001,http://127.0.0.1:2379" --listen-peer-urls "http://<%=node['bcpc']['management']['ip']%>:2380" --initial-advertise-peer-urls "http://<%=node['bcpc']['management']['ip']%>:2380" --initial-cluster-token $(uuidgen) --initial-cluster "<%=node['fqdn']%>=http://<%=node['bcpc']['management']['ip']%>:2380" --initial-cluster-state "new"
+<% else %>
+exec /usr/bin/etcd --proxy on --initial-cluster "bcpc-vm1.hypervisor-bcpc.example.com=http://10.0.100.11:2380"
+<% end %>

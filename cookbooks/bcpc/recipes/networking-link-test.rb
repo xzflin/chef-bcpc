@@ -36,7 +36,7 @@ if node['bcpc']['enabled']['network_tests'] then
                 ) then
                     Chef::Log.info("Found a peer : #{host.hostname}")
                     othernodes.push host
-                    float_addr.push host['bcpc']['floating']['ip']
+                    float_addr.push host['bcpc']['floating']['ip'] unless node['bcpc']['enabled']['neutron']
                     storage_addr.push host['bcpc']['storage']['ip']
                 end
             end
@@ -45,7 +45,7 @@ if node['bcpc']['enabled']['network_tests'] then
             if othernodes.empty? then
                 Chef::Log.info("No peers, using self : #{node['hostname']}")
                 othernodes.push node
-                float_addr.push node['bcpc']['floating']['ip']
+                float_addr.push node['bcpc']['floating']['ip'] unless node['bcpc']['enabled']['neutron']
                 storage_addr.push node['bcpc']['storage']['ip']
             end
         end
@@ -77,9 +77,11 @@ if node['bcpc']['enabled']['network_tests'] then
                 FileUtils.touch("/etc/storage-test-success")
             end
 
-            if not File.file?("/etc/floating-test-success")
-                ping_node_list("floating peers", float_addr)
-                FileUtils.touch("/etc/floating-test-success")
+            unless node['bcpc']['enabled']['neutron']
+              if not File.file?("/etc/floating-test-success")
+                  ping_node_list("floating peers", float_addr)
+                  FileUtils.touch("/etc/floating-test-success")
+              end
             end
         end
     end
