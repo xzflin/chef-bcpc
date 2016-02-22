@@ -73,6 +73,8 @@ default['bcpc']['enabled']['secure_fixed_networks'] = true
 default['bcpc']['enabled']['swap'] = true
 # Toggle to enable apport for debugging process crashes
 default['bcpc']['enabled']['apport'] = true
+# Toggle to enable kdump for debugging kernel panics (recommended)
+default['bcpc']['enabled']['kdump'] = true
 # Toggle to enable/disable Heat (OpenStack Cloud Formation)
 default['bcpc']['enabled']['heat'] = false
 
@@ -672,6 +674,15 @@ default['bcpc']['quota'] = {
 #
 ###########################################
 default['bcpc']['getty']['ttys'] = %w( ttyS0 ttyS1 )
+
+###########################################
+#
+#  crash dump configuration
+#
+###########################################
+default['bcpc']['crashdump']['crashkernel']['memory'] = "256M"
+default['bcpc']['crashdump']['crashkernel']['cmdline_append'] = "irqpoll maxcpus=1"
+
 ###########################################
 #
 #  VNC settings
