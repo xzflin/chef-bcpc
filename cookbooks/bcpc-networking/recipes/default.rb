@@ -17,7 +17,6 @@
 # limitations under the License.
 #
 include_recipe 'bcpc-networking::set-node-number-and-rack'
-include_recipe 'bcpc-networking::configure-tcp'
 include_recipe 'bcpc-networking::configure-interfaces'
 include_recipe 'bcpc-networking::link-test'
 include_recipe 'bcpc-networking::gateway-test'

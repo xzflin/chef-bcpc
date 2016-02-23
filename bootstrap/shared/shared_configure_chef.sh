@@ -100,7 +100,7 @@ done
 ENVIRONMENT_SET="$ENVIRONMENT_SET :"
 do_on_node vm-bootstrap $ENVIRONMENT_SET
 
-do_on_node bootstrap "$KNIFE node run_list set bcpc-vm-bootstrap.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Hardware-Virtual],recipe[role-bcpc-bootstrap]' \
+do_on_node vm-bootstrap "$KNIFE node run_list set bcpc-vm-bootstrap.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Hardware-Virtual],recipe[role-bcpc-bootstrap]' \
   && $KNIFE node run_list set bcpc-vm1.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Hardware-Virtual],recipe[role-bcpc-node-head]' \
   && $KNIFE node run_list set bcpc-vm2.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Hardware-Virtual],recipe[role-bcpc-node-work-osd]' \
   && $KNIFE node run_list set bcpc-vm3.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Hardware-Virtual],recipe[role-bcpc-node-work-ephemeral]'"
