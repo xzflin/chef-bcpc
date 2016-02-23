@@ -78,9 +78,9 @@ end
 #end
 
 # service neutron-dhcp-agent stop
-bash "stop-neutron-dhcp-agent" do
-   code "service neutron-dhcp-agent stop"
-end
+#bash "stop-neutron-dhcp-agent" do
+#   code "service neutron-dhcp-agent stop"
+#end
 
 package "calico-compute" do
     action :upgrade
@@ -97,6 +97,10 @@ end
 bash "start-calico-felix" do
     code "service calico-felix restart"
 end
+
+# apt-get install python-pip
+# pip install networking-calico
+
 #base "upgrade-dnsmasq" do
 #    code "apt-get install -y --only-upgrade dnsmasq-base"
 #end
@@ -104,3 +108,5 @@ end
 #base "upgrade-dnsmasq-utils" do
 #    code "apt-get install -y --only-upgrade dnsmasq-utils"
 #end
+
+# sudo update-rc.d -f apparmor remove

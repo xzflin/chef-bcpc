@@ -58,19 +58,20 @@ template '/etc/neutron/fwaas_driver.ini' do
   mode 00600
 end
 
-%w{neutron-dhcp-agent neutron-metadata-agent neutron-plugin-ml2 neutron-plugin-linuxbridge-agent neutron-l3-agent}.each do |pkg|
+#%w{neutron-dhcp-agent neutron-metadata-agent neutron-plugin-ml2 neutron-plugin-linuxbridge-agent neutron-l3-agent}.each do |pkg|
+%w{neutron-dhcp-agent neutron-metadata-agent neutron-plugin-ml2}.each do |pkg|
   package pkg do
     action :upgrade
     options "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
   end
 end
 
-service 'neutron-plugin-linuxbridge-agent' do
-  action [:enable, :start]
-  subscribes :restart, "template[/etc/neutron/neutron.conf]", :delayed
-  subscribes :restart, "template[/etc/neutron/plugins/ml2/ml2_conf.ini]", :delayed
-  subscribes :restart, "template[/etc/neutron/policy.json]", :delayed
-end
+#service 'neutron-plugin-linuxbridge-agent' do
+#  action [:enable, :start]
+#  subscribes :restart, "template[/etc/neutron/neutron.conf]", :delayed
+#  subscribes :restart, "template[/etc/neutron/plugins/ml2/ml2_conf.ini]", :delayed
+#  subscribes :restart, "template[/etc/neutron/policy.json]", :delayed
+#end
 
 service 'neutron-dhcp-agent' do
   action [:enable, :start]
@@ -79,13 +80,13 @@ service 'neutron-dhcp-agent' do
   subscribes :restart, "template[/etc/neutron/policy.json]", :delayed
 end
 
-service 'neutron-l3-agent' do
-  action [:enable, :start]
-  subscribes :restart, "template[/etc/neutron/neutron.conf]", :delayed
-  subscribes :restart, "template[/etc/neutron/l3_agent.ini]", :delayed
-  subscribes :restart, "template[/etc/neutron/fwaas_driver.ini]", :delayed
-  subscribes :restart, "template[/etc/neutron/policy.json]", :delayed
-end
+#service 'neutron-l3-agent' do
+#  action [:enable, :start]
+#  subscribes :restart, "template[/etc/neutron/neutron.conf]", :delayed
+#  subscribes :restart, "template[/etc/neutron/l3_agent.ini]", :delayed
+#  subscribes :restart, "template[/etc/neutron/fwaas_driver.ini]", :delayed
+#  subscribes :restart, "template[/etc/neutron/policy.json]", :delayed
+#end
 
 service 'neutron-metadata-agent' do
   action [:enable, :start]

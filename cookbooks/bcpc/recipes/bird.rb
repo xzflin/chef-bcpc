@@ -35,7 +35,7 @@ template "/etc/bird/bird.conf" do
   variables(lazy {
     {
       :servers => get_all_nodes,
-      :bootstrap_node => get_bootstrap_node
+      :headnodes => get_head_nodes
     }
   })
   # use get_head_nodes
