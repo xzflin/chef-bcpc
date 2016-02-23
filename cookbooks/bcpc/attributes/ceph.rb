@@ -8,6 +8,7 @@ default['bcpc']['ceph']['extras']['dist'] = "precise"
 # To use apache instead of civetweb, make the following value anything but 'civetweb'
 default['bcpc']['ceph']['frontend'] = "civetweb"
 default['bcpc']['ceph']['chooseleaf'] = "rack"
+default['bcpc']['ceph']['pg_auto_adjust'] = false
 default['bcpc']['ceph']['pgp_auto_adjust'] = false
 # Need to review...
 default['bcpc']['ceph']['pgs_per_node'] = 1024

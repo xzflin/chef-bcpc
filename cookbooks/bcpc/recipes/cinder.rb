@@ -152,34 +152,37 @@ bash "wait-for-cinder-to-become-operational" do
 end
 
 node['bcpc']['ceph']['enabled_pools'].each do |type|
-    bash "create-cinder-rados-pool-#{type}" do
-        user "root"
-        optimal = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['volumes']['replicas']*node['bcpc']['ceph']['volumes']['portion']/100/node['bcpc']['ceph']['enabled_pools'].length)
-        code <<-EOH
-            ceph osd pool create #{node['bcpc']['ceph']['volumes']['name']}-#{type} #{optimal}
-            ceph osd pool set #{node['bcpc']['ceph']['volumes']['name']}-#{type} crush_ruleset #{(type=="ssd") ? node['bcpc']['ceph']['ssd']['ruleset'] : node['bcpc']['ceph']['hdd']['ruleset']}
-        EOH
-        not_if "rados lspools | grep #{node['bcpc']['ceph']['volumes']['name']}-#{type}"
-        notifies :run, "bash[wait-for-pgs-creating]", :immediately
-    end
-
-    bash "set-cinder-rados-pool-replicas-#{type}" do
-        user "root"
-        replicas = [search_nodes("recipe", "ceph-osd").length, node['bcpc']['ceph']['volumes']['replicas']].min
-        if replicas < 1; then
-            replicas = 1
-        end
-        code "ceph osd pool set #{node['bcpc']['ceph']['volumes']['name']}-#{type} size #{replicas}"
-        not_if "ceph osd pool get #{node['bcpc']['ceph']['volumes']['name']}-#{type} size | grep #{replicas}"
-    end
-
-    (node['bcpc']['ceph']['pgp_auto_adjust'] ? %w{pg_num pgp_num} : %w{pg_num}).each do |pg|
-        bash "set-cinder-rados-pool-#{pg}-#{type}" do
+    [node['bcpc']['ceph']['volumes'], node['bcpc']['ceph']['vms']].each do |pool|
+        bash "create-cinder-rados-#{pool}-pool-#{type}" do
             user "root"
-            optimal = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['volumes']['replicas']*node['bcpc']['ceph']['volumes']['portion']/100/node['bcpc']['ceph']['enabled_pools'].length)
-            code "ceph osd pool set #{node['bcpc']['ceph']['volumes']['name']}-#{type} #{pg} #{optimal}"
-            only_if { %x[ceph osd pool get #{node['bcpc']['ceph']['volumes']['name']}-#{type} #{pg} | awk '{print $2}'].to_i < optimal }
+            optimal = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph'][pool]['replicas']*node['bcpc']['ceph'][pool]['portion']/100/node['bcpc']['ceph']['enabled_pools'].length)
+            code <<-EOH
+                ceph osd pool create #{node['bcpc']['ceph'][pool]['name']}-#{type} #{optimal}
+                ceph osd pool set #{node['bcpc']['ceph'][pool]['name']}-#{type} crush_ruleset #{(type=="ssd") ? node['bcpc']['ceph']['ssd']['ruleset'] : node['bcpc']['ceph']['hdd']['ruleset']}
+            EOH
+            not_if "rados lspools | grep #{node['bcpc']['ceph'][pool]['name']}-#{type}"
             notifies :run, "bash[wait-for-pgs-creating]", :immediately
+        end
+
+        bash "set-cinder-rados-#{pool}-pool-replicas-#{type}" do
+            user "root"
+            replicas = [search_nodes("recipe", "ceph-osd").length, node['bcpc']['ceph'][pool]['replicas']].min
+            replicas = 1 if replicas < 1
+            code "ceph osd pool set #{node['bcpc']['ceph'][pool]['name']}-#{type} size #{replicas}"
+            not_if "ceph osd pool get #{node['bcpc']['ceph'][pool]['name']}-#{type} size | grep #{replicas}"
+        end
+
+        auto_adjust_attributes = []
+        auto_adjust_attributes += ['pg_num'] if node['bcpc']['ceph']['pg_auto_adjust']
+        auto_adjust_attributes += ['pgp_num'] if node['bcpc']['ceph']['pgp_auto_adjust']
+        auto_adjust_attributes.each do |pg|
+            bash "set-cinder-rados-#{pool}-pool-#{pg}-#{type}" do
+                user "root"
+                optimal = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph'][pool]['replicas']*node['bcpc']['ceph'][pool]['portion']/100/node['bcpc']['ceph']['enabled_pools'].length)
+                code "ceph osd pool set #{node['bcpc']['ceph'][pool]['name']}-#{type} #{pg} #{optimal}"
+                only_if { %x[ceph osd pool get #{node['bcpc']['ceph'][pool]['name']}-#{type} #{pg} | awk '{print $2}'].to_i < optimal }
+                notifies :run, "bash[wait-for-pgs-creating]", :immediately
+            end
         end
     end
 

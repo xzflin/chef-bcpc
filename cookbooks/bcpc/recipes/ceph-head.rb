@@ -171,24 +171,6 @@ bash "ceph-add-crush-rules" do
     not_if "grep ssd /tmp/crush-map.txt"
 end
 
-# Beginning in Hammer these two are not automatically created
-vms_optimal_pg = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['vms']['replicas']*node['bcpc']['ceph']['vms']['portion']/100)
-
-# Create the VMs pool and any others that may need creating
-vms_rule = (node['bcpc']['ceph']['vms']['type'] == "ssd") ? node['bcpc']['ceph']['ssd']['ruleset'] : node['bcpc']['ceph']['hdd']['ruleset']
-
-bash "create-rados-pool-#{node['bcpc']['ceph']['vms']['name']}" do
-    user "root"
-    code <<-EOH
-        ceph osd pool create #{node['bcpc']['ceph']['vms']['name']} #{vms_optimal_pg}
-        ceph osd pool set #{node['bcpc']['ceph']['vms']['name']} crush_ruleset #{vms_rule}
-        sleep 15
-    EOH
-    not_if "rados lspools | grep ^#{node['bcpc']['ceph']['vms']['name']}$"
-end
-#     notifies :run, "bash[wait-for-pgs-creating]", :immediately
-
-
 # Commented out 'data' and 'metadata' since the number of pools can impact pgs
 # data metadata - removed from loop below - After firefly data and metadata are no longer default pools
 if get_head_nodes.length == 1; then

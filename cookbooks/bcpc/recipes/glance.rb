@@ -29,7 +29,7 @@ ruby_block "initialize-glance-config" do
 end
 
 %w{glance glance-api glance-registry}.each do |pkg|
-  package pkg do 
+  package pkg do
     action :upgrade
     options "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
   end
@@ -49,7 +49,7 @@ cookbook_file "/tmp/glance-v2-null-description.patch" do
   source "glance-v2-null-description.patch"
   owner "root"
   mode 0644
-end 
+end
 
 bash "patch-backport-for-glance-v2-null-description" do
   user "root"
@@ -66,7 +66,7 @@ bash "patch-backport-for-glance-v2-null-description" do
   only_if "shasum /usr/lib/python2.7/dist-packages/glance/schema.py | grep -q '^e397f917f21e2067721336c5913e0151ed99bb0c'"
   notifies :restart, "service[glance-api]", :immediately
   notifies :restart, "service[glance-registry]", :immediately
-end 
+end
 
 template "/etc/glance/glance-api.conf" do
     source "glance-api.conf.erb"
@@ -138,7 +138,7 @@ end
 # Note, glance connects to ceph using client.glance, but we have already generated
 # the key for that in ceph-head.rb, so by now we should have it in /etc/ceph/ceph.client.glance.key
 
-bash "create-glance-rados-pool" do
+bash "create-glance-rados-images-pool" do
     user "root"
     optimal = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['images']['replicas']*node['bcpc']['ceph']['images']['portion']/100)
     code <<-EOH
@@ -150,18 +150,19 @@ bash "create-glance-rados-pool" do
 end
 
 
-bash "set-glance-rados-pool-replicas" do
+bash "set-glance-rados-images-pool-replicas" do
     user "root"
     replicas = [search_nodes("recipe", "ceph-osd").length, node['bcpc']['ceph']['images']['replicas']].min
-    if replicas < 1; then
-        replicas = 1
-    end
+    replicas = 1 if replicas < 1
     code "ceph osd pool set #{node['bcpc']['ceph']['images']['name']} size #{replicas}"
     not_if "ceph osd pool get #{node['bcpc']['ceph']['images']['name']} size | grep #{replicas}"
 end
 
-(node['bcpc']['ceph']['pgp_auto_adjust'] ? %w{pg_num pgp_num} : %w{pg_num}).each do |pg|
-    bash "set-glance-rados-pool-#{pg}" do
+auto_adjust_attributes = []
+auto_adjust_attributes += ['pg_num'] if node['bcpc']['ceph']['pg_auto_adjust']
+auto_adjust_attributes += ['pgp_num'] if node['bcpc']['ceph']['pgp_auto_adjust']
+auto_adjust_attributes.each do |pg|
+    bash "set-glance-rados-images-pool-#{pg}" do
         user "root"
         optimal = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['images']['replicas']*node['bcpc']['ceph']['images']['portion']/100)
         code "ceph osd pool set #{node['bcpc']['ceph']['images']['name']} #{pg} #{optimal}"
