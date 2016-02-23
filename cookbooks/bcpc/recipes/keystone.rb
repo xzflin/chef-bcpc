@@ -246,19 +246,19 @@ bash "keystone-create-admin-user-role" do
 end
 
 # create services and endpoints
-node['bcpc']['keystone']['api_matrix'].each do |svc, svcprops|
+node['bcpc']['catalog'].each do |svc, svcprops|
   ruby_block "keystone-create-#{svc}-service" do
     block do
       %x[
         export OS_TOKEN="#{get_config('keystone-admin-token')}";
-        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['keystone']['api_matrix']['identity']['ports']['admin']}/#{node['bcpc']['keystone']['api_matrix']['identity']['uris']['admin']}/";
+        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['admin']}/#{node['bcpc']['catalog']['identity']['uris']['admin']}/";
         openstack service create --name '#{svcprops['name']}' --description '#{svcprops['description']}' #{svc}
       ]
     end
     only_if {
       services_raw = %x[
         export OS_TOKEN=\"#{get_config('keystone-admin-token')}\";
-        export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['keystone']['api_matrix']['identity']['ports']['admin']}/#{node['bcpc']['keystone']['api_matrix']['identity']['uris']['admin']}/\";
+        export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['admin']}/#{node['bcpc']['catalog']['identity']['uris']['admin']}/\";
         openstack service list -f json
       ]
       services = JSON.parse(services_raw)
@@ -270,7 +270,7 @@ node['bcpc']['keystone']['api_matrix'].each do |svc, svcprops|
     block do
       %x[
         export OS_TOKEN="#{get_config('keystone-admin-token')}";
-        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['keystone']['api_matrix']['identity']['ports']['admin']}/#{node['bcpc']['keystone']['api_matrix']['identity']['uris']['admin']}/";
+        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['admin']}/#{node['bcpc']['catalog']['identity']['uris']['admin']}/";
         openstack endpoint create \
             --region '#{node['bcpc']['region_name']}' \
             --publicurl '#{node['bcpc']['protocol'][svcprops['project']]}://openstack.#{node['bcpc']['cluster_domain']}:#{svcprops['ports']['public']}/#{svcprops['uris']['public']}' \
@@ -282,7 +282,7 @@ node['bcpc']['keystone']['api_matrix'].each do |svc, svcprops|
     only_if {
       endpoints_raw = %x[
         export OS_TOKEN=\"#{get_config('keystone-admin-token')}\";
-        export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['keystone']['api_matrix']['identity']['ports']['admin']}/#{node['bcpc']['keystone']['api_matrix']['identity']['uris']['admin']}/\";
+        export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['admin']}/#{node['bcpc']['catalog']['identity']['uris']['admin']}/\";
         openstack endpoint list -f json
       ]
       endpoints = JSON.parse(endpoints_raw)
