@@ -4,7 +4,7 @@ import requests
 import json
 
 headers = {'content-type': 'application/json'}
-roles = ['BCPC-Headnode', 'BCPC-Worknode', 'BCPC-EphemeralWorknode', 'BCPC-Monitoring']
+roles = ['BCPC-Headnode', 'BCPC-Worknode', 'BCPC-EphemeralWorknode', 'BCPC-Monitoring', 'BCPC-Bootstrap']
 zabbix_url = 'http://<%= node['bcpc']['management']['ip'] %>:7777/api_jsonrpc.php'
 
 login_api = {

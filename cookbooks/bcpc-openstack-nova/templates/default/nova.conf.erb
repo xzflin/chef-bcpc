@@ -37,6 +37,13 @@ enabled_apis=metadata
 vendordata_driver = <%=node["bcpc"]["vendordata_driver"] %>
 <% end %>
 
+<% if node['bcpc']['nova']['notifications']['enabled'] %>
+# Nova notification settings
+notification_topics=<%= node['bcpc']['nova']['notifications']['notification_topics'] %>
+notification_driver=<%= node['bcpc']['nova']['notifications']['notification_driver'] %>
+notify_on_state_change=<%= node['bcpc']['nova']['notifications']['notify_on_state_change'] %>
+<% end %>
+
 # Nova Scheduler
 scheduler_driver=nova.scheduler.filter_scheduler.FilterScheduler
 scheduler_default_filters=<%=node['bcpc']['nova']['scheduler_default_filters'].join(',')%>
@@ -74,20 +81,25 @@ default_availability_zone=
 compute_driver=libvirt.LibvirtDriver
 use_cow_images=True
 #snapshot_image_format=qcow2
-#start_guests_on_host_boot=True
-#resume_guests_state_on_host_boot=True
+sync_power_state_interval=<%= node['bcpc']['nova']['sync_power_state_interval'] %>
+resume_guests_state_on_host_boot=<%= node['bcpc']['nova']['resume_guests_state_on_host_boot'] %>
 
 # Nova Volume settings
 volume_api_class=nova.volume.cinder.API
 
 # Nova VNC settings
-ssl_only=True
+ssl_only=false
 key=/etc/nova/ssl-bcpc.key
 cert=/etc/nova/ssl-bcpc.pem
 novnc_enabled=True
-novncproxy_base_url=https://<%=node['bcpc']['management']['ip']%>:6080/vnc_auto.html
-vncserver_proxyclient_address=127.0.0.1
+<% if node['bcpc']['vnc']['proxy_use_vip'] %>
+novncproxy_base_url=https://<%=node['bcpc']['management']['vip']%>:6080/vnc_auto.html
+<% else %>
+novncproxy_base_url=https://openstack.<%=node['bcpc']['cluster_domain']%>:6080/vnc_auto.html
+<% end %>
+vncserver_proxyclient_address=<%=node['bcpc']['management']['ip']%>
 novncproxy_host=<%=node['bcpc']['management']['ip']%>
+vncserver_listen=<%=node['bcpc']['management']['ip']%>
 
 # Glance settings
 image_service=nova.image.glance.GlanceImageService
@@ -132,9 +144,10 @@ lock_path=/var/lock/nova
 [oslo_messaging_rabbit]
 # Rabbit message queue settings
 #rabbit_host=<%=node['bcpc']['management']['vip']%>
-rabbit_hosts=<%=get_shuffled_servers(@servers).map{|x| x['bcpc']['management']['ip'] + ":5672"}.join(',')%>
+rabbit_hosts=<%=get_shuffled_servers(@servers, prefer_local=true).map{|x| x['bcpc']['management']['ip'] + ":5672"}.join(',')%>
 rabbit_password=<%=get_config('rabbitmq-password')%>
 rabbit_ha_queues=True
+heartbeat_timeout_threshold=<%=node['bcpc']['rabbitmq']['heartbeat']%>
 amqp_durable_queues=<%=node['bcpc']['rabbitmq']['durable_queues']%>
 
 [database]
@@ -171,7 +184,7 @@ api_insecure=True
 # Always boot nova VMs from RBD
 <% if node['bcpc']['nova']['ephemeral'] %>
 images_type=lvm
-images_volume_group=nova_disk
+images_volume_group=<%= node['bcpc']['nova']['ephemeral_vg_name'] %>
 <% else %>
 images_type=rbd
 images_rbd_pool=<%=node['bcpc']['ceph']['vms']['name']%>
@@ -185,7 +198,7 @@ inject_key=false
 inject_partition=-2
 # Set flags for libvirt live migration
 live_migration_flag="VIR_MIGRATE_UNDEFINE_SOURCE,VIR_MIGRATE_PEER2PEER,VIR_MIGRATE_LIVE,VIR_MIGRATE_PERSIST_DEST,VIR_MIGRATE_TUNNELLED"
-<% end %> 
+<% end %>
 virt_type=<%=node['bcpc']['virt_type']%>
 use_virtio_for_bridges=True
 hw_disk_discard = unmap
@@ -197,4 +210,3 @@ hw_disk_discard = unmap
 <%=k %>=<%=v %>
 <% end %>
 <% end %>
-

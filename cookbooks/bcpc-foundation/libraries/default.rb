@@ -163,8 +163,15 @@ end
 
 # shuffles a list of servers deterministically to avoid stacking all connections up on a single node
 # (e.g., RabbitMQ, where OpenStack will pile on to the first server in the list)
-def get_shuffled_servers(server_list)
-  server_list.shuffle(random: Random.new(IPAddr.new(node['bcpc']['management']['ip']).to_i))
+def get_shuffled_servers(server_list, prefer_local=false)
+  shuffled_servers = server_list.shuffle(random: Random.new(IPAddr.new(node['bcpc']['management']['ip']).to_i))
+  # prefer_local == reorder the array so that the local node appears first (remainder of array stays the same)
+  if prefer_local
+    # if converging on a node that is not in the given list, index will be nil, so don't modify list order
+    this_server_idx = shuffled_servers.index { |x| x['bcpc']['management']['ip'] == node['bcpc']['management']['ip'] }
+    shuffled_servers.insert(0, shuffled_servers.delete_at(this_server_idx)) unless this_server_idx.nil?
+  end
+  shuffled_servers
 end
 
 def get_cached_head_node_names

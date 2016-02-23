@@ -972,7 +972,7 @@ workers=<%= node['bcpc']['heat']['workers'] %>
 #rabbit_port=5672
 
 # RabbitMQ HA cluster host:port pairs (list value)
-rabbit_hosts=<%=get_shuffled_servers(@servers).map{|x| x['bcpc']['management']['ip'] + ":5672"}.join(',')%>
+rabbit_hosts=<%=get_shuffled_servers(@servers, prefer_local=true).map{|x| x['bcpc']['management']['ip'] + ":5672"}.join(',')%>
 
 # connect over SSL for RabbitMQ (boolean value)
 #rabbit_use_ssl=false
@@ -1004,6 +1004,8 @@ rabbit_password=<%=get_config('rabbitmq-password')%>
 # value)
 rabbit_ha_queues=True
 
+# Number of seconds after which the Rabbit broker is considered down if heartbeat's keep-alive fails (0 disables the heartbeat, >0 enables it.
+heartbeat_timeout_threshold=<%=node['bcpc']['rabbitmq']['heartbeat']%>
 
 [keystone_authtoken]
 # cafile = /etc/ssl/certs/ssl-bcpc.pem

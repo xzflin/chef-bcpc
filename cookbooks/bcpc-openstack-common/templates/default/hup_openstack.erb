@@ -10,21 +10,15 @@ echo
 echo "################################"
 echo "# HEAD NODE SERVICES"
 for i in apache2 \
-         glance-api \
-         glance-registry \
          cinder-api \
          cinder-scheduler \
          cinder-volume \
+         glance-api \
+         glance-registry \
          nova-cert \
          nova-conductor \
          nova-consoleauth \
-         nova-scheduler \
-         heat-api \
-         heat-api-cfn \
-         heat-engine \
-         ceilometer-api \
-         ceilometer-agent-central \
-         ceilometer-collector
+         nova-scheduler
 do
     service $i restart
 done
@@ -36,8 +30,7 @@ echo "# WORK NODE SERVICES"
 for i in nova-api \
          nova-compute \
          nova-network \
-         nova-novncproxy \
-         ceilometer-agent-compute
+         nova-novncproxy
 do
     service $i restart
 done

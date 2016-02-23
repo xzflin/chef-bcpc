@@ -51,9 +51,10 @@ quota_<%=key%> = <%= value %>
 [oslo_messaging_rabbit]
 # Rabbit message queue settings
 #rabbit_host=<%=node['bcpc']['management']['vip']%>
-rabbit_hosts=<%=get_shuffled_servers(@servers).map{|x| x['bcpc']['management']['ip'] + ":5672"}.join(',')%>
+rabbit_hosts=<%=get_shuffled_servers(@servers, prefer_local=true).map{|x| x['bcpc']['management']['ip'] + ":5672"}.join(',')%>
 rabbit_password=<%=get_config('rabbitmq-password')%>
 rabbit_ha_queues=True
+heartbeat_timeout_threshold=<%=node['bcpc']['rabbitmq']['heartbeat']%>
 amqp_durable_queues=<%=node['bcpc']['rabbitmq']['durable_queues']%>
 
 [oslo_concurrency]
@@ -88,8 +89,8 @@ volume_backend_name=<%= type.upcase %>
 rbd_user=cinder
 rbd_pool=<%="#{node['bcpc']['ceph']['volumes']['name']}-#{type}"%>
 rbd_secret_uuid=<%=get_config('libvirt-secret-uuid')%>
-rbd_flatten_volume_from_snapshot=False
-rbd_max_clone_depth=5
+rbd_flatten_volume_from_snapshot=<%= node['bcpc']['cinder']['rbd_flatten_volume_from_snapshot'] %>
+rbd_max_clone_depth=<%= node['bcpc']['cinder']['rbd_max_clone_depth'] %>
 rbd_store_chunk_size = 4
 rados_connect_timeout = -1
 glance_api_version = 2

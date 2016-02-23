@@ -25,6 +25,13 @@ export CLUSTER_VM_CPUS=2
 export CLUSTER_VM_DRIVE_SIZE=20480
 
 ##############################################
+# USED BY ANSIBLE BUILD PATH ONLY
+##############################################
+
+# Sets the VirtualBox VM machine folder (Property machinefolder).
+export ANSIBLE_VM_DIR=$HOME/.ansible-bcpc-vms
+
+##############################################
 # USED BY VAGRANT BUILD PATH ONLY
 ##############################################
 
@@ -66,7 +73,15 @@ export BOOTSTRAP_APT_MIRROR=
 # Valid range is 0-3 (default 0).
 export MONITORING_NODES=0
 
+# Sets the size of the swapfile allocated (in MiB) to created VMs
+export VM_SWAP_SIZE=8192
+
 # These directories are where the repository and file cache will be mounted via
 # shared folders inside each VM.
 export REPO_MOUNT_POINT=/chef-bcpc-host
 export FILECACHE_MOUNT_POINT=/chef-bcpc-files
+
+# Specify the desired chef versions
+# Leave empty for sensible defaults in shared_prereqs.sh
+export CHEF_CLIENT_DEB=
+export CHEF_SERVER_DEB=

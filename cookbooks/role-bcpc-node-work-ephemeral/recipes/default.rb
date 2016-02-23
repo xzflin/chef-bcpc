@@ -30,5 +30,6 @@ sleep 2
 include_recipe 'component-bcpc-common'
 include_recipe 'component-bcpc-node-common'
 include_recipe 'component-bcpc-node-work-common'
+include_recipe 'bcpc-software-raid'
 include_recipe 'bcpc-ephemeral-disk'
 include_recipe 'component-bcpc-node-monitoring'

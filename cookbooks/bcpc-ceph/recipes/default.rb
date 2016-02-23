@@ -22,33 +22,34 @@ apt_repository "ceph" do
   distribution node['lsb']['codename']
   components ["main"]
   key "ceph-release.key"
+  notifies :run, "execute[apt-get update]", :immediately
 end
 
 if platform?("debian", "ubuntu")
-    include_recipe "bcpc-networking"
+  include_recipe "bcpc-networking"
 end
 
-bash "check-ceph-version" do
-    code <<-EOH
-        /usr/local/bin/apt-pkg-check-version ceph #{node['bcpc']['ceph']['version_number']}
-        exit $?
-	EOH
+# delete the compromised Ceph signing key (17ED316D)
+# if the new Ceph release key is installed (460F3994)
+bash "remove-old-ceph-key" do
+  code "apt-key del 17ED316D"
+  only_if "apt-key list | grep -q 460F3994 && apt-key list | grep -q 17ED316D"
 end
 
-# Installing CephFS but not activating it
-%w{librados2 librbd1 libcephfs1 python-ceph ceph ceph-common ceph-fs-common ceph-mds}.each do |pkg|
-    package pkg do
-        action :install
-        version node['bcpc']['ceph']['version']
-    end
+%w{librados2 librbd1 libcephfs1 python-ceph ceph ceph-common ceph-fs-common ceph-mds ceph-fuse}.each do |pkg|
+  package pkg do
+    # use Ceph repository instead of UCA
+    # UCA release looks like "trusty-proposed" or "trusty-updates"
+    default_release 'trusty'
+    action :upgrade
+  end
 end
-
 
 ruby_block "initialize-ceph-common-config" do
-    block do
-        make_config('ceph-fs-uuid', generate_uuid)
-        make_config('ceph-mon-key', ceph_keygen)
-    end
+  block do
+    make_config('ceph-fs-uuid', generate_uuid)
+    make_config('ceph-mon-key', ceph_keygen)
+  end
 end
 
 directory '/etc/ceph' do
@@ -130,7 +131,7 @@ end
 
 # Script looks for mdsmap and if MDS is removed later then this script will need to be changed.
 bash "wait-for-pgs-creating" do
-    action :nothing
-    user "root"
-    code "while ceph -s | grep -v mdsmap | grep creating >/dev/null 2>&1; do echo Waiting for new pgs to create...; sleep 1; done"
+  action :nothing
+  user "root"
+  code "while ceph -s | grep -v mdsmap | grep creating >/dev/null 2>&1; do echo Waiting for new pgs to create...; sleep 1; done"
 end

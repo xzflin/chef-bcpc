@@ -350,6 +350,7 @@ ListenIP=<%=node['bcpc']['monitoring']['vip']%>
 # Range: 1-30
 # Default:
 # Timeout=3
+Timeout=<%= node['bcpc']['zabbix']['server_timeout'] %>
 
 ### Option: TrapperTimeout
 #   Specifies how many seconds trapper may spend processing new data.

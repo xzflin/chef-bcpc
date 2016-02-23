@@ -26,6 +26,9 @@ include_recipe 'component-bcpc-common'
 include_recipe 'bcpc-bootstrap'
 include_recipe 'bcpc-backup::cluster'
 include_recipe 'bcpc-openstack-rally'
+include_recipe 'bcpc-diamond'
+include_recipe 'bcpc-fluentd'
+include_recipe 'bcpc-zabbix::agent'
 # disabled on bootstrap node for the moment because it requires
 # bcpc-openstack-rally::populate-keystone to have executed on a head node -
 # will sort race condition at some point in the future - erhudy

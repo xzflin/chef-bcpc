@@ -17,17 +17,26 @@
 # limitations under the License.
 #
 
-%w{apache2 libapache2-mod-fastcgi libapache2-mod-wsgi libapache2-mod-python libapache2-mod-php5}.each do |pkg|
+%w{apache2 libapache2-mod-fastcgi libapache2-mod-wsgi libapache2-mod-php5}.each do |pkg|
     package pkg do
         action :upgrade
     end
 end
 
-%w{ssl wsgi python php5 proxy_http rewrite cache cache_disk}.each do |mod|
+%w{ssl wsgi php5 proxy_http rewrite cache cache_disk}.each do |mod|
     bash "apache-enable-#{mod}" do
         user "root"
         code "a2enmod #{mod}"
         not_if "test -r /etc/apache2/mods-enabled/#{mod}.load"
+        notifies :restart, "service[apache2]", :delayed
+    end
+end
+
+%w{python}.each do |mod|
+    bash "apache-disable-#{mod}" do
+        user "root"
+        code "a2dismod #{mod}"
+        only_if "test -r /etc/apache2/mods-enabled/#{mod}.load"
         notifies :restart, "service[apache2]", :delayed
     end
 end
