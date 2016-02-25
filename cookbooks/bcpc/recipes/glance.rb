@@ -29,7 +29,7 @@ ruby_block "initialize-glance-config" do
 end
 
 %w{glance glance-api glance-registry}.each do |pkg|
-  package pkg do 
+  package pkg do
     action :upgrade
     options "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
   end
@@ -49,7 +49,7 @@ cookbook_file "/tmp/glance-v2-null-description.patch" do
   source "glance-v2-null-description.patch"
   owner "root"
   mode 0644
-end 
+end
 
 bash "patch-backport-for-glance-v2-null-description" do
   user "root"
@@ -66,7 +66,7 @@ bash "patch-backport-for-glance-v2-null-description" do
   only_if "shasum /usr/lib/python2.7/dist-packages/glance/schema.py | grep -q '^e397f917f21e2067721336c5913e0151ed99bb0c'"
   notifies :restart, "service[glance-api]", :immediately
   notifies :restart, "service[glance-registry]", :immediately
-end 
+end
 
 template "/etc/glance/glance-api.conf" do
     source "glance-api.conf.erb"
@@ -184,6 +184,7 @@ bash "glance-cirros-image" do
     user "root"
     code <<-EOH
         . /root/adminrc
+        . /root/api_versionsrc
         qemu-img convert -f qcow2 -O raw /tmp/cirros-0.3.4-x86_64-disk.img /tmp/cirros-0.3.4-x86_64-disk.raw
         glance image-create --name='Cirros 0.3.4 x86_64' --visibility=public --container-format=bare --disk-format=raw --file /tmp/cirros-0.3.4-x86_64-disk.raw
     EOH

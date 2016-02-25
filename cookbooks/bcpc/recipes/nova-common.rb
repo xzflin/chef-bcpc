@@ -45,7 +45,7 @@ template "/etc/nova/nova.conf" do
 end
 
 template "/etc/nova/api-paste.ini" do
-    source "nova.api-paste.ini.erb"
+    source "nova.#{node['bcpc']['openstack_release']}.api-paste.ini.erb"
     owner "nova"
     group "nova"
     mode 00600

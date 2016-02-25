@@ -4,12 +4,16 @@
 #
 ################################################
 
-export OS_TENANT_NAME=<%=@node['bcpc']['admin_tenant']%>
-export OS_USERNAME=<%=get_config('keystone-admin-user')%>
-export OS_PASSWORD=<%=get_config('keystone-admin-password')%>
-export OS_AUTH_URL=<%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:5000/v2.0/
-export OS_REGION_NAME=<%=@node['bcpc']['region_name']%>
+export OS_TENANT_NAME=<%= @node['bcpc']['admin_tenant'] %>
+export OS_USERNAME=<%= get_config('keystone-admin-user') %>
+export OS_PASSWORD=<%= get_config('keystone-admin-password') %>
+export OS_AUTH_URL=<%= @node['bcpc']['protocol']['keystone'] %>://openstack.<%= @node['bcpc']['cluster_domain'] %>:<%= @node['bcpc']['catalog']['identity']['ports']['public'] %>/<%= @node['bcpc']['catalog']['identity']['uris']['public'] %>/
+export OS_REGION_NAME=<%= @node['bcpc']['region_name'] %>
 export OS_NO_CACHE=1
-# export OS_CACERT=/etc/ssl/certs/ssl-bcpc.pem
-# both Glance API versions are enabled but prefer v2
-export OS_IMAGE_API_VERSION=2
+<% if get_api_version(:identity) == "3" %>
+export OS_PROJECT_DOMAIN_NAME=default
+export OS_USER_DOMAIN_NAME=default
+<% end %>
+
+# API versions in a separate file so that they can be used when bootstrapping Keystone services
+source /root/api_versionsrc

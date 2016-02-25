@@ -128,6 +128,7 @@ template "/etc/apache2/conf-available/openstack-dashboard.conf" do
     group "root"
     mode 00644
     notifies :restart, "service[apache2]", :delayed
+    notifies :run, "bash[dpkg-reconfigure-openstack-dashboard]", :delayed
 end
 
 # we used to remove the Horizon config from conf-* and move it to sites-*
@@ -215,14 +216,16 @@ ruby_block "horizon-database-creation" do
         self.notifies :run, "bash[horizon-database-sync]", :immediately
         self.resolve_notification_references
     end
-    not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['horizon']}\"'|grep \"#{node['bcpc']['dbname']['horizon']}\" >/dev/nul" }
+    not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['horizon']}\"'|grep \"#{node['bcpc']['dbname']['horizon']}\" >/dev/null" }
 end
 
+# Horizon does not have a database in Liberty
 bash "horizon-database-sync" do
     action :nothing
     user "root"
     code "/usr/share/openstack-dashboard/manage.py syncdb --noinput"
     notifies :restart, "service[apache2]", :immediately
+    only_if { node['bcpc']['openstack_release'] == 'kilo' }
 end
 
 # needed to regenerate the static assets for the dashboard

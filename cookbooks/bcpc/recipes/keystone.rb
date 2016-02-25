@@ -43,11 +43,6 @@ package 'keystone' do
     action :upgrade
 end
 
-# needed to parse openstack json output
-package 'jq' do
-    action :upgrade
-end
-
 # do not run or try to start standalone keystone service since it is now served by WSGI
 service "keystone" do
     action [:disable, :stop]
@@ -104,6 +99,13 @@ end
 
 template "/root/adminrc" do
     source "adminrc.erb"
+    owner "root"
+    group "root"
+    mode 00600
+end
+
+template "/root/api_versionsrc" do
+    source "api_versionsrc.erb"
     owner "root"
     group "root"
     mode 00600
@@ -190,8 +192,6 @@ bash "wait-for-keystone-to-become-operational" do
   timeout node['bcpc']['keystone']['wait_for_keystone_timeout']
 end
 
-
-
 bash "keystone-create-admin-user" do
     user "root"
     code <<-EOH
@@ -201,7 +201,6 @@ bash "keystone-create-admin-user" do
     EOH
     not_if ". /root/keystonerc; . /root/adminrc; keystone user-get $OS_USERNAME"
 end
-
 
 bash "keystone-create-admin-tenant" do
     user "root"
@@ -250,6 +249,7 @@ node['bcpc']['catalog'].each do |svc, svcprops|
   ruby_block "keystone-create-#{svc}-service" do
     block do
       %x[
+        . /root/api_versionsrc
         export OS_TOKEN="#{get_config('keystone-admin-token')}";
         export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['admin']}/#{node['bcpc']['catalog']['identity']['uris']['admin']}/";
         openstack service create --name '#{svcprops['name']}' --description '#{svcprops['description']}' #{svc}
@@ -257,8 +257,9 @@ node['bcpc']['catalog'].each do |svc, svcprops|
     end
     only_if {
       services_raw = %x[
-        export OS_TOKEN=\"#{get_config('keystone-admin-token')}\";
-        export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['admin']}/#{node['bcpc']['catalog']['identity']['uris']['admin']}/\";
+        . /root/api_versionsrc
+        export OS_TOKEN="#{get_config('keystone-admin-token')}";
+        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['admin']}/#{node['bcpc']['catalog']['identity']['uris']['admin']}/";
         openstack service list -f json
       ]
       services = JSON.parse(services_raw)
@@ -266,23 +267,42 @@ node['bcpc']['catalog'].each do |svc, svcprops|
     }
   end
 
+  # openstack command syntax changes between identity API v2 and v3, so calculate the endpoint creation command ahead of time
+  identity_api_version = node['bcpc']['catalog']['identity']['uris']['public'].scan(/^[^\d]*(\d+)/)[0][0].to_i
+  if identity_api_version == 3
+    endpoint_create_cmd = <<-EOH
+      openstack endpoint create \
+          --region '#{node['bcpc']['region_name']}' #{svc} public '#{node['bcpc']['protocol'][svcprops['project']]}://openstack.#{node['bcpc']['cluster_domain']}:#{svcprops['ports']['public']}/#{svcprops['uris']['public']}' ;
+      openstack endpoint create \
+          --region '#{node['bcpc']['region_name']}' #{svc} internal '#{node['bcpc']['protocol'][svcprops['project']]}://openstack.#{node['bcpc']['cluster_domain']}:#{svcprops['ports']['internal']}/#{svcprops['uris']['internal']}' ;
+      openstack endpoint create \
+          --region '#{node['bcpc']['region_name']}' #{svc} admin '#{node['bcpc']['protocol'][svcprops['project']]}://openstack.#{node['bcpc']['cluster_domain']}:#{svcprops['ports']['admin']}/#{svcprops['uris']['admin']}' ;
+    EOH
+  else
+    endpoint_create_cmd = <<-EOH
+      openstack endpoint create \
+          --region '#{node['bcpc']['region_name']}' \
+          --publicurl '#{node['bcpc']['protocol'][svcprops['project']]}://openstack.#{node['bcpc']['cluster_domain']}:#{svcprops['ports']['public']}/#{svcprops['uris']['public']}' \
+          --adminurl '#{node['bcpc']['protocol'][svcprops['project']]}://openstack.#{node['bcpc']['cluster_domain']}:#{svcprops['ports']['admin']}/#{svcprops['uris']['admin']}' \
+          --internalurl '#{node['bcpc']['protocol'][svcprops['project']]}://openstack.#{node['bcpc']['cluster_domain']}:#{svcprops['ports']['internal']}/#{svcprops['uris']['internal']}' \
+          #{svc}
+    EOH
+  end
+
   ruby_block "keystone-create-#{svc}-endpoint" do
     block do
       %x[
+        . /root/api_versionsrc
         export OS_TOKEN="#{get_config('keystone-admin-token')}";
         export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['admin']}/#{node['bcpc']['catalog']['identity']['uris']['admin']}/";
-        openstack endpoint create \
-            --region '#{node['bcpc']['region_name']}' \
-            --publicurl '#{node['bcpc']['protocol'][svcprops['project']]}://openstack.#{node['bcpc']['cluster_domain']}:#{svcprops['ports']['public']}/#{svcprops['uris']['public']}' \
-            --adminurl '#{node['bcpc']['protocol'][svcprops['project']]}://openstack.#{node['bcpc']['cluster_domain']}:#{svcprops['ports']['admin']}/#{svcprops['uris']['admin']}' \
-            --internalurl '#{node['bcpc']['protocol'][svcprops['project']]}://openstack.#{node['bcpc']['cluster_domain']}:#{svcprops['ports']['internal']}/#{svcprops['uris']['internal']}' \
-            #{svc}
+        #{endpoint_create_cmd}
       ]
     end
     only_if {
       endpoints_raw = %x[
-        export OS_TOKEN=\"#{get_config('keystone-admin-token')}\";
-        export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['admin']}/#{node['bcpc']['catalog']['identity']['uris']['admin']}/\";
+        . /root/api_versionsrc
+        export OS_TOKEN="#{get_config('keystone-admin-token')}";
+        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['admin']}/#{node['bcpc']['catalog']['identity']['uris']['admin']}/";
         openstack endpoint list -f json
       ]
       endpoints = JSON.parse(endpoints_raw)
