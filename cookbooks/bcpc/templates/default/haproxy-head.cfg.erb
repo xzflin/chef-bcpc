@@ -156,7 +156,11 @@ listen novnc
   balance source
   option tcplog
   option httpchk GET /
+<% if is_kilo? %>
   http-check expect status 200
+<% else %>
+  http-check expect status 404
+<% end %>
 <% @servers.each do |server| -%>
   <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:6080 check inter 5s rise 1 fall 1" %>
 <% end -%>

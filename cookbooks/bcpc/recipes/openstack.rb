@@ -20,6 +20,13 @@
 include_recipe "bcpc::default"
 include_recipe "bcpc::packages-openstack"
 
+# are we performing an upgrade from Kilo to Liberty?
+kilo_to_liberty_upgrade_check = Mixlib::ShellOut.new("dpkg --compare-versions $(dpkg -s python-nova | egrep '^Version:' | awk '{ print $NF }') lt 2:12.0.0")
+kilo_to_liberty_upgrade_check.run_command
+if !kilo_to_liberty_upgrade_check.error? && node['bcpc']['openstack_release'] == 'liberty'
+  file '/usr/local/etc/kilo_to_liberty_upgrade'
+end
+
 # python-nova will be used as the canary package to determine whether at least
 # 2015.1.2 is being installed
 ruby_block 'evaluate-version-eligibility' do

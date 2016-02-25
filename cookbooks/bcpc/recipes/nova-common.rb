@@ -34,7 +34,10 @@ ruby_block "initialize-nova-config" do
     end
 end
 
-package "nova-common"
+package "nova-common" do
+  action :upgrade
+  options "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
+end
 
 template "/etc/nova/nova.conf" do
     source "nova.conf.erb"
@@ -45,7 +48,7 @@ template "/etc/nova/nova.conf" do
 end
 
 template "/etc/nova/api-paste.ini" do
-    source "nova.api-paste.ini.erb"
+    source "nova.#{node['bcpc']['openstack_release']}.api-paste.ini.erb"
     owner "nova"
     group "nova"
     mode 00600
