@@ -22,6 +22,48 @@ require 'base64'
 require 'thread'
 require 'ipaddr'
 
+def is_kilo?
+  return node['bcpc']['openstack_release'] == 'kilo'
+end
+
+# this method deals in strings even though API versions are numbers because
+# some API versions are integers and others are floats and it would be bad
+# if Ruby decided to report an API version as something like 1.10000000006584
+# or 1.09999999958587
+def get_api_version(service, uri_type='public')
+  # render to string in case a symbol is provided
+  service_str = service.to_s
+  uri_type_str = uri_type.to_s
+
+  unless ['admin', 'internal', 'public'].include? uri_type_str
+    fail "#{uri_type_str} is not a valid URI type to inspect for API version, please select from admin/internal/public"
+  end
+
+  unless node['bcpc']['catalog'].keys.include? service_str
+    fail "#{service_str} is not a valid service, please select from #{node['bcpc']['catalog'].keys.join('/')}"
+  end
+
+  api_version_list = node['bcpc']['catalog'][service_str]['uris'][uri_type_str].scan(/^[^\d]*(\d+)/)
+
+  if api_version_list.empty?
+    # Glance URL should not include a version number, default to Glance API v1 for Kilo and v2 otherwise
+    if service_str == 'image'
+      return (is_kilo? ? '1' : '2')
+    else
+      fail "Could not derive API version for #{service_str} from #{uri_type_str} URI, please inspect service catalog"
+    end
+  end
+
+  # special workarounds for certain fussy non-Glance APIs
+  if service_str == 'identity' and api_version_list[0][0] == "2"
+    return "2.0"
+  elsif service_str == 'compute' and api_version_list[0][0] == "1"
+    return "1.1"
+  else
+    return api_version_list[0][0]
+  end
+end
+
 def is_vip?
     ipaddr = `ip addr show dev #{node['bcpc']['management']['interface']}`
     return ipaddr.include? node['bcpc']['management']['vip']
@@ -298,4 +340,17 @@ end
 
 def maintenance_action
   node['bcpc']['in_maintenance'] ? :member : :depart
+end
+
+def generate_service_catalog_uri(svcprops, access_level)
+  "#{node['bcpc']['protocol'][svcprops['project']]}://openstack.#{node['bcpc']['cluster_domain']}:#{svcprops['ports'][access_level]}/#{svcprops['uris'][access_level]}"
+end
+
+def execute_in_keystone_admin_context(cmd)
+  %x[
+    . /root/api_versionsrc
+    export OS_TOKEN="#{get_config('keystone-admin-token')}";
+    export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['admin']}/#{node['bcpc']['catalog']['identity']['uris']['admin']}/";
+    #{cmd}
+  ]
 end

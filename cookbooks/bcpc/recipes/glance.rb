@@ -104,6 +104,14 @@ ruby_block "glance-database-creation" do
     not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['glance']}\"'|grep \"#{node['bcpc']['dbname']['glance']}\" >/dev/null" }
 end
 
+ruby_block 'update-glance-db-schema-for-liberty' do
+  block do
+    self.notifies :run, "bash[glance-database-sync]", :immediately
+    self.resolve_notification_references
+  end
+  only_if { ::File.exist?('/usr/local/etc/kilo_to_liberty_upgrade') }
+end
+
 bash "glance-database-sync" do
     action :nothing
     user "root"
@@ -162,6 +170,7 @@ bash "glance-cirros-image" do
     user "root"
     code <<-EOH
         . /root/adminrc
+        . /root/api_versionsrc
         qemu-img convert -f qcow2 -O raw /tmp/cirros-0.3.4-x86_64-disk.img /tmp/cirros-0.3.4-x86_64-disk.raw
         glance image-create --name='Cirros 0.3.4 x86_64' --visibility=public --container-format=bare --disk-format=raw --file /tmp/cirros-0.3.4-x86_64-disk.raw
     EOH

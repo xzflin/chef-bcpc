@@ -1,7 +1,8 @@
-# Cookbook Name:: bcpc
-# Recipe:: flavors
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Cookbook Name:: bcpc
+# Recipe:: kilo-to-liberty-upgrade-cleanup
+#
+# Copyright 2016, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,20 +17,12 @@
 # limitations under the License.
 #
 
-bash "wait-for-flavors-to-become-operational" do
-  code ". /root/adminrc; until openstack flavor list >/dev/null 2>&1; do sleep 1; done"
-  timeout 60
+bash 'hup-openstack-after-upgrade' do
+  code '/usr/local/bin/hup_openstack'
+  only_if { ::File.exist?('/usr/local/etc/kilo_to_liberty_upgrade') }
 end
 
-node['bcpc']['flavors'].each do |name, flavor|
-  bcpc_osflavor name do
-    memory_mb flavor['memory_mb']
-    disk_gb   flavor['disk_gb']
-    vcpus  flavor['vcpus']
-    ephemeral_gb flavor['ephemeral_gb']
-    swap_gb flavor['swap_gb']
-    is_public flavor['is_public'] or true
-    flavor_id flavor['id'] or "auto"
-    extra_specs flavor["extra_specs"]
-  end
+file 'cleanup-kilo_to_liberty_upgrade-lockfile' do
+  path '/usr/local/etc/kilo_to_liberty_upgrade'
+  action :delete
 end

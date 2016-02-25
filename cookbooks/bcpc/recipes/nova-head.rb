@@ -34,6 +34,14 @@ ruby_block "nova-database-creation" do
     not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['nova']}\"'|grep \"#{node['bcpc']['dbname']['nova']}\" >/dev/null" }
 end
 
+ruby_block 'update-nova-db-schema-for-liberty' do
+  block do
+    self.notifies :run, "bash[nova-database-sync]", :immediately
+    self.resolve_notification_references
+  end
+  only_if { ::File.exist?('/usr/local/etc/kilo_to_liberty_upgrade') }
+end
+
 bash "nova-database-sync" do
     action :nothing
     user "root"

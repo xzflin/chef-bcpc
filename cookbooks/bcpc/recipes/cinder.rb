@@ -29,6 +29,11 @@ ruby_block "initialize-cinder-config" do
     end
 end
 
+package 'cinder-common' do
+  action :upgrade
+  options "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
+end
+
 %w{cinder-api cinder-volume cinder-scheduler}.each do |pkg|
     package pkg do
         action :upgrade
@@ -58,7 +63,7 @@ bcpc_patch "cinder-az-fallback-2015.1.2-and-beyond" do
   notifies :restart, 'service[cinder-api]', :immediately
   notifies :restart, 'service[cinder-volume]', :immediately
   notifies :restart, 'service[cinder-scheduler]', :immediately
-  only_if "dpkg --compare-versions $(dpkg -s python-cinder | egrep '^Version:' | awk '{ print $NF }') ge 1:2015.1.2 && dpkg --compare-versions $(dpkg -s python-cinder | egrep '^Version:' | awk '{ print $NF }') le 2:7.0"
+  only_if "dpkg --compare-versions $(dpkg -s python-cinder | egrep '^Version:' | awk '{ print $NF }') ge 1:2015.1.2 && dpkg --compare-versions $(dpkg -s python-cinder | egrep '^Version:' | awk '{ print $NF }') lt 2:7.0"
 end
 
 # Deal with quota update commands (applies to cinderclient < 1.3.1)
@@ -107,6 +112,13 @@ ruby_block "cinder-database-creation" do
     not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['cinder']}\"'|grep \"#{node['bcpc']['dbname']['cinder']}\" >/dev/null" }
 end
 
+ruby_block 'update-cinder-db-schema-for-liberty' do
+  block do
+    self.notifies :run, "bash[cinder-database-sync]", :immediately
+    self.resolve_notification_references
+  end
+  only_if { ::File.exist?('/usr/local/etc/kilo_to_liberty_upgrade') }
+end
 
 bash "cinder-database-sync" do
     action :nothing
@@ -164,6 +176,18 @@ node['bcpc']['ceph']['enabled_pools'].each do |type|
         EOH
         not_if ". /root/adminrc; cinder type-list | grep #{type.upcase}"
     end
+end
+
+node['bcpc']['cinder']['quota'].each do |k, v|
+  bash "cinder-set-default-#{k}-quota" do
+    user "root"
+    code <<-EOH
+      . /root/adminrc
+      cinder quota-class-update --#{k} #{v} default
+    EOH
+  end
+  # figure this out later
+  #not_if ". /root/adminrc; cinder quota-class-show
 end
 
 service "tgt" do

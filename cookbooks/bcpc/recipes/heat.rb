@@ -84,6 +84,14 @@ if node['bcpc']['enabled']['heat']
       not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['heat']}\"'|grep \"#{node['bcpc']['dbname']['heat']}\" >/dev/null" }
   end
 
+  ruby_block 'update-heat-db-schema-for-liberty' do
+    block do
+      self.notifies :run, "bash[heat-database-sync]", :immediately
+      self.resolve_notification_references
+    end
+    only_if { ::File.exist?('/usr/local/etc/kilo_to_liberty_upgrade') }
+  end
+
   bash "heat-database-sync" do
       action :nothing
       user "root"

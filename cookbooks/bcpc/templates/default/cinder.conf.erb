@@ -13,12 +13,12 @@ allow_availability_zone_fallback=<%= node['bcpc']['cinder']['allow_az_fallback']
 rootwrap_config = /etc/cinder/rootwrap.conf
 api_paste_confg = /etc/cinder/api-paste.ini
 verbose = <%= node['bcpc']['cinder']['verbose'] %>
-debug = False
+debug = <%= node['bcpc']['cinder']['debug'] %>
 auth_strategy = keystone
 state_path = /var/lib/cinder
 logdir=/var/log/cinder
 # v1 API is being removed in Liberty
-enable_v1_api=true
+enable_v1_api=<%= is_kilo? %>
 enable_v2_api=true
 
 # Bind to mgt IP only
@@ -43,9 +43,12 @@ enabled_backends=<%= node['bcpc']['ceph']['enabled_pools'].map {|type| type.upca
 #control_exchange = cinder
 #notification_driver = cinder.openstack.common.notifier.rpc_notifier
 
+<%# default quotas in Liberty are set exclusively with cinder quota-class-update %>
+<% if is_kilo? %>
 # Quotas
 <% node['bcpc']['cinder']['quota'].each do | key, value| %>
 quota_<%=key%> = <%= value %>
+<% end %>
 <% end %>
 
 [oslo_messaging_rabbit]
@@ -70,16 +73,12 @@ idle_timeout=3600
 
 [keystone_authtoken]
 # cafile = /etc/ssl/certs/ssl-bcpc.pem
-auth_uri = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:5000/v2.0/
-#auth_host = <%=node['bcpc']['management']['vip']%>
-#auth_port = 35357
-#auth_protocol = <%=node['bcpc']['protocol']['keystone']%>
+auth_uri = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:5000/<%= node['bcpc']['catalog']['identity']['uris']['internal'] %>/
 identity_uri = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:35357
-auth_version = v2.0
+auth_version = <%= node['bcpc']['catalog']['identity']['uris']['internal'] %>
 admin_tenant_name = <%=node['bcpc']['admin_tenant']%>
 admin_user = <%=get_config('keystone-admin-user')%>
 admin_password = <%=get_config('keystone-admin-password')%>
-#admin_token = <%=get_config('keystone-admin-token')%>
 signing_dir = /var/lib/cinder
 
 <% node['bcpc']['ceph']['enabled_pools'].each do |type| -%>
