@@ -105,7 +105,9 @@ until_refresh = 10
 
 # Networking settings
 network_manager=nova.network.manager.VlanManager
-firewall_driver=nova.virt.libvirt.firewall.IptablesFirewallDriver
+# firewall_driver=nova.virt.libvirt.firewall.IptablesFirewallDriver
+firewall_driver=nova.virt.firewall.NoopFirewallDriver
+security_group_api = neutron
 allow_same_net_traffic=False
 public_interface=<%=node['bcpc']['floating']['interface']%>
 vlan_interface=<%=node['bcpc']['fixed']['vlan_interface']%>

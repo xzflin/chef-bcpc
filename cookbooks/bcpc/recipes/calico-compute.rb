@@ -64,10 +64,42 @@ service "etcd" do
     action [:enable, :start]
 end
 
-# neutron-common neutron-dhcp-agent nova-api-metadata
-package "neutron-common" do
+# Calico uses their own dnsmasq
+# apt-get install --only-upgrade dnsmasq-base dnsmasq-utils
+package "dnsmasq-base" do
     action :upgrade
 end
+
+package "dnsmasq-utils" do
+    action :upgrade
+end
+
+# I think this is a no-op
+#package "neutron-common" do
+#    action :upgrade
+#end
+
+# this is temporary hack to make Calico work
+package "python-pip" do
+    action :upgrade
+end
+
+# must install without dependencies
+# otherwise it installs pbr version that breaks keystone
+#bash "install-networking-calico" do
+#    code "pip install --no-deps networking-calico"
+#end
+
+cookbook_file "/tmp/networking-calico-1.0.0.tar.gz" do
+    source "networking-calico-1.0.0.tar.gz"
+    owner "root"
+    mode 00644
+end
+
+bash "install-networking-calico" do
+    code "pip install --no-deps --no-index --find-links file:///tmp/ networking-calico"
+end
+
 
 package "neutron-dhcp-agent" do
     action :upgrade
@@ -97,16 +129,5 @@ end
 bash "start-calico-felix" do
     code "service calico-felix restart"
 end
-
-# apt-get install python-pip
-# pip install networking-calico
-
-#base "upgrade-dnsmasq" do
-#    code "apt-get install -y --only-upgrade dnsmasq-base"
-#end
-
-#base "upgrade-dnsmasq-utils" do
-#    code "apt-get install -y --only-upgrade dnsmasq-utils"
-#end
 
 # sudo update-rc.d -f apparmor remove

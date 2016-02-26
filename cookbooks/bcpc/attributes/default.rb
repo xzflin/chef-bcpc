@@ -48,7 +48,8 @@ default['bcpc']['enabled']['monitoring'] = true
 # This will enable powerdns on head nodes
 default['bcpc']['enabled']['dns'] = true
 # This will enable iptables firewall on all nodes
-default['bcpc']['enabled']['host_firewall'] = true
+# TODO: make this work with Calico
+default['bcpc']['enabled']['host_firewall'] = false
 # This will enable of encryption of the chef data bag
 default['bcpc']['enabled']['encrypt_data_bag'] = false
 # These will enable automatic dist-upgrade/upgrade at the start of a Chef run

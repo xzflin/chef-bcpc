@@ -20,14 +20,14 @@
 include_recipe "bcpc::keystone"
 include_recipe "bcpc::nova-head"
 
-# spin until nova starts to respond, avoids blowing up on an HTTP 503
-# if Apache was restarted recently and is not yet ready
-bash "wait-for-nova-to-become-operational" do
-  code ". /root/adminrc; until nova secgroup-list >/dev/null 2>&1; do sleep 1; done"
-  timeout 30
-end
-
 unless node['bcpc']['enabled']['neutron']
+  # spin until nova starts to respond, avoids blowing up on an HTTP 503
+  # if Apache was restarted recently and is not yet ready
+  bash "wait-for-nova-to-become-operational" do
+    code ". /root/adminrc; until nova secgroup-list >/dev/null 2>&1; do sleep 1; done"
+    timeout 30
+  end
+
   bash "nova-configure-default-icmp-secgroup-rule" do
       user "root"
       code <<-EOH
