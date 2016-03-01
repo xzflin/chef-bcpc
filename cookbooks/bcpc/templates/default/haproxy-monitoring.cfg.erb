@@ -42,7 +42,7 @@ listen mysql-galera <%=node['bcpc']['monitoring']['vip']%>:3306
   option tcplog
   option tcpka
   option httpchk
-<% @servers.each do |server| -%>
+<% @mysql_servers.each do |server| -%>
   <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:3306 check port 3307 inter 5s rise 1 fall 1 observe layer4 backup" %>
 <% end -%>
 
@@ -75,7 +75,7 @@ backend graphite-web-backend
   option httpchk GET /composer/
   http-check expect status 200
   reqrep ^([^\ :]*)\ /graphite/(.*) \1\ /\2
-<% @servers.each do |server| -%>
+<% @graphite_servers.each do |server| -%>
   <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:8888 check inter 5s rise 1 fall 1" %>
 <% end -%>
 
@@ -86,7 +86,7 @@ backend kibana-backend
   acl AuthOkay_kibana http_auth(admins)
   http-request auth realm <%= node['bcpc']['kibana']['fqdn'] %> if !AuthOkay_kibana
   reqrep ^([^\ :]*)\ /kibana/(.*) \1\ /\2
-<% @servers.each do |server| -%>
+<% @elasticsearch_servers.each do |server| -%>
   <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:5601 check inter 5s rise 1 fall 1" %>
 <% end -%>
 
@@ -95,7 +95,7 @@ backend elasticsearch-backend
   option httpchk GET /
   http-check expect status 200
   reqrep ^([^\ :]*)\ /elasticsearch/(.*) \1\ /\2
-<% @servers.each do |server| -%>
+<% @elasticsearch_servers.each do |server| -%>
   <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:9200 check inter 5s rise 1 fall 1" %>
 <% end -%>
 
@@ -104,7 +104,7 @@ backend zabbix-backend
   option httpchk GET /
   http-check expect status 200
   reqrep ^([^\ :]*)\ /zabbix/(.*) \1\ /\2
-<% @servers.each do |server| -%>
+<% @zabbix_servers.each do |server| -%>
   <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:7777 check inter 5s rise 1 fall 1" %>
 <% end -%>
 
@@ -120,7 +120,7 @@ listen graphite-carbon-relay-line <%=node['bcpc']['monitoring']['vip']%>:2013
   balance leastconn
   option tcplog
   option tcpka
-<% @servers.each do |server| -%>
+<% @graphite_servers.each do |server| -%>
   <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:2013 check inter 5s rise 1 fall 1 observe layer4" %>
 <% end -%>
 
@@ -129,7 +129,7 @@ listen graphite-carbon-relay-pickle <%=node['bcpc']['monitoring']['vip']%>:2014
   balance leastconn
   option tcplog
   option tcpka
-<% @servers.each do |server| -%>
+<% @graphite_servers.each do |server| -%>
   <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:2014 check inter 5s rise 1 fall 1 observe layer4" %>
 <% end -%>
 
@@ -138,7 +138,7 @@ listen elasticsearch <%=node['bcpc']['monitoring']['vip']%>:9200
   option tcplog
   option httpchk GET /
   http-check expect status 200
-<% @servers.each do |server| -%>
+<% @elasticsearch_servers.each do |server| -%>
   <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:9200 check inter 5s rise 1 fall 1" %>
 <% end -%>
 
