@@ -19,7 +19,7 @@
 if node['bcpc']['enabled']['tpm'] then
   include_recipe "bcpc::default"
   
-  package "linux-image-extra-virtual" # installs the TPM module if not already there
+  package "linux-image-extra-#{node['kernel']['release']}"
   
   bash "ensure-tpm_rng-module-is-loaded" do
     code <<-EOH
