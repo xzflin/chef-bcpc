@@ -50,7 +50,7 @@ d-i     clock-setup/ntp boolean true
 d-i     clock-setup/ntp-server  string <%= @node['ntp']['servers'].first %>
 # This will install the base 12.04 kernel image.  If you comment out the
 # following line, it will install the upgraded kernel LTS stack.
-d-i     base-installer/kernel/image     string linux-server
+d-i     base-installer/kernel/image     string <%= @node['bcpc']['preseed']['kernel'] %>
 d-i     passwd/root-login       boolean false
 d-i     passwd/make-user        boolean true
 d-i     passwd/user-fullname    string ubuntu
@@ -95,14 +95,11 @@ d-i     debian-installer/exit/poweroff  boolean false
 d-i     pkgsel/include string openssh-server
 
 d-i     preseed/late_command string true && \
-        wget "http://$http_server:$http_port/cblr/svc/op/nopxe/system/$system_name" -O /dev/null ;\
-        <% if @node['bcpc']['preseed'] && @node['bcpc']['preseed']['kernel'] %>
-        in-target apt-get install -y <%= @node['bcpc']['preseed']['kernel'] %> ;\
-        <% else %>
-        true ;\
+        <% unless node.default['bcpc']['preseed']['kernel'] == node['bcpc']['preseed']['kernel'] %>
+        in-target apt-get -y install <%= node['bcpc']['preseed']['kernel'].gsub('linux-image', 'linux-image-extra') %> ;\
         <% end %>
-        wget "http://$http_server:$http_port/cblr/svc/op/nopxe/system/$system_name" -O /dev/null ;\
         in-target env no_proxy=$http_server wget "http://$http_server:$http_port/cobbler/pub/scripts/get-ssh-keys" -O /root/get-ssh-keys ;\
         in-target chmod 0755 /root/get-ssh-keys ; in-target install -d -m0600 /root/.ssh ;\
         in-target env no_proxy=$http_server /root/get-ssh-keys root -o /root/.ssh/authorized_keys ;\
-        echo -e "\n<%=@bootstrap_node['bcpc']['bootstrap'] && @bootstrap_node['bcpc']['bootstrap']['server']%>\t<%=@bootstrap_node['fqdn']%>\n" >> /target/etc/hosts
+        echo -e "\n<%=@bootstrap_node['bcpc']['bootstrap'] && @bootstrap_node['bcpc']['bootstrap']['server']%>\t<%=@bootstrap_node['fqdn']%>\n" >> /target/etc/hosts ;\
+        wget "http://$http_server:$http_port/cblr/svc/op/nopxe/system/$system_name" -O /dev/null ;
