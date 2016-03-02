@@ -71,6 +71,8 @@ default['bcpc']['enabled']['tpm'] = false
 default['bcpc']['enabled']['secure_fixed_networks'] = true
 # Toggle to enable/disable swap memory
 default['bcpc']['enabled']['swap'] = true
+# Toggle to enable apport for debugging process crashes
+default['bcpc']['enabled']['apport'] = true
 # Toggle to enable/disable Heat (OpenStack Cloud Formation)
 default['bcpc']['enabled']['heat'] = false
 
