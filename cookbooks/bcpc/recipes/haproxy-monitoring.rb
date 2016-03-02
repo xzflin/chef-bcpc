@@ -38,7 +38,10 @@ template "/etc/haproxy/haproxy.cfg" do
           {
             :monitoring_admin_username => get_config("monitoring-admin-user"),
             :monitoring_admin_password_hash => get_config("monitoring-admin-password-hash"),
-            :servers => search_nodes("role", "BCPC-Monitoring")
+            :mysql_servers => search_nodes("recipe", "mysql-monitoring"),
+            :graphite_servers => search_nodes("recipe", "graphite"),
+            :elasticsearch_servers => search_nodes("recipe", "elasticsearch"),
+            :zabbix_servers => search_nodes("recipe", "zabbix-server"),
           }
         }
     )
