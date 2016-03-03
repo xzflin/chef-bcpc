@@ -37,6 +37,13 @@ enabled_apis=metadata
 vendordata_driver = <%=node["bcpc"]["vendordata_driver"] %>
 <% end %>
 
+<% if node['bcpc']['nova']['notifications']['enabled'] %>
+# Nova notification settings
+notification_topics=<%= node['bcpc']['nova']['notifications']['notification_topics'] %>
+notification_driver=<%= node['bcpc']['nova']['notifications']['notification_driver'] %>
+notify_on_state_change=<%= node['bcpc']['nova']['notifications']['notify_on_state_change'] %>
+<% end %>
+
 # Nova Scheduler
 scheduler_driver=nova.scheduler.filter_scheduler.FilterScheduler
 scheduler_default_filters=<%=node['bcpc']['nova']['scheduler_default_filters'].join(',')%>

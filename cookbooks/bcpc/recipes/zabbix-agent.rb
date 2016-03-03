@@ -116,6 +116,15 @@ if node['bcpc']['enabled']['monitoring'] then
       notifies :restart, "service[zabbix-agent]", :immediately
     end
 
+    template "/etc/zabbix/zabbix_agentd.d/userparameter_bootstrap.conf" do
+        source "zabbix_agentd_userparameters_bootstrap.conf.erb"
+        owner node['bcpc']['zabbix']['user']
+        group "root"
+        mode 00600
+        only_if { File.exist?('/opt/opscode/bin/chef-server-ctl') }
+        notifies :restart, "service[zabbix-agent]", :immediately
+    end
+
     service "zabbix-agent" do
         action [:enable, :start]
         provider Chef::Provider::Service::Init::Debian

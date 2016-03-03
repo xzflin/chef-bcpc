@@ -15,8 +15,14 @@ if [ "$(pgrep -c $SCRIPT_NAME)" -gt "1" ]; then
   exit 0
 fi
 
-# Restart the PowerDNS service
-service pdns restart
+# Restart the PowerDNS service, attempt to lock doing so to avoid
+# multiple copies of PowerDNS starting up (see #986)
+LOCK_FILE=/tmp/powerdns_restart.lock
+if [ ! -f $LOCK_FILE ]; then
+  echo $$ >> $LOCK_FILE
+  service pdns restart
+  rm -f $LOCK_FILE
+fi
 
 # Restart local OpenStack services
 /usr/local/bin/hup_openstack

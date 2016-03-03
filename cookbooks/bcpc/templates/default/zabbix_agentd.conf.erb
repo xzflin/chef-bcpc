@@ -199,6 +199,8 @@ HostMetadata=BCPC-Monitoring
 HostMetadata=BCPC-EphemeralWorknode
 <% elsif node["roles"].include? "BCPC-Worknode" -%>
 HostMetadata=BCPC-Worknode
+<% elsif node["roles"].include? "BCPC-Bootstrap" -%>
+HostMetadata=BCPC-Bootstrap
 <% end -%>
 
 ### Option: Alias

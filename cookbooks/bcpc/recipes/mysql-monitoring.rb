@@ -61,8 +61,8 @@ template "/etc/mysql/conf.d/wsrep.cnf" do
     source "wsrep.cnf.erb"
     mode 00644
     variables(
-        :max_connections => [search_nodes("role", "BCPC-Monitoring").length*150, 200].max,
-        :servers => search_nodes("role", "BCPC-Monitoring"),
+        :max_connections => [search_nodes("recipe", "mysql-monitoring").length*150, 200].max,
+        :servers => search_nodes("recipe", "mysql-monitoring"),
         :wsrep_cluster_name => "#{node['bcpc']['region_name']}-Monitoring",
         :wsrep_port => 4577,
         :galera_user_key => "mysql-monitoring-galera-user",

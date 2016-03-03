@@ -87,8 +87,8 @@ class OSQuota(object):
                               % component)
                 raise Exception("Unrecognized component %s" % component)
 
-        quota_cmd.append('--' + string.replace(resource, '_', '-'))
-        quota_cmd.append(str(limit))
+            quota_cmd.append('--' + string.replace(resource, '_', '-'))
+            quota_cmd.append(str(limit))
 
         # Force nova quota reductions regardless of current usage
         # Cinder quota reductions do not validate current usages by default
@@ -101,8 +101,8 @@ class OSQuota(object):
         for component in config:
             for project in config[component]:
                 tenant_id = self._get_tenant_id(project)
-                current_quota = self._get_current_quota(component, tenant_id)
-                conf_quota = self._parse_conf_quota(config[component][project])
+                current_quota = sorted(self._get_current_quota(component, tenant_id))
+                conf_quota = sorted(self._parse_conf_quota(config[component][project]))
                 # If defined quota does not match in-effect quota, apply update
                 if cmp(current_quota, conf_quota) != 0:
                     quota_cmd = self._construct_quota_cmd(component,

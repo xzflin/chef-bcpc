@@ -18,7 +18,6 @@
 #
 
 include_recipe "bcpc::default"
-include_recipe "bcpc::system"
 include_recipe "bcpc::certs"
 
 template "/etc/hosts" do

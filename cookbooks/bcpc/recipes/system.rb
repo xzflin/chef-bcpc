@@ -19,6 +19,36 @@
 
 include_recipe "bcpc::default"
 
+# if a particular kernel version is being specified, place holds on the
+# packages so that nothing can automatically remove them
+if node['bcpc']['kernel_version']
+  ["linux-image-#{node['bcpc']['kernel_version']}",
+   "linux-image-extra-#{node['bcpc']['kernel_version']}",
+   "linux-headers-#{node['bcpc']['kernel_version']}",
+   "linux-tools-#{node['bcpc']['kernel_version']}"].each do |pkg|
+    package pkg
+
+    bash "place-hold-on-#{pkg}" do
+      code "echo #{pkg} hold | dpkg --set-selections"
+      not_if "dpkg -s #{pkg} | grep ^Status: | grep -q ' hold '"
+    end
+  end
+end
+
+template "/etc/default/grub" do
+  source "system.etc_default_grub.erb"
+  owner  "root"
+  group  "root"
+  mode   00644
+  notifies :run, "execute[system-update-grub]", :immediately
+end
+
+execute "system-update-grub" do
+  command "update-grub"
+  user "root"
+  action :nothing
+end
+
 template "/etc/sysctl.d/70-bcpc.conf" do
     source "sysctl-70-bcpc.conf.erb"
     owner "root"
@@ -36,16 +66,11 @@ execute "reload-sysctl" do
     command "sysctl -p /etc/sysctl.d/70-bcpc.conf"
 end
 
-bash "set-deadline-io-scheduler" do
-    user "root"
-    code <<-EOH
-        for i in /sys/block/sd?; do
-            echo deadline > $i/queue/scheduler
-        done
-        echo GRUB_CMDLINE_LINUX_DEFAULT=\\\"\\$GRUB_CMDLINE_LINUX_DEFAULT elevator=deadline\\\" >> /etc/default/grub
-        update-grub
-    EOH
-    not_if "grep 'elevator=deadline' /etc/default/grub"
+ruby_block "set-nf_conntrack-hashsize" do
+    block do
+        %x[ echo $((#{node['bcpc']['system']['parameters']['net.nf_conntrack_max']}/8)) > /sys/module/nf_conntrack/parameters/hashsize ]
+    end
+    not_if { system "grep -q ^$((#{node['bcpc']['system']['parameters']['net.nf_conntrack_max']}/8))$ /sys/module/nf_conntrack/parameters/hashsize" }
 end
 
 ruby_block "swap-toggle" do
