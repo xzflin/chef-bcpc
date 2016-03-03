@@ -95,8 +95,9 @@ d-i     debian-installer/exit/poweroff  boolean false
 d-i     pkgsel/include string openssh-server
 
 d-i     preseed/late_command string true && \
-        <% unless node.default['bcpc']['preseed']['kernel'] == node['bcpc']['preseed']['kernel'] %>
-        in-target apt-get -y install <%= node['bcpc']['preseed']['kernel'].gsub('linux-image', 'linux-image-extra') %> ;\
+        <%# known meta packages that automatically pull in linux-image-extra are linux-server, linux-image-generic-lts-*, linux-image-generic %>
+        <% unless ['linux-server', 'linux-image-generic'].include?(@node['bcpc']['preseed']['kernel']) or @node['bcpc']['preseed']['kernel'].start_with?('linux-image-generic-lts-') %>
+        in-target apt-get -y install <%= @node['bcpc']['preseed']['kernel'].gsub('linux-image', 'linux-image-extra') %> ;\
         <% end %>
         in-target env no_proxy=$http_server wget "http://$http_server:$http_port/cobbler/pub/scripts/get-ssh-keys" -O /root/get-ssh-keys ;\
         in-target chmod 0755 /root/get-ssh-keys ; in-target install -d -m0600 /root/.ssh ;\
