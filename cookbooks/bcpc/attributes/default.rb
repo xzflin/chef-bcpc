@@ -657,7 +657,9 @@ default['bcpc']['rgw_quota'] = {
 default['bcpc']['quota'] = {
     'nova' => {
         'AdminTenant' => {
-           'cores' => -1
+           'cores'        => -1,
+           'ram'          => -1,
+           'floating_ips' => -1
         }
     }
 }
