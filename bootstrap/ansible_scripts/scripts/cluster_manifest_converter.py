@@ -32,7 +32,29 @@ import sys
 import yaml
 
 
-def to_yaml(path, cluster_name):
+def merge(a, b, path=None):
+    """merges b into a
+    http://stackoverflow.com/questions/7204805/dictionaries-of-dictionaries-merge/7205107#7205107
+    """
+    if path is None: path = []
+    for key in b:
+        if key in a:
+            if isinstance(a[key], dict) and isinstance(b[key], dict):
+                merge(a[key], b[key], path + [str(key)])
+            elif a[key] == b[key]:
+                pass # same leaf value
+        else:
+            a[key] = b[key]
+    return a
+
+def load_existing_yaml(file_list):
+    out = {}
+    for infile in file_list:
+      with open(infile) as f:
+          merge(out,yaml.safe_load(f))
+    return out
+
+def to_yaml(path=None, cluster_name=None, existing=[]):
     """
     Opens and reads the given file, which is assumed to be in cluster.txt
     format. Returns a string with cluster.txt converted to YAML, or dies trying.
@@ -42,6 +64,10 @@ def to_yaml(path, cluster_name):
     f.close()
 
     cluster = {'cluster_name': cluster_name, 'nodes': {}}
+
+    e_yaml = {'cluster_name': cluster_name, 'nodes': {}}
+    if len(existing) > 0:
+        e_yaml.update(load_existing_yaml(existing))
 
     for line in cluster_txt:
         if line.strip() == "end":
@@ -56,16 +82,17 @@ def to_yaml(path, cluster_name):
             sys.exit("ERROR: %s found more than once in cluster.txt" % name)
         if ipmi == "-":
             ipmi = None
-        cluster['nodes'][name] = {
-            'mac_address': mac,
-            'ip_address': ip,
-            'ipmi_address': ipmi,
-            'domain': domain,
-            'role': role,
-            'hardware_type': None
-        }
+        cluster['nodes'][name] = {'mac_address': mac,
+                                  'ip_address': ip,
+                                  'ipmi_address': ipmi,
+                                  'domain': domain,
+                                  'role': role}
 
-    return yaml.dump(cluster, default_flow_style=False)
+        merge(e_yaml['nodes'],cluster['nodes'])
+        if 'hardware_type' not in e_yaml['nodes'][name]:
+            e_yaml['nodes'][name]['hardware_type'] = None
+
+    return yaml.dump(e_yaml, default_flow_style=False)
 
 
 def to_text(path):
@@ -113,18 +140,23 @@ def main():
         'to text.')
     parser.add_argument("path", help="path to cluster.txt")
     parser.add_argument("cluster_name", help="name of cluster")
+    parser.add_argument("-e", "--existing",
+        help="path to existing cluster.yml file", action='append',
+        default=[])
     parser.add_argument("-t", "--text",
         help="convert from YAML to text (THIS WILL DISCARD DATA)",
         action="store_true")
     args = parser.parse_args()
 
-    if not os.path.exists(args.path) or not os.access(args.path, os.R_OK):
-        sys.exit("ERROR: Unable to open %s" % args.path)
+    for path in ([args.path] + args.existing):
+      if not os.path.exists(path) or not os.access(path, os.R_OK):
+          sys.exit("ERROR: Unable to open %s" % args.path)
 
     if args.text:
+        # Ignore existing here
         print(to_text(args.path))
     else:
-        print(to_yaml(args.path, args.cluster_name))
+        print(to_yaml(args.path, args.cluster_name, args.existing))
 
 
 if __name__ == "__main__":
