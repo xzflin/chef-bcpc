@@ -32,32 +32,34 @@ import sys
 import yaml
 
 
-def merge(a, b, path=None):
-    """merges b into a
+def merge(a, b, path=[]):
+    """ merges b into a
     http://stackoverflow.com/questions/7204805/dictionaries-of-dictionaries-merge/7205107#7205107
     """
-    if path is None: path = []
     for key in b:
         if key in a:
             if isinstance(a[key], dict) and isinstance(b[key], dict):
                 merge(a[key], b[key], path + [str(key)])
             elif a[key] == b[key]:
-                pass # same leaf value
+                pass
         else:
             a[key] = b[key]
     return a
 
+
 def load_existing_yaml(file_list):
     out = {}
     for infile in file_list:
-      with open(infile) as f:
-          merge(out,yaml.safe_load(f))
+        with open(infile) as f:
+            merge(out, yaml.safe_load(f))
     return out
+
 
 def to_yaml(path=None, cluster_name=None, existing=[]):
     """
     Opens and reads the given file, which is assumed to be in cluster.txt
-    format. Returns a string with cluster.txt converted to YAML, or dies trying.
+    format. Returns a string with cluster.txt converted to YAML, or dies
+    trying.
     """
     f = open(path)
     cluster_txt = f.readlines()
@@ -88,7 +90,7 @@ def to_yaml(path=None, cluster_name=None, existing=[]):
                                   'domain': domain,
                                   'role': role}
 
-        merge(e_yaml['nodes'],cluster['nodes'])
+        merge(e_yaml['nodes'], cluster['nodes'])
         if 'hardware_type' not in e_yaml['nodes'][name]:
             e_yaml['nodes'][name]['hardware_type'] = None
 
@@ -141,16 +143,20 @@ def main():
     parser.add_argument("path", help="path to cluster.txt")
     parser.add_argument("cluster_name", help="name of cluster")
     parser.add_argument("-e", "--existing",
-        help="path to existing cluster.yml file", action='append',
-        default=[])
+                        help="path to existing cluster.yml file."
+                        " Can be used multiple times. Values from each"
+                        " successive file take precedence over those"
+                        " specified earlier.",
+                        action='append', default=[])
     parser.add_argument("-t", "--text",
-        help="convert from YAML to text (THIS WILL DISCARD DATA)",
-        action="store_true")
+                        help="convert from YAML to text"
+                        " (THIS WILL DISCARD DATA)",
+                        action="store_true")
     args = parser.parse_args()
 
     for path in ([args.path] + args.existing):
-      if not os.path.exists(path) or not os.access(path, os.R_OK):
-          sys.exit("ERROR: Unable to open %s" % args.path)
+        if not os.path.exists(path) or not os.access(path, os.R_OK):
+            sys.exit("ERROR: Unable to open %s" % args.path)
 
     if args.text:
         # Ignore existing here
