@@ -15,7 +15,7 @@ cluster_apt_mirror: 10.0.100.3
 cluster_vip: 10.0.100.5
 
 # set to the FQDN of the bootstrap node using hostname+hypervisor domain
-chef_server: bcpc-bootstrap.hypervisor-bcpc.example.com
+chef_server: ansible-bcpc-bootstrap.hypervisor-bcpc.example.com
 
 ################################################
 # CLUSTER ACCESS AND CREDENTIALS

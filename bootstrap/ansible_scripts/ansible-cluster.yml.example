@@ -1,7 +1,7 @@
 ---
 cluster_name: Test-Laptop-Ansible
 nodes:
-  bcpc-bootstrap:
+  ansible-bcpc-bootstrap:
     domain: bcpc.example.com
     hardware_type: Virtual
     ip_address: 10.0.100.3

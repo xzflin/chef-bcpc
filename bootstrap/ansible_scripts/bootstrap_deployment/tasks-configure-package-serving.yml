@@ -27,19 +27,19 @@
     when: apt_mirror_via_vboxsf and hardware_type == "Virtual" and gcc_found.rc != 0
 
   - name: Check for VirtualBox shared folder for apt mirror
-    local_action: shell VBoxManage showvminfo bcpc-bootstrap --machinereadable | egrep -q 'SharedFolderNameMachineMapping\d+="apt-mirror"'
+    local_action: shell VBoxManage showvminfo ansible-bcpc-bootstrap --machinereadable | egrep -q 'SharedFolderNameMachineMapping\d+="apt-mirror"'
     become: no
     when: apt_mirror_via_vboxsf and hardware_type == "Virtual"
     register: apt_mirror_shared_folder_configured
     ignore_errors: true
 
   - name: Power down bootstrap VM to create shared folder
-    local_action: command VBoxManage controlvm bcpc-bootstrap acpipowerbutton
+    local_action: command VBoxManage controlvm ansible-bcpc-bootstrap acpipowerbutton
     become: no
     when: apt_mirror_via_vboxsf and hardware_type == "Virtual" and apt_mirror_shared_folder_configured.rc != 0
 
   - name: Wait for bootstrap VM to power off
-    local_action: pause seconds=10
+    local_action: pause seconds=180
     become: no
     when: apt_mirror_via_vboxsf and hardware_type == "Virtual" and apt_mirror_shared_folder_configured.rc != 0
 
@@ -49,7 +49,7 @@
     when: apt_mirror_via_vboxsf and hardware_type == "Virtual" and apt_mirror_shared_folder_configured.rc != 0
 
   - name: Power on bootstrap VM
-    local_action: command VBoxManage startvm bcpc-bootstrap
+    local_action: command VBoxManage startvm ansible-bcpc-bootstrap
     become: no
     when: apt_mirror_via_vboxsf and hardware_type == "Virtual" and apt_mirror_shared_folder_configured.rc != 0
 
@@ -81,7 +81,7 @@
     when: apt_mirror_via_vboxsf and hardware_type == "Virtual" and apt_mirror_shared_folder_configured.rc != 0
 
   - name: Wait for bootstrap VM to become available via SSH
-    local_action: wait_for host={{ ansible_ssh_host }} port=22 delay=10 state=started
+    local_action: wait_for host={{ ansible_ssh_host }} port=22 delay=180 state=started
     become: no
     when: apt_mirror_via_vboxsf and hardware_type == "Virtual" and apt_mirror_shared_folder_configured.rc != 0
 
@@ -92,6 +92,14 @@
   - name: Mount VirtualBox apt mirror shared folder
     mount: name={{ bootstrap_apt_mirror_dir }} src=apt-mirror fstype=vboxsf state=mounted
     when: apt_mirror_via_vboxsf and hardware_type == "Virtual"
+
+  - name: Load vboxsf kernel module on boot
+    lineinfile: dest=/etc/modules insertafter=EOF state=present line='vboxsf'
+    when: apt_mirror_via_vboxsf and hardware_type == "Virtual" and apt_mirror_shared_folder_configured.rc != 0
+
+  - name: Mount shared folder on boot
+    lineinfile: dest=/etc/rc.local insertbefore='exit 0' state=present line='mount apt-mirror'
+    when: apt_mirror_via_vboxsf and hardware_type == "Virtual" and apt_mirror_shared_folder_configured.rc != 0
     # VirtualBox shared folder done
 
   - name: Create directory to serve package mirrors from for Apache
