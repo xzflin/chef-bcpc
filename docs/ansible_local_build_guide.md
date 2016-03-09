@@ -44,16 +44,27 @@ Creating VMs
 
 Installing the OS on the bootstrap node
 ---
-* Attach the ISO to the DVD drive of the **bcpc-bootstrap** node.
+***NOTE: this process is somewhat involved and annoying. It will be replaced with a Packer image that incorporates everything automatically in the near future.***
+
+* Attach the ISO to the DVD drive of the **ansible-bcpc-bootstrap** node.
 * Boot the bootstrap node and install the operating system.
 * Select **eth0** as the primary network interface (additional interfaces will be configured manually after installation).
   * **eth0** is the VirtualBox NAT interface that allows the bootstrap node to access the Internet.
   * In actual hardware builds, an Internet connection is not necessary or expected to be present; this interface's presence is a concession to convenience so that DNS works properly, otherwise every SSH connection will take ~10 seconds due to reverse DNS lookup timeouts.
   * If you have a local DNS server on your build host, you can remove this interface from the VM; remember to update the Chef environment and change the value of the **bcpc.bootstrap.pxe_interface** key to move it up one spot.
-* Enter **bcpc-bootstrap** as the hostname.
+* Enter **ansible-bcpc-bootstrap** as the hostname.
 * Create an account named **ubuntu** (password can be whatever you like).
 * Partition `/dev/sda` using the **Guided - use entire disk** method. The other disks do not need to be partitioned or formatted at this time.
-* Select only **OpenSSH server** when asked to make a software selection.
+* Software selection:
+  * Select **OpenSSH server**.
+  * Check **Manual package selection** and continue.
+  * When **aptitude** launches, press the `/` key and enter `whois`, then press Return.
+  * Press the `+` key to add the **whois** package to the list of packages to be installed (the text will change to green).
+  * **If you wish to mount the apt mirror via VirtualBox shared folders**, you must also install **build-essential**:
+    * Press the `/` key and enter `build-essential`, then press Return.
+    * Press the `+` key to add the **build-essential** package to the list of packages to be installed (the text will change to green).
+  * Press the `G` key twice to begin installing packages from Aptitude. (Some packages will fail the configuration step, but this is okay).
+  * After package installation is complete, press Return, then quit Aptitude with the `Q` key.
 * GRUB can go in the MBR.
 
 Manually configuring bootstrap node network
