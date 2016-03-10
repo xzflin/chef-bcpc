@@ -31,6 +31,7 @@ package "nmap"
 package "iperf"
 package "curl"
 package "conntrack"
+package "dhcpdump"
 
 # I/O troubleshooting tools
 package "fio"
