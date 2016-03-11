@@ -35,9 +35,12 @@ template "/etc/haproxy/haproxy.cfg" do
   variables(
     lazy {
       {
-        :monitoring_admin_username => get_config("monitoring-admin-user"),
+        :monitoring_admin_username      => get_config("monitoring-admin-user"),
         :monitoring_admin_password_hash => get_config("monitoring-admin-password-hash"),
-        :servers => get_monitor_nodes
+        :mysql_servers                  => search_nodes("recipe", "bcpc-mysql::monitornode"),
+        :graphite_servers               => search_nodes("recipe", "bcpc-graphite::default"),
+        :elasticsearch_servers          => search_nodes("recipe", "bcpc-elasticsearch::default"),
+        :zabbix_servers                 => search_nodes("recipe", "bcpc-zabbix::server"),
       }
     }
   )

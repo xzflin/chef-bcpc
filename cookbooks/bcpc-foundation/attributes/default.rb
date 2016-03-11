@@ -14,6 +14,10 @@ default['bcpc']['openstack_branch'] = "proposed"
 default['bcpc']['virt_type'] = "kvm"
 # Define the kernel to be installed. By default, track latest LTS kernel
 default['bcpc']['preseed']['kernel'] = "linux-image-generic-lts-trusty"
+# Define a specific kernel version to have GRUB default to (if non-nil)
+# - specify kernel like pattern "3.13.0-61-generic"
+# - a wrong pattern here will result in Chef convergence failure
+default['bcpc']['kernel_version'] = nil
 # ulimits for libvirt-bin
 default['bcpc']['libvirt-bin']['ulimit']['nofile'] = 4096
 # Region name for this cluster
@@ -67,6 +71,8 @@ default['bcpc']['enabled']['tpm'] = false
 default['bcpc']['enabled']['secure_fixed_networks'] = true
 # Toggle to enable/disable swap memory
 default['bcpc']['enabled']['swap'] = true
+# Toggle to enable apport for debugging process crashes
+default['bcpc']['enabled']['apport'] = true
 # Toggle to enable/disable Heat (OpenStack Cloud Formation)
 default['bcpc']['enabled']['heat'] = false
 
@@ -235,11 +241,109 @@ default['bcpc']['horizon']['disable_panels'] = ['containers']
 
 ###########################################
 #
+# Service catalog (API versions/endpoints)
+#
+###########################################
+default['bcpc']['catalog'] = {
+  'identity' => {
+    'name' => 'keystone',
+    'project' => 'keystone',
+    'description' => 'OpenStack Identity',
+    'ports' => {
+      'admin' => 35357,
+      'internal' => 5000,
+      'public' => 5000
+    },
+    'uris' => {
+      'admin' => 'v2.0',
+      'internal' => 'v2.0',
+      'public' => 'v2.0'
+    }
+  },
+  'compute' => {
+    'name' => 'Compute Service',
+    'project' => 'nova',
+    'description' => 'OpenStack Compute Service',
+    'ports' => {
+      'admin' => 8774,
+      'internal' => 8774,
+      'public' => 8774
+    },
+    'uris' => {
+      'admin' => 'v1.1/$(tenant_id)s',
+      'internal' => 'v1.1/$(tenant_id)s',
+      'public' => 'v1.1/$(tenant_id)s'
+    }
+  },
+  'ec2' => {
+    'name' => 'EC2 Service',
+    'project' => 'nova',
+    'description' => 'OpenStack EC2 Service',
+    'ports' => {
+      'admin' => 8773,
+      'internal' => 8773,
+      'public' => 8773
+    },
+    'uris' => {
+      'admin' => 'services/Admin',
+      'internal' => 'services/Cloud',
+      'public' => 'services/Cloud'
+    }
+  },
+  'volume' => {
+    'name' => 'Volume Service',
+    'project' => 'cinder',
+    'description' => 'OpenStack Volume Service',
+    'ports' => {
+      'admin' => 8776,
+      'internal' => 8776,
+      'public' => 8776
+    },
+    'uris' => {
+      'admin' => 'v1/$(tenant_id)s',
+      'internal' => 'v1/$(tenant_id)s',
+      'public' => 'v1/$(tenant_id)s'
+    }
+  },
+  'volumev2' => {
+    'name' => 'cinderv2',
+    'project' => 'cinder',
+    'description' => 'OpenStack Volume Service V2',
+    'ports' => {
+      'admin' => 8776,
+      'internal' => 8776,
+      'public' => 8776
+    },
+    'uris' => {
+      'admin' => 'v2/$(tenant_id)s',
+      'internal' => 'v2/$(tenant_id)s',
+      'public' => 'v2/$(tenant_id)s'
+    }
+  },
+  'image' => {
+    'name' => 'Image Service',
+    'project' => 'glance',
+    'description' => 'OpenStack Image Service',
+    'ports' => {
+      'admin' => 9292,
+      'internal' => 9292,
+      'public' => 9292
+    },
+    'uris' => {
+      'admin' => 'v2',
+      'internal' => 'v2',
+      'public' => 'v2'
+    }
+  }
+}
+
+###########################################
+#
 #  Keystone Settings
 #
 ###########################################
 #
-# Defaut log file
+# Default log file
 default['bcpc']['keystone']['log_file'] = '/var/log/keystone/keystone.log'
 # Eventlet server is deprecated in Kilo, so by default we
 # serve Keystone via Apache now.
@@ -279,6 +383,7 @@ default['bcpc']['keystone']['drivers']['trust'] = 'sql'
 default['bcpc']['keystone']['drivers']['notification'] = 'log'
 # Notifications format. See: http://docs.openstack.org/developer/keystone/event_notifications.html
 default['bcpc']['keystone']['notification_format'] = 'cadf'
+
 # LDAP credentials used by Keystone
 default['bcpc']['ldap']['admin_user'] = nil
 default['bcpc']['ldap']['admin_pass'] = nil
@@ -554,7 +659,9 @@ default['bcpc']['rgw_quota'] = {
 default['bcpc']['quota'] = {
     'nova' => {
         'AdminTenant' => {
-           'cores' => -1
+           'cores'        => -1,
+           'ram'          => -1,
+           'floating_ips' => -1
         }
     }
 }

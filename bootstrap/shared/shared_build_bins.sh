@@ -80,7 +80,7 @@ if [ -f diamond.deb ]; then
 fi
 # Make the diamond package
 if [ ! -f diamond.deb ]; then
-  cp -r $FILECACHE_MOUNT_POINT/python-diamond Diamond
+  git clone $FILECACHE_MOUNT_POINT/python-diamond Diamond
   cd Diamond
   git checkout $VER_DIAMOND
   make builddeb

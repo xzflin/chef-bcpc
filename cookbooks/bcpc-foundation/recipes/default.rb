@@ -16,10 +16,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+include_recipe 'bcpc-foundation::apport'
 include_recipe 'bcpc-foundation::certs'
 include_recipe 'bcpc-foundation::cpupower'
 include_recipe 'bcpc-foundation::deadline-io-scheduler'
 include_recipe 'bcpc-foundation::developer'
+include_recipe 'bcpc-foundation::kernel'
 include_recipe 'bcpc-foundation::packages-common'
 include_recipe 'bcpc-foundation::packages-debugging'
 include_recipe 'bcpc-foundation::swap'

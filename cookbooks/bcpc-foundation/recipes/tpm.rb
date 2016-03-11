@@ -16,51 +16,51 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-if node['bcpc']['enabled']['tpm']
-  package "linux-image-extra-virtual" # installs the TPM module if not already there
+return unless node['bcpc']['enabled']['tpm']
 
-  bash "ensure-tpm_rng-module-is-loaded" do
-    code <<-EOH
-      modprobe tpm_rng
-    EOH
-    not_if "lsmod | grep -q tpm_rng"
-  end
+package "linux-image-extra-#{node['kernel']['release']}"
 
-  bash "ensure-tpm_rng-module-loads-on-boot" do
-    code <<-EOH
-      echo 'tpm_rng' >> /etc/modules
-    EOH
-    not_if "grep -q tpm_rng /etc/modules"
-  end
+bash "ensure-tpm_rng-module-is-loaded" do
+  code <<-EOH
+    modprobe tpm_rng
+  EOH
+  not_if "lsmod | grep -q tpm_rng"
+end
 
-  # this is the sort of thing that you wish didn't have to exist, but it does,
-  # because trousers has a broken postinst script
-  bash "work-around-broken-trousers-postinst" do
-    code <<-EOH
-      cd /tmp && apt-get download trousers
-      if [[ $? != 0 ]]; then exit 1; fi
-      TROUSERS_PKG=$(find . -maxdepth 1 -name trousers\*deb)
-      dpkg --unpack $TROUSERS_PKG
-      sed -i 's/pidof udevd/pidof systemd-udevd/g' /var/lib/dpkg/info/trousers.postinst
-      dpkg --configure trousers
-    EOH
-    only_if "dpkg -l trousers 2>&1 | grep -q 'no packages found'"
-  end
-  package "rng-tools"
-  package "tpm-tools"
+bash "ensure-tpm_rng-module-loads-on-boot" do
+  code <<-EOH
+    echo 'tpm_rng' >> /etc/modules
+  EOH
+  not_if "grep -q tpm_rng /etc/modules"
+end
 
-  service "rng-tools" do
-    action :stop
-  end
+# this is the sort of thing that you wish didn't have to exist, but it does,
+# because trousers has a broken postinst script
+bash "work-around-broken-trousers-postinst" do
+  code <<-EOH
+    cd /tmp && apt-get download trousers
+    if [[ $? != 0 ]]; then exit 1; fi
+    TROUSERS_PKG=$(find . -maxdepth 1 -name trousers\*deb)
+    dpkg --unpack $TROUSERS_PKG
+    sed -i 's/pidof udevd/pidof systemd-udevd/g' /var/lib/dpkg/info/trousers.postinst
+    dpkg --configure trousers
+  EOH
+  only_if "dpkg -l trousers 2>&1 | grep -q 'no packages found'"
+end
+package "rng-tools"
+package "tpm-tools"
 
-  template "/etc/default/rng-tools" do
-    source "rng-tools.erb"
-    user "root"
-    group "root"
-    mode 0644
-  end
+service "rng-tools" do
+  action :stop
+end
 
-  service "rng-tools" do
-    action :start
-  end
+template "/etc/default/rng-tools" do
+  source "rng-tools.erb"
+  user "root"
+  group "root"
+  mode 0644
+end
+
+service "rng-tools" do
+  action :start
 end
