@@ -57,8 +57,8 @@ BOX=trusty-server-cloudimg-amd64-vagrant-disk1.box
 download_file $BOX http://cloud-images.ubuntu.com/vagrant/trusty/current/$BOX
 
 # Obtain Chef client and server DEBs.
-CHEF_CLIENT_DEB=${CHEF_CLIENT_DEB:-chef_12.3.0-1_amd64.deb}
-CHEF_SERVER_DEB=${CHEF_SERVER_DEB:-chef-server-core_12.0.8-1_amd64.deb}
+CHEF_CLIENT_DEB=${CHEF_CLIENT_DEB:-chef_12.9.41-1_amd64.deb}
+CHEF_SERVER_DEB=${CHEF_SERVER_DEB:-chef-server-core_12.6.0-1_amd64.deb}
 download_file $CHEF_CLIENT_DEB https://packages.chef.io/stable/ubuntu/10.04/$CHEF_CLIENT_DEB
 download_file $CHEF_SERVER_DEB https://packages.chef.io/stable/ubuntu/14.04/$CHEF_SERVER_DEB
 
