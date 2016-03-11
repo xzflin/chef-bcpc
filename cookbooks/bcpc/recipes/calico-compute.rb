@@ -25,7 +25,7 @@ apt_repository "calico" do
   notifies :run, "execute[apt-get update]", :immediately
 end
 
-# install etcd
+# install etcd from calico repo
 package "etcd" do
     action :upgrade
 end
@@ -80,9 +80,9 @@ end
 #end
 
 # this is temporary hack to make Calico work
-package "python-pip" do
-    action :upgrade
-end
+# package "python-pip" do
+#    action :upgrade
+#end
 
 # must install without dependencies
 # otherwise it installs pbr version that breaks keystone
@@ -90,15 +90,15 @@ end
 #    code "pip install --no-deps networking-calico"
 #end
 
-cookbook_file "/tmp/networking-calico-1.0.0.tar.gz" do
-    source "networking-calico-1.0.0.tar.gz"
-    owner "root"
-    mode 00644
-end
+#cookbook_file "/tmp/networking-calico-1.0.0.tar.gz" do
+#    source "networking-calico-1.0.0.tar.gz"
+#    owner "root"
+#    mode 00644
+#end
 
-bash "install-networking-calico" do
-    code "pip install --no-deps --no-index --find-links file:///tmp/ networking-calico"
-end
+#bash "install-networking-calico" do
+#    code "pip install --no-deps --no-index --find-links file:///tmp/ networking-calico"
+#end
 
 
 package "neutron-dhcp-agent" do
@@ -129,5 +129,3 @@ end
 bash "start-calico-felix" do
     code "service calico-felix restart"
 end
-
-# sudo update-rc.d -f apparmor remove

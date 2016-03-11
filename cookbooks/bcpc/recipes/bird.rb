@@ -38,7 +38,6 @@ template "/etc/bird/bird.conf" do
       :headnodes => get_head_nodes
     }
   })
-  # use get_head_nodes
   # notifies :restart, "service[bird]", :immediately
 end
 

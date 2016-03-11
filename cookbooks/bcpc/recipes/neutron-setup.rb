@@ -25,7 +25,7 @@
 bash "set-up-neutron-networks" do
   code <<-EOH
     neutron net-create --router:external --provider:network_type flat --provider:physical_network ext-net1 external-network
-  neutron subnet-create --allocation-pool start=192.168.100.129,end=192.168.100.254 --gateway 192.168.100.1 --disable-dhcp external-network 192.168.100.0/24
+    neutron subnet-create --allocation-pool start=192.168.100.129,end=192.168.100.254 --gateway 192.168.100.1 --disable-dhcp external-network 192.168.100.0/24
     neutron net-create --provider:network_type vxlan AdminTenant-network
     neutron subnet-create --name AdminTenant-subnet --enable-dhcp --gateway 1.127.0.1 AdminTenant-network 1.127.0.0/25
     neutron router-create AdminTenant-router

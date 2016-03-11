@@ -85,3 +85,19 @@ end
 bash "restart-neutron-server" do
   code "service neutron-server restart"
 end
+
+# in case it is missing
+package "jq" do
+    action :upgrade
+end
+
+# create sample networks for testing
+bash "create-calico-net" do
+    code "source /root/adminrc; neutron net-create --shared --provider:network_type local calico_int_net"
+    not_if "source /root/adminrc; neutron net-list -f json | jq '.[] | .name' | grep '\"calico_int_net\"'"
+end
+
+bash "create-calico-subnet" do
+    code "source /root/adminrc; neutron subnet-create --name calico_int_subnet --allocation-pool start=192.168.100.30,end=192.168.100.50  calico_int_net 192.168.100.0/25"
+    not_if "source /root/adminrc; neutron subnet-list -f json | jq '.[] | .name' | grep '\"calico_int_subnet\"'"
+end
