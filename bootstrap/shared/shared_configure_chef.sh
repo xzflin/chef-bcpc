@@ -118,7 +118,7 @@ do_on_node vm-bootstrap $ADMIN_SET
 # Otherwise, each mon VM needs to complete chef run first before setting the next node's run_list.
 if [[ $BOOTSTRAP_CHEF_DO_CONVERGE -eq 0 ]]; then
   for vm in $mon_vms; do
-    do_on_node vm-bootstrap "$KNIFE node run_list set bcpc-$vm.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Monitoring]'"
+    do_on_node vm-bootstrap "$KNIFE node run_list set bcpc-$vm.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Hardware-Virtual],recipe[role-bcpc-node-monitor]'"
   done
   echo "BOOTSTRAP_CHEF_DO_CONVERGE is set to 0, skipping automatic convergence."
   exit 0
@@ -136,7 +136,7 @@ else
   done
   # Run chef on each mon VM before assigning next node for monitoring.
   for vm in $mon_vms; do
-    do_on_node vm-bootstrap "$KNIFE node run_list set bcpc-$vm.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Monitoring]'"
+    do_on_node vm-bootstrap "$KNIFE node run_list set bcpc-$vm.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Hardware-Virtual],recipe[role-bcpc-node-monitor]'"
     do_on_node $vm "sudo chef-client"
   done
   # Run chef on each mon VM except the last node to update cluster components
