@@ -284,28 +284,36 @@ bash "patch-for-ip-hostnames-metadata" do
     notifies :restart, "service[nova-api]", :immediately
 end
 
-cookbook_file "/tmp/nova_network_linux_net.patch" do
-    source "nova_network_linux_net.patch"
-    owner "root"
-    mode 0644
+# Remove patch files used by older patching resource
+file "/usr/lib/python2.7/dist-packages/nova/network/linux_net.py.prepatch" do
+  action :delete
 end
 
-bash "patch-for-ip-hostnames-networking" do
-    user "root"
-    code <<-EOH
-        cd /usr/lib/python2.7/dist-packages/
-        cp nova/network/linux_net.py nova/network/linux_net.py.prepatch
-        patch -p1 < /tmp/nova_network_linux_net.patch
-        rv=$?
-        if [ $rv -ne 0 ]; then
-          echo "Error applying patch ($rv) - aborting!"
-          exit $rv
-        fi
-        cp /tmp/nova_network_linux_net.patch .
-    EOH
-    not_if "grep -q 'THIS FILE PATCHED BY BCPC' /usr/lib/python2.7/dist-packages/nova/network/linux_net.py"
-    notifies :restart, "service[nova-compute]", :immediately
-    notifies :restart, "service[nova-network]", :immediately
+file "/usr/lib/python2.7/dist-packages/nova_network_linux_net.patch" do
+  action :delete
+end
+
+# This patches nova-network to have dnsmasq bind to the tenant's bridged
+# interface, so unicast DHCP replies are correctly responded to.
+# This presumes linux_net.py has the BCPC hostnames patch applied by an
+# earlier version of this recipe.
+bcpc_patch "nova-network-linux_net-dnsmasq" do
+  patch_file           'nova-network-linux_net-dnsmasq.patch'
+  patch_root_dir       '/usr/lib/python2.7/dist-packages'
+  shasums_before_apply 'nova-network-linux_net-dnsmasq-BEFORE.SHASUMS'
+  shasums_after_apply  'nova-network-linux_net-dnsmasq-AFTER.SHASUMS'
+  notifies :restart, 'service[nova-network]', :immediately
+  only_if "shasum /usr/lib/python2.7/dist-packages/nova/network/linux_net.py | grep -q '^78337cd95c476de57b9eede2350a67dd780fb239'"
+end
+
+# This patches the stock nova-network linux_net.py with BCPC hostname
+# change and the above dnsmasq fix
+bcpc_patch "nova-network-linux_net" do
+  patch_file           'nova-network-linux_net.patch'
+  patch_root_dir       '/usr/lib/python2.7/dist-packages'
+  shasums_before_apply 'nova-network-linux_net-BEFORE.SHASUMS'
+  shasums_after_apply  'nova-network-linux_net-AFTER.SHASUMS'
+  notifies :restart, 'service[nova-network]', :immediately
 end
 
 # this patch patches Nova to work correctly if you attempt to boot an instance from
