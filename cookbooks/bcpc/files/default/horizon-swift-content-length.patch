@@ -1,5 +1,5 @@
---- openstack_dashboard/api/swift.py.bak	2015-05-05 14:45:05.262274431 -0400
-+++ openstack_dashboard/api/swift.py	2015-05-05 14:45:28.234179366 -0400
+--- a/openstack_dashboard/api/swift.py	2015-05-05 14:45:05.262274431 -0400
++++ b/openstack_dashboard/api/swift.py	2015-05-05 14:45:28.234179366 -0400
 @@ -283,6 +283,7 @@
      if object_file:
          headers['X-Object-Meta-Orig-Filename'] = object_file.name
