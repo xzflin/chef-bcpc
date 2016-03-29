@@ -20,10 +20,23 @@
 include_recipe "bcpc::default"
 include_recipe "bcpc::packages-openstack"
 
+# python-nova will be used as the canary package to determine whether at least
+# 2015.1.2 is being installed
+package 'python-nova' do
+  action :upgrade
+end
+
+ruby_block 'evaluate-version-eligibility' do
+  block do
+    minimum_nova_version = Mixlib::ShellOut.new("dpkg --compare-versions $(dpkg -s python-nova | egrep '^Version:' | awk '{ print $NF }') ge 1:2015.1.2")
+    cmd_result = minimum_nova_version.run_command
+    fail('You must install OpenStack Kilo 2015.1.2 or better. Earlier versions are not supported.') if cmd_result.error?
+  end
+end
+
 %w{ python-novaclient
     python-cinderclient
     python-glanceclient
-    python-nova
     python-memcache
     python-keystoneclient
     python-nova-adminclient
