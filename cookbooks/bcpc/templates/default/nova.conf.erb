@@ -51,6 +51,7 @@ ram_allocation_ratio=<%=node['bcpc']['nova']['ram_allocation_ratio']%>
 reserved_host_memory_mb=<%=node['bcpc']['nova']['reserved_host_memory_mb']%>
 cpu_allocation_ratio=<%=node['bcpc']['nova']['cpu_allocation_ratio']%>
 scheduler_host_subset_size=<%= node['bcpc']['nova']['scheduler_host_subset_size'] %>
+max_concurrent_builds=<%= node['bcpc']['nova']['max_concurrent_builds'] %>
 
 # Nova Network settings
 network_manager=nova.network.manager.VlanManager
