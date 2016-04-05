@@ -1,4 +1,0 @@
-create monitoring-clients-staging hash:ip family inet hashsize 1024 maxelem 65536
-<% for @ipaddress in @clients %>
-add monitoring-clients-staging <%= @ipaddress %>
-<% end %>
