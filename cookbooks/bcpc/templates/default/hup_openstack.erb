@@ -5,32 +5,4 @@
 #
 ################################################
 
-<% if @servers.include?(node) -%>
-echo
-echo "################################"
-echo "# HEAD NODE SERVICES"
-for i in apache2 \
-         cinder-api \
-         cinder-scheduler \
-         cinder-volume \
-         glance-api \
-         glance-registry \
-         nova-cert \
-         nova-conductor \
-         nova-consoleauth \
-         nova-scheduler
-do
-    service $i restart
-done
-<% end -%>
-
-echo
-echo "################################"
-echo "# WORK NODE SERVICES"
-for i in nova-api \
-         nova-compute \
-         nova-network \
-         nova-novncproxy
-do
-    service $i restart
-done
+/usr/local/bin/control_openstack restart
