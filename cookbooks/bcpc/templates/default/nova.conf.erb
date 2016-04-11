@@ -80,6 +80,9 @@ default_availability_zone=
 
 # Nova Compute settings
 compute_driver=libvirt.LibvirtDriver
+<% unless is_kilo? %>
+compute_monitors = cpu.virt_driver
+<% end %>
 use_cow_images=True
 #snapshot_image_format=qcow2
 sync_power_state_interval=<%= node['bcpc']['nova']['sync_power_state_interval'] %>
@@ -87,20 +90,6 @@ resume_guests_state_on_host_boot=<%= node['bcpc']['nova']['resume_guests_state_o
 
 # Nova Volume settings
 volume_api_class=nova.volume.cinder.API
-
-# Nova VNC settings
-ssl_only=false
-key=/etc/nova/ssl-bcpc.key
-cert=/etc/nova/ssl-bcpc.pem
-novnc_enabled=True
-<% if node['bcpc']['vnc']['proxy_use_vip'] %>
-novncproxy_base_url=https://<%=node['bcpc']['management']['vip']%>:6080/vnc_auto.html
-<% else %>
-novncproxy_base_url=https://openstack.<%=node['bcpc']['cluster_domain']%>:6080/vnc_auto.html
-<% end %>
-vncserver_proxyclient_address=<%=node['bcpc']['management']['ip']%>
-novncproxy_host=<%=node['bcpc']['management']['ip']%>
-vncserver_listen=<%=node['bcpc']['management']['ip']%>
 
 # Glance settings
 image_service=nova.image.glance.GlanceImageService
@@ -139,6 +128,26 @@ quota_<%=key%> = <%= value %>
 max_age = 28800
 until_refresh = 10
 
+# Nova VNC settings
+<%# Liberty and beyond uses a separate [vnc] section for some options %>
+novncproxy_host=<%=node['bcpc']['management']['ip']%>
+<% unless is_kilo? %>
+[vnc]
+enabled=True
+<% else %>
+novnc_enabled=True
+<% end %>
+ssl_only=false
+key=/etc/nova/ssl-bcpc.key
+cert=/etc/nova/ssl-bcpc.pem
+<% if node['bcpc']['vnc']['proxy_use_vip'] %>
+novncproxy_base_url=https://<%=node['bcpc']['management']['vip']%>:6080/vnc_auto.html
+<% else %>
+novncproxy_base_url=https://openstack.<%=node['bcpc']['cluster_domain']%>:6080/vnc_auto.html
+<% end %>
+vncserver_proxyclient_address=<%=node['bcpc']['management']['ip']%>
+vncserver_listen=<%=node['bcpc']['management']['ip']%>
+
 [oslo_concurrency]
 lock_path=/var/lock/nova
 
@@ -162,9 +171,9 @@ idle_timeout=3600
 # Keystone settings
 [keystone_authtoken]
 # cafile = /etc/ssl/certs/ssl-bcpc.pem
-auth_uri = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:5000/v2.0/
+auth_uri = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:5000/<%= node['bcpc']['catalog']['identity']['uris']['internal'] %>/
 identity_uri = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:35357
-auth_version = v2.0
+auth_version = <%= node['bcpc']['catalog']['identity']['uris']['internal'] %>
 admin_tenant_name = <%=node['bcpc']['admin_tenant']%>
 admin_user = <%=get_config('keystone-admin-user')%>
 admin_password = <%=get_config('keystone-admin-password')%>
@@ -203,7 +212,6 @@ live_migration_flag="VIR_MIGRATE_UNDEFINE_SOURCE,VIR_MIGRATE_PEER2PEER,VIR_MIGRA
 virt_type=<%=node['bcpc']['virt_type']%>
 use_virtio_for_bridges=True
 hw_disk_discard = unmap
-
 
 <% unless node["bcpc"]["vendordata_config"].nil? %>
 [metadata]

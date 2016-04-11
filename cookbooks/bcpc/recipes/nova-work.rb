@@ -231,7 +231,7 @@ service "apparmor" do
 end
 
 template "/etc/apparmor.d/abstractions/libvirt-qemu" do
-  source "apparmor-libvirt-qemu.erb"
+  source "apparmor-libvirt-qemu.#{node['bcpc']['openstack_release']}.erb"
   notifies :restart, "service[libvirt-bin]", :delayed
   notifies :restart, "service[apparmor]", :delayed
 end

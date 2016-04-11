@@ -70,6 +70,10 @@ deb http://ubuntu-cloud.archive.canonical.com/ubuntu trusty-proposed/kilo main
 deb http://ubuntu-cloud.archive.canonical.com/ubuntu trusty-updates/kilo main
 deb-i386 http://ubuntu-cloud.archive.canonical.com/ubuntu trusty-proposed/kilo main
 deb-i386 http://ubuntu-cloud.archive.canonical.com/ubuntu trusty-updates/kilo main
+deb http://ubuntu-cloud.archive.canonical.com/ubuntu trusty-proposed/liberty main
+deb http://ubuntu-cloud.archive.canonical.com/ubuntu trusty-updates/liberty main
+deb-i386 http://ubuntu-cloud.archive.canonical.com/ubuntu trusty-proposed/liberty main
+deb-i386 http://ubuntu-cloud.archive.canonical.com/ubuntu trusty-updates/liberty main
 clean http://ubuntu-cloud.archive.canonical.com/ubuntu
 
 # zabbix repository in BCPC

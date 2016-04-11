@@ -87,7 +87,7 @@ bcpc_patch "cinder-az-fallback-2015.1.2" do
   notifies :restart, 'service[cinder-api]', :immediately
   notifies :restart, 'service[cinder-volume]', :immediately
   notifies :restart, 'service[cinder-scheduler]', :immediately
-  not_if "dpkg -s python-cinder | egrep -q '^Version: 1:2015.1.(0|1)'"
+  only_if "dpkg --compare-versions $(dpkg -s python-cinder | egrep '^Version:' | awk '{ print $NF }') ge 1:2015.1.2 && dpkg --compare-versions $(dpkg -s python-cinder | egrep '^Version:' | awk '{ print $NF }') lt 2:7.0"
 end
 
 # Deal with quota update commands (applies to cinderclient < 1.3.1)
@@ -100,6 +100,7 @@ bcpc_patch "fix-quota-class-update" do
     notifies :restart, "service[cinder-api]", :immediately
     notifies :restart, "service[cinder-volume]", :immediately
     notifies :restart, "service[cinder-scheduler]", :immediately
+    only_if "dpkg --compare-versions $(dpkg -s python-cinderclient | egrep '^Version:' | awk '{ print $NF }') lt 1:1.3.1"
 end
 
 template "/etc/cinder/cinder.conf" do
@@ -134,7 +135,6 @@ ruby_block "cinder-database-creation" do
     end
     not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['cinder']}\"'|grep \"#{node['bcpc']['dbname']['cinder']}\" >/dev/null" }
 end
-
 
 bash "cinder-database-sync" do
     action :nothing
@@ -192,6 +192,18 @@ node['bcpc']['ceph']['enabled_pools'].each do |type|
         EOH
         not_if ". /root/adminrc; cinder type-list | grep #{type.upcase}"
     end
+end
+
+node['bcpc']['cinder']['quota'].each do |k, v|
+  bash "cinder-set-default-#{k}-quota" do
+    user "root"
+    code <<-EOH
+      . /root/adminrc
+      cinder quota-class-update --#{k} #{v} default
+    EOH
+  end
+  # figure this out later
+  #not_if ". /root/adminrc; cinder quota-class-show
 end
 
 service "tgt" do
