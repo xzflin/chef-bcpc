@@ -39,7 +39,7 @@ include_recipe "bcpc::packages-openstack"
     end
 end
 
-%w{hup_openstack logwatch}.each do |script|
+%w{control_openstack hup_openstack logwatch}.each do |script|
     template "/usr/local/bin/#{script}" do
         source "#{script}.erb"
         mode 0755
