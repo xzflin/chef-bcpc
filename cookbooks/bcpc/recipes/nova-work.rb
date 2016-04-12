@@ -306,14 +306,23 @@ bcpc_patch "nova-network-linux_net-dnsmasq" do
   only_if "shasum /usr/lib/python2.7/dist-packages/nova/network/linux_net.py | grep -q '^78337cd95c476de57b9eede2350a67dd780fb239'"
 end
 
-# This patches the stock nova-network linux_net.py with BCPC hostname
-# change and the above dnsmasq fix
-bcpc_patch "nova-network-linux_net" do
+# patches for Kilo/Liberty for linux_net.py (only differ in checksums, same patch applies to both)
+bcpc_patch "nova-network-kilo-linux_net" do
   patch_file           'nova-network-linux_net.patch'
   patch_root_dir       '/usr/lib/python2.7/dist-packages'
-  shasums_before_apply 'nova-network-linux_net-BEFORE.SHASUMS'
-  shasums_after_apply  'nova-network-linux_net-AFTER.SHASUMS'
+  shasums_before_apply 'nova-network-kilo-linux_net-BEFORE.SHASUMS'
+  shasums_after_apply  'nova-network-kilo-linux_net-AFTER.SHASUMS'
   notifies :restart, 'service[nova-network]', :immediately
+  only_if "dpkg --compare-versions $(dpkg -s python-nova | egrep '^Version:' | awk '{ print $NF }') lt 2:0"
+end
+
+bcpc_patch "nova-network-liberty-linux_net" do
+  patch_file           'nova-network-linux_net.patch'
+  patch_root_dir       '/usr/lib/python2.7/dist-packages'
+  shasums_before_apply 'nova-network-liberty-linux_net-BEFORE.SHASUMS'
+  shasums_after_apply  'nova-network-liberty-linux_net-AFTER.SHASUMS'
+  notifies :restart, 'service[nova-network]', :immediately
+  only_if "dpkg --compare-versions $(dpkg -s python-nova | egrep '^Version:' | awk '{ print $NF }') ge 2:0"
 end
 
 # this patch patches Nova to work correctly if you attempt to boot an instance from
