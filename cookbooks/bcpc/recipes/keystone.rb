@@ -269,43 +269,53 @@ node['bcpc']['catalog'].each do |svc, svcprops|
   # entry from the environment service catalog)
   ruby_block "keystone-delete-outdated-#{svc}-endpoint" do
     block do
-      svc_endpoint_raw = %x[
+      svc_endpoints_raw = %x[
         . /root/api_versionsrc
         export OS_TOKEN="#{get_config('keystone-admin-token')}";
         export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['admin']}/#{node['bcpc']['catalog']['identity']['uris']['admin']}/";
-        openstack endpoint show #{svc} -f json 2>/dev/null
+        openstack endpoint list -f json
       ]
       begin
-        svc_endpoint = JSON.parse(svc_endpoint_raw)
-        svc_id = svc_endpoint.select { |k| k['Field'] == 'id' }[0]['Value']
-        %x[
-          . /root/api_versionsrc
-          export OS_TOKEN="#{get_config('keystone-admin-token')}";
-          export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['admin']}/#{node['bcpc']['catalog']['identity']['uris']['admin']}/";
-          openstack endpoint delete #{svc_id}
-        ]
+        svc_endpoints = JSON.parse(svc_endpoints_raw)
+        #puts svc_endpoints
+        svc_ids = svc_endpoints.select { |k| k['Service Type'] == svc }.collect { |v| v['ID'] }
+        #puts svc_ids
+        svc_ids.each do |svc_id|
+          %x[
+            . /root/api_versionsrc
+            export OS_TOKEN="#{get_config('keystone-admin-token')}";
+            export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['admin']}/#{node['bcpc']['catalog']['identity']['uris']['admin']}/";
+            openstack endpoint delete #{svc_id} 2>&1
+          ]
+        end
       rescue JSON::ParserError
-        next
       end
     end
     not_if {
-      svc_endpoint_raw = %x[
+      puts 'starting not_if block'
+      svc_endpoints_raw = %x[
         . /root/api_versionsrc
         export OS_TOKEN="#{get_config('keystone-admin-token')}";
         export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['admin']}/#{node['bcpc']['catalog']['identity']['uris']['admin']}/";
-        openstack endpoint show #{svc} -f json 2>/dev/null
+        openstack endpoint list -f json
       ]
       begin
-        svc_endpoint = JSON.parse(svc_endpoint_raw)
-        adminurl = svc_id = svc_endpoint.select { |k| k['Field'] == 'adminurl' }[0]['Value']
-        internalurl = svc_id = svc_endpoint.select { |k| k['Field'] == 'internalurl' }[0]['Value']
-        publicurl = svc_id = svc_endpoint.select { |k| k['Field'] == 'publicurl' }[0]['Value']
-        (adminurl == generate_service_catalog_uri(svcprops, 'admin')) && (internalurl == generate_service_catalog_uri(svcprops, 'internal')) && (publicurl == generate_service_catalog_uri(svcprops, 'public'))
+        svc_endpoints = JSON.parse(svc_endpoints_raw)
+        #puts svc_endpoints
+        svcs = svc_endpoints.select { |k| k['Service Type'] == svc }
+        #puts svcs
 
-        #puts "Comparing '#{adminurl}' to '#{generate_service_catalog_uri(svcprops, 'admin')}'"
-        #puts "Comparing '#{internalurl}' to '#{generate_service_catalog_uri(svcprops, 'internal')}'"
-        #puts "Comparing '#{publicurl}' to '#{generate_service_catalog_uri(svcprops, 'public')}'"
+        adminurl = svcs.select { |v| v['URL'] if v['Interface'] == 'admin' }[0]['URL']
+        internalurl = svcs.select { |v| v['URL'] if v['Interface'] == 'internal' }[0]['URL']
+        publicurl = svcs.select { |v| v['URL'] if v['Interface'] == 'public' }[0]['URL']
+        puts "\n"
+        puts "Comparing #{adminurl} to #{generate_service_catalog_uri(svcprops, 'admin')}"
+        puts "Comparing #{internalurl} to #{generate_service_catalog_uri(svcprops, 'internal')}"
+        puts "Comparing #{publicurl} to #{generate_service_catalog_uri(svcprops, 'public')}"
+        puts 'ending not_if block successfully'
+        (adminurl == generate_service_catalog_uri(svcprops, 'admin')) && (internalurl == generate_service_catalog_uri(svcprops, 'internal')) && (publicurl == generate_service_catalog_uri(svcprops, 'public'))
       rescue JSON::ParserError
+        puts 'failing out of not_if block'
         false
       end
     }
@@ -357,8 +367,6 @@ node['bcpc']['catalog'].each do |svc, svcprops|
           #{svc}
     EOH
   end
-
-  puts endpoint_create_cmd
 
   ruby_block "keystone-create-#{svc}-endpoint" do
     block do
