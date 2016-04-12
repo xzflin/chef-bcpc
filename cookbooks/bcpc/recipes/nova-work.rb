@@ -204,12 +204,33 @@ file "/usr/local/bin/nova-service-restart-wrapper" do
   action :delete
 end
 
-bcpc_patch 'nova-api-metadata-base' do
+# patch Nova metadata for our hostname format (ip-x-x-x-x and public-x-x-x-x)
+bcpc_patch 'nova-api-metadata-base-kilo' do
   patch_file           'nova-api-metadata-base.patch'
   patch_root_dir       '/usr/lib/python2.7/dist-packages'
-  shasums_before_apply 'nova-api-metadata-base-BEFORE.SHASUMS'
-  shasums_after_apply  'nova-api-metadata-base-AFTER.SHASUMS'
+  shasums_before_apply 'nova-api-metadata-base-kilo-BEFORE.SHASUMS'
+  shasums_after_apply  'nova-api-metadata-base-kilo-AFTER.SHASUMS'
   notifies :restart, 'service[nova-api]', :immediately
+  only_if "dpkg --compare-versions $(dpkg -s python-nova | egrep '^Version:' | awk '{ print $NF }') lt 2:0"
+end
+
+# two different sets of checksums for Liberty (12.0.0 has one, 12.0.1+ another)
+bcpc_patch 'nova-api-metadata-base-liberty-12.0.0' do
+  patch_file           'nova-api-metadata-base.patch'
+  patch_root_dir       '/usr/lib/python2.7/dist-packages'
+  shasums_before_apply 'nova-api-metadata-base-liberty-12.0.0-BEFORE.SHASUMS'
+  shasums_after_apply  'nova-api-metadata-base-liberty-12.0.0-AFTER.SHASUMS'
+  notifies :restart, 'service[nova-api]', :immediately
+  only_if "dpkg --compare-versions $(dpkg -s python-nova | egrep '^Version:' | awk '{ print $NF }') eq 2:12.0.0-0ubuntu1~cloud0"
+end
+
+bcpc_patch 'nova-api-metadata-base-liberty-12.0.1-plus' do
+  patch_file           'nova-api-metadata-base.patch'
+  patch_root_dir       '/usr/lib/python2.7/dist-packages'
+  shasums_before_apply 'nova-api-metadata-base-liberty-12.0.1-plus-BEFORE.SHASUMS'
+  shasums_after_apply  'nova-api-metadata-base-liberty-12.0.1-plus-AFTER.SHASUMS'
+  notifies :restart, 'service[nova-api]', :immediately
+  only_if "dpkg --compare-versions $(dpkg -s python-nova | egrep '^Version:' | awk '{ print $NF }') ge 2:12.0.1-0ubuntu1~cloud0"
 end
 
 # Remove patch files used by older patching resource
@@ -224,7 +245,7 @@ end
 # This patches nova-network to have dnsmasq bind to the tenant's bridged
 # interface, so unicast DHCP replies are correctly responded to.
 # This presumes linux_net.py has the BCPC hostnames patch applied by an
-# earlier version of this recipe.
+# earlier version of this recipe (Kilo only).
 bcpc_patch "nova-network-linux_net-dnsmasq" do
   patch_file           'nova-network-linux_net-dnsmasq.patch'
   patch_root_dir       '/usr/lib/python2.7/dist-packages'
