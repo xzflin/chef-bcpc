@@ -17,10 +17,10 @@
 # limitations under the License.
 #
 
-next unless node['bcpc']['kilo_to_liberty_upgrade_in_progress']
+if node['bcpc']['kilo_to_liberty_upgrade_in_progress']
+  bash 'hup-openstack' do
+    code '/usr/local/bin/hup_openstack'
+  end
 
-bash 'hup-openstack' do
-  code '/usr/local/bin/hup_openstack'
+  node.rm['bcpc']['kilo_to_liberty_upgrade_in_progress']
 end
-
-node.rm['bcpc']['kilo_to_liberty_upgrade_in_progress']
