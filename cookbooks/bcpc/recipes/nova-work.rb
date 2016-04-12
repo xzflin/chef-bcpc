@@ -215,6 +215,8 @@ bcpc_patch 'nova-api-metadata-base-kilo' do
 end
 
 # two different sets of checksums for Liberty (12.0.0 has one, 12.0.1+ another)
+# NOTE: SHASUM for base.py in Git is _different_ from package (somebody moved a line
+# in the packaged version)
 bcpc_patch 'nova-api-metadata-base-liberty-12.0.0' do
   patch_file           'nova-api-metadata-base.patch'
   patch_root_dir       '/usr/lib/python2.7/dist-packages'

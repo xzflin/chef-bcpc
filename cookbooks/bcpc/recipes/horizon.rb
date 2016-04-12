@@ -51,12 +51,22 @@ end
 
 # this patch explicitly sets the Content-Length header when uploading files into
 # containers via Horizon (not upstreamed)
-bcpc_patch 'horizon-swift-content-length' do
+bcpc_patch 'horizon-swift-content-length-kilo' do
   patch_file           'horizon-swift-content-length.patch'
   patch_root_dir       '/usr/share/openstack-dashboard'
-  shasums_before_apply 'horizon-swift-content-length-BEFORE.SHASUMS'
-  shasums_after_apply  'horizon-swift-content-length-AFTER.SHASUMS'
+  shasums_before_apply 'horizon-swift-content-length-kilo-BEFORE.SHASUMS'
+  shasums_after_apply  'horizon-swift-content-length-kilo-AFTER.SHASUMS'
   notifies :restart, 'service[apache2]', :delayed
+  only_if "dpkg --compare-versions $(dpkg -s openstack-dashboard | egrep '^Version:' | awk '{ print $NF }') lt 2:0"
+end
+
+bcpc_patch 'horizon-swift-content-length-liberty' do
+  patch_file           'horizon-swift-content-length.patch'
+  patch_root_dir       '/usr/share/openstack-dashboard'
+  shasums_before_apply 'horizon-swift-content-length-liberty-BEFORE.SHASUMS'
+  shasums_after_apply  'horizon-swift-content-length-liberty-AFTER.SHASUMS'
+  notifies :restart, 'service[apache2]', :delayed
+  only_if "dpkg --compare-versions $(dpkg -s openstack-dashboard | egrep '^Version:' | awk '{ print $NF }') ge 2:0"
 end
 
 # this adds a way to override and customize Horizon's behavior
