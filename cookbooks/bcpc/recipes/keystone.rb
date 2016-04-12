@@ -40,7 +40,17 @@ ruby_block "initialize-keystone-config" do
 end
 
 package 'keystone' do
+  action :upgrade
+  options "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
+end
+
+# these packages need to be updated in Liberty but are not upgraded when Keystone is upgraded
+%w( python-oslo.i18n python-oslo.serialization python-pyasn1 ).each do |pkg|
+  package pkg do
     action :upgrade
+    notifies :restart, "service[apache2]", :immediately
+    not_if { is_kilo? }
+  end
 end
 
 # do not run or try to start standalone keystone service since it is now served by WSGI
@@ -169,6 +179,14 @@ ruby_block "keystone-database-creation" do
     not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['keystone']}\"'|grep \"#{node['bcpc']['dbname']['keystone']}\" >/dev/null" }
 end
 
+ruby_block 'update-keystone-db-schema-for-liberty' do
+  block do
+    self.notifies :run, "bash[keystone-database-sync]", :immediately
+    self.resolve_notification_references
+  end
+  only_if { node['bcpc']['kilo_to_liberty_upgrade_in_progress'] }
+end
+
 bash "keystone-database-sync" do
     action :nothing
     user "root"
@@ -246,6 +264,57 @@ end
 
 # create services and endpoints
 node['bcpc']['catalog'].each do |svc, svcprops|
+  # attempt to delete endpoints that no longer match the environment
+  # (keys off the service type, so it is possible to orphan endpoints if you remove an
+  # entry from the environment service catalog)
+  ruby_block "keystone-delete-outdated-#{svc}-endpoint" do
+    block do
+      svc_endpoint_raw = %x[
+        . /root/api_versionsrc
+        export OS_TOKEN="#{get_config('keystone-admin-token')}";
+        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['admin']}/#{node['bcpc']['catalog']['identity']['uris']['admin']}/";
+        openstack endpoint show #{svc} -f json 2>/dev/null
+      ]
+      begin
+        svc_endpoint = JSON.parse(svc_endpoint_raw)
+        svc_id = svc_endpoint.select { |k| k['Field'] == 'id' }[0]['Value']
+        %x[
+          . /root/api_versionsrc
+          export OS_TOKEN="#{get_config('keystone-admin-token')}";
+          export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['admin']}/#{node['bcpc']['catalog']['identity']['uris']['admin']}/";
+          openstack endpoint delete #{svc_id}
+        ]
+      rescue JSON::ParserError
+        next
+      end
+    end
+    not_if {
+      svc_endpoint_raw = %x[
+        . /root/api_versionsrc
+        export OS_TOKEN="#{get_config('keystone-admin-token')}";
+        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['admin']}/#{node['bcpc']['catalog']['identity']['uris']['admin']}/";
+        openstack endpoint show #{svc} -f json 2>/dev/null
+      ]
+      begin
+        svc_endpoint = JSON.parse(svc_endpoint_raw)
+        adminurl = svc_id = svc_endpoint.select { |k| k['Field'] == 'adminurl' }[0]['Value']
+        internalurl = svc_id = svc_endpoint.select { |k| k['Field'] == 'internalurl' }[0]['Value']
+        publicurl = svc_id = svc_endpoint.select { |k| k['Field'] == 'publicurl' }[0]['Value']
+        (adminurl == generate_service_catalog_uri(svcprops, 'admin')) && (internalurl == generate_service_catalog_uri(svcprops, 'internal')) && (publicurl == generate_service_catalog_uri(svcprops, 'public'))
+
+        #puts "Comparing '#{adminurl}' to '#{generate_service_catalog_uri(svcprops, 'admin')}'"
+        #puts "Comparing '#{internalurl}' to '#{generate_service_catalog_uri(svcprops, 'internal')}'"
+        #puts "Comparing '#{publicurl}' to '#{generate_service_catalog_uri(svcprops, 'public')}'"
+      rescue JSON::ParserError
+        false
+      end
+    }
+  end
+
+  # why no corresponding deletion for out of date services?
+  # services don't get outdated in the way endpoints do (since endpoints encode version numbers and ports),
+  # services just say that service X is present in the catalog, not how to access it
+
   ruby_block "keystone-create-#{svc}-service" do
     block do
       %x[
@@ -272,22 +341,24 @@ node['bcpc']['catalog'].each do |svc, svcprops|
   if identity_api_version == 3
     endpoint_create_cmd = <<-EOH
       openstack endpoint create \
-          --region '#{node['bcpc']['region_name']}' #{svc} public '#{node['bcpc']['protocol'][svcprops['project']]}://openstack.#{node['bcpc']['cluster_domain']}:#{svcprops['ports']['public']}/#{svcprops['uris']['public']}' ;
+          --region '#{node['bcpc']['region_name']}' #{svc} public "#{generate_service_catalog_uri(svcprops, 'public')}" ;
       openstack endpoint create \
-          --region '#{node['bcpc']['region_name']}' #{svc} internal '#{node['bcpc']['protocol'][svcprops['project']]}://openstack.#{node['bcpc']['cluster_domain']}:#{svcprops['ports']['internal']}/#{svcprops['uris']['internal']}' ;
+          --region '#{node['bcpc']['region_name']}' #{svc} internal "#{generate_service_catalog_uri(svcprops, 'internal')}" ;
       openstack endpoint create \
-          --region '#{node['bcpc']['region_name']}' #{svc} admin '#{node['bcpc']['protocol'][svcprops['project']]}://openstack.#{node['bcpc']['cluster_domain']}:#{svcprops['ports']['admin']}/#{svcprops['uris']['admin']}' ;
+          --region '#{node['bcpc']['region_name']}' #{svc} admin "#{generate_service_catalog_uri(svcprops, 'admin')}" ;
     EOH
   else
     endpoint_create_cmd = <<-EOH
       openstack endpoint create \
           --region '#{node['bcpc']['region_name']}' \
-          --publicurl '#{node['bcpc']['protocol'][svcprops['project']]}://openstack.#{node['bcpc']['cluster_domain']}:#{svcprops['ports']['public']}/#{svcprops['uris']['public']}' \
-          --adminurl '#{node['bcpc']['protocol'][svcprops['project']]}://openstack.#{node['bcpc']['cluster_domain']}:#{svcprops['ports']['admin']}/#{svcprops['uris']['admin']}' \
-          --internalurl '#{node['bcpc']['protocol'][svcprops['project']]}://openstack.#{node['bcpc']['cluster_domain']}:#{svcprops['ports']['internal']}/#{svcprops['uris']['internal']}' \
+          --publicurl "#{generate_service_catalog_uri(svcprops, 'public')}" \
+          --adminurl "#{generate_service_catalog_uri(svcprops, 'admin')}" \
+          --internalurl "#{generate_service_catalog_uri(svcprops, 'internal')}" \
           #{svc}
     EOH
   end
+
+  puts endpoint_create_cmd
 
   ruby_block "keystone-create-#{svc}-endpoint" do
     block do

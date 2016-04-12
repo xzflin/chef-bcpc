@@ -104,6 +104,14 @@ ruby_block "glance-database-creation" do
     not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['glance']}\"'|grep \"#{node['bcpc']['dbname']['glance']}\" >/dev/null" }
 end
 
+ruby_block 'update-glance-db-schema-for-liberty' do
+  block do
+    self.notifies :run, "bash[glance-database-sync]", :immediately
+    self.resolve_notification_references
+  end
+  only_if { node['bcpc']['kilo_to_liberty_upgrade_in_progress'] }
+end
+
 bash "glance-database-sync" do
     action :nothing
     user "root"

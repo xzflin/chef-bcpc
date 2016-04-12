@@ -163,27 +163,28 @@ template "/usr/share/openstack-dashboard/openstack_dashboard/conf/nova_policy.js
     variables(:policy => JSON.pretty_generate(node['bcpc']['nova']['policy']))
 end
 
-ruby_block "horizon-database-creation" do
-    block do
-        %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
-            mysql -uroot -e "CREATE DATABASE #{node['bcpc']['dbname']['horizon']};"
-            mysql -uroot -e "GRANT ALL ON #{node['bcpc']['dbname']['horizon']}.* TO '#{get_config('mysql-horizon-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-horizon-password')}';"
-            mysql -uroot -e "GRANT ALL ON #{node['bcpc']['dbname']['horizon']}.* TO '#{get_config('mysql-horizon-user')}'@'localhost' IDENTIFIED BY '#{get_config('mysql-horizon-password')}';"
-            mysql -uroot -e "FLUSH PRIVILEGES;"
-        ]
-        self.notifies :run, "bash[horizon-database-sync]", :immediately
-        self.resolve_notification_references
-    end
-    not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['horizon']}\"'|grep \"#{node['bcpc']['dbname']['horizon']}\" >/dev/null" }
-end
-
 # Horizon does not have a database in Liberty
-bash "horizon-database-sync" do
-    action :nothing
-    user "root"
-    code "/usr/share/openstack-dashboard/manage.py syncdb --noinput"
-    notifies :restart, "service[apache2]", :immediately
-    only_if { node['bcpc']['openstack_release'] == 'kilo' }
+if is_kilo?
+  ruby_block "horizon-database-creation" do
+      block do
+          %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
+              mysql -uroot -e "CREATE DATABASE #{node['bcpc']['dbname']['horizon']};"
+              mysql -uroot -e "GRANT ALL ON #{node['bcpc']['dbname']['horizon']}.* TO '#{get_config('mysql-horizon-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-horizon-password')}';"
+              mysql -uroot -e "GRANT ALL ON #{node['bcpc']['dbname']['horizon']}.* TO '#{get_config('mysql-horizon-user')}'@'localhost' IDENTIFIED BY '#{get_config('mysql-horizon-password')}';"
+              mysql -uroot -e "FLUSH PRIVILEGES;"
+          ]
+          self.notifies :run, "bash[horizon-database-sync]", :immediately
+          self.resolve_notification_references
+      end
+      not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['horizon']}\"'|grep \"#{node['bcpc']['dbname']['horizon']}\" >/dev/null" }
+  end
+
+  bash "horizon-database-sync" do
+      action :nothing
+      user "root"
+      code "/usr/share/openstack-dashboard/manage.py syncdb --noinput"
+      notifies :restart, "service[apache2]", :immediately
+  end
 end
 
 # needed to regenerate the static assets for the dashboard
@@ -192,4 +193,11 @@ bash "dpkg-reconfigure-openstack-dashboard" do
     user "root"
     code "dpkg-reconfigure openstack-dashboard"
     notifies :restart, "service[apache2]", :immediately
+end
+
+# troveclient gets installed by something and can blow up Horizon startup
+# if not upgraded when moving from Kilo to Liberty
+package 'python-troveclient' do
+  action :upgrade
+  notifies :restart, "service[apache2]", :immediately
 end

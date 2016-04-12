@@ -303,3 +303,7 @@ def generate_vrrp_vrid()
     raise "Unable to generate unique VRID" if results.empty?
     results.first
 end
+
+def generate_service_catalog_uri(svcprops, access_level)
+  "#{node['bcpc']['protocol'][svcprops['project']]}://openstack.#{node['bcpc']['cluster_domain']}:#{svcprops['ports'][access_level]}/#{svcprops['uris'][access_level]}"
+end

@@ -34,7 +34,10 @@ ruby_block "initialize-nova-config" do
     end
 end
 
-package "nova-common"
+package "nova-common" do
+  action :upgrade
+  options "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
+end
 
 template "/etc/nova/nova.conf" do
     source "nova.conf.erb"

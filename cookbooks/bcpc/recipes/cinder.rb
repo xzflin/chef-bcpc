@@ -29,6 +29,11 @@ ruby_block "initialize-cinder-config" do
     end
 end
 
+package 'cinder-common' do
+  action :upgrade
+  options "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
+end
+
 %w{cinder-api cinder-volume cinder-scheduler}.each do |pkg|
     package pkg do
         action :upgrade
@@ -105,6 +110,14 @@ ruby_block "cinder-database-creation" do
         self.resolve_notification_references
     end
     not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['cinder']}\"'|grep \"#{node['bcpc']['dbname']['cinder']}\" >/dev/null" }
+end
+
+ruby_block 'update-cinder-db-schema-for-liberty' do
+  block do
+    self.notifies :run, "bash[cinder-database-sync]", :immediately
+    self.resolve_notification_references
+  end
+  only_if { node['bcpc']['kilo_to_liberty_upgrade_in_progress'] }
 end
 
 bash "cinder-database-sync" do
