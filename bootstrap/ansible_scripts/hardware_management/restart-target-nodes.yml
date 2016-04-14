@@ -97,7 +97,7 @@
       register: instance_stopped
       until: instance_stopped.rc == 0
       ignore_errors: true
-      retries: 10
+      retries: 20
       delay: 3
       with_items: running_instances
       when: item != ""
@@ -113,13 +113,16 @@
 
     - name: Wait for hypervisor to come back online
       become: no
-      local_action: wait_for host={{ ansible_ssh_host }} port=22 state=started timeout=1200
+      local_action: wait_for host={{ ansible_ssh_host }} port=22 state=started timeout=1800
 
-    - name: Wait 30 seconds for Nova to become available
-      command: sleep 30
+    - name: Figure out time to wait for Nova Networking (30 seconds per instance)
+      set_fact: sleep_time={{ running_instances|length|int*30 }}
+
+    - name: Wait for Nova Networking to recreate all tenant networks
+      pause: seconds={{ sleep_time }}
 
     - name: nova start instances on hypervisor
-      shell: ". /root/adminrc && nova start {{ item }} && sleep 2"
+      shell: ". /root/adminrc && nova start {{ item }} && sleep 15"
       with_items: running_instances
       delegate_to: "{{ control_headnode }}"
       when: "{{ restart_instances | default(True) }} and item != ''"
