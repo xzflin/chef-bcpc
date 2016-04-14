@@ -74,30 +74,16 @@ if node['bcpc']['enabled']['metrics'] then
     # | | | | |  _| |  \ V /  | |_) / _ \ | || |   | |_| |
     # | |_| | |_| | |___| |   |  __/ ___ \| || |___|  _  |
     #  \___/ \____|_____|_|   |_| /_/   \_\_| \____|_| |_|
-    # carbon-relay sometimes remain stuck even when destinations have
+    # carbon-relay sometimes remains stuck even when destinations have
     # (i.e, carbon-cache) recovered from lag/unresponsiveness. This patch
     # applies Graphite Carbon PR #400 which fixes a race condition in carbon
     # client queue signalling.
-    cookbook_file "/tmp/graphite-carbon-client.patch" do
-        source "graphite-carbon-client.patch"
-        owner "root"
-        mode 00644
-    end
-
-    bash "patch-for-graphite-carbon-client" do
-        user "root"
-        code <<-EOH
-           cd /opt/graphite
-           patch -p1 < /tmp/graphite-carbon-client.patch
-           rv=$?
-           if [ $rv -ne 0 ]; then
-             echo "Error applying patch ($rv) - aborting!"
-             exit $rv
-           fi
-           cp /tmp/graphite-carbon-client.patch .
-        EOH
-        not_if "grep -q 'THIS FILE PATCHED BY BCPC' /opt/graphite/lib/carbon/client.py"
-        notifies :restart, "service[carbon-relay]", :delayed
+    bcpc_patch 'graphite-carbon-client' do
+      patch_file           'graphite-carbon-client.patch'
+      patch_root_dir       '/opt/graphite'
+      shasums_before_apply 'graphite-carbon-client-BEFORE.SHASUMS'
+      shasums_after_apply  'graphite-carbon-client-AFTER.SHASUMS'
+      notifies :restart, "service[carbon-relay]", :delayed
     end
 
     template "/opt/graphite/conf/carbon.conf" do

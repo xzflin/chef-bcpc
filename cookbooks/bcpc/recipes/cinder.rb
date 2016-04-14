@@ -50,36 +50,7 @@ end
 # this patch resolves BCPC issue #798 - upstreamed as #1489575 (note that
 # the upstream patch has a different form because it applied to Liberty and
 # not to Kilo)
-#
-# patch should apply cleanly to both 2015.1.0 and 2015.1.1 (SHA checksums
-# are identical for both files modified by the patch between the two versions)
-# this patch does NOT apply cleanly to 2015.1.2, separate patch resource below
-cookbook_file "/tmp/cinder_availability_zone_fallback.patch" do
-    source "cinder_availability_zone_fallback.patch"
-    owner "root"
-    mode 00644
-end
-
-bash "patch-for-cinder-availability-zone-fallback-2015.1.0-and-2015.1.1" do
-    user "root"
-    code <<-EOH
-       cd /usr/lib/python2.7/dist-packages
-       patch -p1 < /tmp/cinder_availability_zone_fallback.patch
-       rv=$?
-       if [ $rv -ne 0 ]; then
-         echo "Error applying patch ($rv) - aborting!"
-         exit $rv
-       fi
-       cp /tmp/cinder_availability_zone_fallback.patch .
-    EOH
-    only_if "shasum /usr/lib/python2.7/dist-packages/cinder/common/config.py | grep -q '^96b5ea3694440ca5fcc3c7fdea5992209aa1f1ed' && shasum /usr/lib/python2.7/dist-packages/cinder/volume/flows/api/create_volume.py | grep -q '^a18858b74d8d0cf747377dd89f6643667d4ec0ae'"
-    notifies :restart, "service[cinder-api]", :immediately
-    notifies :restart, "service[cinder-volume]", :immediately
-    notifies :restart, "service[cinder-scheduler]", :immediately
-end
-
-# 2015.1.2 version of the above patch
-bcpc_patch "cinder-az-fallback-2015.1.2" do
+bcpc_patch "cinder-az-fallback-2015.1.2-and-beyond" do
   patch_file 'cinder-az-fallback-2015.1.2.patch'
   patch_root_dir '/usr/lib/python2.7/dist-packages'
   shasums_before_apply 'cinder-az-fallback-2015.1.2.patch.BEFORE.SHASUMS'
@@ -87,7 +58,7 @@ bcpc_patch "cinder-az-fallback-2015.1.2" do
   notifies :restart, 'service[cinder-api]', :immediately
   notifies :restart, 'service[cinder-volume]', :immediately
   notifies :restart, 'service[cinder-scheduler]', :immediately
-  not_if "dpkg -s python-cinder | egrep -q '^Version: 1:2015.1.(0|1)'"
+  only_if "dpkg --compare-versions $(dpkg -s python-cinder | egrep '^Version:' | awk '{ print $NF }') ge 1:2015.1.2 && dpkg --compare-versions $(dpkg -s python-cinder | egrep '^Version:' | awk '{ print $NF }') le 2:7.0"
 end
 
 # Deal with quota update commands (applies to cinderclient < 1.3.1)
@@ -100,6 +71,7 @@ bcpc_patch "fix-quota-class-update" do
     notifies :restart, "service[cinder-api]", :immediately
     notifies :restart, "service[cinder-volume]", :immediately
     notifies :restart, "service[cinder-scheduler]", :immediately
+    only_if "dpkg --compare-versions $(dpkg -s python-cinderclient | egrep '^Version:' | awk '{ print $NF }') lt 1:1.3.1"
 end
 
 template "/etc/cinder/cinder.conf" do
