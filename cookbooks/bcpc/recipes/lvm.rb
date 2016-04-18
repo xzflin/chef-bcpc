@@ -18,8 +18,8 @@
 #
 
 if node['bcpc']['nova']['ephemeral']
-  package 'lvm2' 
-  
+  package 'lvm2'
+
   bash "setup-lvm-pv" do
     user "root"
     code <<-EOH
@@ -35,5 +35,11 @@ if node['bcpc']['nova']['ephemeral']
   EOH
     not_if "vgdisplay nova_disk"
   end
-  
+
+  # LVM creates backups of metadata at each operation, clean old ones up
+  cron 'lvm-archive-cleanup' do
+    command '/usr/bin/find /etc/lvm/archive/ -type f -ctime +7 -delete'
+    hour '3'
+    minute '0'
+  end
 end
