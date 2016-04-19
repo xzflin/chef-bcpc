@@ -266,3 +266,11 @@ def generate_vrrp_vrid()
     raise "Unable to generate unique VRID" if results.empty?
     results.first
 end
+
+def join_aggregate_action
+  node['bcpc']['in_maintenance'] ? :depart : :member
+end
+
+def maintenance_action
+  node['bcpc']['in_maintenance'] ? :member : :depart
+end

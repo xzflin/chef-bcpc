@@ -40,6 +40,15 @@ default['bcpc']['s3_ssl_intermediate_certificate'] = nil
 
 ###########################################
 #
+#  Maintenance attribute for nodes
+#
+###########################################
+# Use this attribute to mark a node as in maintenance
+# (don't set it in the environment!)
+default['bcpc']['in_maintenance'] = false
+
+###########################################
+#
 #  Flags to enable/disable BCPC cluster features
 #
 ###########################################
@@ -630,13 +639,21 @@ default['bcpc']['flavors'] = {
 ###########################################
 
 default['bcpc']['host_aggregates'] = {
-    "general_compute" => {
-      "general_compute" => "yes"
-    },
-    "ephemeral_compute" => {
-      "general_compute" => "no",
-      "ephemeral_compute" => "yes"
-    }
+  "general_compute" => {
+    "ephemeral_compute" => "no",
+    "general_compute" => "yes",
+    "maintenance" => "no"
+  },
+  "ephemeral_compute" => {
+    "ephemeral_compute" => "yes",
+    "general_compute" => "no",
+    "maintenance" => "no"
+  },
+  "maintenance" => {
+    "general_compute" => "no",
+    "ephemeral_compute" => "no",
+    "maintenance" => "yes"
+  }
 }
 
 default['bcpc']['aggregate_membership'] = []
