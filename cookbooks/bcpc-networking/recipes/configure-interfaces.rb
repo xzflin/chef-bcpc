@@ -227,11 +227,12 @@ ruby_block "additional-interface-setup-for-montoring" do
           :clients => node['bcpc']['monitoring']['external_clients'].sort
         )
         notifies :run, "execute[run-#{function}-script]", :immediately
-    end
+      end
 
-    execute "run-#{function}-script" do
-        action :nothing
-        command "/etc/network/if-up.d/001bcpc-#{function}"
+      execute "run-#{function}-script" do
+          action :nothing
+          command "/etc/network/if-up.d/001bcpc-#{function}"
+      end
     end
   end
 end
