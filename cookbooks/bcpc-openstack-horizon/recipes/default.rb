@@ -51,7 +51,7 @@ end
 
 # this patch explicitly sets the Content-Length header when uploading files into
 # containers via Horizon (not upstreamed)
-bcpc_patch 'horizon-swift-content-length' do
+bcpc_foundation_patch 'horizon-swift-content-length' do
   patch_file           'horizon-swift-content-length.patch'
   patch_root_dir       '/usr/share/openstack-dashboard'
   shasums_before_apply 'horizon-swift-content-length-BEFORE.SHASUMS'

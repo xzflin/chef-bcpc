@@ -51,7 +51,7 @@ end
 # this patch resolves BCPC issue #798 - upstreamed as #1489575 (note that
 # the upstream patch has a different form because it applied to Liberty and
 # not to Kilo)
-bcpc_patch "cinder-az-fallback-2015.1.2-and-beyond" do
+bcpc_foundation_patch "cinder-az-fallback-2015.1.2-and-beyond" do
   patch_file 'cinder-az-fallback-2015.1.2.patch'
   patch_root_dir '/usr/lib/python2.7/dist-packages'
   shasums_before_apply 'cinder-az-fallback-2015.1.2.patch.BEFORE.SHASUMS'

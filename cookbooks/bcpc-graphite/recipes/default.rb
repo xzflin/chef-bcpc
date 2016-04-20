@@ -59,7 +59,7 @@ if node['bcpc']['enabled']['metrics']
     # (i.e, carbon-cache) recovered from lag/unresponsiveness. This patch
     # applies Graphite Carbon PR #400 which fixes a race condition in carbon
     # client queue signalling.
-    bcpc_patch 'graphite-carbon-client' do
+    bcpc_foundation_patch 'graphite-carbon-client' do
       patch_file           'graphite-carbon-client.patch'
       patch_root_dir       '/opt/graphite'
       shasums_before_apply 'graphite-carbon-client-BEFORE.SHASUMS'
