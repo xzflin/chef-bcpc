@@ -17,11 +17,15 @@
 # limitations under the License.
 #
 
+# place OSD nodes in general compute aggregate
+node.override['bcpc']['aggregate_membership'] = ['general_compute']
+
 # save the node at the start of the run so that its run list is available
 node.save
 
 include_recipe 'component-bcpc-common'
 include_recipe 'component-bcpc-node-common'
 include_recipe 'bcpc-openstack-nova::compute'
+include_recipe 'bcpc-openstack-nova::host-aggregates'
 include_recipe 'bcpc-health-check::worknode'
 include_recipe 'bcpc-health-check::rgwnode'

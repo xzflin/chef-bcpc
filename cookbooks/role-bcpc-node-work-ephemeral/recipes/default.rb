@@ -22,6 +22,9 @@
 # that are using this role cookbook - erhudy)
 node.override['bcpc']['nova']['ephemeral'] = true
 
+# place ephemeral nodes in ephemeral compute aggregate
+node.override['bcpc']['aggregate_membership'] = ['ephemeral_compute']
+
 # save the node at the start of the run so that its run list is available
 node.save
 # magic sleep so that Chef server has time to reindex
