@@ -124,6 +124,18 @@ if node['bcpc']['enabled']['metrics'] then
         notifies :restart, "service[carbon-relay]", :delayed
     end
 
+    %w{whitelist blacklist}.each do |list|
+        template "/opt/graphite/conf/#{list}.conf" do
+            source "carbon-whitelist.conf.erb"
+            owner "root"
+            group "root"
+            mode 00644
+            variables(
+                :regexes => node['bcpc']['graphite']['use_whitelist'][list]
+            )
+        end
+    end
+
     template "/etc/apache2/sites-available/graphite-web.conf" do
         source "apache-graphite-web.conf.erb"
         owner "root"

@@ -114,7 +114,7 @@ WHISPER_AUTOFLUSH = False
 # Set this to True to enable whitelisting and blacklisting of metrics in
 # CONF_DIR/whitelist and CONF_DIR/blacklist. If the whitelist is missing or
 # empty, all metrics will pass through
-# USE_WHITELIST = False
+USE_WHITELIST = <%= node['bcpc']['graphite']['use_whitelist']['enabled'] %>
 
 # By default, carbon itself will log statistics (such as a count,
 # metricsReceived) with the top level prefix of 'carbon' at an interval of 60
@@ -218,7 +218,7 @@ USE_FLOW_CONTROL = True
 # Set this to True to enable whitelisting and blacklisting of metrics in
 # CONF_DIR/whitelist and CONF_DIR/blacklist. If the whitelist is missing or
 # empty, all metrics will pass through
-# USE_WHITELIST = False
+USE_WHITELIST = <%= node['bcpc']['graphite']['use_whitelist']['enabled'] %>
 
 # By default, carbon itself will log statistics (such as a count,
 # metricsReceived) with the top level prefix of 'carbon' at an interval of 60
