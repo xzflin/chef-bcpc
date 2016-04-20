@@ -1,7 +1,5 @@
-diff --git a/nova/network/linux_net.py b/nova/network/linux_net.py
-index 430da17..465e7ca 100644
---- a/nova/network/linux_net.py
-+++ b/nova/network/linux_net.py
+--- a/nova/network/linux_net.py   2016-03-14 16:17:32.517329066 +0000
++++ b/nova/network/linux_net.py   2016-03-15 15:48:39.712397155 +0000
 @@ -15,6 +15,8 @@
  #    License for the specific language governing permissions and limitations
  #    under the License.
@@ -11,7 +9,15 @@ index 430da17..465e7ca 100644
  """Implements vlans, bridges, and iptables rules using linux utilities."""
  
  import calendar
-@@ -1220,7 +1222,8 @@ def _host_dhcp(fixedip):
+@@ -1127,6 +1129,7 @@
+            '--dhcp-optsfile=%s' % _dhcp_file(dev, 'opts'),
+            '--listen-address=%s' % network_ref['dhcp_server'],
+            '--except-interface=lo',
++           '--interface=%s' % dev,
+            '--dhcp-range=set:%s,%s,static,%s,%ss' %
+                          (network_ref['label'],
+                           network_ref['dhcp_start'],
+@@ -1220,7 +1223,8 @@
      # NOTE(cfb): dnsmasq on linux only supports 64 characters in the hostname
      #            field (LP #1238910). Since the . counts as a character we need
      #            to truncate the hostname to only 63 characters.

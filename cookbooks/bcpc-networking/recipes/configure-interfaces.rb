@@ -200,6 +200,7 @@ end
 ruby_block "additional-interface-setup-for-montoring" do
   block do
     if node.recipes.include? 'role-bcpc-node-monitor'
+      function = 'ipset-monitoring'
       # ipset is used to maintain largish block(s) of IP addresses to be referred to
       # by iptables
       package "ipset"
@@ -212,24 +213,25 @@ ruby_block "additional-interface-setup-for-montoring" do
       end
 
       # Stage monitoring-clients ipset, and swap if lists have changed
-      template "/tmp/ipset-monitoring-clients" do
+      # Insert numbering so it runs before /etc/network/if-up.d/bcpc-firewall
+      template "/etc/network/if-up.d/001bcpc-#{function}" do
+          mode 00775
+          source "bcpc-#{function}.erb"
+          notifies :run, "execute[run-#{function}-script]", :delayed
+      end
+
+      template "/etc/#{function}-clients.conf" do
         mode 00600
-        source "ipset-monitoring-clients.erb"
+        source "#{function}-clients.conf.erb"
         variables(
           :clients => node['bcpc']['monitoring']['external_clients'].sort
         )
-        notifies :run, "bash[apply-ipset-monitoring-clients]", :immediately
-      end
+        notifies :run, "execute[run-#{function}-script]", :immediately
+    end
 
-      bash "apply-ipset-monitoring-clients" do
+    execute "run-#{function}-script" do
         action :nothing
-        user "root"
-        code <<-EOH
-            ipset restore -f /tmp/ipset-monitoring-clients
-            ipset swap monitoring-clients-staging monitoring-clients
-            ipset destroy monitoring-clients-staging
-        EOH
-      end
+        command "/etc/network/if-up.d/001bcpc-#{function}"
     end
   end
 end

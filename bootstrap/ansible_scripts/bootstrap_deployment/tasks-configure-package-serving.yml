@@ -1,6 +1,6 @@
 ---
   - name: Perform synchronization of local bootstrap files
-    synchronize: src={{ controlnode_files_dir }}/ dest={{ bootstrap_files_dir }}/
+    synchronize: src={{ controlnode_files_dir }}/ dest={{ bootstrap_files_dir }}/ owner=no group=no
     tags:
       - synchronize
 
@@ -11,7 +11,8 @@
 
   # leave / on the end of src path so rsync doesn't put the mirror dir inside the dest dir!
   - name: Perform synchronization of local apt mirror (can take a long while)
-    synchronize: src={{ controlnode_apt_mirror_dir }}/ dest={{ bootstrap_apt_mirror_dir }}
+    synchronize: src={{ controlnode_apt_mirror_dir }}/ dest={{ bootstrap_apt_mirror_dir }} owner=no group=no
+    become: no
     when: not apt_mirror_via_vboxsf
     tags:
       - synchronize
@@ -101,6 +102,12 @@
     lineinfile: dest=/etc/rc.local insertbefore='exit 0' state=present line='mount apt-mirror'
     when: apt_mirror_via_vboxsf and hardware_type == "Virtual" and apt_mirror_shared_folder_configured.rc != 0
     # VirtualBox shared folder done
+
+  - name: Perform synchronization of local bootstrap files
+    synchronize: src={{ controlnode_files_dir }}/ dest={{ bootstrap_files_dir }}/ owner=no group=no
+    become: no
+    tags:
+      - synchronize
 
   - name: Create directory to serve package mirrors from for Apache
     file: path={{ bootstrap_mirror_root_dir }} state=directory owner=root group=root mode=0755

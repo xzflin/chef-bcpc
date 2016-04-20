@@ -211,6 +211,12 @@ if node['bcpc']['enabled']['monitoring']
         end
     end
 
+    %w{ Bootstrap EphemeralWorknode Headnode Monitoring Worknode }.each do |metadata|
+        bcpc_zabbix_zbx_autoreg "BCPC-#{metadata}" do
+            action :create
+        end
+    end
+
     template "/usr/share/zabbix/zabbix-api-auto-discovery" do
         source "zabbix_api_auto_discovery.erb"
         owner "root"

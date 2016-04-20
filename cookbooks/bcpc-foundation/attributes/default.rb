@@ -403,6 +403,9 @@ default['bcpc']['nova']['reserved_host_memory_mb'] = 1024
 default['bcpc']['nova']['cpu_allocation_ratio'] = 2.0
 # select from between this many equally optimal hosts when launching an instance
 default['bcpc']['nova']['scheduler_host_subset_size'] = 3
+# maximum number of builds to allow the scheduler to run simultaneously
+# (setting too high may cause Three Stooges Syndrome, particularly on RBD-intensive operations)
+default['bcpc']['nova']['max_concurrent_builds'] = 4
 # "workers" parameters in nova are set to number of CPUs
 # available by default. This provides an override.
 default['bcpc']['nova']['workers'] = 5
