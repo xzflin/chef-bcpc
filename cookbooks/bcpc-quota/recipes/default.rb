@@ -16,6 +16,13 @@
 # limitations under the License.
 #
 
+# spin until nova starts to respond, avoids blowing up on an HTTP 503
+# if Apache was restarted recently and is not yet ready
+bash "wait-for-nova-to-become-operational" do
+  code ". /root/adminrc; until nova absolute-limits >/dev/null 2>&1; do sleep 1; done"
+  timeout 30
+end
+
 cookbook_file '/usr/local/bin/set-os-quota.py' do
     source 'set-os-quota.py'
     owner 'root'
