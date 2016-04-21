@@ -81,6 +81,7 @@ my_ip=<%=node['bcpc']['management']['ip']%>
 routing_source_ip=<%=node['bcpc']['floating']['ip']%>
 dhcp_domain=<%=node['bcpc']['cluster_domain']%>
 default_availability_zone=
+default_floating_pool = <%= node['bcpc']['region_name'] %>
 
 # Nova Compute settings
 compute_driver=libvirt.LibvirtDriver
