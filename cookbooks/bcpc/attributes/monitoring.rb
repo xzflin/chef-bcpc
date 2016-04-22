@@ -36,6 +36,12 @@ default['bcpc']['graphite']['retention'] = '60s:1d'
 default['bcpc']['graphite']['max_creates_per_min'] = '60'
 # Limit the number of updates to prevent over-utilizing the disk
 default['bcpc']['graphite']['max_updates_per_sec'] = '500'
+# Graphite whitelist/blacklist toggle
+default['bcpc']['graphite']['use_whitelist'] = {
+  'enabled' => 'False',
+  'whitelist' => [],
+  'blacklist' => []
+}
 
 ###########################################
 #
