@@ -81,6 +81,19 @@ if node['bcpc']['enabled']['metrics'] then
         notifies :restart, "service[diamond]", :delayed
     end
 
+    %w{CPU}.each do |collector|
+        template "/etc/diamond/collectors/#{collector}Collector.conf" do
+            source "diamond-collector.conf.erb"
+            owner "diamond"
+            group "root"
+            mode 00600
+            variables(
+                :parameters => node['bcpc']['diamond']['collectors'][collector]
+            )
+            notifies :restart, "service[diamond]", :delayed
+        end
+    end
+
     template "/etc/diamond/collectors/ElasticSearchCollector.conf" do
         source "diamond-collector-elasticsearch.conf.erb"
         owner "diamond"
