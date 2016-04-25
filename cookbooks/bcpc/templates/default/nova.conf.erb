@@ -165,6 +165,12 @@ amqp_durable_queues=<%=node['bcpc']['rabbitmq']['durable_queues']%>
 connection=mysql://<%=get_config('mysql-nova-user')%>:<%=get_config('mysql-nova-password')%>@<%=node['bcpc']['management']['vip']%>/<%=node['bcpc']['dbname']['nova']%>
 idle_timeout=3600
 
+<% unless is_kilo? %>
+[api_database]
+connection=mysql://<%= get_config('mysql-nova-api-user') %>:<%= get_config('mysql-nova-api-password') %>@<%= node['bcpc']['management']['vip'] %>/<%= node['bcpc']['dbname']['nova_api'] %>
+idle_timeout=3600
+<% end %>
+
 [ssl]
 # ca_file = /etc/ssl/certs/ssl-bcpc.pem
 

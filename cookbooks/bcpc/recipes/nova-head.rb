@@ -34,6 +34,22 @@ ruby_block "nova-database-creation" do
     not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['nova']}\"'|grep \"#{node['bcpc']['dbname']['nova']}\" >/dev/null" }
 end
 
+# Nova API database needed by Liberty or higher
+ruby_block "nova-api-database-creation" do
+    block do
+        %x[ export MYSQL_PWD=#{get_config('mysql-root-password')};
+            mysql -uroot -e "CREATE DATABASE #{node['bcpc']['dbname']['nova_api']};"
+            mysql -uroot -e "GRANT ALL ON #{node['bcpc']['dbname']['nova_api']}.* TO '#{get_config('mysql-nova-api-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-nova-api-password')}';"
+            mysql -uroot -e "GRANT ALL ON #{node['bcpc']['dbname']['nova_api']}.* TO '#{get_config('mysql-nova-api-user')}'@'localhost' IDENTIFIED BY '#{get_config('mysql-nova-api-password')}';"
+            mysql -uroot -e "FLUSH PRIVILEGES;"
+        ]
+        self.notifies :run, "bash[nova-api-database-sync]", :immediately
+        self.resolve_notification_references
+    end
+    not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['nova_api']}\"'|grep \"#{node['bcpc']['dbname']['nova_api']}\" >/dev/null" }
+    only_if { !is_kilo? }
+end
+
 ruby_block 'update-nova-db-schema-for-liberty' do
   block do
     self.notifies :run, "bash[nova-database-sync]", :immediately
@@ -46,6 +62,12 @@ bash "nova-database-sync" do
     action :nothing
     user "root"
     code "nova-manage db sync"
+end
+
+bash "nova-api-database-sync" do
+    action :nothing
+    user "root"
+    code "nova-manage api_db sync"
 end
 
 %w{nova-scheduler nova-cert nova-consoleauth nova-conductor}.each do |pkg|
