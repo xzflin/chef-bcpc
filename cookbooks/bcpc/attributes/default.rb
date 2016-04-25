@@ -206,6 +206,7 @@ default['bcpc']['mirror']['kibana-dist'] = '4.1'
 #
 ###########################################
 default['bcpc']['dbname']['nova'] = "nova"
+default['bcpc']['dbname']['nova_api'] = "nova_api"
 default['bcpc']['dbname']['cinder'] = "cinder"
 default['bcpc']['dbname']['glance'] = "glance"
 default['bcpc']['dbname']['horizon'] = "horizon"
