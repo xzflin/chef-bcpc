@@ -20,7 +20,8 @@ include_recipe "bcpc::ceph-work"
 include_recipe "bcpc::nova-common"
 
 package "nova-compute-#{node['bcpc']['virt_type']}" do
-    action :upgrade
+  action :upgrade
+  notifies :restart, 'service[nova-compute]', :immediately
 end
 
 %w{nova-api nova-network nova-compute nova-novncproxy}.each do |pkg|
