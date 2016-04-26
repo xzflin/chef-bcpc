@@ -10,6 +10,9 @@ fi
 REQUIRED_VARS=( BOOTSTRAP_CACHE_DIR REPO_ROOT )
 check_for_envvars ${REQUIRED_VARS[@]}
 
+# List of binary versions to download
+source $REPO_ROOT/bootstrap/config/build_bins_versions.sh
+
 # Create directory for download cache.
 mkdir -p $BOOTSTRAP_CACHE_DIR
 
@@ -28,6 +31,21 @@ download_file() {
     rm -f $BOOTSTRAP_CACHE_DIR/$FILE
     curl -L --progress-bar -o $BOOTSTRAP_CACHE_DIR/$FILE $URL
     touch $BOOTSTRAP_CACHE_DIR/${FILE}_downloaded
+  fi
+}
+
+# Clones a repo and attempts to pull updates if requested version does not exist
+clone_repo() {
+  URL=$1
+  DIR=$2
+  VER=$3
+
+  if [[ -d $BOOTSTRAP_CACHE_DIR/$DIR/.git ]]; then
+    git -C $BOOTSTRAP_CACHE_DIR/$DIR log --pretty=format:'%H' | \
+    grep -q $VER || \
+    git -C $BOOTSTRAP_CACHE_DIR/$DIR pull
+  else
+    git clone $URL $BOOTSTRAP_CACHE_DIR/$DIR
   fi
 }
 
@@ -59,8 +77,8 @@ download_file $BOX http://cloud-images.ubuntu.com/vagrant/trusty/current/$BOX
 # Obtain Chef client and server DEBs.
 CHEF_CLIENT_DEB=${CHEF_CLIENT_DEB:-chef_12.3.0-1_amd64.deb}
 CHEF_SERVER_DEB=${CHEF_SERVER_DEB:-chef-server-core_12.0.8-1_amd64.deb}
-download_file $CHEF_CLIENT_DEB https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/10.04/x86_64/$CHEF_CLIENT_DEB
-download_file $CHEF_SERVER_DEB https://web-dl.packagecloud.io/chef/stable/packages/ubuntu/trusty/$CHEF_SERVER_DEB
+download_file $CHEF_CLIENT_DEB https://packages.chef.io/stable/ubuntu/10.04/$CHEF_CLIENT_DEB
+download_file $CHEF_SERVER_DEB https://packages.chef.io/stable/ubuntu/14.04/$CHEF_SERVER_DEB
 
 # Pull needed cookbooks from the Chef Supermarket.
 mkdir -p $BOOTSTRAP_CACHE_DIR/cookbooks
@@ -102,15 +120,10 @@ download_file cirros-0.3.4-x86_64-disk.img http://download.cirros-cloud.net/0.3.
 rm -f $BOOTSTRAP_CACHE_DIR/kibana-4.0.2-linux-x64.tar.gz_downloaded $BOOTSTRAP_CACHE_DIR/kibana-4.0.2-linux-x64.tar.gz
 # Remove obsolete cached items for BrightCoveOS Diamond
 rm -rf $BOOTSTRAP_CACHE_DIR/diamond_downloaded $BOOTSTRAP_CACHE_DIR/diamond
-# unfortunately GitHub ZIP files do not contain the actual Git index, so we must use Git to clone here
-if [[ ! -f $BOOTSTRAP_CACHE_DIR/python-diamond_downloaded ]]; then
-  git clone https://github.com/python-diamond/Diamond $BOOTSTRAP_CACHE_DIR/python-diamond
-  touch $BOOTSTRAP_CACHE_DIR/python-diamond_downloaded
-fi
-if [[ ! -f $BOOTSTRAP_CACHE_DIR/elasticsearch-head_downloaded ]]; then
-  git clone https://github.com/mobz/elasticsearch-head $BOOTSTRAP_CACHE_DIR/elasticsearch-head
-  touch $BOOTSTRAP_CACHE_DIR/elasticsearch-head_downloaded
-fi
+
+
+clone_repo https://github.com/python-diamond/Diamond python-diamond $VER_DIAMOND
+clone_repo https://github.com/mobz/elasticsearch-head elasticsearch-head $VER_ESPLUGIN
 
 download_file pyrabbit-1.0.1.tar.gz https://pypi.python.org/packages/source/p/pyrabbit/pyrabbit-1.0.1.tar.gz
 download_file requests-aws-0.1.6.tar.gz https://pypi.python.org/packages/source/r/requests-aws/requests-aws-0.1.6.tar.gz

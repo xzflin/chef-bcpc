@@ -52,6 +52,8 @@ default['bcpc']['graphite']['use_whitelist'] = {
 # CPU Collector parameters
 default['bcpc']['diamond']['collectors']['CPU']['normalize'] = 'True'
 default['bcpc']['diamond']['collectors']['CPU']['percore'] = 'False'
+# LoadAverage Collector parameters
+default['bcpc']['diamond']['collectors']['LoadAverage']['metrics_blacklist'] = '^[01][15]_normalized$'
 # List of queue names separated by whitespace to report on. If nil, report all.
 default['bcpc']['diamond']['collectors']['rabbitmq']['queues'] = nil
 # Regular expression or list of queues to not report on.

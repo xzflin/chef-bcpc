@@ -81,7 +81,7 @@ if node['bcpc']['enabled']['metrics'] then
         notifies :restart, "service[diamond]", :delayed
     end
 
-    %w{CPU}.each do |collector|
+    %w{CPU LoadAverage}.each do |collector|
         template "/etc/diamond/collectors/#{collector}Collector.conf" do
             source "diamond-collector.conf.erb"
             owner "diamond"
