@@ -23,6 +23,7 @@ package "libapache2-mod-auth-kerb" do
 end
 
 # drop the sso template into place
+# TODo: Should attempt to clone/download file first from upstream
 cookbook_file "/etc/keystone/sso_callback_template.html" do
     owner "root"
     group "root"
