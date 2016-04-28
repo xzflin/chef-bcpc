@@ -2,6 +2,30 @@
   "name": "Test-Laptop-Vagrant",
   "override_attributes": {
     "bcpc": {
+        "openstack_release": "liberty",
+        "catalog": {
+            "identity": {
+                "uris": {
+                "admin": "v3",
+                "internal": "v3",
+                "public": "v3"
+                }
+            },
+            "compute": {
+                "uris": {
+                "admin": "v2/%(tenant_id)s",
+                "internal": "v2/%(tenant_id)s",
+                "public": "v2/%(tenant_id)s"
+                }
+            },
+            "volume": {
+                "uris": {
+                "admin": "v2/%(tenant_id)s",
+                "identity": "v2/%(tenant_id)s",
+                "public": "v2/%(tenant_id)s"
+                }
+            }
+        },
       "vagrant": {
         "nat_ip": "10.0.2.15"
       },
