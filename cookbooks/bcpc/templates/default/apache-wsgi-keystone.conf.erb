@@ -11,6 +11,25 @@ Listen <%=node['bcpc']['management']['ip']%>:35357
         ErrorLogFormat "%{cu}t %M"
     </IfVersion>
     CustomLog /var/log/apache2/keystone_access.log combined
+
+    <%# TODO: make more specific to federation type %>
+    <% if node['bcpc']['keystone']['federation'] %>
+    <Location ~ "kerberos" >
+        # KERB_ID must match the IdP set in Openstack.
+        SetEnv KERB_ID KERB_ID
+
+        AuthType Kerberos
+        AuthName "Kerberos Login"
+        KrbMethodNegotiate on
+        KrbServiceName HTTP
+        KrbSaveCredentials on
+        KrbLocalUserMapping on
+        KrbAuthRealms HYPERVISOR-BCPC.EXAMPLE.COM
+        Krb5Keytab /etc/apache2/krb5.keytab
+        KrbMethodK5Passwd off #optional-- if 'off' makes GSSAPI SPNEGO a requirement
+        Require valid-user
+    </Location>
+    <% end %>
 </VirtualHost>
 
 <VirtualHost <%=node['bcpc']['management']['ip']%>:35357>
