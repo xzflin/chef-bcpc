@@ -81,12 +81,26 @@ notification_driver = <%= node['bcpc']['keystone']['drivers']['notification'] %>
 [assignment]
 driver = keystone.assignment.backends.<%= node['bcpc']['keystone']['drivers']['assignment'] %>.Assignment
 
+
+<% if node['bcpc']['keystone']['federation'] %>
 [auth]
+methods = external,password,token,kerberos
+#password = keystone.auth.plugins.password.Password
+#token = keystone.auth.plugins.token.Token
+#external = keystone.auth.plugins.external.DefaultDomain
+#oauth1 = keystone.auth.plugins.oauth1.OAuth
+
+[kerberos]
+remote_id_attribute = KERB_ID
+<% else %>
+[auth]
+kerberos = keystone.auth.plugins.mapped.Mapped
 #methods = external,password,token,oauth1
 #password = keystone.auth.plugins.password.Password
 #token = keystone.auth.plugins.token.Token
 #external = keystone.auth.plugins.external.DefaultDomain
 #oauth1 = keystone.auth.plugins.oauth1.OAuth
+<% end %>
 
 [cache]
 #config_prefix = cache.keystone
@@ -196,8 +210,15 @@ driver = keystone.contrib.federation.backends.<%= node['bcpc']['keystone']['driv
 #assertion_prefix =
 #remote_id_attribute = <None>
 #federated_domain_name = Federated
-#trusted_dashboard =
-#sso_callback_template = /etc/keystone/sso_callback_template.html
+<%
+    url_suffix = 'horizon/websso/'
+    names = [ "openstack.#{@node["bcpc"]["cluster_domain"]}",
+              node['bcpc']['management']['vip'] ]
+%>
+<%  names.each do |n| %>
+trusted_dashboard = https://<%= n %>/<%= url_suffix %>
+<%  end %>
+sso_callback_template = /etc/keystone/sso_callback_template.html
 
 [fernet_tokens]
 #key_repository = /etc/keystone/fernet-keys/
