@@ -30,3 +30,19 @@ cookbook_file "/etc/keystone/sso_callback_template.html" do
     mode "0644"
     source "keystone/sso_callback_template.html"
 end
+
+# drop the mapping template into place
+cookbook_file "Chef::Config['file_cache_path']/kerberos-mapping.json" do
+    owner "root"
+    group "root"
+    mode "0644"
+    source "keystone/kerberos-mapping.json.erb"
+    variables :group_id => 'FILLMEIN'
+end
+
+## do the keystsone wsgi bits
+#chef_gem "chef-rewind"
+#require "chef/rewind"
+
+include_recipe "bcpc::keystone"
+#rewind :template => "/etc/apache2

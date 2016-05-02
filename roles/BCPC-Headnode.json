@@ -21,6 +21,7 @@
       "recipe[bcpc::haproxy-head]",
       "recipe[bcpc::keepalived-head]",
       "recipe[bcpc::keystone]",
+      "recipe[bcpc::federated-kerberos]",
       "recipe[bcpc::glance]",
       "recipe[bcpc::cinder]",
       "recipe[bcpc::nova-head]",
