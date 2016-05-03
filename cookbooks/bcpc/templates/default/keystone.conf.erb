@@ -211,7 +211,7 @@ driver = keystone.contrib.federation.backends.<%= node['bcpc']['keystone']['driv
 #remote_id_attribute = <None>
 #federated_domain_name = Federated
 <%
-    url_suffix = 'auth/horizon/websso/'
+    url_suffix = 'horizon/auth/websso/'
     names = [ "openstack.#{@node["bcpc"]["cluster_domain"]}",
               node['bcpc']['management']['vip'] ]
 %>
