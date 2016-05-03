@@ -17,7 +17,7 @@ Listen <%= node['bcpc']['management']['ip'] %>:35357
     <%
         config_opts = node['bcpc']['keystone']['federation']['kerberos']
         routes = ["/v3/auth/OS-FEDERATION/websso/#{config_opts['protocol_name']}"]
-        routes << "/v3/auth/OS-FEDERATION/identity_providers/#{config_opts['provider_name']}/protocols/#{config_opt['protocol_name']}"
+        routes << "/v3/auth/OS-FEDERATION/identity_providers/#{config_opts['provider_name']}/protocols/#{config_opts['protocol_name']}"
         routes.each do |route|
     %>
     <Location ~ "<%= route %>">
