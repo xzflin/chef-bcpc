@@ -246,8 +246,6 @@ default['bcpc']['horizon']['disable_panels'] = ['containers']
 #
 ###########################################
 #
-# Toggle Federated Authentication
-default['bcpc']['keystone']['federation'] = true
 # Default log file
 default['bcpc']['keystone']['log_file'] = '/var/log/keystone/keystone.log'
 # Eventlet server is deprecated in Kilo, so by default we
