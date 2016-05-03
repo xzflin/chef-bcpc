@@ -553,3 +553,13 @@ FLAVOR_EXTRA_KEYS = {
         ('quota:outbound_average', _('Quota: Outbound average')),
     ]
 }
+
+<%# This is a bit aggressive %>
+<% if node['bcpc']['keystone']['federation']['kerberos'] %>
+WEBSSO_INITIAL_CHOICE="kerberos"
+WEBSSO_ENABLED = True
+WEBSSO_CHOICES = (
+("credentials", _("Keystone Credentials")),
+("kerberos", _("Kerberos")),
+)
+<% end %>
