@@ -45,4 +45,51 @@ end
 #require "chef/rewind"
 
 include_recipe "bcpc::keystone"
-#rewind :template => "/etc/apache2
+
+# Do keystone setup
+bash "keystone-create-kerberos-users-group" do
+    user "root"
+    code <<-EOH
+        . /root/adminrc
+#        . /root/keystonerc
+        openstack group create #{node['keystone']['federation']['kerberos']['users_group']}
+    EOH
+    not_if ". /root/adminrc; openstack group show #{node['keystone']['federation']['kerberos']['users_group']}"
+end
+
+bash "keystone-create-kerberos-users-group-mapping" do
+    user "root"
+    code <<-EOH
+        . /root/adminrc
+        openstack role add --project AdminTenant --group #{node['keystone']['federation']['kerberos']['users_group']} Member
+    EOH
+    not_if ". /root/adminrc; openstack role assignment list --group-domain Default --group #{node['keystone']['federation']['kerberos']['users_group']} --project AdminTenant"
+end
+
+bash "keystone-create-kerberos-identity-provider" do
+    user "root"
+    code <<-EOH
+        . /root/adminrc
+        openstack identity provider create --description Kerberos --remote-id #{node['keystone']['federation']['kerberos']['remote_id']} #{node['keystone']['federation']['kerberos']['provider_name']}
+    EOH
+    not_if ". /root/adminrc; openstack identity provider show #{node['keystone']['federation']['kerberos']['provider_name']}"
+end
+
+bash "keystone-create-kerberos-identity-mapping" do
+    user "root"
+    code <<-EOH
+        . /root/adminrc
+        openstack mapping create --rules #{Chef::Config['file_cache_path']/kerberos-mapping.json} #{node['keystone']['federation']['kerberos']['mapping_name']}
+    EOH
+    not_if ". /root/adminrc; openstack mapping show #{node['keystone']['federation']['kerberos']['mapping_name']}"
+end
+
+bash "keystone-create-kerberos-federation-protocol" do
+    user "root"
+    code <<-EOH
+        . /root/adminrc
+        openstack federation protocol create --identity-provider #{node['keystone']['federation']['kerberos']['provider_name']}" --mapping #{node['keystone']['federation']['kerberos']['mapping_name']} #{node['keystone']['federation']['kerberos']['protocol_name']}
+    EOH
+    not_if ". /root/adminrc; openstack federation protocol show --identity-provider #{node['keystone']['federation']['kerberos']['provider_name']} #{node['keystone']['federation']['kerberos']['protocol_name']}"
+end
+#openstack identity provider set --remote-id KERB_ID kerb
