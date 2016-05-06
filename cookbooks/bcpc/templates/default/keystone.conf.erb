@@ -85,6 +85,7 @@ driver = keystone.assignment.backends.<%= node['bcpc']['keystone']['drivers']['a
 <% if node['bcpc']['keystone']['federation'] %>
 [auth]
 methods = external,password,token,kerberos
+kerberos = keystone.auth.plugins.mapped.Mapped
 #password = keystone.auth.plugins.password.Password
 #token = keystone.auth.plugins.token.Token
 #external = keystone.auth.plugins.external.DefaultDomain
@@ -94,7 +95,6 @@ methods = external,password,token,kerberos
 remote_id_attribute = KERB_ID
 <% else %>
 [auth]
-kerberos = keystone.auth.plugins.mapped.Mapped
 #methods = external,password,token,oauth1
 #password = keystone.auth.plugins.password.Password
 #token = keystone.auth.plugins.token.Token
