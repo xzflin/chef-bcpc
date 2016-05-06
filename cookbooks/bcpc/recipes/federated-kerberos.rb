@@ -54,7 +54,7 @@ include_recipe "bcpc::keystone"
 # Do keystone setup
 bash "keystone-create-kerberos-users-group" do
     user "root"
-    retries 3
+    guard_interpreter :bash
     code <<-EOH
         . /root/adminrc
         openstack group create #{node['bcpc']['keystone']['federation']['kerberos']['users_group']}
@@ -64,6 +64,7 @@ end
 
 bash "keystone-create-kerberos-users-group-mapping" do
     user "root"
+    guard_interpreter :bash
     code <<-EOH
         . /root/adminrc
         openstack role add --project AdminTenant --group #{node['bcpc']['keystone']['federation']['kerberos']['users_group']} Member
@@ -73,6 +74,7 @@ end
 
 bash "keystone-create-kerberos-identity-provider" do
     user "root"
+    guard_interpreter :bash
     code <<-EOH
         . /root/adminrc
         openstack identity provider create --description Kerberos --remote-id #{node['bcpc']['keystone']['federation']['kerberos']['remote_id']} #{node['bcpc']['keystone']['federation']['kerberos']['provider_name']}
@@ -82,6 +84,7 @@ end
 
 bash "keystone-create-kerberos-identity-mapping" do
     user "root"
+    guard_interpreter :bash
     code <<-EOH
         . /root/adminrc
         openstack mapping create --rules #{Chef::Config['file_cache_path']}/kerberos-mapping.json #{node['bcpc']['keystone']['federation']['kerberos']['mapping_name']}
@@ -91,6 +94,7 @@ end
 
 bash "keystone-create-kerberos-federation-protocol" do
     user "root"
+    guard_interpreter :bash
     code <<-EOH
         . /root/adminrc
         openstack federation protocol create --identity-provider #{node['bcpc']['keystone']['federation']['kerberos']['provider_name']}" --mapping #{node['bcpc']['keystone']['federation']['kerberos']['mapping_name']} #{node['bcpc']['keystone']['federation']['kerberos']['protocol_name']}
