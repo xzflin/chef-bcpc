@@ -97,7 +97,7 @@ bash "keystone-create-kerberos-federation-protocol" do
     guard_interpreter :bash
     code <<-EOH
         . /root/adminrc
-        openstack federation protocol create --identity-provider #{node['bcpc']['keystone']['federation']['kerberos']['provider_name']}" --mapping #{node['bcpc']['keystone']['federation']['kerberos']['mapping_name']} #{node['bcpc']['keystone']['federation']['kerberos']['protocol_name']}
+        openstack federation protocol create --identity-provider #{node['bcpc']['keystone']['federation']['kerberos']['provider_name']} --mapping #{node['bcpc']['keystone']['federation']['kerberos']['mapping_name']} #{node['bcpc']['keystone']['federation']['kerberos']['protocol_name']}
     EOH
     not_if ". /root/adminrc; openstack federation protocol show --identity-provider #{node['bcpc']['keystone']['federation']['kerberos']['provider_name']} #{node['bcpc']['keystone']['federation']['kerberos']['protocol_name']}"
 end
