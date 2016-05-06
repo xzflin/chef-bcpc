@@ -17,18 +17,19 @@
 # limitations under the License.
 #
     
-# install the apache mod
-package "libapache2-mod-auth-kerb" do
-    action :upgrade
-end
-
-# enable the mod
-bash "apache-enable-mod-auth-kerb}" do
-    user "root"
-    code "a2enmod auth_kerb"
-    not_if "test -r /etc/apache2/mods-enabled/auth_kerb.load"
-    notifies :restart, "service[apache2]", :delayed
-end
+# Below handled by apache2 recipe
+## install the apache mod
+#package "libapache2-mod-auth-kerb" do
+#    action :upgrade
+#end
+#
+## enable the mod
+#bash "apache-enable-mod-auth-kerb}" do
+#    user "root"
+#    code "a2enmod auth_kerb"
+#    not_if "test -r /etc/apache2/mods-enabled/auth_kerb.load"
+#    notifies :restart, "service[apache2]", :delayed
+#end
 
 # drop the sso template into place
 # TODo: Should attempt to clone/download file first from upstream
