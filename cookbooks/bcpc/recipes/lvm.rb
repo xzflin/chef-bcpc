@@ -29,7 +29,7 @@ if node['bcpc']['nova']['ephemeral']
     group  'root'
     mode   00644
     variables(
-      :lvm_whitelist => node['bcpc']['nova']['ephemeral_disks'].map { |dev| "\"a|^#{dev}$|\", " }
+      :lvm_whitelist => node['bcpc']['nova']['ephemeral_disks'].map { |dev| "\"a|^#{dev}$|\", " }.join
     )
   end
 
