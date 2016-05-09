@@ -59,8 +59,8 @@ download_file $BOX http://cloud-images.ubuntu.com/vagrant/trusty/current/$BOX
 # Obtain Chef client and server DEBs.
 CHEF_CLIENT_DEB=${CHEF_CLIENT_DEB:-chef_12.3.0-1_amd64.deb}
 CHEF_SERVER_DEB=${CHEF_SERVER_DEB:-chef-server-core_12.0.8-1_amd64.deb}
-download_file $CHEF_CLIENT_DEB https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/10.04/x86_64/$CHEF_CLIENT_DEB
-download_file $CHEF_SERVER_DEB https://web-dl.packagecloud.io/chef/stable/packages/ubuntu/trusty/$CHEF_SERVER_DEB
+download_file $CHEF_CLIENT_DEB https://packages.chef.io/stable/ubuntu/10.04/$CHEF_CLIENT_DEB
+download_file $CHEF_SERVER_DEB https://packages.chef.io/stable/ubuntu/14.04/$CHEF_SERVER_DEB
 
 # Pull needed cookbooks from the Chef Supermarket.
 mkdir -p $BOOTSTRAP_CACHE_DIR/cookbooks
