@@ -256,5 +256,3 @@ bash "disable-noninteractive-pam-logging" do
     code "sed --in-place 's/^\\(session\\s*required\\s*pam_unix.so\\)/#\\1/' /etc/pam.d/common-session-noninteractive"
     only_if "grep -e '^session\\s*required\\s*pam_unix.so' /etc/pam.d/common-session-noninteractive"
 end
-
-include_recipe "bcpc::apache2"
