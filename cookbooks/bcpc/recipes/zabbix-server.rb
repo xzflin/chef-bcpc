@@ -228,10 +228,28 @@ if node['bcpc']['enabled']['monitoring'] then
         end
     end
 
-    %w{ Bootstrap EphemeralWorknode Headnode Monitoring Worknode }.each do |metadata|
-        bcpc_zbx_autoreg "BCPC-#{metadata}" do
-            action :create
-        end
+    %w( Bootstrap EphemeralWorknode Headnode Worknode ).each do |metadata|
+      bcpc_zbx_autoreg "BCPC-#{metadata}" do
+        action :create
+      end
+    end
+
+    %w( Metrics Logging ).each do |mon_role|
+      bcpc_zbx_autoreg "BCPC-#{mon_role}" do
+        action :create
+        template ["Template BCPC #{mon_role}", 'Template OS Linux-active']
+        hostgroup ["BCPC-#{mon_role}"]
+      end
+    end
+
+    %w( Alerting ).each do |mon_role|
+      bcpc_zbx_autoreg "BCPC-#{mon_role}" do
+        action :create
+        template ["Template BCPC #{mon_role}", 'Template OS Linux-active',
+                  'Template App Keepalived', 'Template App HAProxy',
+                  'Template App MySQL']
+        hostgroup ["BCPC-#{mon_role}"]
+      end
     end
 
     template "/usr/share/zabbix/zabbix-api-auto-discovery" do

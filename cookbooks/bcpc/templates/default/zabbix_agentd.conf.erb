@@ -191,16 +191,16 @@ Hostname=<%=node['hostname']%>
 
 ### Option: HostMetadata
 #   Sets a metadata value for auto host registration.
-<% if node["roles"].include? "BCPC-Headnode" -%>
+<% if node['roles'].include? 'BCPC-Headnode' -%>
 HostMetadata=BCPC-Headnode
-<% elsif node["roles"].include? "BCPC-Monitoring" -%>
-HostMetadata=BCPC-Monitoring
-<% elsif node["roles"].include? "BCPC-EphemeralWorknode" -%>
+<% elsif node['roles'].include? 'BCPC-EphemeralWorknode' -%>
 HostMetadata=BCPC-EphemeralWorknode
-<% elsif node["roles"].include? "BCPC-Worknode" -%>
+<% elsif node['roles'].include? 'BCPC-Worknode' -%>
 HostMetadata=BCPC-Worknode
-<% elsif node["roles"].include? "BCPC-Bootstrap" -%>
+<% elsif node['roles'].include? 'BCPC-Bootstrap' -%>
 HostMetadata=BCPC-Bootstrap
+<% else -%>
+HostMetadata=<%= node['roles'].sort.join(',') %>
 <% end -%>
 
 ### Option: Alias
