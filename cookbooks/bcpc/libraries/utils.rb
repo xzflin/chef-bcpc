@@ -267,6 +267,16 @@ def generate_vrrp_vrid()
     results.first
 end
 
+# this takes the blisteringly maddening openstack CLI JSON output of the form
+# [{"Field": "x", "Value": "y"}, ...] and turns it into a regular hash
+def openstack_json_to_hash(input)
+  input.collect {
+    |v| { v['Field'] => v['Value'] }
+  }.reduce({}) {
+    |target_hash, v| target_hash.merge(v)
+  }
+end
+
 def join_aggregate_action
   node['bcpc']['in_maintenance'] ? :depart : :member
 end
