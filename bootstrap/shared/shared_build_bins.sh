@@ -17,17 +17,8 @@ if [[ -z $BUILD_DEST ]]; then BUILD_DEST=cookbooks/bcpc/files/default/bins; fi
 # directory used for storing build cache products
 BUILD_CACHE_DIR=$FILECACHE_MOUNT_POINT/build_bins_cache
 
-# Define the appropriate version of each binary to grab/build
-VER_KIBANA=4.0.2
-VER_PIP=7.0.3
-VER_RALLY=0.0.4
-VER_REQUESTS_AWS=0.1.6
-VER_PYZABBIX=0.7.3
-VER_GRAPHITE_CARBON=0.9.13
-VER_GRAPHITE_WHISPER=0.9.13
-VER_GRAPHITE_WEB=0.9.13
-VER_DIAMOND=d6dbab7e9be05201f9109d83157c496dcab7c68b
-VER_ESPLUGIN=9c032b7c628d8da7745fbb1939dcd2db52629943
+# Binary versions to grab/build
+source bootstrap/config/build_bins_versions.sh
 
 pushd $BUILD_DEST
 
