@@ -29,7 +29,7 @@ node['bcpc']['flavors'].each do |name, flavor|
   end
 end
 
-# remove e1 flavors (replaced by nondurable1)
+# remove old flavor names
 %w(
   e1.tiny
   e1.small
@@ -37,6 +37,12 @@ end
   e1.large
   e1.xlarge
   e1.2xlarge
+  m1.tiny
+  m1.small
+  m1.medium
+  m1.large
+  m1.xlarge
+  m1.2xlarge
 ).each do |flavor|
   bcpc_osflavor flavor do
     action :delete

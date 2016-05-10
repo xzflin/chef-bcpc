@@ -573,7 +573,7 @@ default['bcpc']['rally']['user'] = 'ubuntu'
 ###########################################
 
 default['bcpc']['flavors'] = {
-  "m1.tiny" => {
+  "generic1.tiny" => {
     "vcpus" => 1,
     "memory_mb" => 512,
     "disk_gb" => 1,
@@ -582,7 +582,7 @@ default['bcpc']['flavors'] = {
       "aggregate_instance_extra_specs:general_compute" => "yes",
     }
   },
-  "m1.small" => {
+  "generic1.small" => {
     "vcpus" => 1,
     "memory_mb" => 2048,
     "disk_gb" => 20,
@@ -591,7 +591,7 @@ default['bcpc']['flavors'] = {
       "aggregate_instance_extra_specs:general_compute" => "yes",
     }
   },
-  "m1.medium" => {
+  "generic1.medium" => {
     "vcpus" => 2,
     "memory_mb" => 4096,
     "disk_gb" => 40,
@@ -600,7 +600,7 @@ default['bcpc']['flavors'] = {
       "aggregate_instance_extra_specs:general_compute" => "yes",
     }
   },
-  "m1.large" => {
+  "generic1.large" => {
     "vcpus" => 4,
     "memory_mb" => 8192,
     "disk_gb" => 40,
@@ -609,7 +609,7 @@ default['bcpc']['flavors'] = {
       "aggregate_instance_extra_specs:general_compute" => "yes",
     }
   },
-  "m1.xlarge" => {
+  "generic1.xlarge" => {
     "vcpus" => 8,
     "memory_mb" => 16384,
     "disk_gb" => 40,
@@ -618,7 +618,7 @@ default['bcpc']['flavors'] = {
       "aggregate_instance_extra_specs:general_compute" => "yes",
     }
   },
-  "m1.2xlarge" => {
+  "generic1.2xlarge" => {
     "vcpus" => 16,
     "memory_mb" => 32768,
     "disk_gb" => 40,
