@@ -25,7 +25,7 @@ end
 
 def openstack_cli
   args =  ["openstack",
-      "--os-tenant-name", node['bcpc']['admin_tenant'],
+      "--os-project-name", node['bcpc']['admin_tenant'],
       "--os-username", get_config('keystone-admin-user'),
       "--os-auth-url", "#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:5000/v2.0/",
       "--os-region-name", node['bcpc']['region_name'],
@@ -37,7 +37,7 @@ def nova_cli
   # comes to args e.g. "--os-user-name" vs "--os-username".
   args =  ["nova",
       "--os-project-name", node['bcpc']['admin_tenant'],
-      "--os-user-name", get_config('keystone-admin-user'),
+      "--os-username", get_config('keystone-admin-user'),
       "--os-auth-url", "#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:5000/v2.0/",
       "--os-region-name", node['bcpc']['region_name'],
       "--os-password" , get_config('keystone-admin-password')]
