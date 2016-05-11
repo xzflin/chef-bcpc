@@ -7,7 +7,7 @@ default['bcpc']['country'] = "US"
 default['bcpc']['state'] = "NY"
 default['bcpc']['location'] = "New York"
 default['bcpc']['organization'] = "Bloomberg"
-default['bcpc']['openstack_release'] = "kilo"
+default['bcpc']['openstack_release'] = "liberty"
 # Can be "updates" or "proposed"
 default['bcpc']['openstack_branch'] = "proposed"
 # Should be kvm (or qemu if testing in VMs that don't support VT-x)
