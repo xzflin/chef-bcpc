@@ -1,0 +1,29 @@
+--- a/nova/network/linux_net.py
++++ b/nova/network/linux_net.py
+@@ -15,6 +15,8 @@
+ #    License for the specific language governing permissions and limitations
+ #    under the License.
+
++# THIS FILE PATCHED BY BCPC
++
+ """Implements vlans, bridges, and iptables rules using linux utilities."""
+
+ import calendar
+@@ -1127,6 +1129,7 @@ def restart_dhcp(context, dev, network_ref, fixedips):
+            '--dhcp-optsfile=%s' % _dhcp_file(dev, 'opts'),
+            '--listen-address=%s' % network_ref['dhcp_server'],
+            '--except-interface=lo',
++           '--interface=%s' % dev,
+            '--dhcp-range=set:%s,%s,static,%s,%ss' %
+                          (network_ref['label'],
+                           network_ref['dhcp_start'],
+@@ -1220,7 +1223,8 @@ def _host_dhcp(fixedip):
+     # NOTE(cfb): dnsmasq on linux only supports 64 characters in the hostname
+     #            field (LP #1238910). Since the . counts as a character we need
+     #            to truncate the hostname to only 63 characters.
+-    hostname = fixedip.instance.hostname
++    #hostname = fixedip.instance.hostname
++    hostname = 'ip-%s' % str(fixedip.address).replace('.', '-')
+     if len(hostname) > 63:
+         LOG.warning(_LW('hostname %s too long, truncating.') % (hostname))
+         hostname = fixedip.instance.hostname[:2] + '-' +\
