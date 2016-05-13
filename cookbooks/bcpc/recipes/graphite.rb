@@ -22,10 +22,15 @@ if node['bcpc']['enabled']['metrics']
   include_recipe 'bcpc::default'
   include_recipe 'bcpc::apache2'
 
-  # We need python-django >= 1.4, hence pinning to Trusty
+  # Remove Precise leftovers from Trusty builds
   apt_preference 'python-django' do
-    pin          'release n=trusty'
-    pin_priority '999'
+    action :remove
+  end
+  file '/etc/apt/apt.conf.d/00defaultrelease' do
+    action :delete
+  end
+  apt_repository 'trusty' do
+    action :remove
   end
 
   # Setup MySQL client
@@ -38,19 +43,6 @@ if node['bcpc']['enabled']['metrics']
 
   package 'percona-xtradb-cluster-client-5.6' do
     action :upgrade
-  end
-
-  template '/etc/apt/apt.conf.d/00defaultrelease' do
-    source 'apt-conf-defaultrelease.erb'
-    owner 'root'
-    group 'root'
-    mode 00644
-  end
-
-  apt_repository 'trusty' do
-    uri node['ubuntu']['archive_url']
-    distribution 'trusty'
-    components ['main']
   end
 
   ruby_block 'initialize-graphite-config' do
