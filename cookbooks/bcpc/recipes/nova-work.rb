@@ -236,10 +236,21 @@ end
 
 # This patches the stock nova-network linux_net.py with BCPC hostname
 # change and the above dnsmasq fix
-bcpc_patch "nova-network-linux_net" do
-  patch_file           'nova-network-linux_net.patch'
+# This is duplicated for 2015.1.3, 2015.1.4 for expediency
+bcpc_patch "nova-network-linux_net-2015.1.[2-3]" do
+  patch_file           'nova-network-linux_net-2015.1.3.patch'
   patch_root_dir       '/usr/lib/python2.7/dist-packages'
-  shasums_before_apply 'nova-network-linux_net-BEFORE.SHASUMS'
-  shasums_after_apply  'nova-network-linux_net-AFTER.SHASUMS'
+  shasums_before_apply 'nova-network-linux_net-2015.1.3-BEFORE.SHASUMS'
+  shasums_after_apply  'nova-network-linux_net-2015.1.3-AFTER.SHASUMS'
   notifies :restart, 'service[nova-network]', :immediately
+  only_if { %w(1:2015.1.2-0ubuntu2~cloud0 1:2015.1.3-0ubuntu1).include? %x[dpkg-query -W -f '${Version}' python-nova] }
+end
+
+bcpc_patch "nova-network-linux_net-2015.1.4" do
+  patch_file           'nova-network-linux_net-2015.1.4.patch'
+  patch_root_dir       '/usr/lib/python2.7/dist-packages'
+  shasums_before_apply 'nova-network-linux_net-2015.1.4-BEFORE.SHASUMS'
+  shasums_after_apply  'nova-network-linux_net-2015.1.4-AFTER.SHASUMS'
+  notifies :restart, 'service[nova-network]', :immediately
+  only_if { %x[dpkg-query -W -f '${Version}' python-nova] == "1:2015.1.4-0ubuntu1"}
 end
