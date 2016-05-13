@@ -162,10 +162,25 @@ def get_cached_head_node_names
     return headnodes
 end
 
+# Nearest power_of_2
 def power_of_2(number)
-    result = 1
-    while (result < number) do result <<= 1 end
-    return result
+#    result = 1
+#    while (result < number) do result <<= 1 end
+#    return result
+  result = 1
+  last_pwr = 1
+  while result < number
+    last_pwr = result
+    result <<= 1
+  end
+
+  low_delta = number - last_pwr
+  high_delta = result - number
+  if high_delta > low_delta
+    result = last_pwr
+  end
+
+  result
 end
 
 def secure_password(len=20)
