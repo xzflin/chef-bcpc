@@ -32,7 +32,7 @@ BCPC is built using the following open-source software:
  - [Ceph](http://ceph.com/)
  - [Chef](http://www.opscode.com/chef/)
  - [Cobbler](http://www.cobblerd.org/)
- - [Diamond](https://github.com/BrightcoveOS/Diamond)
+ - [Diamond](https://github.com/python-diamond/Diamond)
  - [ElasticSearch](http://www.elasticsearch.org/)
  - [Etherboot](http://etherboot.org/)
  - [Fluentd](http://fluentd.org/)
