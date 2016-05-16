@@ -78,7 +78,8 @@ if node['bcpc']['enabled']['logging'] then
     end
 
     cookbook_file "/tmp/elasticsearch-plugins.tgz" do
-        source "bins/elasticsearch-plugins.tgz"
+        source "elasticsearch-plugins.tgz"
+        cookbook 'bcpc-binary-files'
         owner "root"
         mode 00444
     end

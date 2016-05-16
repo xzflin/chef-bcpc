@@ -32,7 +32,7 @@ if node['bcpc']['enabled']['monitoring'] then
             make_config('zabbix-guest-password', secure_password)
         end
     end
-    
+
     # this script removes the old manually compiled Zabbix server installation
     # (being a bit lazy and assuming the presence of the old server binary signals everything
     # is still there)
@@ -64,7 +64,7 @@ if node['bcpc']['enabled']['monitoring'] then
         options '--no-install-recommends -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"'
       end
     end
-    
+
     # terminate the Zabbix server if this server doesn't hold the monitoring VIP
     # (this is a safeguard to get out of a potential weird state immediately after
     # migrating from compiled Zabbix to packaged Zabbix)
@@ -190,7 +190,8 @@ if node['bcpc']['enabled']['monitoring'] then
     end
 
     cookbook_file "/tmp/python-pyzabbix_0.7.3_all.deb" do
-        source "bins/python-pyzabbix_0.7.3_all.deb"
+        source "python-pyzabbix_0.7.3_all.deb"
+        cookbook 'bcpc-binary-files'
         owner "root"
         mode 00444
     end

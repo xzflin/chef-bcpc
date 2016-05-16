@@ -21,7 +21,8 @@ if node['bcpc']['monitoring']['pagerduty']['enabled'] then
 
     # Pagerduty integration script
     cookbook_file '/usr/lib/zabbix/alertscripts/pagerduty.py' do
-        source 'bins/pagerduty-zabbix-proxy.py'
+        source 'pagerduty-zabbix-proxy.py'
+        cookbook 'bcpc-binary-files'
         owner 'root'
         mode 00755
         not_if "shasum /usr/lib/zabbix/alertscripts/pagerduty.py | grep -q '^8a55e3ad8139054366d3feb2b7e6f4f0d712285a'"

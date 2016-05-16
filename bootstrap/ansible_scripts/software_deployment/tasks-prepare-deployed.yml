@@ -72,11 +72,8 @@
   copy: src={{ controlnode_ssl_key_dir }}/{{ item }} dest={{ bootstrap_deployed_dir }}/cookbooks/bcpc/files/default/{{ item }} owner={{ ansible_ssh_user }} mode=0644 validate='openssl rsa -in %s -noout'
   with_items: "{{ ssl_key_list }}"
 
-- name: Create cookbook bins directory
-  file: path={{ bootstrap_deployed_dir }}/cookbooks/bcpc/files/default/bins state=directory owner=operations group=operators
-
-- name: Copy prebuilt binaries into bcpc cookbook
-  shell: cp -r {{ bootstrap_files_dir }}/{{ chef_bcpc_version }}-prebuilt/* {{ bootstrap_deployed_dir }}/cookbooks/bcpc/files/default/bins
+- name: Copy prebuilt binaries into bcpc-binary-files cookbook
+  shell: cp -r {{ bootstrap_files_dir }}/{{ chef_bcpc_version }}-prebuilt/* {{ bootstrap_deployed_dir }}/cookbooks/bcpc-binary-files/files/default/
   when: use_prebuilt_binaries
 
 - name: Check for /chef-bcpc-files

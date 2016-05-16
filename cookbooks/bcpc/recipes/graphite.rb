@@ -56,7 +56,8 @@ if node['bcpc']['enabled']['metrics']
   %w( python-whisper_0.9.13_all.deb python-carbon_0.9.13_all.deb
       python-graphite-web_0.9.13_all.deb ).each do |pkg|
     cookbook_file "/tmp/#{pkg}" do
-      source "bins/#{pkg}"
+      source pkg
+      cookbook 'bcpc-binary-files'
       owner 'root'
       mode 00444
     end
@@ -243,5 +244,4 @@ if node['bcpc']['enabled']['metrics']
       action [:enable, :start]
     end
   end
-
 end

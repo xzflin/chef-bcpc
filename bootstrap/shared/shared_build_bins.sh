@@ -12,7 +12,7 @@ if [[ -z $FILECACHE_MOUNT_POINT ]]; then
   echo "FILECACHE_MOUNT_POINT must be set to proceed! Exiting." >&2
   exit 1
 fi
-if [[ -z $BUILD_DEST ]]; then BUILD_DEST=cookbooks/bcpc/files/default/bins; fi
+if [[ -z $BUILD_DEST ]]; then BUILD_DEST=cookbooks/bcpc-binary-files/files/default; fi
 
 # directory used for storing build cache products
 BUILD_CACHE_DIR=$FILECACHE_MOUNT_POINT/build_bins_cache

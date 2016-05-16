@@ -148,7 +148,8 @@ end
 end
 
 cookbook_file "/tmp/cirros-0.3.4-x86_64-disk.img" do
-    source "bins/cirros-0.3.4-x86_64-disk.img"
+    source "cirros-0.3.4-x86_64-disk.img"
+    cookbook 'bcpc-binary-files'
     owner "root"
     mode 00444
 end

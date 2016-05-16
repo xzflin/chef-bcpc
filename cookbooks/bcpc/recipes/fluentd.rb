@@ -70,7 +70,8 @@ if node['bcpc']['enabled']['logging'] then
       gem_full_path = ::File.join Chef::Config[:file_cache_path], gem_file
 
       cookbook_file gem_full_path do
-        source ::File.join 'bins', gem_file
+        source gem_file
+        cookbook 'bcpc-binary-files'
         owner "root"
         mode 00644
       end

@@ -22,7 +22,8 @@ if node['bcpc']['enabled']['metrics'] then
     include_recipe "bcpc::default"
 
     cookbook_file "/tmp/diamond.deb" do
-        source "bins/diamond.deb"
+        source "diamond.deb"
+        cookbook 'bcpc-binary-files'
         owner "root"
         mode 00444
     end
@@ -50,7 +51,8 @@ if node['bcpc']['enabled']['metrics'] then
     end
 
     cookbook_file "/tmp/pyrabbit-1.0.1.tar.gz" do
-        source "bins/pyrabbit-1.0.1.tar.gz"
+        source "pyrabbit-1.0.1.tar.gz"
+        cookbook 'bcpc-binary-files'
         owner "root"
         mode 00444
     end
