@@ -30,8 +30,39 @@ download_file() {
     echo $FILE
     rm -f $BOOTSTRAP_CACHE_DIR/$FILE
     curl -L --progress-bar -o $BOOTSTRAP_CACHE_DIR/$FILE $URL
+    if [[ $? != 0 ]]; then
+      echo "Received error when attempting to download from ${URL}."
+    fi
     touch $BOOTSTRAP_CACHE_DIR/${FILE}_downloaded
   fi
+}
+
+# cleanup_cookbook removes all but the specified cookbook version so that we
+# don't keep old cookbook versions and clobber them when decompressing
+cleanup_cookbook() {
+  COOKBOOK=$1
+  VERSION_TO_KEEP=$2
+
+  # this syntax should work with both BSD and GNU find (for building on OS X and Linux)
+  find ${BOOTSTRAP_CACHE_DIR}/cookbooks/ -name ${COOKBOOK}-\*.tar.gz -and -not -name ${COOKBOOK}-${VERSION_TO_KEEP}.tar.gz -delete && true
+  find ${BOOTSTRAP_CACHE_DIR}/cookbooks/ -name ${COOKBOOK}-\*.tar.gz_downloaded -and -not -name ${COOKBOOK}-${VERSION_TO_KEEP}.tar.gz_downloaded -delete && true
+}
+
+# download_cookbook wraps download_file for retrieving cookbooks
+download_cookbook() {
+  COOKBOOK=$1
+  VERSION_TO_GET=$2
+
+  download_file cookbooks/${COOKBOOK}-${VERSION_TO_GET}.tar.gz http://cookbooks.opscode.com/api/v1/cookbooks/${COOKBOOK}/versions/${VERSION_TO_GET}/download
+}
+
+# cleanup_and_download_cookbook wraps both cleanup_cookbook and download_cookbook
+cleanup_and_download_cookbook() {
+  COOKBOOK=$1
+  TARGET_VERSION=$2
+
+  cleanup_cookbook ${COOKBOOK} ${TARGET_VERSION}
+  download_cookbook ${COOKBOOK} ${TARGET_VERSION}
 }
 
 # Clones a repo and attempts to pull updates if requested version does not exist
@@ -80,16 +111,20 @@ CHEF_SERVER_DEB=${CHEF_SERVER_DEB:-chef-server-core_12.0.8-1_amd64.deb}
 download_file $CHEF_CLIENT_DEB https://packages.chef.io/stable/ubuntu/10.04/$CHEF_CLIENT_DEB
 download_file $CHEF_SERVER_DEB https://packages.chef.io/stable/ubuntu/14.04/$CHEF_SERVER_DEB
 
-# Pull needed cookbooks from the Chef Supermarket.
+# Pull needed cookbooks from the Chef Supermarket (and remove the previous
+# versions if present). Versions are pulled from build_bins_versions.sh.
 mkdir -p $BOOTSTRAP_CACHE_DIR/cookbooks
-download_file cookbooks/apt-1.10.0.tar.gz http://cookbooks.opscode.com/api/v1/cookbooks/apt/versions/1.10.0/download
-download_file cookbooks/cron-1.6.1.tar.gz http://cookbooks.opscode.com/api/v1/cookbooks/cron/versions/1.6.1/download
-download_file cookbooks/logrotate-1.6.0.tar.gz http://cookbooks.opscode.com/api/v1/cookbooks/logrotate/versions/1.6.0/download
-download_file cookbooks/ntp-1.8.6.tar.gz http://cookbooks.opscode.com/api/v1/cookbooks/ntp/versions/1.8.6/download
-download_file cookbooks/ubuntu-1.1.8.tar.gz http://cookbooks.opscode.com/api/v1/cookbooks/ubuntu/versions/1.1.8/download
-download_file cookbooks/yum-3.2.2.tar.gz http://cookbooks.opscode.com/api/v1/cookbooks/yum/versions/3.2.2/download
-download_file cookbooks/hostsfile-2.4.5.tar.gz https://supermarket.chef.io/api/v1/cookbooks/hostsfile/versions/2.4.5/download
-download_file cookbooks/concat-0.3.0.tar.gz https://supermarket.chef.io/api/v1/cookbooks/concat/versions/0.3.0/download
+cleanup_and_download_cookbook apt ${VER_APT_COOKBOOK}
+cleanup_and_download_cookbook chef-client ${VER_CHEF_CLIENT_COOKBOOK}
+cleanup_and_download_cookbook chef_handler ${VER_CHEF_HANDLER_COOKBOOK}
+cleanup_and_download_cookbook concat ${VER_CONCAT_COOKBOOK}
+cleanup_and_download_cookbook cron ${VER_CRON_COOKBOOK}
+cleanup_and_download_cookbook hostsfile ${VER_HOSTSFILE_COOKBOOK}
+cleanup_and_download_cookbook logrotate ${VER_LOGROTATE_COOKBOOK}
+cleanup_and_download_cookbook ntp ${VER_NTP_COOKBOOK}
+cleanup_and_download_cookbook ubuntu ${VER_UBUNTU_COOKBOOK}
+cleanup_and_download_cookbook windows ${VER_WINDOWS_COOKBOOK}
+cleanup_and_download_cookbook yum ${VER_YUM_COOKBOOK}
 
 # Pull knife-acl gem.
 download_file knife-acl-0.0.12.gem https://rubygems.global.ssl.fastly.net/gems/knife-acl-0.0.12.gem
