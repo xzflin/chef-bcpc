@@ -2,6 +2,10 @@
 - set_fact:
     ubuntu_password_path: /root/UBUNTU_PASSWORD
 
+# whois package provides mkpasswd
+- name: Install whois
+  apt: name=whois state=present
+
 - name: Test if strong password has already been saved on filesystem
   stat: path={{ ubuntu_password_path }}
   register: ubuntu_password_stat
