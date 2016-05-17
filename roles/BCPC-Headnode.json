@@ -12,6 +12,7 @@
       "recipe[bcpc::networking-gw-test]",
       "recipe[bcpc::networking-route-test]",
       "recipe[bcpc::system]",
+      "recipe[bcpc::apache2]",
       "recipe[bcpc::ceph-head]",
       "recipe[bcpc::mysql-head]",
       "recipe[bcpc::mysql-backup]",

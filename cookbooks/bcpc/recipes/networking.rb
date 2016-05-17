@@ -208,7 +208,7 @@ bash "routing-storage" do
     not_if "grep -e '^2 storage' /etc/iproute2/rt_tables"
 end
 
-if node["roles"].include? "BCPC-Monitoring"
+if node['bcpc']['monitoring']['provider']
     function = 'ipset-monitoring'
     # ipset is used to maintain largish block(s) of IP addresses to be referred to
     # by iptables
@@ -256,5 +256,3 @@ bash "disable-noninteractive-pam-logging" do
     code "sed --in-place 's/^\\(session\\s*required\\s*pam_unix.so\\)/#\\1/' /etc/pam.d/common-session-noninteractive"
     only_if "grep -e '^session\\s*required\\s*pam_unix.so' /etc/pam.d/common-session-noninteractive"
 end
-
-include_recipe "bcpc::apache2"

@@ -59,7 +59,7 @@ template backup_script do
   variables(
     lazy {
       {
-        :monitoring_servers => search_nodes("role", "BCPC-Monitoring")
+        :monitoring_servers => search_nodes('recipe', 'mysql-monitoring')
       }
     }
   )

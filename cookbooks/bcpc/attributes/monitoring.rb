@@ -4,9 +4,9 @@
 #
 ###########################################
 #
-# Besides being the VIP that monitoring agents/clients will communicate with,
-# monitoring services (carbon/elasticsearch/zabbix-server) will bind to it if
-# BCPC-Monitoring role is assigned in-cluster.
+# Flag to indicate if node is a monitoring service provider
+default['bcpc']['monitoring']['provider'] = false
+# VIP for monitoring services and agents
 default['bcpc']['monitoring']['vip'] = "10.17.1.16"
 # List of monitoring clients external to cluster that we are monitoring
 default['bcpc']['monitoring']['external_clients'] = []

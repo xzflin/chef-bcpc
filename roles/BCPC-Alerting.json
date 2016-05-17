@@ -1,5 +1,5 @@
 {
-    "name": "BCPC-Rgwnode",
+    "name": "BCPC-Alerting",
     "default_attributes": {
     },
     "json_class": "Chef::Role",
@@ -11,15 +11,23 @@
       "recipe[bcpc::networking-gw-test]",
       "recipe[bcpc::networking-route-test]",
       "recipe[bcpc::system]",
-      "recipe[bcpc::apache2]",
-      "recipe[bcpc::ceph-rgw]",
+      "recipe[bcpc::mysql-monitoring]",
+      "recipe[bcpc::mysql-monitoring-backup]",
+      "recipe[bcpc::haproxy-monitoring]",
+      "recipe[bcpc::keepalived-monitoring]",
+      "recipe[bcpc::zabbix-server]",
+      "recipe[bcpc::zabbix-pagerduty]",
       "recipe[bcpc::diamond]",
       "recipe[bcpc::fluentd]",
-      "recipe[bcpc::tpm]",
       "recipe[bcpc::zabbix-agent]"
     ],
-    "description": "A functional RGW node in a BCPC cluster",
+    "description": "Run list for alerting",
     "chef_type": "role",
     "override_attributes": {
+        "bcpc": {
+            "monitoring": {
+                "provider": true
+            }
+        }
     }
 }
