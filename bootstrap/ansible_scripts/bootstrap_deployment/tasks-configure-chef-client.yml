@@ -44,17 +44,24 @@
     become: no
     when: bootstrap_node_enrolled.rc == 100
 
-  - name: Install knife-acl gem
-    become: yes
-    command: /opt/opscode/embedded/bin/gem install {{ bootstrap_files_dir }}/{{ chef_bcpc_version }}/knife-acl-0.0.12.gem
-
-  - name: Create Chef actor map
+  - name: Determine if previous version of knife-acl (0.0.12) is installed
+    command: /opt/opscode/embedded/bin/gem list -i knife-acl -v 0.0.12
     become: no
-    command: /opt/opscode/embedded/bin/knife actor map
+    ignore_errors: yes
+    register: old_knife_acl_installed
+
+  - name: Remove previous version of knife-acl
+    become: yes
+    command: /opt/opscode/embedded/bin/gem uninstall knife-acl -v 0.0.12
+    when: old_knife_acl_installed.stdout.find('true')
+
+  - name: Install knife-acl 1.0.2
+    become: yes
+    command: /opt/opscode/embedded/bin/gem install {{ bootstrap_files_dir }}/{{ chef_bcpc_version }}/knife-acl-1.0.2.gem
 
   - name: Make bootstrap node an admin in the Chef server
     become: no
-    command: /opt/opscode/embedded/bin/knife group add actor admins {{ hostfqdn.stdout }}
+    command: /opt/opscode/embedded/bin/knife group add client {{ hostfqdn.stdout }} admins
 
   - name: Assign hardware and bootstrap role to bootstrap node
     become: no

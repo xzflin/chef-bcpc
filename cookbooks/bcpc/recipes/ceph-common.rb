@@ -78,6 +78,10 @@ directory "/var/run/ceph/" do
   mode  "0755"
 end
 
+package 'libvirt-bin' do
+  action :upgrade
+end
+
 directory "/var/run/ceph/guests/" do
   owner "libvirt-qemu"
   group "libvirtd"
@@ -88,7 +92,6 @@ directory "/var/log/qemu/" do
   owner "libvirt-qemu"
   group "libvirtd"
   mode  "0755"
-
 end
 
 bcpc_cephconfig 'paxos_propose_interval' do

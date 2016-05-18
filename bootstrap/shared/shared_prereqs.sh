@@ -75,8 +75,8 @@ BOX=trusty-server-cloudimg-amd64-vagrant-disk1.box
 download_file $BOX http://cloud-images.ubuntu.com/vagrant/trusty/current/$BOX
 
 # Obtain Chef client and server DEBs.
-CHEF_CLIENT_DEB=${CHEF_CLIENT_DEB:-chef_12.3.0-1_amd64.deb}
-CHEF_SERVER_DEB=${CHEF_SERVER_DEB:-chef-server-core_12.0.8-1_amd64.deb}
+CHEF_CLIENT_DEB=${CHEF_CLIENT_DEB:-chef_12.9.41-1_amd64.deb}
+CHEF_SERVER_DEB=${CHEF_SERVER_DEB:-chef-server-core_12.6.0-1_amd64.deb}
 download_file $CHEF_CLIENT_DEB https://packages.chef.io/stable/ubuntu/10.04/$CHEF_CLIENT_DEB
 download_file $CHEF_SERVER_DEB https://packages.chef.io/stable/ubuntu/14.04/$CHEF_SERVER_DEB
 
@@ -92,7 +92,7 @@ download_file cookbooks/hostsfile-2.4.5.tar.gz https://supermarket.chef.io/api/v
 download_file cookbooks/concat-0.3.0.tar.gz https://supermarket.chef.io/api/v1/cookbooks/concat/versions/0.3.0/download
 
 # Pull knife-acl gem.
-download_file knife-acl-0.0.12.gem https://rubygems.global.ssl.fastly.net/gems/knife-acl-0.0.12.gem
+download_file knife-acl-1.0.2.gem https://rubygems.global.ssl.fastly.net/gems/knife-acl-1.0.2.gem
 
 # Pull needed gems for fpm.
 GEMS=( arr-pm-0.0.10 backports-3.6.4 cabin-0.7.1 childprocess-0.5.6 clamp-0.6.5 ffi-1.9.8

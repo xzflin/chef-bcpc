@@ -1,6 +1,7 @@
 ---
   - name: Install Chef Server 12
     apt: deb={{ bootstrap_files_dir }}/{{ chef_bcpc_version }}/{{ chef_server_deb }}
+    register: chef_server_installation
     tags:
       - chef
 
@@ -28,9 +29,30 @@
     tags:
       - chef
 
+  - name: Run Chef Server upgrade
+    become: yes
+    command: chef-server-ctl upgrade -y
+    when: chef_server_installation.changed
+    tags:
+      - chef
+
   - name: Run Chef Server configuration
     become: yes
     command: chef-server-ctl reconfigure
+    tags:
+      - chef
+
+  - name: Restart Chef Server components after upgrade
+    sudo: yes
+    command: chef-server-ctl restart
+    when: chef_server_installation.changed
+    tags:
+      - chef
+
+  - name: Magic sleep after Chef Server restart
+    become: no
+    pause: seconds=10
+    when: chef_server_installation.changed
     tags:
       - chef
 
