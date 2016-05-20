@@ -12,6 +12,7 @@ default['bcpc']['ceph']['pgp_auto_adjust'] = false
 # Need to review...
 default['bcpc']['ceph']['pgs_per_node'] = 128
 default['bcpc']['ceph']['max_pgs_per_osd'] = 300
+default['bcpc']['ceph']['osd_scrub_load_threshold'] = 0.5
 # Set to 0 to disable. See http://tracker.ceph.com/issues/8103
 default['bcpc']['ceph']['pg_warn_max_obj_skew'] = 10
 # Journal size could be 10GB or higher in some cases
