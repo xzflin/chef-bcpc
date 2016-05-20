@@ -65,7 +65,8 @@ template "/var/lib/cobbler/kickstarts/bcpc_ubuntu_host.preseed" do
 end
 
 cookbook_file "/tmp/ubuntu-14.04-mini.iso" do
-    source "bins/ubuntu-14.04-mini.iso"
+    source "ubuntu-14.04-mini.iso"
+    cookbook 'bcpc-binary-files'
     owner "root"
     mode 00444
 end

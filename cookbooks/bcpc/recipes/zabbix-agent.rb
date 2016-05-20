@@ -132,7 +132,8 @@ if node['bcpc']['enabled']['monitoring'] then
     end
 
     cookbook_file "/tmp/python-requests-aws_0.1.6_all.deb" do
-        source "bins/python-requests-aws_0.1.6_all.deb"
+        source "python-requests-aws_0.1.6_all.deb"
+        cookbook 'bcpc-binary-files'
         owner "root"
         mode 00444
     end
