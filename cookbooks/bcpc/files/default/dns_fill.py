@@ -8,16 +8,16 @@ then creates a CNAME record to point to the public-X.X.X.X username
 
 """
 
-import keystoneclient
-from keystoneclient.v2_0 import client as kclient
-from keystoneclient import exceptions as kc_exceptions
-import MySQLdb as mdb
-import argparse
-import syslog
-
 
 class dns_popper(object):
     def __init__(self, config):
+        import keystoneclient
+        from keystoneclient.v2_0 import client as kclient
+        from keystoneclient import exceptions as kc_exceptions
+        import MySQLdb as mdb
+        import re
+        import syslog
+
         self.config = config
         self.keystone = kclient.Client(
             username=config["OS_USERNAME"],
@@ -49,12 +49,6 @@ class dns_popper(object):
         """
         # The replacements we used to do in SQL
         c = self.db_con.cursor()
-        replacements = [
-            ("&", "and"),
-            (" ", "-"),
-            ("_", "-"),
-            (".", "-")]
-
         c.execute(
             "SELECT i.uuid, i.display_name, i.project_id, n.address "
             "FROM nova.instances i "
@@ -77,13 +71,9 @@ class dns_popper(object):
                     add["addr"])
                 continue
 
-            tname = tenant.name
-            sname = server[1]
+            tname = make_rfc1123_compliant(tenant.name)
+            sname = make_rfc1123_compliant(server[1])
             address = server[3]
-
-            for s, t in replacements:
-                tname = tname.replace(s, t)
-                sname = sname.replace(s, t)
 
             dnsname = str(
                 ("%s.%s.%s" % (sname,  tname, self.config["domain"])).lower())
@@ -141,6 +131,57 @@ class dns_popper(object):
                 "DB changes failed: %d: %s" % (e.args[0], e.args[1]))
 
 
+def make_rfc1123_compliant(name):
+    """
+    Renders the given string in an RFC-1123 compliant way:
+    - 63 character max length
+    - allowed chars are [a-z0-9\-]
+    - cannot start or end with hyphen
+
+    In addition:
+    - don't allow consecutive hyphens (not sure if allowed)
+    """
+    import re
+
+    allowed_chars = re.compile(r'[a-z0-9\-]')
+    output_name = ''
+    # replace illegal characters after lowercasing
+    for char in name.lower():
+        if len(allowed_chars.findall(char)):
+            output_name += char
+        elif char == '&':
+            output_name += '-and-'
+        else:
+            output_name += '-'
+
+    # don't let it start with hyphen
+    if output_name[0] == '-':
+        output_name = 'hyphen' + output_name
+
+    # don't allow consecutive hyphens (jury is out on whether this is
+    # legal but we will not allow it)
+    output_name = re.sub(r'\-+', '-', output_name)
+
+    # truncate to 63 characters maximum
+    output_name = output_name[0:63]
+
+    # don't let it end with hyphen (will need to truncate again)
+    if output_name[len(output_name)-1] == '-':
+        # if longer than 57 chars, will need to trim off the end
+        max_length_without_trim = 57
+        if len(output_name) <= max_length_without_trim:
+            output_name += 'hyphen'
+        else:
+            # add 1 here to account for hyphen
+            count_to_remove = (
+                1 + len(output_name) - max_length_without_trim)
+            output_name = (
+                output_name[0:len(output_name)-count_to_remove] +
+                '-hyphen')
+
+    return output_name
+
+
 def c_load_config(path):
     import yaml
     return yaml.load(open(path))
@@ -163,6 +204,7 @@ def c_dump(args):
 
 
 if __name__ == '__main__':
+    import argparse
     import sys
     parser = argparse.ArgumentParser()
     parser.add_argument(
