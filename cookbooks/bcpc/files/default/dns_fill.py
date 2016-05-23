@@ -196,11 +196,19 @@ def c_run(args):
 
 
 def c_dump(args):
+    import json
     config = c_load_config(args.config)
     dnsp = dns_popper(config)
     nrec = dnsp.generate_records_from_vms()
     dbrec = dnsp.get_records_from_db()
-    print nrec, dbrec
+    print(
+        json.dumps(
+            {
+                'expected_records': nrec,
+                'database_records': dbrec
+            }, indent=4
+        )
+    )
 
 
 if __name__ == '__main__':
