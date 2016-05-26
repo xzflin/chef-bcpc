@@ -41,7 +41,6 @@ end
 
 package 'keystone' do
   action :upgrade
-  options "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
 end
 
 # these packages need to be updated in Liberty but are not upgraded when Keystone is upgraded

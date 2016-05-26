@@ -31,7 +31,6 @@ end
 %w{glance glance-api glance-registry}.each do |pkg|
   package pkg do
     action :upgrade
-    options "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
   end
 end
 

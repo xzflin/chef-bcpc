@@ -38,7 +38,6 @@ if node['bcpc']['enabled']['metrics'] then
         provider Chef::Provider::Package::Dpkg
         source "/tmp/diamond.deb"
         action :upgrade
-        options "--force-confold --force-confdef"
     end
 
     if node['bcpc']['virt_type'] == "kvm"

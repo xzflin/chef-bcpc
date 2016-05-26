@@ -31,7 +31,6 @@ end
 
 package 'cinder-common' do
   action :upgrade
-  options "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
 end
 
 %w{cinder-api cinder-volume cinder-scheduler}.each do |pkg|

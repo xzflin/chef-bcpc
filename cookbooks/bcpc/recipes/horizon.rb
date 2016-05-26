@@ -39,7 +39,6 @@ end
 # options specified to keep dpkg from complaining that the config file exists already
 package "openstack-dashboard" do
   action :upgrade
-  options "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
   notifies :run, "bash[dpkg-reconfigure-openstack-dashboard]", :delayed
 end
 
