@@ -31,6 +31,7 @@ end
 %w{glance glance-api glance-registry}.each do |pkg|
   package pkg do
     action :upgrade
+    notifies :run, 'bash[clean-old-pyc-files]', :immediately
   end
 end
 

@@ -24,7 +24,14 @@ include_recipe "bcpc::packages-openstack"
 kilo_to_liberty_upgrade_check = Mixlib::ShellOut.new("dpkg --compare-versions $(dpkg -s python-nova | egrep '^Version:' | awk '{ print $NF }') lt 2:12.0.0")
 kilo_to_liberty_upgrade_check.run_command
 if !kilo_to_liberty_upgrade_check.error? && node['bcpc']['openstack_release'] == 'liberty'
-  file '/usr/local/etc/kilo_to_liberty_upgrade'
+  file '/usr/local/etc/kilo_to_liberty_upgrade' do
+    notifies :run, 'bash[clean-old-pyc-files]', :immediately
+  end
+end
+
+bash 'clean-old-pyc-files' do
+  code 'find /usr/lib/python2.7/dist-packages -name \*.pyc -delete'
+  action :nothing
 end
 
 # python-nova will be used as the canary package to determine whether at least

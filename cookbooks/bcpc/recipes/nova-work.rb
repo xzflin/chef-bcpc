@@ -22,11 +22,13 @@ include_recipe "bcpc::nova-common"
 package "nova-compute-#{node['bcpc']['virt_type']}" do
   action :upgrade
   notifies :restart, 'service[nova-compute]', :immediately
+  notifies :run, 'bash[clean-old-pyc-files]', :immediately
 end
 
 %w{nova-api nova-network nova-compute nova-novncproxy}.each do |pkg|
     package pkg do
         action :upgrade
+        notifies :run, 'bash[clean-old-pyc-files]', :immediately
     end
     service pkg do
         action [:enable, :start]

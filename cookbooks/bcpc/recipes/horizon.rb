@@ -40,6 +40,12 @@ end
 package "openstack-dashboard" do
   action :upgrade
   notifies :run, "bash[dpkg-reconfigure-openstack-dashboard]", :delayed
+  notifies :run, 'bash[clean-old-dashboard-pyc-files]', :immediately
+end
+
+bash 'clean-old-dashboard-pyc-files' do
+  code 'find /usr/share/openstack-dashboard -name \*.pyc -delete'
+  action :nothing
 end
 
 #  _   _  ____ _  __   __  ____   _  _____ ____ _   _

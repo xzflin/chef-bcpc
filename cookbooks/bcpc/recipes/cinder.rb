@@ -31,15 +31,18 @@ end
 
 package 'cinder-common' do
   action :upgrade
+  notifies :run, 'bash[clean-old-pyc-files]', :immediately
 end
 
 %w{cinder-api cinder-volume cinder-scheduler}.each do |pkg|
-    package pkg do
-        action :upgrade
-    end
-    service pkg do
-        action [:enable, :start]
-    end
+  package pkg do
+    action :upgrade
+    notifies :run, 'bash[clean-old-pyc-files]', :immediately
+  end
+  
+  service pkg do
+    action [:enable, :start]
+  end
 end
 
 service "cinder-api" do

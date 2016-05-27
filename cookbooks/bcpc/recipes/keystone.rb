@@ -41,6 +41,7 @@ end
 
 package 'keystone' do
   action :upgrade
+  notifies :run, 'bash[clean-old-pyc-files]', :immediately
 end
 
 # these packages need to be updated in Liberty but are not upgraded when Keystone is upgraded

@@ -17,6 +17,11 @@
 # limitations under the License.
 #
 
+bash 'clean-out-pyc-files-after-upgrade' do
+  code 'find /usr/lib/python2.7/dist-packages -name \*.pyc -delete'
+  only_if { ::File.exist?('/usr/local/etc/kilo_to_liberty_upgrade') }
+end
+
 bash 'hup-openstack-after-upgrade' do
   code '/usr/local/bin/hup_openstack'
   only_if { ::File.exist?('/usr/local/etc/kilo_to_liberty_upgrade') }

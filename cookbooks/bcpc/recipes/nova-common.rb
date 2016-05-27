@@ -38,6 +38,7 @@ end
 
 package "nova-common" do
   action :upgrade
+  notifies :run, 'bash[clean-old-pyc-files]', :immediately
 end
 
 template "/etc/nova/nova.conf" do
