@@ -42,6 +42,14 @@ end
 package 'keystone' do
   action :upgrade
   notifies :run, 'bash[clean-old-pyc-files]', :immediately
+  notifies :run, 'bash[flush-memcached]', :immediately
+end
+
+# sometimes the way tokens are stored changes and causes issues,
+# so flush memcached if Keystone is upgraded
+bash 'flush-memcached' do
+  code "echo flush_all | nc #{node['bcpc']['management']['ip']} 11211"
+  action :nothing
 end
 
 # these packages need to be updated in Liberty but are not upgraded when Keystone is upgraded
