@@ -5,15 +5,23 @@
 
   - name: Set up /mnt directory
     filesystem: fstype=ext4 dev=/dev/sdb opts="-F"
+    when: not bootstrap_data_root_disk
 
   - name: Mount the /mnt directory
     mount: name=/mnt src=/dev/sdb fstype=ext4 state=mounted
+    when: not bootstrap_data_root_disk
+
+  - name: Set up /bcpc directory on root disk if enabled
+    file: path=/bcpc state=directory
+    when: bootstrap_data_root_disk
 
   - name: Set up /bcpc directory
     filesystem: fstype=ext4 dev=/dev/sdc opts="-F"
+    when: not bootstrap_data_root_disk
 
   - name: Mount the /bcpc directory
     mount: name=/bcpc src=/dev/sdc fstype=ext4 state=mounted
+    when: not bootstrap_data_root_disk
 
   - name: Create various staging areas
     file: path={{ item }} state=directory owner=operations group=operators mode=0775 recurse=yes

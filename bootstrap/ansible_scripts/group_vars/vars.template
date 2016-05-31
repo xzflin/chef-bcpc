@@ -155,6 +155,10 @@ bootstrap_apt_mirror_dir: "{{ bootstrap_staging_dir }}/apt-mirror"
 bootstrap_deployed_dir: "{{ bootstrap_staging_dir }}/deployed"
 bootstrap_mirror_root_dir: "{{ bootstrap_staging_dir }}/mirror-root"
 
+# Use root disk for bootstrap data. It will use separate disks (/dev/sd[bc] by
+# default.
+bootstrap_data_root_disk: false
+
 ################################################
 # APT MIRROR SYMLINK PATHS
 # (these should not need to be changed unless upstream repos change)
