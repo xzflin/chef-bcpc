@@ -53,9 +53,11 @@ if node['bcpc']['enabled']['metrics']
     end
   end
 
-  %w( python-whisper_0.9.13_all.deb python-carbon_0.9.13_all.deb
-      python-graphite-web_0.9.13_all.deb ).each do |pkg|
-    cookbook_file "/tmp/#{pkg}" do
+  version = node['bcpc']['graphite']['version']
+  ["python-whisper_#{version}_all.deb", "python-carbon_#{version}_all.deb",
+   "python-graphite-web_#{version}_all.deb"].each do |pkg|
+    deb_full_path = ::File.join Chef::Config[:file_cache_path], pkg
+    cookbook_file deb_full_path do
       source pkg
       cookbook 'bcpc-binary-files'
       owner 'root'
@@ -64,8 +66,10 @@ if node['bcpc']['enabled']['metrics']
 
     package pkg do
       provider Chef::Provider::Package::Dpkg
-      source "/tmp/#{pkg}"
-      action :install
+      source deb_full_path
+      action :upgrade
+      notifies :restart, 'service[carbon-cache]', :delayed
+      notifies :restart, 'service[carbon-relay]', :delayed
     end
   end
 
@@ -75,23 +79,6 @@ if node['bcpc']['enabled']['metrics']
     package pkg do
       action :upgrade
     end
-  end
-
-  #  _   _  ____ _  __   __  ____   _  _____ ____ _   _
-  # | | | |/ ___| | \ \ / / |  _ \ / \|_   _/ ___| | | |
-  # | | | | |  _| |  \ V /  | |_) / _ \ | || |   | |_| |
-  # | |_| | |_| | |___| |   |  __/ ___ \| || |___|  _  |
-  #  \___/ \____|_____|_|   |_| /_/   \_\_| \____|_| |_|
-  # carbon-relay sometimes remains stuck even when destinations have
-  # (i.e, carbon-cache) recovered from lag/unresponsiveness. This patch
-  # applies Graphite Carbon PR #400 which fixes a race condition in carbon
-  # client queue signalling.
-  bcpc_patch 'graphite-carbon-client' do
-    patch_file           'graphite-carbon-client.patch'
-    patch_root_dir       '/opt/graphite'
-    shasums_before_apply 'graphite-carbon-client-BEFORE.SHASUMS'
-    shasums_after_apply  'graphite-carbon-client-AFTER.SHASUMS'
-    notifies :restart, 'service[carbon-relay]', :delayed
   end
 
   template '/opt/graphite/conf/carbon.conf' do
