@@ -292,9 +292,12 @@ default['bcpc']['keystone']['drivers']['oauth1'] = 'sql'
 default['bcpc']['keystone']['drivers']['policy'] = 'sql'
 default['bcpc']['keystone']['drivers']['revoke'] = 'sql'
 default['bcpc']['keystone']['drivers']['role'] = 'sql'
+default['bcpc']['keystone']['drivers']['token'] = 'memcache_pool'
 default['bcpc']['keystone']['drivers']['trust'] = 'sql'
 # Notifications driver
 default['bcpc']['keystone']['drivers']['notification'] = 'log'
+# token format
+default['bcpc']['keystone']['providers']['token'] = 'fernet'
 # Notifications format. See: http://docs.openstack.org/developer/keystone/event_notifications.html
 default['bcpc']['keystone']['notification_format'] = 'cadf'
 

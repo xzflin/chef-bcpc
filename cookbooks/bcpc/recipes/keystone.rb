@@ -66,6 +66,74 @@ service "keystone" do
     action [:disable, :stop]
 end
 
+# if on Liberty, generate Fernet keys and persist the keys in the data bag (if not already
+# generated)
+fernet_key_directory = '/etc/keystone/fernet-keys'
+
+directory fernet_key_directory do
+  owner 'keystone'
+  group 'keystone'
+  mode  00700
+end
+
+# do stuff here for writing out existing keys (there will always be key 0 in the data bag
+# and maybe also 1 and 2, but not necessarily)
+ruby_block 'write-fernet-keys-to-disk' do
+  block do
+    (0..2).each do |idx|
+      if config_defined("keystone-fernet-key-#{idx}")
+        key_path = ::File.join(fernet_key_directory, idx.to_s)
+        key_in_databag = get_config("keystone-fernet-key-#{idx}")
+        need_to_write_key = false
+        if ::File.exist?(key_path)
+    	    key_on_disk = ::File.read(key_path)
+    	    need_to_write_key = !(key_on_disk == key_in_databag)
+    	  else
+    	  	need_to_write_key = true
+        end
+        ::File.write(key_path, key_in_databag) if need_to_write_key
+      end
+    end
+    # remove any other keys present in the directory (not 0, 1, or 2)
+    ::Dir.glob(::File.join(fernet_key_directory, '*')).reject do |path|
+    	path.end_with?(*(0..2).collect { |x| x.to_s })
+    end.each do |file_to_delete|
+    	::File.delete(file_to_delete)
+    end
+  end
+  only_if { config_defined('keystone-fernet-key-0') }
+  notifies :restart, 'service[apache2]', :immediately
+end
+
+bash 'generate-fernet-keys' do
+  code 'keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone'
+  not_if { ::File.exist?(::File.join(fernet_key_directory, '0')) }
+  notifies :restart, 'service[apache2]', :immediately
+end
+
+# key indexes in the data bag will not necessarily match the files on disk
+# (primary key is always key 0 and other keys are rotated down with monotonically
+# increasing integers, so you may have 0/3/4 for example after a few rotations)
+#
+# this block always runs to ensure the data bag does not get desynced with on-disk keys
+ruby_block 'add-fernet-keys-to-data-bag' do
+  block do
+    fernet_keys = ::Dir.glob(::File.join(fernet_key_directory, '*')).sort
+    fernet_keys.each_with_index do |key_path, idx|
+      db_key = "keystone-fernet-key-#{idx}"
+      disk_key_value = ::File.read(key_path)
+      begin
+        db_key_value = get_config(db_key)
+        make_config(db_key, disk_key_value, force=true) unless db_key_value == disk_key_value
+        # save old key to backup slot Just In Case
+        make_config("#{db_key}-backup", db_key_value, force=true)
+      rescue
+        make_config(db_key, disk_key_value)
+      end
+    end
+  end
+end
+
 # standalone Keystone service has a window to start up in and create keystone.log with
 # wrong permissions, so ensure it's owned by keystone:keystone
 file "/var/log/keystone/keystone.log" do
