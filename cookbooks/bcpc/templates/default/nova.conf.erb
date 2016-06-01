@@ -39,7 +39,7 @@ ec2_listen = <%= node['bcpc']['management']['ip'] %>
 ec2_host = <%= node['bcpc']['management']['vip'] %>
 ec2_workers = <%= node['bcpc']['nova']['workers'] %>
 ec2_private_dns_show_ip = True
-keystone_ec2_url = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:5000/v2.0/ec2tokens
+keystone_ec2_url = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:<%= node['bcpc']['catalog']['identity']['ports']['public'] %>/<%= node['bcpc']['catalog']['identity']['uris']['public'] %>/ec2tokens
 
 <% if node['bcpc']['nova']['notifications']['enabled'] %>
 # Nova notification settings
