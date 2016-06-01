@@ -216,3 +216,25 @@ package 'python-troveclient' do
   action :upgrade
   notifies :restart, "service[apache2]", :immediately
 end
+
+# we must patch the API access view to include the settings object so that
+# API versions are accessible, if set explicitly in the Horizon config
+bcpc_patch 'horizon-openrc-api-versions' do
+  patch_file           'horizon-openrc-api-versions.patch'
+  patch_root_dir       '/usr/share/openstack-dashboard'
+  shasums_before_apply 'horizon-openrc-api-versions-BEFORE.SHASUMS'
+  shasums_after_apply  'horizon-openrc-api-versions-AFTER.SHASUMS'
+  notifies :reload, 'service[apache2]', :immediately
+end
+
+# update openrc.sh template to provide additional environment variables and user domain
+openrc_path = ::File.join(
+  '/usr', 'share', 'openstack-dashboard', 'openstack_dashboard',
+  'dashboards', 'project', 'access_and_security', 'templates',
+  'access_and_security', 'api_access', 'openrc.sh.template')
+cookbook_file openrc_path do
+  source 'horizon.openrc.sh.template'
+  owner  'root'
+  group  'root'
+  mode   00644
+end
