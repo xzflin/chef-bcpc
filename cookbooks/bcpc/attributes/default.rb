@@ -522,6 +522,15 @@ default['bcpc']['system']['parameters']['net.nf_conntrack_max'] = 262144
 
 ###########################################
 #
+# BCPC system hardware settings
+#
+###########################################
+#
+# Select desired I/O scheduler to be applied at startup (deadline, noop, cfq)
+default['bcpc']['hardware']['io_scheduler'] = 'deadline'
+
+###########################################
+#
 # CPU governor settings
 #
 ###########################################
