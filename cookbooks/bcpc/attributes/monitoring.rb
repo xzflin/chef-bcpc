@@ -23,6 +23,8 @@ default['bcpc']['monitoring']['pagerduty']['key'] = nil
 #
 ###########################################
 #
+# Graphite version
+default['bcpc']['graphite']['version'] = '0.9.15'
 # Graphite Server FQDN
 default['bcpc']['graphite']['fqdn'] = "graphite.#{node['bcpc']['cluster_domain']}"
 #
