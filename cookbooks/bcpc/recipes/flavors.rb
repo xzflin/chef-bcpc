@@ -16,15 +16,35 @@
 # limitations under the License.
 #
 
-node['bcpc']['flavors'].each do |name, flavor| 
+node['bcpc']['flavors'].each do |name, flavor|
   bcpc_osflavor name do
-    memory_mb flavor['memory_mb'] 
-    disk_gb   flavor['disk_gb'] 
-    vcpus  flavor['vcpus'] 
+    memory_mb flavor['memory_mb']
+    disk_gb   flavor['disk_gb']
+    vcpus  flavor['vcpus']
     ephemeral_gb flavor['ephemeral_gb']
     swap_gb flavor['swap_gb']
     is_public flavor['is_public'] or true
     flavor_id flavor['id'] or "auto"
     extra_specs flavor["extra_specs"]
   end
-end 
+end
+
+# remove old flavor names
+%w(
+  e1.tiny
+  e1.small
+  e1.medium
+  e1.large
+  e1.xlarge
+  e1.2xlarge
+  m1.tiny
+  m1.small
+  m1.medium
+  m1.large
+  m1.xlarge
+  m1.2xlarge
+).each do |flavor|
+  bcpc_osflavor flavor do
+    action :delete
+  end
+end
