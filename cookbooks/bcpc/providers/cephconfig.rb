@@ -27,7 +27,10 @@ action :set do
     next
   end
 
-  sockets = ::Dir.glob(::File.join(@new_resource.path, @new_resource.target) + ".asok")
+  sockets = ::Dir.glob(::File.join(@new_resource.path, @new_resource.target) + ".asok").select do |file|
+    ::File.socket? file
+  end
+
   sockets.each do |socket_path|
     cmd = Mixlib::ShellOut.new("ceph daemon #{socket_path} config get #{@new_resource.name}").run_command
     begin
