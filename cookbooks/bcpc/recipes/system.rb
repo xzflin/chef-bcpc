@@ -93,3 +93,24 @@ ruby_block "swap-toggle" do
     end
   end
 end
+
+# converge I/O scheduler
+ruby_block 'converge-io-scheduler' do
+  block do
+    block_devices = ::Dir.glob('/dev/sd?').map { |d| d.split('/').last }
+    block_devices.each do |device|
+      %x[ echo #{node['bcpc']['hardware']['io_scheduler']} > /sys/block/#{device}/queue/scheduler ]
+    end
+  end
+  not_if do
+    block_devices = ::Dir.glob('/dev/sd?').map { |d| d.split('/').last }
+    devices_to_converge = []
+    block_devices.each do |device|
+      scheduler = %x[ cat /sys/block/#{device}/queue/scheduler ]
+      if scheduler.index("[#{node['bcpc']['hardware']['io_scheduler']}]").nil?
+        devices_to_converge << device
+      end
+    end
+    devices_to_converge.length.zero?
+  end
+end
