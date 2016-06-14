@@ -120,21 +120,27 @@ internal_cookbooks: []
 # bootstrap-files/cookbooks with the appropriate name and version
 dependency_cookbooks:
 - cookbook: apt
-  version: 1.10.0
+  version: 3.0.0
+- cookbook: chef-client
+  version: 4.5.0
+- cookbook: chef_handler
+  version: 1.4.0
 - cookbook: concat
-  version: 0.3.0
+  version: 0.3.3
 - cookbook: cron
-  version: 1.6.1
+  version: 1.7.6
 - cookbook: hostsfile
   version: 2.4.5
 - cookbook: logrotate
-  version: 1.6.0
+  version: 1.9.2
 - cookbook: ntp
-  version: 1.8.6
+  version: 2.0.0
 - cookbook: ubuntu
-  version: 1.1.8
+  version: 1.2.0
+- cookbook: windows
+  version: 1.40.0
 - cookbook: yum
-  version: 3.2.2
+  version: 3.10.0
 
 ################################################
 # CHEF PACKAGE VERSIONS
