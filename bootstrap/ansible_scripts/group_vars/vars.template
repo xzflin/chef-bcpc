@@ -26,10 +26,6 @@ operations_key: "ssh-rsa blah"
 # path to private key for operations user
 ansible_ssh_private_key_file: /put/privkey/here
 
-# IPMI username and password (only used by hardware)
-ipmi_username: username
-ipmi_password: password
-
 ################################################
 # LOCAL PATHS
 ################################################
