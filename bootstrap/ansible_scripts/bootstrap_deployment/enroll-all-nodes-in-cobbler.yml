@@ -10,22 +10,26 @@
   tags:
     - cobbler
   tasks:
-    - name: check that cluster.txt is present
-      stat: path=/bcpc/deployed/cluster.txt
-      register: cluster_txt_stat
+    - name: check that cluster.yaml is present
+      stat: path=/bcpc/deployed/cluster.yaml
+      register: cluster_yaml_stat
 
-    - name: fail if cluster.txt is not present
-      fail: msg="Please provide a cluster.txt in /bcpc/deployed on the bootstrap node"
-      when: not cluster_txt_stat.stat.exists
+    - name: check that cluster.yml is present
+      stat: path=/bcpc/deployed/cluster.yml
+      register: cluster_yml_stat
+
+    - name: fail if cluster YAML (.yaml or .yml) is not present
+      fail: msg="Please provide a cluster.yaml or cluster.yml in /bcpc/deployed on the bootstrap node"
+      when: not cluster_yaml_stat.stat.exists and not cluster_yml_stat.stat.exists
 
     - name: register the cluster head nodes in cluster.txt
-      command: ./cluster-enroll-cobbler.sh add head chdir={{ bootstrap_deployed_dir }}
+      command: ./bootstrap/ansible_scripts/scripts/enroll_cobbler.py add_role -t head chdir={{ bootstrap_deployed_dir }}
 
     - name: register the cluster work nodes in cluster.txt
-      command: ./cluster-enroll-cobbler.sh add work chdir={{ bootstrap_deployed_dir }}
+      command: ./bootstrap/ansible_scripts/scripts/enroll_cobbler.py add_role -t work chdir={{ bootstrap_deployed_dir }}
 
     - name: register the cluster work-ephemeral nodes in cluster.txt
-      command: ./cluster-enroll-cobbler.sh add work-ephemeral chdir={{ bootstrap_deployed_dir }}
+      command: ./bootstrap/ansible_scripts/scripts/enroll_cobbler.py add_role -t work-ephemeral chdir={{ bootstrap_deployed_dir }}
 
     - name: sync Cobbler
       command: cobbler sync
