@@ -39,8 +39,6 @@ Creating VMs
 ---
 * Run `bootstrap/ansible_scripts/scripts/spawn_local_vms.sh` to build the VMs in VirtualBox (existing BCPC VMs will be deleted without mercy). This script will output the MAC addresses of the first network interface of each node.
 * Create `cluster.yml` in your staging directory, using `bootstrap/ansible_scripts/ansible-cluster.yml.example` as a model. For a local build, you should only need to replace the sample MAC addresses with the real ones.
-* Convert `cluster.yml` to `cluster.txt` with `bootstrap/ansible_scripts/scripts/cluster_manifest_converter.py -t cluster.yml Test-Laptop-Ansible > cluster.txt`.
-* Copy `cluster.txt` to the root of the `chef-bcpc` repository (a number of legacy scripts that have not yet been updated to use `cluster.yml` expect `cluster.txt` to be located here).  
 
 Installing the OS on the bootstrap node
 ---
