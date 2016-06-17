@@ -68,7 +68,8 @@ def to_yaml(path, cluster_name):
             'ipmi_password': None,
             'domain': domain,
             'role': role,
-            'hardware_type': None
+            'hardware_type': None,
+            'cobbler_profile': 'bcpc_host',
         }
 
     return yaml.dump(cluster, default_flow_style=False)

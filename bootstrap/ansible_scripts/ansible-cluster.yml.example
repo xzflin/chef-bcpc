@@ -10,6 +10,7 @@ nodes:
     ipmi_password: -
     mac_address: -
     role: bootstrap
+    cobbler_profile: bcpc_host
   bcpc-vm1:
     domain: bcpc.example.com
     hardware_type: Virtual
@@ -19,6 +20,7 @@ nodes:
     ipmi_password: -
     mac_address: -
     role: head
+    cobbler_profile: bcpc_host
   bcpc-vm2:
     domain: bcpc.example.com
     hardware_type: Virtual
@@ -28,6 +30,7 @@ nodes:
     ipmi_password: -
     mac_address: -
     role: work
+    cobbler_profile: bcpc_host
   bcpc-vm3:
     domain: bcpc.example.com
     hardware_type: Virtual
@@ -37,3 +40,4 @@ nodes:
     ipmi_password: -
     mac_address: -
     role: work-ephemeral
+    cobbler_profile: bcpc_host
