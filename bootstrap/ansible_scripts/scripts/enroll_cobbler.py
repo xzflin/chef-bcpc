@@ -161,6 +161,8 @@ class CobblerEnroller(object):
                     'cobbler add returned %i: %s' %
                     (cobbler_add.returncode, cobbler_add.stderr.read()))
 
+        self.sync_cobbler()
+
     def remove_host(self, host):
         if host not in self.systems:
             raise ValueError('node %s not known to Cobbler' % host)
@@ -172,6 +174,8 @@ class CobblerEnroller(object):
             raise RuntimeError(
                 'cobbler remove returned %i: %s' %
                 (cobbler_remove.returncode, cobbler_remove.stderr.read()))
+
+        self.sync_cobbler()
 
     def add_all_hosts_in_role(self, role):
         valid_roles = set(self.nodes[node]['role'] for node in self.nodes)
@@ -189,6 +193,13 @@ class CobblerEnroller(object):
     def add_all_hosts(self):
         for host in self.nodes:
             self.add_host(host)
+
+    def sync_cobbler(self):
+        sync = self.run('cobbler sync', self.dry_run)
+        if sync is not None and sync.returncode != 0:
+            raise RuntimeError(
+                'cobbler sync returned %i: %s' %
+                (sync.returncode, sync.stderr.read()))
 
 
 def main():
