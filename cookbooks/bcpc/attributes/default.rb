@@ -392,6 +392,15 @@ default['bcpc']['cinder']['quota'] = {
 
 ###########################################
 #
+#  Glance Settings
+#
+###########################################
+# Verbose logging (level INFO)
+default['bcpc']['glance']['verbose'] = false
+default['bcpc']['glance']['workers'] = 5
+
+###########################################
+#
 # Routemon settings
 #
 ###########################################

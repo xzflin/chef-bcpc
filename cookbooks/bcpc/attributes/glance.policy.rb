@@ -3,15 +3,13 @@
 #  Glance policy Settings
 #
 ###########################################
-# Verbose logging (level INFO)
-default['bcpc']['glance']['verbose'] = false
-default['bcpc']['glance']['workers'] = 5
+
 default['bcpc']['glance']['policy'] = {
   "context_is_admin" => "role:admin",
   "default" => "",
 
   "add_image" => "role:admin",
-  "delete_image" => "",
+  "delete_image" => "role:admin",
   "get_image" => "",
   "get_images" => "",
   "modify_image" => "",
