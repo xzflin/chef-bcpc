@@ -10,13 +10,13 @@ Minimum Prerequisites
 * Ansible 1.9.4 or better on the bastion host
 * Git, curl, rsync, ssh
 
-cluster.yml/cluster.txt preparation
+cluster.yml preparation
 ---
 * Using the `ansible-cluster.yml.example` file as a reference, create your `cluster.yml` file.
 * The hardware type given for each node is interpolated into the string `BCPC-Hardware-[hardware_type]` when selecting a role file for the node that informs Chef of the hardware layout of the node (e.g., what the network interfaces are named). This is necessary for deploying multiple hardware types within a single cluster.
 * Using `bootstrap/ansible_scripts/scripts/cluster_yaml_to_inventory.py`, generate the Ansible inventory file for the cluster.
 * Using `bootstrap/ansible_scripts/scripts/cluster_manifest_converter.py`, down-convert the YAML file to `cluster.txt` (for use by legacy scripts).
-* Place `cluster.yml`, `cluster.txt`, `environments/CLUSTERNAME.json`, and your `roles/*.json` into the **chef-bcpc-prop** repository under a branch named after your cluster. These files will be overlayed on top of the **chef-bcpc** repository during deployment.
+* Place `cluster.yml`, `environments/CLUSTERNAME.json`, and your `roles/*.json` into the **chef-bcpc-prop** repository under a branch named after your cluster. These files will be overlayed on top of the **chef-bcpc** repository during deployment.
 
 Repository preparation
 ---

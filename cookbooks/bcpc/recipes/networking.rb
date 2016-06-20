@@ -104,15 +104,22 @@ end
 
 %w{ storage floating }.each do |net|
   if not node['bcpc'][net]['interface-parent'].nil?
+    # safeguard to prevent cutting off management network access if
+    # the management interface is on the native VLAN and floating/storage
+    # is on a tagged VLAN on the same physical interface
+    if node['bcpc'][net]['interface-parent'] == node['bcpc']['management']['interface']
+      raise "#{net} interface parent is in use as the management interface, refusing to configure interface parent. Please unset interface parent on the #{net} interface in the hardware role."
+    end
+
     template "/etc/network/interfaces.d/iface-#{node['bcpc'][net]['interface-parent']}" do
       source "network.iface-parent.erb"
       owner "root"
       group "root"
       mode 00644
       variables(
-                :interface => node['bcpc'][net]['interface-parent'],
-                :mtu => node['bcpc'][net]['mtu'],
-                )
+        :interface => node['bcpc'][net]['interface-parent'],
+        :mtu => node['bcpc'][net]['mtu'],
+      )
     end
   end
 end

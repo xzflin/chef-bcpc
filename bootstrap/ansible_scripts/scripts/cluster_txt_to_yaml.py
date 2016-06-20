@@ -14,6 +14,8 @@ nodes:
     hardware_type: null
     ip_address: 131.81.229.220
     ipmi_address: 62.185.178.18
+    ipmi_username: meep
+    ipmi_password: moop
     mac_address: 21:b0:d5:9b:f8:3b
     role: bootstrap
   [...]
@@ -22,6 +24,8 @@ nodes:
     hardware_type: null
     ip_address: 127.228.36.77
     ipmi_address: 218.161.198.210
+    ipmi_username: beep
+    ipmi_password: boop
     mac_address: 18:c2:93:42:a5:cd
     role: work
 """
@@ -35,7 +39,7 @@ import yaml
 def to_yaml(path, cluster_name):
     """
     Opens and reads the given file, which is assumed to be in cluster.txt
-    format. Returns a string with cluster.txt converted to YAML, or dies trying.
+    format. Returns a string with cluster.txt converted to YAML or dies trying.
     """
     f = open(path)
     cluster_txt = f.readlines()
@@ -60,9 +64,12 @@ def to_yaml(path, cluster_name):
             'mac_address': mac,
             'ip_address': ip,
             'ipmi_address': ipmi,
+            'ipmi_username': None,
+            'ipmi_password': None,
             'domain': domain,
             'role': role,
-            'hardware_type': None
+            'hardware_type': None,
+            'cobbler_profile': 'bcpc_host',
         }
 
     return yaml.dump(cluster, default_flow_style=False)
@@ -113,7 +120,8 @@ def main():
         'to text.')
     parser.add_argument("path", help="path to cluster.txt")
     parser.add_argument("cluster_name", help="name of cluster")
-    parser.add_argument("-t", "--text",
+    parser.add_argument(
+        "-t", "--text",
         help="convert from YAML to text (THIS WILL DISCARD DATA)",
         action="store_true")
     args = parser.parse_args()

@@ -85,6 +85,7 @@ d-i     pkgsel/update-policy    select none
 d-i     pkgsel/updatedb boolean true
 d-i     grub-installer/skip     boolean false
 d-i     lilo-installer/skip     boolean false
+d-i     grub-installer/bootdev  string /dev/sda
 d-i     grub-installer/only_debian      boolean true
 d-i     grub-installer/with_other_os    boolean true
 d-i     finish-install/keep-consoles    boolean false

@@ -58,37 +58,67 @@ template "/etc/cobbler/dhcp.template" do
     notifies :run, "bash[run-cobbler-sync]", :immediately
 end
 
-template "/var/lib/cobbler/kickstarts/bcpc_ubuntu_host.preseed" do
-    source "cobbler.bcpc_ubuntu_host.preseed.erb"
+node['bcpc']['cobbler']['kickstarts'].each do |kickstart|
+  template "/var/lib/cobbler/kickstarts/#{kickstart}" do
+    source "cobbler.#{kickstart}.erb"
     mode 00644
     variables(:bootstrap_node => get_bootstrap_node)
+  end
 end
 
-cookbook_file "/tmp/ubuntu-14.04-mini.iso" do
-    source "ubuntu-14.04-mini.iso"
-    cookbook 'bcpc-binary-files'
-    owner "root"
-    mode 00444
-end
+node['bcpc']['cobbler']['distributions'].each do |distro, distro_attrs|
+  iso_path = ::File.join(
+    Chef::Config['file_cache_path'], "#{distro}.iso")
 
-bash "import-ubuntu-distribution-cobbler" do
+  # add thing here to figure out whether to source from cookbook or web URI
+  if distro_attrs['iso_source'] == 'bcpc-binary-files'
+    cookbook_file iso_path do
+      source   distro_attrs['source']
+      cookbook 'bcpc-binary-files'
+      owner    'root'
+      group    'root'
+      mode     00444
+    end
+  elsif distro_attrs['iso_source'] == 'uri'
+    remote_file iso_path do
+      source   distro_attrs['source']
+      checksum distro_attrs['shasum']
+      owner    'root'
+      group    'root'
+      mode     00444
+    end
+  else
+    raise "#{distro_attrs['iso_source']} is not an acceptable ISO source, "
+          "must be either 'bcpc-binary-files' or 'uri'"
+  end
+
+  bash "import-cobbler-distribution-#{distro}" do
     user "root"
     code <<-EOH
-        mount -o loop -o ro /tmp/ubuntu-14.04-mini.iso /mnt
-        cobbler import --name=ubuntu-14.04-mini --path=/mnt --breed=ubuntu --os-version=trusty --arch=x86_64
-        umount /mnt
+      mount -o loop -o ro #{iso_path} /mnt
+      cobbler import --name=#{distro} --path=/mnt \
+        --breed=#{distro_attrs['breed']} \
+        --os-version=#{distro_attrs['os_version']} \
+        --arch=#{distro_attrs['arch']}
+      umount /mnt
     EOH
-    not_if "cobbler distro list | grep ubuntu-14.04-mini"
+    not_if "cobbler distro list | awk '{ print $1 }' | grep '^#{distro}-#{distro_attrs['arch']}$'"
     notifies :run, "bash[run-cobbler-sync]", :immediately
+  end
 end
 
-bash "import-bcpc-profile-cobbler" do
+node['bcpc']['cobbler']['profiles'].each do |profile, profile_attrs|
+  bash "import-bcpc-cobbler-profile-#{profile}" do
     user "root"
     code <<-EOH
-        cobbler profile add --name=bcpc_host --distro=ubuntu-14.04-mini-x86_64 --kickstart=/var/lib/cobbler/kickstarts/bcpc_ubuntu_host.preseed --kopts="interface=auto"
+      cobbler profile add --name=#{profile} \
+      --distro=#{profile_attrs['distro']} \
+      --kickstart=/var/lib/cobbler/kickstarts/#{profile_attrs['kickstart']} \
+      --kopts="interface=auto"
     EOH
-    not_if "cobbler profile list | grep bcpc_host"
+    not_if "cobbler profile list | awk '{ print $1 }' | grep '^#{profile}$'"
     notifies :run, "bash[run-cobbler-sync]", :immediately
+  end
 end
 
 service "isc-dhcp-server" do
