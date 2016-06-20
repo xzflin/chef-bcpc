@@ -159,7 +159,7 @@ class CobblerEnroller(object):
             if cobbler_add is not None and cobbler_add.returncode != 0:
                 raise RuntimeError(
                     'cobbler add returned %i: %s' %
-                    (cobbler_add.returncode, cobbler_add.stderr.read()))
+                    (cobbler_add.returncode, cobbler_add.stdout.read()))
 
         self.sync_cobbler()
 
@@ -173,7 +173,7 @@ class CobblerEnroller(object):
         if cobbler_remove is not None and cobbler_remove.returncode != 0:
             raise RuntimeError(
                 'cobbler remove returned %i: %s' %
-                (cobbler_remove.returncode, cobbler_remove.stderr.read()))
+                (cobbler_remove.returncode, cobbler_remove.stdout.read()))
 
         self.sync_cobbler()
 
@@ -199,7 +199,7 @@ class CobblerEnroller(object):
         if sync is not None and sync.returncode != 0:
             raise RuntimeError(
                 'cobbler sync returned %i: %s' %
-                (sync.returncode, sync.stderr.read()))
+                (sync.returncode, sync.stdout.read()))
 
 
 def main():
