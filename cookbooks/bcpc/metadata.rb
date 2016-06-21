@@ -5,6 +5,8 @@ license          "Apache License 2.0"
 description      "Installs/Configures Bloomberg Clustered Private Cloud (BCPC)"
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
 version          IO.read(File.join(File.dirname(__FILE__), '.version'))
+issues_url       'https://github.com/bloomberg/chef-bcpc/issues'
+source_url       'https://github.com/bloomberg/chef-bcpc'
 
 depends "apt", ">= 1.9.2"
 depends "ubuntu", ">= 1.1.2"
