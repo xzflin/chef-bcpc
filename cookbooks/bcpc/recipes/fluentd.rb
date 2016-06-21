@@ -80,6 +80,7 @@ if node['bcpc']['enabled']['logging'] then
         gem_binary '/opt/td-agent/embedded/bin/fluent-gem'
         source gem_full_path
         version gem_version
+        options '--local'
       end
     end
 
