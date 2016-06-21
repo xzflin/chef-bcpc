@@ -32,6 +32,13 @@ def openstack_cli
            "--os-password" , get_config('keystone-admin-password')]
 end
 
+# calculate the hostname
+# See bloomberg/chef-bcpc#1069
+def hostname
+  procfs_filename = '/proc/sys/kernel/hostname'
+  ::File.readable?(procfs_filename) ? ::File.open(procfs_filename) {|f| f.read.chomp } : node['hostname']
+end
+
 action :create do
   stdout, stderr, status = Open3.capture3(*(openstack_cli +
                                         ["aggregate", "show",
@@ -72,11 +79,12 @@ action :member do
 
   ha_fields = JSON.parse(stdout)
   current_hosts = ha_fields.select {|x| x['Field'] == "hosts"}[0]["Value"]
-  unless current_hosts.include?(node['hostname'])
+
+  unless current_hosts.include?(hostname)
     converge_by ("Adding host") do
       stdout, stderr, status = Open3.capture3(*(openstack_cli +
-                                ["aggregate", "add", "host", @new_resource.name, node['hostname'] ]))
-      raise "Failed to add host #{node['hostname']} to aggregate #{@new_resource.name}: #{stderr}" unless status.success?
+                                ["aggregate", "add", "host", @new_resource.name, hostname ]))
+      raise "Failed to add host #{hostname} to aggregate #{@new_resource.name}: #{stderr}" unless status.success?
     end
   end
 end
@@ -89,11 +97,11 @@ action :depart do
 
   ha_fields = JSON.parse(stdout)
   current_hosts = ha_fields.select {|x| x['Field'] == "hosts"}[0]["Value"]
-  if current_hosts.include?(node['hostname'])
+  if current_hosts.include?(hostname)
     converge_by ("Removing host") do
       stdout, stderr, status = Open3.capture3(*(openstack_cli +
-                                ["aggregate", "remove", "host", @new_resource.name, node['hostname'] ]))
-      raise "Failed to remove host #{node['hostname']} from aggregate #{@new_resource.name}: #{stderr}" unless status.success?
+                                ["aggregate", "remove", "host", @new_resource.name, hostname ]))
+      raise "Failed to remove host #{hostname} from aggregate #{@new_resource.name}: #{stderr}" unless status.success?
     end
   end
 end
