@@ -1,8 +1,8 @@
-
-# Cookbook Name:: bcpc
+#
+# Cookbook Name:: bcpc_common
 # Recipe:: cpupower
 #
-# Copyright 2015, Bloomberg Finance L.P.
+# Copyright 2016, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,22 +18,24 @@
 #
 
 # CPU frequency governor utils
-template "/etc/default/cpufrequtils" do
-  source "cpufrequtils.erb"
-  owner "root"
-  group "root"
-  mode 00644
-  notifies :restart, "service[cpufrequtils]", :delayed
+package 'cpufrequtils' do
+  action :upgrade
 end
 
-package "cpufrequtils"
+template '/etc/default/cpufrequtils' do
+  source 'cpupower/etc_default_cpufrequtils.erb'
+  owner  'root'
+  group  'root'
+  mode 00644
+  notifies :restart, 'service[cpufrequtils]', :immediately
+end
 
 # this service conflicts with the bcpc_cpupower provider, so ensure it is off
 service "cpufrequtils" do
   action [:disable, :stop]
 end
 
-bcpc_cpupower "cpu governor" do
+bcpc_common_cpupower 'CPU governor' do
   governor                      node['bcpc']['cpupower']['governor']
   ondemand_ignore_nice_load     node['bcpc']['cpupower']['ondemand_ignore_nice_load']
   ondemand_io_is_busy           node['bcpc']['cpupower']['ondemand_io_is_busy']

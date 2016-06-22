@@ -1,5 +1,5 @@
 #
-# Cookbook Name:: bcpc
+# Cookbook Name:: bcpc_common
 # Provider:: cpupower
 #
 # Copyright 2015, Bloomberg Finance L.P.
@@ -77,12 +77,12 @@ action :set do
   unless ::File.exists?(cpu0_all_govs_file)
     raise("Your system is seriously broken because you have a CPU scaling governor active but no available list of scaling governors")
   end
-  
+
   available_governors = ::File.read(cpu0_all_govs_file).chomp.split
   unless available_governors.include?(@new_resource.governor)
     raise("Requested governor #{@new_resource.governor} not an available CPU scaling governor (available governors: #{available_governors.join(', ')})")
   end
-  
+
   # next out of the block here so that Chef records the resource as being up to date if no changes are needed
   next unless unconverged_resources.length > 0
 

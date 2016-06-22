@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: apport
+# Cookbook Name:: bcpc_common
+# Recipe:: default
 #
 # Copyright 2016, Bloomberg Finance L.P.
 #
@@ -17,18 +17,11 @@
 # limitations under the License.
 #
 
-package "apport" do
-  action :upgrade
-end
-
-template "/etc/default/apport" do
-  source "etc_default_apport.erb"
-  owner  "root"
-  group  "root"
-  mode   00644
-  notifies :restart, "service[apport]", :delayed
-end
-
-service "apport" do
-  action [:enable, :start]
-end
+include_recipe 'ubuntu'
+include_recipe 'bcpc_common::common_packages'
+include_recipe 'bcpc_common::apport'
+include_recipe 'bcpc_common::cpupower'
+include_recipe 'bcpc_common::getty'
+include_recipe 'ntp'
+include_recipe 'chef-client::delete_validation'
+include_recipe 'chef-client::config'

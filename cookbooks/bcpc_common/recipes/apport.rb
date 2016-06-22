@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: bcpc
-# Recipe:: getty
+# Cookbook Name:: bcpc_common
+# Recipe:: apport
 #
-# Copyright 2014, Bloomberg Finance L.P.
+# Copyright 2016, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,18 +16,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-node['bcpc']['getty']['ttys'].each do |ttyname|
-  template "/etc/init/#{ttyname}.conf" do
-      source "init.ttyXX.erb"
-      owner "root"
-      group "root"
-      mode 00644
-      notifies :restart, "service[#{ttyname}]", :delayed
-      variables({ :ttyname => ttyname })
-  end
 
-  service "#{ttyname}" do
-      provider Chef::Provider::Service::Upstart
-      action [ :enable, :start ]
-  end
+package 'apport' do
+  action :upgrade
+end
+
+template '/etc/default/apport' do
+  source 'apport/etc_default_apport.erb'
+  owner  'root'
+  group  'root'
+  mode   00644
+  notifies :restart, 'service[apport]', :immediately
+end
+
+service 'apport' do
+  action [:enable, :start]
 end

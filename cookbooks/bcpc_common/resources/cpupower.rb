@@ -1,5 +1,5 @@
 
-# Cookbook Name:: bcpc
+# Cookbook Name:: bcpc_common
 # Resource:: cpupower
 #
 # Copyright 2015, Bloomberg Finance L.P.
