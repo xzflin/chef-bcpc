@@ -10,11 +10,13 @@ config = {"ip" :  sys.argv[1],
 
 templates = [ "/tmp/zabbix_linux_active_template.xml",
               "/tmp/zabbix_bcpc_templates.xml"]
-groups = ["BCPC-Headnode",
-          "BCPC-Worknode",
-          "BCPC-EphemeralWorknode",
-          "BCPC-Monitoring",
-          "BCPC-Bootstrap"]
+groups = ['BCPC-Headnode',
+          'BCPC-Worknode',
+          'BCPC-EphemeralWorknode',
+          'BCPC-Alerting',
+          'BCPC-Metrics',
+          'BCPC-Logging',
+          'BCPC-Bootstrap']
 
 zapi = ZabbixAPI(config["ip"])
 # Disable SSL certificate verification

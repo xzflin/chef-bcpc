@@ -62,7 +62,7 @@ fi
 
 # install the knife-acl plugin into embedded knife, rsync the Chef repository into the non-root user
 # (vagrant)'s home directory, and add the dependency cookbooks from the file cache
-do_on_node vm-bootstrap "sudo /opt/opscode/embedded/bin/gem install $FILECACHE_MOUNT_POINT/knife-acl-0.0.12.gem \
+do_on_node vm-bootstrap "sudo /opt/opscode/embedded/bin/gem install $FILECACHE_MOUNT_POINT/knife-acl-1.0.2.gem \
   && rsync -a $REPO_MOUNT_POINT/* \$HOME/chef-bcpc \
   && cp $FILECACHE_MOUNT_POINT/cookbooks/*.tar.gz \$HOME/chef-bcpc/cookbooks \
   && cd \$HOME/chef-bcpc/cookbooks && ls -1 *.tar.gz | xargs -I% tar xvzf %"
@@ -105,10 +105,10 @@ do_on_node vm-bootstrap "$KNIFE node run_list set bcpc-vm-bootstrap.$BCPC_HYPERV
   && $KNIFE node run_list set bcpc-vm2.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Hardware-Virtual],role[BCPC-Worknode]' \
   && $KNIFE node run_list set bcpc-vm3.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Hardware-Virtual],role[BCPC-EphemeralWorknode]'"
 
-# generate actor map and set bootstrap, vm1 and mon vms (if any) as admins so that they can write into the data bag
-ADMIN_SET="cd \$HOME && $KNIFE actor map && "
+# set bootstrap, vm1 and mon vms (if any) as admins so that they can write into the data bag
+ADMIN_SET="true && "
 for vm in vm-bootstrap vm1 $mon_vms; do
-  ADMIN_SET="$ADMIN_SET $KNIFE group add actor admins bcpc-$vm.$BCPC_HYPERVISOR_DOMAIN && "
+  ADMIN_SET="$ADMIN_SET $KNIFE group add client bcpc-$vm.$BCPC_HYPERVISOR_DOMAIN admins && "
 done
 ADMIN_SET="$ADMIN_SET :"
 do_on_node vm-bootstrap $ADMIN_SET

@@ -53,27 +53,34 @@ if node['bcpc']['enabled']['logging'] then
         action :upgrade
     end
 
-    fluentd_gems = %w{
-      excon-0.45.3
-      multi_json-1.11.2
-      multipart-post-2.0.0
-      faraday-0.9.1
-      elasticsearch-transport-1.0.12
-      elasticsearch-api-1.0.12
-      elasticsearch-1.0.12
-      fluent-plugin-elasticsearch-0.9.0
-    }
-  
-    fluentd_gems.each do |pkg|
-      cookbook_file "/tmp/#{pkg}.gem" do
-        source "bins/#{pkg}.gem"
+    # list instead of hash to guarantee iteration in insertion order
+    fluentd_gems = [
+      ['excon', '0.45.3'],
+      ['multi_json', '1.11.2'],
+      ['multipart-post', '2.0.0'],
+      ['faraday', '0.9.1'],
+      ['elasticsearch-transport', '1.0.12'],
+      ['elasticsearch-api', '1.0.12'],
+      ['elasticsearch', '1.0.12'],
+      ['fluent-plugin-elasticsearch', '0.9.0']
+    ]
+
+    fluentd_gems.each do |gem_name, gem_version|
+      gem_file = "#{gem_name}-#{gem_version}.gem"
+      gem_full_path = ::File.join Chef::Config[:file_cache_path], gem_file
+
+      cookbook_file gem_full_path do
+        source gem_file
+        cookbook 'bcpc-binary-files'
         owner "root"
-        mode 00444
+        mode 00644
       end
 
-      bash "install-#{pkg}" do
-        code "/opt/td-agent/embedded/bin/fluent-gem install --local --no-ri --no-rdoc /tmp/#{pkg}.gem"
-        not_if "/opt/td-agent/embedded/bin/fluent-gem list --local --no-versions | grep #{pkg}$"
+      gem_package gem_name do
+        gem_binary '/opt/td-agent/embedded/bin/fluent-gem'
+        source gem_full_path
+        version gem_version
+        options '--local'
       end
     end
 

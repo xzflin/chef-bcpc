@@ -20,6 +20,12 @@ ansible_ssh_user={{ cluster_ssh_user }}
 {% if cluster_hardware_type %}
 hardware_type={{ cluster_hardware_type }}
 {% endif %}
+{% if cluster_ipmi_username %}
+ipmi_username={{ cluster_ipmi_username }}
+{% endif %}
+{% if cluster_ipmi_password %}
+ipmi_password={{ cluster_ipmi_password }}
+{% endif %}
 
 [{{ cluster_name }}:children]
 {{ cluster_name }}-bootstraps
@@ -35,6 +41,12 @@ hardware_type={{ cluster_hardware_type }}
 {% set node = item[0] + " ansible_ssh_host=" + item[1].ip_address %}
 {% if item[1].ipmi_address %}
 {% set node = node + " ipmi_address=" + item[1].ipmi_address %}
+{% if not cluster_ipmi_username %}
+{% set node = node + " ipmi_username=" + item[1].ipmi_username %}
+{% endif %}
+{% if not cluster_ipmi_password %}
+{% set node = node + " ipmi_password=" + item[1].ipmi_password %}
+{% endif %}
 {% endif %}
 {% if not cluster_hardware_type %}
 {% set node = node + " hardware_type=" + item[1].hardware_type %}
@@ -47,6 +59,12 @@ hardware_type={{ cluster_hardware_type }}
 {% set node = item[0] + " ansible_ssh_host=" + item[1].ip_address %}
 {% if item[1].ipmi_address %}
 {% set node = node + " ipmi_address=" + item[1].ipmi_address %}
+{% if not cluster_ipmi_username %}
+{% set node = node + " ipmi_username=" + item[1].ipmi_username %}
+{% endif %}
+{% if not cluster_ipmi_password %}
+{% set node = node + " ipmi_password=" + item[1].ipmi_password %}
+{% endif %}
 {% endif %}
 {% if not cluster_hardware_type %}
 {% set node = node + " hardware_type=" + item[1].hardware_type %}
@@ -59,6 +77,12 @@ hardware_type={{ cluster_hardware_type }}
 {% set node = item[0] + " ansible_ssh_host=" + item[1].ip_address %}
 {% if item[1].ipmi_address %}
 {% set node = node + " ipmi_address=" + item[1].ipmi_address %}
+{% if not cluster_ipmi_username %}
+{% set node = node + " ipmi_username=" + item[1].ipmi_username %}
+{% endif %}
+{% if not cluster_ipmi_password %}
+{% set node = node + " ipmi_password=" + item[1].ipmi_password %}
+{% endif %}
 {% endif %}
 {% if not cluster_hardware_type %}
 {% set node = node + " hardware_type=" + item[1].hardware_type %}
@@ -71,6 +95,12 @@ hardware_type={{ cluster_hardware_type }}
 {% set node = item[0] + " ansible_ssh_host=" + item[1].ip_address %}
 {% if item[1].ipmi_address %}
 {% set node = node + " ipmi_address=" + item[1].ipmi_address %}
+{% if not cluster_ipmi_username %}
+{% set node = node + " ipmi_username=" + item[1].ipmi_username %}
+{% endif %}
+{% if not cluster_ipmi_password %}
+{% set node = node + " ipmi_password=" + item[1].ipmi_password %}
+{% endif %}
 {% endif %}
 {% if not cluster_hardware_type %}
 {% set node = node + " hardware_type=" + item[1].hardware_type %}
@@ -91,6 +121,12 @@ hardware_type={{ cluster_hardware_type }}
 {% endif %}
 {% if not cluster_hardware_type %}
 {% set node = node + " hardware_type=" + item[1].hardware_type %}
+{% endif %}
+{% if not cluster_ipmi_username %}
+{% set node = node + " ipmi_username=" + item[1].ipmi_username %}
+{% endif %}
+{% if not cluster_ipmi_password %}
+{% set node = node + " ipmi_password=" + item[1].ipmi_password %}
 {% endif %}
 {{ node }}
 {% endfor %}
@@ -185,15 +221,21 @@ def render_inventory(path, ssh_user, opts={}):
     template = env.from_string(INVENTORY_TEMPLATE)
 
     hardware_types = set()
+    ipmi_usernames = set()
+    ipmi_passwords = set()
     bootstraps = {}
     headnodes = {}
     worknodes = {}
     eworknodes = {}
     cluster_hardware_type = None
+    cluster_ipmi_username = None
+    cluster_ipmi_password = None
     group_map = {}
 
     for node in cluster['nodes']:
         hardware_types.add(cluster['nodes'][node]['hardware_type'])
+        ipmi_usernames.add(cluster['nodes'][node]['ipmi_username'])
+        ipmi_passwords.add(cluster['nodes'][node]['ipmi_password'])
 
         if cluster['nodes'][node]['role'] == 'bootstrap':
             bootstraps[node] = cluster['nodes'][node]
@@ -226,18 +268,25 @@ def render_inventory(path, ssh_user, opts={}):
     # visual clutter)
     if len(hardware_types) == 1:
         cluster_hardware_type = hardware_types.pop()
+    # same for IPMI username/password
+    if len(ipmi_usernames) == 1:
+        cluster_ipmi_username = ipmi_usernames.pop()
+    if len(ipmi_passwords) == 1:
+        cluster_ipmi_password = ipmi_passwords.pop()
 
     template_vars = {
-                        'cluster_name': cluster['cluster_name'],
-                        'cluster_hardware_type': cluster_hardware_type,
-                        'cluster_ssh_user': ssh_user,
-                        'bootstraps': bootstraps,
-                        'headnodes': headnodes,
-                        'worknodes': worknodes,
-                        'eworknodes': eworknodes,
-                        'group_map': group_map,
-                        'group_opts_map': g_opts
-                    }
+        'cluster_name': cluster['cluster_name'],
+        'cluster_hardware_type': cluster_hardware_type,
+        'cluster_ipmi_username': cluster_ipmi_username,
+        'cluster_ipmi_password': cluster_ipmi_password,
+        'cluster_ssh_user': ssh_user,
+        'bootstraps': bootstraps,
+        'headnodes': headnodes,
+        'worknodes': worknodes,
+        'eworknodes': eworknodes,
+        'group_map': group_map,
+        'group_opts_map': g_opts
+    }
     return template.render(template_vars)
 
 
@@ -246,7 +295,8 @@ def main():
         description='Takes cluster.yaml and emits an Ansible inventory.',
         formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('path', help='path to cluster.yaml')
-    parser.add_argument('-G', '--grouping',
+    parser.add_argument(
+        '-G', '--grouping',
         help='''set the grouping options
 
 If appears multiple times, last occurring value takes precedence
@@ -259,10 +309,12 @@ regex supplied for host_pattern.
 For example if using test data generated by `create_random_cluster_txt.py`
 and wanting to group by rack, try the following argument:
 
---grouping rack:grouping_key='rack_id',host_pattern='fake-node-r(?P<rack_id>\d+)n\d',prefix='rack-'
+--grouping rack:grouping_key='rack_id',
+host_pattern='fake-node-r(?P<rack_id>\d+)n\d',prefix='rack-'
              '''
                         )
-    parser.add_argument('-s', '--ssh_user',
+    parser.add_argument(
+        '-s', '--ssh_user',
         help='write this as ansible_ssh_user (default: %(default)s)',
         default='operations')
     args = parser.parse_args()

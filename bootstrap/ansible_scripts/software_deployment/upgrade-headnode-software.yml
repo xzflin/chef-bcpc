@@ -303,7 +303,7 @@
     - set_fact: vip_holder="{{ inventory_hostname }}"
       when: if_vip_output.stdout == "have_vip"
 
-    - name: Set Ceph noout
+    - name: Unset Ceph noout
       command: ceph osd unset noout
       when: vip_holder is defined
 

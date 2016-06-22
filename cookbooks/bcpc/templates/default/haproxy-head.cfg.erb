@@ -31,7 +31,8 @@ defaults
   timeout client 30m
   timeout server 30m
 
-listen mysql-galera <%=node['bcpc']['management']['vip']%>:3306
+listen mysql-galera
+  bind <%=node['bcpc']['management']['vip']%>:3306
   timeout client 24h
   timeout server 24h
   mode tcp

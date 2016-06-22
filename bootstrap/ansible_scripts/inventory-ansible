@@ -24,7 +24,7 @@ bcpc-vm3 ansible_ssh_host=10.0.100.13
 bcpc-vm1 ansible_ssh_host=10.0.100.11
 
 [Test-Laptop-Ansible-bootstraps]
-bcpc-bootstrap ansible_ssh_host=10.0.100.3
+ansible-bcpc-bootstrap ansible_ssh_host=10.0.100.3
 
 [cluster:children]
 headnodes

@@ -104,15 +104,22 @@ end
 
 %w{ storage floating }.each do |net|
   if not node['bcpc'][net]['interface-parent'].nil?
+    # safeguard to prevent cutting off management network access if
+    # the management interface is on the native VLAN and floating/storage
+    # is on a tagged VLAN on the same physical interface
+    if node['bcpc'][net]['interface-parent'] == node['bcpc']['management']['interface']
+      raise "#{net} interface parent is in use as the management interface, refusing to configure interface parent. Please unset interface parent on the #{net} interface in the hardware role."
+    end
+
     template "/etc/network/interfaces.d/iface-#{node['bcpc'][net]['interface-parent']}" do
       source "network.iface-parent.erb"
       owner "root"
       group "root"
       mode 00644
       variables(
-                :interface => node['bcpc'][net]['interface-parent'],
-                :mtu => node['bcpc'][net]['mtu'],
-                )
+        :interface => node['bcpc'][net]['interface-parent'],
+        :mtu => node['bcpc'][net]['mtu'],
+      )
     end
   end
 end
@@ -208,37 +215,33 @@ bash "routing-storage" do
     not_if "grep -e '^2 storage' /etc/iproute2/rt_tables"
 end
 
-if node["roles"].include? "BCPC-Monitoring"
+if node['bcpc']['monitoring']['provider']
+    function = 'ipset-monitoring'
     # ipset is used to maintain largish block(s) of IP addresses to be referred to
     # by iptables
     package "ipset"
 
-    bash "create-ipset-lists" do
-        user "root"
-        code <<-EOH
-            ipset list monitoring-clients >/dev/null || ipset create monitoring-clients hash:ip
-        EOH
+    # Insert numbering so it runs before /etc/network/if-up.d/bcpc-firewall
+    template "/etc/network/if-up.d/001bcpc-#{function}" do
+        mode 00775
+        source "bcpc-#{function}.erb"
+        notifies :run, "execute[run-#{function}-script]", :delayed
     end
 
-    # Stage monitoring-clients ipset, and swap if lists have changed
-    template "/tmp/ipset-monitoring-clients" do
+    template "/etc/#{function}-clients.conf" do
         mode 00600
-        source "ipset-monitoring-clients.erb"
+        source "#{function}-clients.conf.erb"
         variables(
             :clients => node['bcpc']['monitoring']['external_clients'].sort
         )
-        notifies :run, "bash[apply-ipset-monitoring-clients]", :immediately
+        notifies :run, "execute[run-#{function}-script]", :immediately
     end
 
-    bash "apply-ipset-monitoring-clients" do
+    execute "run-#{function}-script" do
         action :nothing
-        user "root"
-        code <<-EOH
-            ipset restore -f /tmp/ipset-monitoring-clients
-            ipset swap monitoring-clients-staging monitoring-clients
-            ipset destroy monitoring-clients-staging
-        EOH
+        command "/etc/network/if-up.d/001bcpc-#{function}"
     end
+
 end
 
 %w{ routing firewall }.each do |function|
@@ -260,5 +263,3 @@ bash "disable-noninteractive-pam-logging" do
     code "sed --in-place 's/^\\(session\\s*required\\s*pam_unix.so\\)/#\\1/' /etc/pam.d/common-session-noninteractive"
     only_if "grep -e '^session\\s*required\\s*pam_unix.so' /etc/pam.d/common-session-noninteractive"
 end
-
-include_recipe "bcpc::apache2"

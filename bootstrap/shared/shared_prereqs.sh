@@ -10,6 +10,9 @@ fi
 REQUIRED_VARS=( BOOTSTRAP_CACHE_DIR REPO_ROOT )
 check_for_envvars ${REQUIRED_VARS[@]}
 
+# List of binary versions to download
+source $REPO_ROOT/bootstrap/config/build_bins_versions.sh
+
 # Create directory for download cache.
 mkdir -p $BOOTSTRAP_CACHE_DIR
 
@@ -18,17 +21,71 @@ download_file() {
   FILE=$1
   URL=$2
 
+  # remove failed file download
+  if [[ -f $BOOTSTRAP_CACHE_DIR/$FILE && ! -f $BOOTSTRAP_CACHE_DIR/${FILE}_downloaded ]]; then
+    rm -f $BOOTSTRAP_CACHE_DIR/$FILE
+  fi
+
   if [[ ! -f $BOOTSTRAP_CACHE_DIR/$FILE && ! -f $BOOTSTRAP_CACHE_DIR/${FILE}_downloaded ]]; then
     echo $FILE
     rm -f $BOOTSTRAP_CACHE_DIR/$FILE
     curl -L --progress-bar -o $BOOTSTRAP_CACHE_DIR/$FILE $URL
+    if [[ $? != 0 ]]; then
+      echo "Received error when attempting to download from ${URL}."
+    fi
     touch $BOOTSTRAP_CACHE_DIR/${FILE}_downloaded
+  fi
+}
+
+# cleanup_cookbook removes all but the specified cookbook version so that we
+# don't keep old cookbook versions and clobber them when decompressing
+cleanup_cookbook() {
+  COOKBOOK=$1
+  VERSION_TO_KEEP=$2
+
+  # this syntax should work with both BSD and GNU find (for building on OS X and Linux)
+  find ${BOOTSTRAP_CACHE_DIR}/cookbooks/ -name ${COOKBOOK}-\*.tar.gz -and -not -name ${COOKBOOK}-${VERSION_TO_KEEP}.tar.gz -delete && true
+  find ${BOOTSTRAP_CACHE_DIR}/cookbooks/ -name ${COOKBOOK}-\*.tar.gz_downloaded -and -not -name ${COOKBOOK}-${VERSION_TO_KEEP}.tar.gz_downloaded -delete && true
+}
+
+# download_cookbook wraps download_file for retrieving cookbooks
+download_cookbook() {
+  COOKBOOK=$1
+  VERSION_TO_GET=$2
+
+  download_file cookbooks/${COOKBOOK}-${VERSION_TO_GET}.tar.gz http://cookbooks.opscode.com/api/v1/cookbooks/${COOKBOOK}/versions/${VERSION_TO_GET}/download
+}
+
+# cleanup_and_download_cookbook wraps both cleanup_cookbook and download_cookbook
+cleanup_and_download_cookbook() {
+  COOKBOOK=$1
+  TARGET_VERSION=$2
+
+  cleanup_cookbook ${COOKBOOK} ${TARGET_VERSION}
+  download_cookbook ${COOKBOOK} ${TARGET_VERSION}
+}
+
+# Clones a repo and attempts to pull updates if requested version does not exist
+clone_repo() {
+  URL=$1
+  DIR=$2
+  VER=$3
+
+  if [[ -d $BOOTSTRAP_CACHE_DIR/$DIR/.git ]]; then
+    git -C $BOOTSTRAP_CACHE_DIR/$DIR log --pretty=format:'%H' | \
+    grep -q $VER || \
+    git -C $BOOTSTRAP_CACHE_DIR/$DIR pull
+  else
+    git clone $URL $BOOTSTRAP_CACHE_DIR/$DIR
   fi
 }
 
 # This uses ROM-o-Matic to generate a custom PXE boot ROM.
 # (doesn't use the function because of the unique curl command)
 ROM=gpxe-1.0.1-80861004.rom
+if [[ -f $BOOTSTRAP_CACHE_DIR/$ROM && ! -f $BOOTSTRAP_CACHE_DIR/${ROM}_downloaded ]]; then
+  rm -f $BOOTSTRAP_CACHE_DIR/$ROM
+fi
 if [[ ! -f $BOOTSTRAP_CACHE_DIR/$ROM && ! -f $BOOTSTRAP_CACHE_DIR/${ROM}_downloaded ]]; then
   echo $ROM
   rm -f $BOOTSTRAP_CACHE_DIR/$ROM
@@ -39,29 +96,38 @@ fi
 # Obtain an Ubuntu netboot image to be used for PXE booting.
 download_file ubuntu-14.04-mini.iso http://archive.ubuntu.com/ubuntu/dists/trusty-updates/main/installer-amd64/current/images/netboot/mini.iso
 
+# Obtain the VirtualBox guest additions ISO for use with Ansible.
+VBOX_VERSION=5.0.10
+VBOX_ADDITIONS=VBoxGuestAdditions_$VBOX_VERSION.iso
+download_file $VBOX_ADDITIONS http://download.virtualbox.org/virtualbox/$VBOX_VERSION/$VBOX_ADDITIONS
+
 # Obtain a Vagrant Trusty box.
 BOX=trusty-server-cloudimg-amd64-vagrant-disk1.box
 download_file $BOX http://cloud-images.ubuntu.com/vagrant/trusty/current/$BOX
 
 # Obtain Chef client and server DEBs.
-CHEF_CLIENT_DEB=${CHEF_CLIENT_DEB:-chef_12.3.0-1_amd64.deb}
-CHEF_SERVER_DEB=${CHEF_SERVER_DEB:-chef-server-core_12.0.8-1_amd64.deb}
-download_file $CHEF_CLIENT_DEB https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/10.04/x86_64/$CHEF_CLIENT_DEB
-download_file $CHEF_SERVER_DEB https://web-dl.packagecloud.io/chef/stable/packages/ubuntu/trusty/$CHEF_SERVER_DEB
+CHEF_CLIENT_DEB=${CHEF_CLIENT_DEB:-chef_12.9.41-1_amd64.deb}
+CHEF_SERVER_DEB=${CHEF_SERVER_DEB:-chef-server-core_12.6.0-1_amd64.deb}
+download_file $CHEF_CLIENT_DEB https://packages.chef.io/stable/ubuntu/10.04/$CHEF_CLIENT_DEB
+download_file $CHEF_SERVER_DEB https://packages.chef.io/stable/ubuntu/14.04/$CHEF_SERVER_DEB
 
-# Pull needed cookbooks from the Chef Supermarket.
+# Pull needed cookbooks from the Chef Supermarket (and remove the previous
+# versions if present). Versions are pulled from build_bins_versions.sh.
 mkdir -p $BOOTSTRAP_CACHE_DIR/cookbooks
-download_file cookbooks/apt-1.10.0.tar.gz http://cookbooks.opscode.com/api/v1/cookbooks/apt/versions/1.10.0/download
-download_file cookbooks/cron-1.6.1.tar.gz http://cookbooks.opscode.com/api/v1/cookbooks/cron/versions/1.6.1/download
-download_file cookbooks/logrotate-1.6.0.tar.gz http://cookbooks.opscode.com/api/v1/cookbooks/logrotate/versions/1.6.0/download
-download_file cookbooks/ntp-1.8.6.tar.gz http://cookbooks.opscode.com/api/v1/cookbooks/ntp/versions/1.8.6/download
-download_file cookbooks/ubuntu-1.1.8.tar.gz http://cookbooks.opscode.com/api/v1/cookbooks/ubuntu/versions/1.1.8/download
-download_file cookbooks/yum-3.2.2.tar.gz http://cookbooks.opscode.com/api/v1/cookbooks/yum/versions/3.2.2/download
-download_file cookbooks/hostsfile-2.4.5.tar.gz https://supermarket.chef.io/api/v1/cookbooks/hostsfile/versions/2.4.5/download
-download_file cookbooks/concat-0.3.0.tar.gz https://supermarket.chef.io/api/v1/cookbooks/concat/versions/0.3.0/download
+cleanup_and_download_cookbook apt ${VER_APT_COOKBOOK}
+cleanup_and_download_cookbook chef-client ${VER_CHEF_CLIENT_COOKBOOK}
+cleanup_and_download_cookbook chef_handler ${VER_CHEF_HANDLER_COOKBOOK}
+cleanup_and_download_cookbook concat ${VER_CONCAT_COOKBOOK}
+cleanup_and_download_cookbook cron ${VER_CRON_COOKBOOK}
+cleanup_and_download_cookbook hostsfile ${VER_HOSTSFILE_COOKBOOK}
+cleanup_and_download_cookbook logrotate ${VER_LOGROTATE_COOKBOOK}
+cleanup_and_download_cookbook ntp ${VER_NTP_COOKBOOK}
+cleanup_and_download_cookbook ubuntu ${VER_UBUNTU_COOKBOOK}
+cleanup_and_download_cookbook windows ${VER_WINDOWS_COOKBOOK}
+cleanup_and_download_cookbook yum ${VER_YUM_COOKBOOK}
 
 # Pull knife-acl gem.
-download_file knife-acl-0.0.12.gem https://rubygems.global.ssl.fastly.net/gems/knife-acl-0.0.12.gem
+download_file knife-acl-1.0.2.gem https://rubygems.global.ssl.fastly.net/gems/knife-acl-1.0.2.gem
 
 # Pull needed gems for fpm.
 GEMS=( arr-pm-0.0.10 backports-3.6.4 cabin-0.7.1 childprocess-0.5.6 clamp-0.6.5 ffi-1.9.8
@@ -89,24 +155,19 @@ download_file cirros-0.3.4-x86_64-disk.img http://download.cirros-cloud.net/0.3.
 rm -f $BOOTSTRAP_CACHE_DIR/kibana-4.0.2-linux-x64.tar.gz_downloaded $BOOTSTRAP_CACHE_DIR/kibana-4.0.2-linux-x64.tar.gz
 # Remove obsolete cached items for BrightCoveOS Diamond
 rm -rf $BOOTSTRAP_CACHE_DIR/diamond_downloaded $BOOTSTRAP_CACHE_DIR/diamond
-# unfortunately GitHub ZIP files do not contain the actual Git index, so we must use Git to clone here
-if [[ ! -f $BOOTSTRAP_CACHE_DIR/python-diamond_downloaded ]]; then
-  git clone https://github.com/python-diamond/Diamond $BOOTSTRAP_CACHE_DIR/python-diamond
-  touch $BOOTSTRAP_CACHE_DIR/python-diamond_downloaded
-fi
-if [[ ! -f $BOOTSTRAP_CACHE_DIR/elasticsearch-head_downloaded ]]; then
-  git clone https://github.com/mobz/elasticsearch-head $BOOTSTRAP_CACHE_DIR/elasticsearch-head
-  touch $BOOTSTRAP_CACHE_DIR/elasticsearch-head_downloaded
-fi
+
+
+clone_repo https://github.com/python-diamond/Diamond python-diamond $VER_DIAMOND
+clone_repo https://github.com/mobz/elasticsearch-head elasticsearch-head $VER_ESPLUGIN
 
 download_file pyrabbit-1.0.1.tar.gz https://pypi.python.org/packages/source/p/pyrabbit/pyrabbit-1.0.1.tar.gz
 download_file requests-aws-0.1.6.tar.gz https://pypi.python.org/packages/source/r/requests-aws/requests-aws-0.1.6.tar.gz
 download_file pyzabbix-0.7.3.tar.gz https://pypi.python.org/packages/source/p/pyzabbix/pyzabbix-0.7.3.tar.gz
 download_file pagerduty-zabbix-proxy.py https://gist.githubusercontent.com/ryanhoskin/202a1497c97b0072a83a/raw/96e54cecdd78e7990bb2a6cc8f84070599bdaf06/pd-zabbix-proxy.py
 
-download_file carbon-0.9.13.tar.gz http://pypi.python.org/packages/source/c/carbon/carbon-0.9.13.tar.gz
-download_file whisper-0.9.13.tar.gz http://pypi.python.org/packages/source/w/whisper/whisper-0.9.13.tar.gz
-download_file graphite-web-0.9.13.tar.gz http://pypi.python.org/packages/source/g/graphite-web/graphite-web-0.9.13.tar.gz
+download_file carbon-${VER_GRAPHITE_CARBON}.tar.gz http://pypi.python.org/packages/source/c/carbon/carbon-${VER_GRAPHITE_CARBON}.tar.gz
+download_file whisper-${VER_GRAPHITE_WHISPER}.tar.gz http://pypi.python.org/packages/source/w/whisper/whisper-${VER_GRAPHITE_WHISPER}.tar.gz
+download_file graphite-web-${VER_GRAPHITE_WEB}.tar.gz http://pypi.python.org/packages/source/g/graphite-web/graphite-web-${VER_GRAPHITE_WEB}.tar.gz
 
 # Obtain packages for Rally. There are a lot.
 # for future reference, to install files from this cache use pip install --no-index -f file:///path/to/files rally

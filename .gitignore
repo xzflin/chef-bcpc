@@ -4,6 +4,7 @@
 .idea/
 .vagrant/
 *.iml
+*.pyc
 id_rsa
 secret_file
 cluster.txt

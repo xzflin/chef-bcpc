@@ -39,63 +39,6 @@ service "nova-api" do
     restart_command "service nova-api restart; sleep 5"
 end
 
-#  _   _  ____ _  __   __  ____   _  _____ ____ _   _
-# | | | |/ ___| | \ \ / / |  _ \ / \|_   _/ ___| | | |
-# | | | | |  _| |  \ V /  | |_) / _ \ | || |   | |_| |
-# | |_| | |_| | |___| |   |  __/ ___ \| || |___|  _  |
-#  \___/ \____|_____|_|   |_| /_/   \_\_| \____|_| |_|
-# this patch resolves OpenStack issue #1456321 and BCPC issue #573 -
-# fixes DHCP server assignment so that each fixed IP subnet gets its gateway
-# address as its DHCP server by default instead of all subnets getting the
-# gateway of the lowest subnet
-#
-# can be removed for 2015.1.1 - only applies to 2015.1.0
-cookbook_file "/tmp/nova-network-dhcp-server.patch" do
-    source "nova-network-dhcp-server.patch"
-    owner "root"
-    mode 00644
-end
-
-bash "patch-for-nova-network-dhcp-server-2015.1.0" do
-    user "root"
-    code <<-EOH
-       cd /usr/lib/python2.7/dist-packages
-       patch -p1 < /tmp/nova-network-dhcp-server.patch
-       rv=$?
-       if [ $rv -ne 0 ]; then
-         echo "Error applying patch ($rv) - aborting!"
-         exit $rv
-       fi
-       cp /tmp/nova-network-dhcp-server.patch .
-    EOH
-    only_if "shasum /usr/lib/python2.7/dist-packages/nova/network/manager.py | grep -q '^1da5cc12bc28f97e15e5f0e152d37b548766ee04'"
-    notifies :restart, "service[nova-api]", :immediately
-end
-
-# backport of a patch to fix OpenStack issue #1484738 and BCPC issue #826
-# required for both 2015.1.0 and 2015.1.1
-# two resources, one to apply to 2015.1.0 and one to apply to 2015.1.1
-# (nova/compute/manager.py checksums differ between versions)
-
-# only_if clauses are required so that the resource for the version not installed will not blow up and fail the Chef run
-bcpc_patch "nova-fix-refresh-secgroups-2015.1.0" do
-  patch_file           'nova-fix-refresh-secgroups-2015.1.0.patch'
-  patch_root_dir       '/usr/lib/python2.7/dist-packages'
-  shasums_before_apply 'nova-fix-refresh-secgroups-2015.1.0-BEFORE.SHASUMS'
-  shasums_after_apply  'nova-fix-refresh-secgroups-2015.1.0-AFTER.SHASUMS'
-  only_if "dpkg -s python-nova | grep -q '^Version: 1:2015.1.0'"
-  notifies :restart, 'service[nova-compute]', :immediately
-end
-
-bcpc_patch "nova-fix-refresh-secgroups-2015.1.1" do
-  patch_file           'nova-fix-refresh-secgroups-2015.1.1.patch'
-  patch_root_dir       '/usr/lib/python2.7/dist-packages'
-  shasums_before_apply 'nova-fix-refresh-secgroups-2015.1.1-BEFORE.SHASUMS'
-  shasums_after_apply  'nova-fix-refresh-secgroups-2015.1.1-AFTER.SHASUMS'
-  only_if "dpkg -s python-nova | grep -q '^Version: 1:2015.1.1'"
-  notifies :restart, 'service[nova-compute]', :immediately
-end
-
 %w{novnc pm-utils memcached sysfsutils}.each do |pkg|
     package pkg do
         action :upgrade
@@ -261,61 +204,53 @@ file "/usr/local/bin/nova-service-restart-wrapper" do
   action :delete
 end
 
-cookbook_file "/tmp/nova_api_metadata_base.patch" do
-    source "nova_api_metadata_base.patch"
-    owner "root"
-    mode 0644
-end
-
-bash "patch-for-ip-hostnames-metadata" do
-    user "root"
-    code <<-EOH
-        cd /usr/lib/python2.7/dist-packages/
-        cp nova/api/metadata/base.py nova/api/metadata/base.py.prepatch
-        patch -p1 < /tmp/nova_api_metadata_base.patch
-        rv=$?
-        if [ $rv -ne 0 ]; then
-          echo "Error applying patch ($rv) - aborting!"
-          exit $rv
-        fi
-        cp /tmp/nova_api_metadata_base.patch .
-    EOH
-    not_if "grep -q 'THIS FILE PATCHED BY BCPC' /usr/lib/python2.7/dist-packages/nova/api/metadata/base.py"
-    notifies :restart, "service[nova-api]", :immediately
-end
-
-cookbook_file "/tmp/nova_network_linux_net.patch" do
-    source "nova_network_linux_net.patch"
-    owner "root"
-    mode 0644
-end
-
-bash "patch-for-ip-hostnames-networking" do
-    user "root"
-    code <<-EOH
-        cd /usr/lib/python2.7/dist-packages/
-        cp nova/network/linux_net.py nova/network/linux_net.py.prepatch
-        patch -p1 < /tmp/nova_network_linux_net.patch
-        rv=$?
-        if [ $rv -ne 0 ]; then
-          echo "Error applying patch ($rv) - aborting!"
-          exit $rv
-        fi
-        cp /tmp/nova_network_linux_net.patch .
-    EOH
-    not_if "grep -q 'THIS FILE PATCHED BY BCPC' /usr/lib/python2.7/dist-packages/nova/network/linux_net.py"
-    notifies :restart, "service[nova-compute]", :immediately
-    notifies :restart, "service[nova-network]", :immediately
-end
-
-# this patch patches Nova to work correctly if you attempt to boot an instance from
-# a root volume larger than the root volume specified by the flavor
-# upstream bug #1457517 - only needed for 2015.1.0 and 2015.1.1
-bcpc_patch "nova-volume-boot-size" do
-  patch_file           'nova-volume-boot-size.patch'
+bcpc_patch 'nova-api-metadata-base' do
+  patch_file           'nova-api-metadata-base.patch'
   patch_root_dir       '/usr/lib/python2.7/dist-packages'
-  shasums_before_apply 'nova-volume-boot-size-BEFORE.SHASUMS'
-  shasums_after_apply  'nova-volume-boot-size-AFTER.SHASUMS'
+  shasums_before_apply 'nova-api-metadata-base-BEFORE.SHASUMS'
+  shasums_after_apply  'nova-api-metadata-base-AFTER.SHASUMS'
   notifies :restart, 'service[nova-api]', :immediately
-  only_if "dpkg -s python-nova | egrep -q '^Version: 1:2015.1.(0|1)'"
+end
+
+# Remove patch files used by older patching resource
+file "/usr/lib/python2.7/dist-packages/nova/network/linux_net.py.prepatch" do
+  action :delete
+end
+
+file "/usr/lib/python2.7/dist-packages/nova_network_linux_net.patch" do
+  action :delete
+end
+
+# This patches nova-network to have dnsmasq bind to the tenant's bridged
+# interface, so unicast DHCP replies are correctly responded to.
+# This presumes linux_net.py has the BCPC hostnames patch applied by an
+# earlier version of this recipe.
+bcpc_patch "nova-network-linux_net-dnsmasq" do
+  patch_file           'nova-network-linux_net-dnsmasq.patch'
+  patch_root_dir       '/usr/lib/python2.7/dist-packages'
+  shasums_before_apply 'nova-network-linux_net-dnsmasq-BEFORE.SHASUMS'
+  shasums_after_apply  'nova-network-linux_net-dnsmasq-AFTER.SHASUMS'
+  notifies :restart, 'service[nova-network]', :immediately
+  only_if "shasum /usr/lib/python2.7/dist-packages/nova/network/linux_net.py | grep -q '^78337cd95c476de57b9eede2350a67dd780fb239'"
+end
+
+# This patches the stock nova-network linux_net.py with BCPC hostname
+# change and the above dnsmasq fix
+# This is duplicated for 2015.1.3, 2015.1.4 for expediency
+bcpc_patch "nova-network-linux_net-2015.1.[2-3]" do
+  patch_file           'nova-network-linux_net-2015.1.3.patch'
+  patch_root_dir       '/usr/lib/python2.7/dist-packages'
+  shasums_before_apply 'nova-network-linux_net-2015.1.3-BEFORE.SHASUMS'
+  shasums_after_apply  'nova-network-linux_net-2015.1.3-AFTER.SHASUMS'
+  notifies :restart, 'service[nova-network]', :immediately
+  only_if { %w(1:2015.1.2-0ubuntu2~cloud0 1:2015.1.3-0ubuntu1).include? %x[dpkg-query -W -f '${Version}' python-nova] }
+end
+
+bcpc_patch "nova-network-linux_net-2015.1.4" do
+  patch_file           'nova-network-linux_net-2015.1.4.patch'
+  patch_root_dir       '/usr/lib/python2.7/dist-packages'
+  shasums_before_apply 'nova-network-linux_net-2015.1.4-BEFORE.SHASUMS'
+  shasums_after_apply  'nova-network-linux_net-2015.1.4-AFTER.SHASUMS'
+  notifies :restart, 'service[nova-network]', :immediately
+  only_if { %x[dpkg-query -W -f '${Version}' python-nova] == "1:2015.1.4-0ubuntu1"}
 end

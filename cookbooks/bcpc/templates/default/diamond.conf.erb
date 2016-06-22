@@ -163,16 +163,10 @@ batch = 100
 # Default Poll Interval (seconds)
 interval = 10
 
-[[CPUCollector]]
-enabled = True
-
 [[DiskSpaceCollector]]
 enabled = True
 
 [[DiskUsageCollector]]
-enabled = True
-
-[[LoadAverageCollector]]
 enabled = True
 
 [[MemoryCollector]]
@@ -191,9 +185,6 @@ enabled = True
 enabled = True
 
 [[UDPCollector]]
-enabled = True
-
-[[NtpdCollector]]
 enabled = True
 
 <% if node['bcpc']['virt_type'] == "kvm" -%>

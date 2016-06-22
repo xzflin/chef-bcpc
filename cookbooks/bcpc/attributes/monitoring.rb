@@ -4,9 +4,9 @@
 #
 ###########################################
 #
-# Besides being the VIP that monitoring agents/clients will communicate with,
-# monitoring services (carbon/elasticsearch/zabbix-server) will bind to it if
-# BCPC-Monitoring role is assigned in-cluster.
+# Flag to indicate if node is a monitoring service provider
+default['bcpc']['monitoring']['provider'] = false
+# VIP for monitoring services and agents
 default['bcpc']['monitoring']['vip'] = "10.17.1.16"
 # List of monitoring clients external to cluster that we are monitoring
 default['bcpc']['monitoring']['external_clients'] = []
@@ -23,6 +23,8 @@ default['bcpc']['monitoring']['pagerduty']['key'] = nil
 #
 ###########################################
 #
+# Graphite version
+default['bcpc']['graphite']['version'] = '0.9.15'
 # Graphite Server FQDN
 default['bcpc']['graphite']['fqdn'] = "graphite.#{node['bcpc']['cluster_domain']}"
 #
@@ -36,6 +38,12 @@ default['bcpc']['graphite']['retention'] = '60s:1d'
 default['bcpc']['graphite']['max_creates_per_min'] = '60'
 # Limit the number of updates to prevent over-utilizing the disk
 default['bcpc']['graphite']['max_updates_per_sec'] = '500'
+# Graphite whitelist/blacklist toggle
+default['bcpc']['graphite']['use_whitelist'] = {
+  'enabled' => 'False',
+  'whitelist' => [],
+  'blacklist' => []
+}
 
 ###########################################
 #
@@ -43,6 +51,11 @@ default['bcpc']['graphite']['max_updates_per_sec'] = '500'
 #
 ###########################################
 #
+# CPU Collector parameters
+default['bcpc']['diamond']['collectors']['CPU']['normalize'] = 'True'
+default['bcpc']['diamond']['collectors']['CPU']['percore'] = 'False'
+# LoadAverage Collector parameters
+default['bcpc']['diamond']['collectors']['LoadAverage']['metrics_blacklist'] = '^[01][15]_normalized$'
 # List of queue names separated by whitespace to report on. If nil, report all.
 default['bcpc']['diamond']['collectors']['rabbitmq']['queues'] = nil
 # Regular expression or list of queues to not report on.

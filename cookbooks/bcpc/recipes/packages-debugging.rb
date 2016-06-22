@@ -31,6 +31,7 @@ package "nmap"
 package "iperf"
 package "curl"
 package "conntrack"
+package "dhcpdump"
 
 # I/O troubleshooting tools
 package "fio"
@@ -43,11 +44,10 @@ package "sysstat"
 package "linux-tools-common"
 package "linux-tools-#{node['kernel']['release']}"
 
-# In precise, sosreport is only in backports.
-apt_repository "backports" do
-    uri node['ubuntu']['archive_url']
-    distribution "#{node['lsb']['codename']}-backports"
-    components node['ubuntu']['components'].split(" ")
-end
 package "sosreport"
 
+# Remove backports repository from Trusty builds since sosreport is now
+# available in trusty/main
+apt_repository "backports" do
+  action :remove
+end

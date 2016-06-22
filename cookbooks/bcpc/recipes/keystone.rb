@@ -41,6 +41,7 @@ end
 
 package 'keystone' do
     action :upgrade
+    options "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
 end
 
 # needed to parse openstack json output

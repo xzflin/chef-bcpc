@@ -19,9 +19,6 @@ memcached_servers=<%=@servers.map{|x| x['bcpc']['management']['ip'] + ":11211"}.
 auth_strategy=keystone
 api_paste_config=/etc/nova/api-paste.ini
 s3_host=<%=node['bcpc']['management']['vip']%>
-ec2_listen=<%= node['bcpc']['management']['ip'] %>
-ec2_host=<%=node['bcpc']['management']['vip']%>
-ec2_workers=<%=node['bcpc']['nova']['workers']%>
 osapi_compute_listen=<%= node['bcpc']['management']['ip'] %>
 osapi_compute_workers=<%=node['bcpc']['nova']['workers']%>
 metadata_listen=169.254.169.254
@@ -37,6 +34,13 @@ enabled_apis=metadata
 vendordata_driver = <%=node["bcpc"]["vendordata_driver"] %>
 <% end %>
 
+# EC2 compatibility API settings
+ec2_listen = <%= node['bcpc']['management']['ip'] %>
+ec2_host = <%= node['bcpc']['management']['vip'] %>
+ec2_workers = <%= node['bcpc']['nova']['workers'] %>
+ec2_private_dns_show_ip = True
+keystone_ec2_url = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:<%= node['bcpc']['catalog']['identity']['ports']['public'] %>/<%= node['bcpc']['catalog']['identity']['uris']['public'] %>/ec2tokens
+
 <% if node['bcpc']['nova']['notifications']['enabled'] %>
 # Nova notification settings
 notification_topics=<%= node['bcpc']['nova']['notifications']['notification_topics'] %>
@@ -51,6 +55,7 @@ ram_allocation_ratio=<%=node['bcpc']['nova']['ram_allocation_ratio']%>
 reserved_host_memory_mb=<%=node['bcpc']['nova']['reserved_host_memory_mb']%>
 cpu_allocation_ratio=<%=node['bcpc']['nova']['cpu_allocation_ratio']%>
 scheduler_host_subset_size=<%= node['bcpc']['nova']['scheduler_host_subset_size'] %>
+max_concurrent_builds=<%= node['bcpc']['nova']['max_concurrent_builds'] %>
 
 # Nova Network settings
 network_manager=nova.network.manager.VlanManager
@@ -76,6 +81,7 @@ my_ip=<%=node['bcpc']['management']['ip']%>
 routing_source_ip=<%=node['bcpc']['floating']['ip']%>
 dhcp_domain=<%=node['bcpc']['cluster_domain']%>
 default_availability_zone=
+default_floating_pool = <%= node['bcpc']['region_name'] %>
 
 # Nova Compute settings
 compute_driver=libvirt.LibvirtDriver
@@ -122,7 +128,6 @@ state_path=/var/lib/nova
 rootwrap_config=/etc/nova/rootwrap.conf
 verbose=<%= node['bcpc']['nova']['verbose'] %>
 debug=<%= node['bcpc']['nova']['debug'] %>
-ec2_private_dns_show_ip=True
 <% if not node['bcpc']['nova']['default_log_levels'].nil? %>
 default_log_levels="<%= node['bcpc']['nova']['default_log_levels'] %>"
 <% end %>

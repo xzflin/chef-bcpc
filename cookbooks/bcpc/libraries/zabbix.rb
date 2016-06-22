@@ -41,3 +41,13 @@ def zbx_api(auth, method, params)
 
   zbx_res['result']
 end
+
+def zbx_auth
+  params = {
+    :user     => get_config('zabbix-admin-user'),
+    :password => get_config('zabbix-admin-password')
+  }
+  auth = zbx_api(nil, 'user.login', params)
+  raise 'Zabbix authentication failed' if auth.nil?
+  auth
+end

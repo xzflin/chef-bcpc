@@ -50,55 +50,14 @@ end
 #  \___/ \____|_____|_|   |_| /_/   \_\_| \____|_| |_|
 
 # this patch explicitly sets the Content-Length header when uploading files into
-# containers via Horizon
-cookbook_file "/tmp/horizon-swift-content-length.patch" do
-    source "horizon-swift-content-length.patch"
-    owner "root"
-    mode 00644
-end
-
-bash "patch-for-horizon-swift-content-length" do
-    user "root"
-    code <<-EOH
-       cd /usr/share/openstack-dashboard
-       patch -p0 < /tmp/horizon-swift-content-length.patch
-       rv=$?
-       if [ $rv -ne 0 ]; then
-         echo "Error applying patch ($rv) - aborting!"
-         exit $rv
-       fi
-       cp /tmp/horizon-swift-content-length.patch .
-    EOH
-    not_if "test -f /usr/share/openstack-dashboard/horizon-swift-content-length.patch"
-    notifies :restart, "service[apache2]", :delayed
-end
-
-#  _   _  ____ _  __   __  ____   _  _____ ____ _   _
-# | | | |/ ___| | \ \ / / |  _ \ / \|_   _/ ___| | | |
-# | | | | |  _| |  \ V /  | |_) / _ \ | || |   | |_| |
-# | |_| | |_| | |___| |   |  __/ ___ \| || |___|  _  |
-#  \___/ \____|_____|_|   |_| /_/   \_\_| \____|_| |_|
-# this patch backports the fix for OpenStack issue #1451429 to enable
-# image uploading from Horizon
-cookbook_file "/tmp/horizon_glance_image_upload.patch" do
-    source "horizon_glance_image_upload.patch"
-    owner "root"
-    mode 00644
-end
-
-bash "patch-for-horizon-glance-image-upload" do
-    user "root"
-    code <<-EOH
-       cd /usr/share/openstack-dashboard
-       patch -p1 < /tmp/horizon_glance_image_upload.patch
-       rv=$?
-       if [ $rv -ne 0 ]; then
-         echo "Error applying patch ($rv) - aborting!"
-         exit $rv
-       fi
-    EOH
-    only_if "shasum /usr/share/openstack-dashboard/openstack_dashboard/api/glance.py | grep -q '^81fea34940da24d9c8e8c62da8f71e9a211729b3'"
-    notifies :restart, "service[apache2]", :delayed
+# containers via Horizon (not upstreamed) - not needed for 2015.1.4 and beyond
+bcpc_patch 'horizon-swift-content-length' do
+  patch_file           'horizon-swift-content-length.patch'
+  patch_root_dir       '/usr/share/openstack-dashboard'
+  shasums_before_apply 'horizon-swift-content-length-BEFORE.SHASUMS'
+  shasums_after_apply  'horizon-swift-content-length-AFTER.SHASUMS'
+  notifies :restart, 'service[apache2]', :delayed
+  only_if "dpkg --compare-versions $(dpkg -s openstack-dashboard | egrep '^Version:' | awk '{ print $NF }') ge 1:2015.1.0 && dpkg --compare-versions $(dpkg -s openstack-dashboard | egrep '^Version:' | awk '{ print $NF }') lt 1:2015.1.4"
 end
 
 # this adds a way to override and customize Horizon's behavior

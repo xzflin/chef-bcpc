@@ -162,10 +162,25 @@ def get_cached_head_node_names
     return headnodes
 end
 
+# Nearest power_of_2
 def power_of_2(number)
-    result = 1
-    while (result < number) do result <<= 1 end
-    return result
+#    result = 1
+#    while (result < number) do result <<= 1 end
+#    return result
+  result = 1
+  last_pwr = 1
+  while result < number
+    last_pwr = result
+    result <<= 1
+  end
+
+  low_delta = number - last_pwr
+  high_delta = result - number
+  if high_delta > low_delta
+    result = last_pwr
+  end
+
+  result
 end
 
 def secure_password(len=20)
@@ -265,4 +280,22 @@ def generate_vrrp_vrid()
     results = (1..254).to_a - exclusions
     raise "Unable to generate unique VRID" if results.empty?
     results.first
+end
+
+# this takes the blisteringly maddening openstack CLI JSON output of the form
+# [{"Field": "x", "Value": "y"}, ...] and turns it into a regular hash
+def openstack_json_to_hash(input)
+  input.collect {
+    |v| { v['Field'] => v['Value'] }
+  }.reduce({}) {
+    |target_hash, v| target_hash.merge(v)
+  }
+end
+
+def join_aggregate_action
+  node['bcpc']['in_maintenance'] ? :depart : :member
+end
+
+def maintenance_action
+  node['bcpc']['in_maintenance'] ? :member : :depart
 end

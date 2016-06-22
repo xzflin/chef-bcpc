@@ -41,19 +41,22 @@ rally_user = node['bcpc']['rally']['user']
 end
 
 cookbook_file "/tmp/rally-pip.tar.gz" do
-    source "bins/rally-pip.tar.gz"
+    source "rally-pip.tar.gz"
+    cookbook 'bcpc-binary-files'
     owner "root"
     mode 00444
 end
 
 cookbook_file "/tmp/rally-bin.tar.gz" do
-    source "bins/rally-bin.tar.gz"
+    source "rally-bin.tar.gz"
+    cookbook 'bcpc-binary-files'
     owner "root"
     mode 00444
 end
 
 cookbook_file "/tmp/rally.tar.gz" do
-    source "bins/rally.tar.gz"
+    source "rally.tar.gz"
+    cookbook 'bcpc-binary-files'
     owner "root"
     mode 00444
 end
@@ -61,7 +64,8 @@ end
 pip_version = '7.0.3'
 
 cookbook_file "/tmp/python-pip_#{pip_version}_all.deb" do
-    source "bins/python-pip_#{pip_version}_all.deb"
+    source "python-pip_#{pip_version}_all.deb"
+    cookbook 'bcpc-binary-files'
     owner "root"
     mode 00444
 end

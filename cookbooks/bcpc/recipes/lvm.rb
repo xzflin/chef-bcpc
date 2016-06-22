@@ -18,22 +18,41 @@
 #
 
 if node['bcpc']['nova']['ephemeral']
-  package 'lvm2' 
-  
+  package 'lvm2' do
+    action :upgrade
+  end
+
+  # LVM watches its configuration file and will reload automatically
+  template '/etc/lvm/lvm.conf' do
+    source 'lvm.conf.erb'
+    owner  'root'
+    group  'root'
+    mode   00644
+    variables(
+      :lvm_whitelist => node['bcpc']['nova']['ephemeral_disks'].map { |dev| "\"a|^#{dev}$|\", " }.join
+    )
+  end
+
   bash "setup-lvm-pv" do
     user "root"
     code <<-EOH
-    pvcreate #{ node['bcpc']['nova']['ephemeral_disks'].join(' ') }
-  EOH
+      pvcreate #{ node['bcpc']['nova']['ephemeral_disks'].join(' ') }
+    EOH
     not_if "pvdisplay | grep '/dev'"
   end
 
   bash "setup-lvm-lv" do
     user "root"
     code <<-EOH
-    vgcreate nova_disk  #{ node['bcpc']['nova']['ephemeral_disks'].join(' ') }
-  EOH
+      vgcreate nova_disk  #{ node['bcpc']['nova']['ephemeral_disks'].join(' ') }
+    EOH
     not_if "vgdisplay nova_disk"
   end
-  
+
+  # LVM creates backups of metadata at each operation, clean old ones up
+  cron 'lvm-archive-cleanup' do
+    command '/usr/bin/find /etc/lvm/archive/ -type f -ctime +7 -delete'
+    hour '3'
+    minute '0'
+  end
 end

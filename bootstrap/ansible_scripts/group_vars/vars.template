@@ -15,7 +15,7 @@ cluster_apt_mirror: 10.0.100.3
 cluster_vip: 10.0.100.5
 
 # set to the FQDN of the bootstrap node using hostname+hypervisor domain
-chef_server: bcpc-bootstrap.hypervisor-bcpc.example.com
+chef_server: ansible-bcpc-bootstrap.hypervisor-bcpc.example.com
 
 ################################################
 # CLUSTER ACCESS AND CREDENTIALS
@@ -25,10 +25,6 @@ operations_key: "ssh-rsa blah"
 
 # path to private key for operations user
 ansible_ssh_private_key_file: /put/privkey/here
-
-# IPMI username and password (only used by hardware)
-ipmi_username: username
-ipmi_password: password
 
 ################################################
 # LOCAL PATHS
@@ -54,10 +50,21 @@ controlnode_apt_mirror_dir: /set/to/a/real/path
 # (this is passed to rsync with an / appended to the end)
 controlnode_ssl_key_dir: /set/to/a/real/path
 
+# invoke bootstrap/shared/shared_prereqs.sh to update file cache
+# (disable if you do not have Internet access)
+update_bcpc_local_cache: true
+
 # set this variable here for all clusters or in group_vars for an
 # individual cluster to seek out prebuilt binaries instead of building
 # on the bootstrap node
 use_prebuilt_binaries: false
+
+# when doing local builds, setting this to true will mount the apt mirror
+# via VirtualBox shared folders rather than rsyncing it
+# (only has an effect if bootstrap node's hardware type is Virtual)
+# NOTE: if you already synced and then turn this on, it will not remove the
+# existing mirrored files (just mounts over it)
+apt_mirror_via_vboxsf: false
 
 # lists of users to add or remove from the bootstrap node
 # will be skipped if not defined
@@ -109,21 +116,27 @@ internal_cookbooks: []
 # bootstrap-files/cookbooks with the appropriate name and version
 dependency_cookbooks:
 - cookbook: apt
-  version: 1.10.0
+  version: 3.0.0
+- cookbook: chef-client
+  version: 4.5.0
+- cookbook: chef_handler
+  version: 1.4.0
 - cookbook: concat
-  version: 0.3.0
+  version: 0.3.3
 - cookbook: cron
-  version: 1.6.1
+  version: 1.7.6
 - cookbook: hostsfile
   version: 2.4.5
 - cookbook: logrotate
-  version: 1.6.0
+  version: 1.9.2
 - cookbook: ntp
-  version: 1.8.6
+  version: 2.0.0
 - cookbook: ubuntu
-  version: 1.1.8
+  version: 1.2.0
+- cookbook: windows
+  version: 1.40.0
 - cookbook: yum
-  version: 3.2.2
+  version: 3.10.0
 
 ################################################
 # CHEF PACKAGE VERSIONS
@@ -143,6 +156,10 @@ bootstrap_git_staging_dir: "{{ bootstrap_staging_dir }}/git-staging"
 bootstrap_apt_mirror_dir: "{{ bootstrap_staging_dir }}/apt-mirror"
 bootstrap_deployed_dir: "{{ bootstrap_staging_dir }}/deployed"
 bootstrap_mirror_root_dir: "{{ bootstrap_staging_dir }}/mirror-root"
+
+# Use root disk for bootstrap data. It will use separate disks (/dev/sd[bc] by
+# default.
+bootstrap_data_root_disk: false
 
 ################################################
 # APT MIRROR SYMLINK PATHS

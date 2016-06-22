@@ -12,22 +12,13 @@ if [[ -z $FILECACHE_MOUNT_POINT ]]; then
   echo "FILECACHE_MOUNT_POINT must be set to proceed! Exiting." >&2
   exit 1
 fi
-if [[ -z $BUILD_DEST ]]; then BUILD_DEST=cookbooks/bcpc/files/default/bins; fi
+if [[ -z $BUILD_DEST ]]; then BUILD_DEST=cookbooks/bcpc-binary-files/files/default; fi
 
 # directory used for storing build cache products
 BUILD_CACHE_DIR=$FILECACHE_MOUNT_POINT/build_bins_cache
 
-# Define the appropriate version of each binary to grab/build
-VER_KIBANA=4.0.2
-VER_PIP=7.0.3
-VER_RALLY=0.0.4
-VER_REQUESTS_AWS=0.1.6
-VER_PYZABBIX=0.7.3
-VER_GRAPHITE_CARBON=0.9.13
-VER_GRAPHITE_WHISPER=0.9.13
-VER_GRAPHITE_WEB=0.9.13
-VER_DIAMOND=d6dbab7e9be05201f9109d83157c496dcab7c68b
-VER_ESPLUGIN=9c032b7c628d8da7745fbb1939dcd2db52629943
+# Binary versions to grab/build
+source bootstrap/config/build_bins_versions.sh
 
 pushd $BUILD_DEST
 
@@ -78,7 +69,7 @@ if [ -f diamond.deb ]; then
 fi
 # Make the diamond package
 if [ ! -f diamond.deb ]; then
-  cp -r $FILECACHE_MOUNT_POINT/python-diamond Diamond
+  git clone $FILECACHE_MOUNT_POINT/python-diamond Diamond
   cd Diamond
   git checkout $VER_DIAMOND
   make builddeb
@@ -133,7 +124,7 @@ if [ ! -f python-carbon_${VER_GRAPHITE_CARBON}_all.deb ]; then
   cp -v $FILECACHE_MOUNT_POINT/carbon-${VER_GRAPHITE_CARBON}.tar.gz .
   tar zxf carbon-${VER_GRAPHITE_CARBON}.tar.gz
   fpm --python-install-bin /opt/graphite/bin -s python -t deb -f carbon-${VER_GRAPHITE_CARBON}/setup.py
-  rm -rf carbon-${VER_GRAPHITE_CARBON} carbon-${VER_GRAPHITE_CARBON}.tar.gz 
+  rm -rf carbon-${VER_GRAPHITE_CARBON} carbon-${VER_GRAPHITE_CARBON}.tar.gz
 fi
 FILES="python-carbon_${VER_GRAPHITE_CARBON}_all.deb $FILES"
 
@@ -141,7 +132,7 @@ if [ ! -f python-whisper_${VER_GRAPHITE_WHISPER}_all.deb ]; then
   cp -v $FILECACHE_MOUNT_POINT/whisper-${VER_GRAPHITE_WHISPER}.tar.gz .
   tar zxf whisper-${VER_GRAPHITE_WHISPER}.tar.gz
   fpm --python-install-bin /opt/graphite/bin -s python -t deb -f whisper-${VER_GRAPHITE_WHISPER}/setup.py
-  rm -rf whisper-${VER_GRAPHITE_WHISPER} whisper-${VER_GRAPHITE_WHISPER}.tar.gz 
+  rm -rf whisper-${VER_GRAPHITE_WHISPER} whisper-${VER_GRAPHITE_WHISPER}.tar.gz
 fi
 FILES="python-whisper_${VER_GRAPHITE_WHISPER}_all.deb $FILES"
 
@@ -194,7 +185,7 @@ if [ ! -f rally-pip.tar.gz ] || [ ! -f rally-bin.tar.gz ] || [ ! -f python-pip_$
   # install any packages listed there; this forces easy_install to use
   # the same mechanism as we are telling pip to use in $PIP_INSTALL
   echo -e "[easy_install]\nallow_hosts = ''\nfind_links = file://$FILECACHE_MOUNT_POINT/rally/" > $HOME/.pydistutils.cfg
-  $PIP_INSTALL --default-timeout 60 -I rally 
+  $PIP_INSTALL --default-timeout 60 -I rally
   $PIP_INSTALL --default-timeout 60 python-openstackclient
   $PIP_INSTALL -U argparse
   $PIP_INSTALL -U setuptools
@@ -208,4 +199,4 @@ FILES="rally.tar.gz rally-pip.tar.gz rally-bin.tar.gz python-pip_${VER_PIP}_all.
 # rsync build products with cache directory
 mkdir -p $BUILD_CACHE_DIR && rsync -avxSH $(pwd -P)/* $BUILD_CACHE_DIR
 
-popd # $BUILD_DEST 
+popd # $BUILD_DEST

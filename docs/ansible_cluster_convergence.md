@@ -26,10 +26,10 @@ ansible-playbook -i inventory-file bootstrap_deployment/converge-bootstrap.yml
 ```
 ansible-playbook -i inventory-file bootstrap_deployment/enroll-all-nodes-in-cobbler.yml
 ```
-  * This playbook executes `cluster-enroll-cobbler.sh` from the root of the repository on the bootstrap node, which reads `cluster.txt` (has not yet been updated to use `cluster.yaml`) and enrolls the requested nodes or updates them to match `cluster.txt`.
-  * If you have not filled out `cluster.txt`, this playbook will execute but the calls to the script will not actually do anything.
-  * If you forgot to include `cluster.txt`, this playbook will bail out.
-  * `cluster.txt` is typically injected into the bootstrap node via the `chef-bcpc-prop` repo, which allows inserting and overwriting arbitrary files in the `chef-bcpc` repository.
+  * This playbook executes `bootstrap/ansible_scripts/scripts/enroll_cobbler.py` from the root of the repository on the bootstrap node, which will read `cluster.yaml` or `cluster.yml` and add new nodes as needed; nodes that are already in Cobbler will not be modified.
+  * If you have provided an invalid cluster YAML file, this playbook will execute and fail when the cluster YAML file fails validation.
+  * If you forgot to include cluster YAML, this playbook will bail out.
+  * The cluster YAML is typically injected into the bootstrap node via the `chef-bcpc-prop` repo, which allows inserting and overwriting arbitrary files in the `chef-bcpc` repository.
   * Verify the Cobbler enrollments with `sudo cobbler system list`.
 * Reboot cluster nodes and wait for them to be PXE booted and have the OS installed.
   * If you have another DHCP server on the network, you must configure it to use the bootstrap node as `next-server`, or your PXE booting will fail.
@@ -39,7 +39,7 @@ Join other nodes into the cluster
 ---
 * Create **operations** user on newly booted nodes:
 ```
-ansible-playbook -i inventory-file -k -K -e 'ansible_ssh_user=ubuntu' software_deployment/create-operations-user-everywhere.yml
+ansible-playbook -i inventory-file -k -K -e 'ansible_ssh_user=ubuntu' software_deployment/create-operations-user-on-cluster.yml
 ```
   * The password for the **ubuntu** user can be obtained from the data bag on the bootstrap node with `knife data bag show configs ENVIRONMENT`.
   * Using the **operations** user for access is recommended.

@@ -29,7 +29,7 @@ ruby_block "initialize-glance-config" do
 end
 
 %w{glance glance-api glance-registry}.each do |pkg|
-  package pkg do 
+  package pkg do
     action :upgrade
     options "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
   end
@@ -44,29 +44,6 @@ end
 service "glance-api" do
     restart_command "service glance-api restart; sleep 5"
 end
-
-cookbook_file "/tmp/glance-v2-null-description.patch" do
-  source "glance-v2-null-description.patch"
-  owner "root"
-  mode 0644
-end 
-
-bash "patch-backport-for-glance-v2-null-description" do
-  user "root"
-  code <<-EOH
-    cd /usr/lib/python2.7/dist-packages/
-    cp glance/schema.py glance/schema.py.prematch
-    patch -p1 < /tmp/glance-v2-null-description.patch
-    rv=$?
-    if [ $rv -ne 0 ]; then
-      echo "Error applying patch ($rv) - aborting!"
-      exit $rv
-    fi
-  EOH
-  only_if "shasum /usr/lib/python2.7/dist-packages/glance/schema.py | grep -q '^e397f917f21e2067721336c5913e0151ed99bb0c'"
-  notifies :restart, "service[glance-api]", :immediately
-  notifies :restart, "service[glance-registry]", :immediately
-end 
 
 template "/etc/glance/glance-api.conf" do
     source "glance-api.conf.erb"
@@ -171,7 +148,8 @@ end
 end
 
 cookbook_file "/tmp/cirros-0.3.4-x86_64-disk.img" do
-    source "bins/cirros-0.3.4-x86_64-disk.img"
+    source "cirros-0.3.4-x86_64-disk.img"
+    cookbook 'bcpc-binary-files'
     owner "root"
     mode 00444
 end

@@ -1,0 +1,10 @@
+--- a/nova/network/linux_net.py   2016-03-09 23:19:33.045201359 +0000
++++ b/nova/network/linux_net.py   2016-03-11 15:19:48.325374249 +0000
+@@ -1129,6 +1129,7 @@
+            '--dhcp-optsfile=%s' % _dhcp_file(dev, 'opts'),
+            '--listen-address=%s' % network_ref['dhcp_server'],
+            '--except-interface=lo',
++           '--interface=%s' % dev,
+            '--dhcp-range=set:%s,%s,static,%s,%ss' %
+                          (network_ref['label'],
+                           network_ref['dhcp_start'],

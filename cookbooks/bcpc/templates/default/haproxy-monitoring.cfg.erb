@@ -34,7 +34,8 @@ defaults
 userlist admins
   user <%= @monitoring_admin_username %> password <%= @monitoring_admin_password_hash %>
 
-listen mysql-galera <%=node['bcpc']['monitoring']['vip']%>:3306
+listen mysql-galera
+  bind <%=node['bcpc']['monitoring']['vip']%>:3306
   timeout client 24h
   timeout server 24h
   mode tcp
@@ -115,7 +116,8 @@ frontend graphite-web
   reqadd X-Forwarded-Proto:\ https
   default_backend graphite-web-backend
 
-listen graphite-carbon-relay-line <%=node['bcpc']['monitoring']['vip']%>:2013
+listen graphite-carbon-relay-line
+  bind <%=node['bcpc']['monitoring']['vip']%>:2013
   mode tcp
   balance leastconn
   option tcplog
@@ -124,7 +126,8 @@ listen graphite-carbon-relay-line <%=node['bcpc']['monitoring']['vip']%>:2013
   <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:2013 check inter 5s rise 1 fall 1 observe layer4" %>
 <% end -%>
 
-listen graphite-carbon-relay-pickle <%=node['bcpc']['monitoring']['vip']%>:2014
+listen graphite-carbon-relay-pickle
+  bind <%=node['bcpc']['monitoring']['vip']%>:2014
   mode tcp
   balance leastconn
   option tcplog
@@ -133,7 +136,8 @@ listen graphite-carbon-relay-pickle <%=node['bcpc']['monitoring']['vip']%>:2014
   <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:2014 check inter 5s rise 1 fall 1 observe layer4" %>
 <% end -%>
 
-listen elasticsearch <%=node['bcpc']['monitoring']['vip']%>:9200
+listen elasticsearch
+  bind <%=node['bcpc']['monitoring']['vip']%>:9200
   balance source
   option tcplog
   option httpchk GET /
@@ -141,4 +145,3 @@ listen elasticsearch <%=node['bcpc']['monitoring']['vip']%>:9200
 <% @elasticsearch_servers.each do |server| -%>
   <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:9200 check inter 5s rise 1 fall 1" %>
 <% end -%>
-
