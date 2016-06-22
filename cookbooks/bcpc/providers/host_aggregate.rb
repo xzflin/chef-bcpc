@@ -36,7 +36,7 @@ end
 # See bloomberg/chef-bcpc#1069
 def hostname
   procfs_filename = '/proc/sys/kernel/hostname'
-  ::File.readable?(procfs_filename) ? ::File.open(procfs_filename) {|f| f.read.chomp } : node['hostname']
+  @nodename ||= ::File.readable?(procfs_filename) ? ::File.open(procfs_filename) {|f| f.read.chomp } : node['hostname']
 end
 
 action :create do
