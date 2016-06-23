@@ -53,11 +53,11 @@
   - name: Remove previous version of knife-acl
     become: yes
     command: /opt/opscode/embedded/bin/gem uninstall knife-acl -v 0.0.12
-    when: old_knife_acl_installed.stdout.find('true')
+    when: old_knife_acl_installed.rc == 0
 
   - name: Install knife-acl 1.0.2
     become: yes
-    command: /opt/opscode/embedded/bin/gem install {{ bootstrap_files_dir }}/{{ chef_bcpc_version }}/knife-acl-1.0.2.gem
+    command: /opt/opscode/embedded/bin/gem install {{ bootstrap_files_dir }}/{{ chef_bcpc_version }}/knife-acl-1.0.2.gem --local
 
   - name: Make bootstrap node an admin in the Chef server
     become: no
