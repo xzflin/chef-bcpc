@@ -30,9 +30,16 @@ template '/etc/default/cpufrequtils' do
   notifies :restart, 'service[cpufrequtils]', :immediately
 end
 
-# this service conflicts with the bcpc_cpupower provider, so ensure it is off
+# this service conflicts with the provider, so leaving it off is recommended
+cpufrequtils_action = \
+  if node['bcpc']['enabled']['cpufrequtils']
+    [:start, :enable]
+  else
+    [:stop, :disable]
+  end
+
 service "cpufrequtils" do
-  action [:disable, :stop]
+  action cpufrequtils_action
 end
 
 bcpc_common_cpupower 'CPU governor' do
