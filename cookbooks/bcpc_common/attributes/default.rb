@@ -45,6 +45,10 @@ default['bcpc_common']['packages']['to_remove'] = %w(
 # apt-get update on each Chef run
 default['apt']['compile_time_update'] = true
 
+# These will enable automatic dist-upgrade/upgrade at the end of a Chef run
+default['bcpc']['enabled']['apt_dist_upgrade'] = false
+default['bcpc']['enabled']['apt_upgrade'] = false
+
 # Toggle to enable apport for debugging process crashes
 default['bcpc']['enabled']['apport'] = true
 

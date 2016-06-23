@@ -64,10 +64,6 @@ default['bcpc']['enabled']['dns'] = true
 default['bcpc']['enabled']['host_firewall'] = true
 # This will enable of encryption of the chef data bag
 default['bcpc']['enabled']['encrypt_data_bag'] = false
-# These will enable automatic dist-upgrade/upgrade at the start of a Chef run
-# (not recommended for stability)
-default['bcpc']['enabled']['apt_dist_upgrade'] = false
-default['bcpc']['enabled']['apt_upgrade'] = false
 # This will enable the extra healthchecks for keepalived (VIP management)
 default['bcpc']['enabled']['keepalived_checks'] = true
 # This will enable the networking test scripts
