@@ -32,17 +32,7 @@ template '/etc/memcached.conf' do
   owner    'root'
   group    'root'
   mode     00644
-  variables(
-    verbose: node['bcpc']['memcached']['debug']
-  )
   notifies :restart, 'service[memcached]', :immediate
-end
-
-logrotate_app 'memcached' do
-  path      '/var/log/memcached.log'
-  frequency 'daily'
-  rotate    10
-  options   ['compress', 'delaycompress', 'notifempty', 'copytruncate']
 end
 
 service 'memcached' do
