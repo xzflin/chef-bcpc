@@ -42,6 +42,25 @@
     tags:
       - chef
 
+  - name: Remove deprecated opscode-expander-reindexer service from runit supervision
+    file: name=/opt/opscode/service/opscode-expander-reindexer state=absent
+    register: chef_remove_reindexer_result
+    tags:
+      - chef
+
+  - name: Wait for runit to pick up above change
+    become: no
+    pause: seconds=10
+    when: chef_remove_reindexer_result.changed
+    tags:
+      - chef
+
+  - name: Remove deprecated opscode-expander-reindexer runit service dir
+    file: name=/opt/opscode/sv/opscode-expander-reindexer state=absent
+    when: chef_remove_reindexer_result.changed
+    tags:
+      - chef
+
   - name: Restart Chef Server components after upgrade
     sudo: yes
     command: chef-server-ctl restart
