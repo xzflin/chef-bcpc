@@ -23,3 +23,8 @@ Just include `bcpc-common` in your node's `run_list`:
   ]
 }
 ```
+
+This cookbook also includes the **apt_upgrade** recipe, which will run
+`apt-get upgrade` or `apt-get dist-upgrade` if so configured (intended to be
+used in situations where you are using a frozen mirror and want to ensure that
+your nodes remain converged with the package versions from that frozen mirror).
