@@ -21,12 +21,20 @@ include_recipe 'apt'
 
 bash 'perform-dist-upgrade' do
   user 'root'
-  code 'DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" dist-upgrade'
+  code <<-EOH
+    DEBIAN_FRONTEND=noninteractive apt-get -y \
+    -o Dpkg::Options::="--force-confdef" \
+    -o Dpkg::Options::="--force-confold" dist-upgrade
+  EOH
   only_if { node['bcpc']['enabled']['apt_dist_upgrade'] }
 end
 
 bash 'perform-upgrade' do
   user 'root'
-  code 'DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade'
+  code <<-EOH
+    DEBIAN_FRONTEND=noninteractive apt-get -y \
+    -o Dpkg::Options::="--force-confdef" \
+    -o Dpkg::Options::="--force-confold" upgrade
+  EOH
   only_if { node['bcpc']['enabled']['apt_upgrade'] }
 end

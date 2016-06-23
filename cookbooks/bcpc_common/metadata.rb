@@ -12,4 +12,3 @@ depends 'apt', '>= 3.0.0'
 depends 'chef-client', '>= 4.5.0'
 depends 'ntp', '>= 2.0.0'
 depends 'ubuntu', '>= 1.2.0'
-

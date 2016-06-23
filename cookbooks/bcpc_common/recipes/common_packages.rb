@@ -18,7 +18,7 @@
 #
 
 # Remove backports repository if configured to avoid its treachery
-apt_repository "backports" do
+apt_repository 'backports' do
   action :remove
 end
 

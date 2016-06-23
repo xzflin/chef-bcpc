@@ -24,13 +24,11 @@ node['bcpc']['getty']['ttys'].each do |ttyname|
     group  'root'
     mode   00644
     notifies :restart, "service[#{ttyname}]", :delayed
-    variables(
-      :ttyname => ttyname
-    )
+    variables(ttyname: ttyname)
   end
 
   service ttyname do
     provider Chef::Provider::Service::Upstart
-    action [ :enable, :start ]
+    action [:enable, :start]
   end
 end
