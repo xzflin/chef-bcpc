@@ -361,6 +361,8 @@ default['bcpc']['keystone']['eventlet_server'] = false
 default['bcpc']['keystone']['enable_caching'] = true
 # Enable debug logging (also caching debug logging).
 default['bcpc']['keystone']['debug'] = false
+# Enable memcached double verbose logging.
+default['bcpc']['memcached']['debug'] = false
 # Enable verbose logging.
 default['bcpc']['keystone']['verbose'] = false
 # Set the timeout for how long we will wait for Keystone to become operational
