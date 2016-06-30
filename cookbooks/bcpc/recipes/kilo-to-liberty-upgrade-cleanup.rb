@@ -1,8 +1,8 @@
 #
 # Cookbook Name:: bcpc
-# Recipe:: packages-openstack
+# Recipe:: kilo-to-liberty-upgrade-cleanup
 #
-# Copyright 2015, Bloomberg Finance L.P.
+# Copyright 2016, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,13 +17,17 @@
 # limitations under the License.
 #
 
-package "ubuntu-cloud-keyring" do
-  action :upgrade
+bash 'clean-out-pyc-files-after-upgrade' do
+  code 'find /usr/lib/python2.7/dist-packages -name \*.pyc -delete'
+  only_if { ::File.exist?('/usr/local/etc/kilo_to_liberty_upgrade') }
 end
 
-apt_repository "openstack" do
-  uri node['bcpc']['repos']['openstack']
-  distribution "#{node['lsb']['codename']}-#{node['bcpc']['openstack_branch']}/#{node['bcpc']['openstack_release']}"
-  components ["main"]
-  key "ubuntu-cloud.key"
+bash 'hup-openstack-after-upgrade' do
+  code '/usr/local/bin/hup_openstack'
+  only_if { ::File.exist?('/usr/local/etc/kilo_to_liberty_upgrade') }
+end
+
+file 'cleanup-kilo_to_liberty_upgrade-lockfile' do
+  path '/usr/local/etc/kilo_to_liberty_upgrade'
+  action :delete
 end

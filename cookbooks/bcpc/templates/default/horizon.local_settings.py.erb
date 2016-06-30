@@ -17,8 +17,8 @@ TEMPLATE_DEBUG = DEBUG
 SITE_BRANDING = "<%=node['bcpc']['region_name']%>"
 
 #
-# Set the timeout of the dashboard to match the keystone 
-# token timeout. 
+# Set the timeout of the dashboard to match the keystone
+# token timeout.
 #
 SESSION_TIMEOUT=3600
 
@@ -46,10 +46,12 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTOCOL', 'https')
 # NOTE: The version should be formatted as it appears in the URL for the
 # service API. For example, The identity service APIs have inconsistent
 # use of the decimal point, so valid options would be "2.0" or "3".
-# OPENSTACK_API_VERSIONS = {
-#     "identity": 3,
-#     "volume": 2
-# }
+OPENSTACK_API_VERSIONS = {
+     "compute": <%= get_api_version(:compute) %>,
+     "identity": <%= get_api_version(:identity) %>,
+     "image": <%= get_api_version(:image) %>,
+     "volume": <%= get_api_version(:volumev2) %>
+}
 
 # Set this to True if running on multi-domain model. When this is enabled, it
 # will require user to enter the Domain name in addition to username for login.
@@ -63,6 +65,8 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTOCOL', 'https')
 # valid options would be "AUTO", "VNC", "SPICE" or "RDP"
 # CONSOLE_TYPE = "AUTO"
 
+<%# Horizon does not use a database in Liberty %>
+<% if is_kilo? %>
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -73,12 +77,13 @@ DATABASES = {
         'default-character-set': 'utf8'
     },
 }
+<% end %>
 
 # Default OpenStack Dashboard configuration.
 HORIZON_CONFIG = {
     # overrides module is in /usr/local/bcpc-horizon
     'customization_module': 'bcpc.overrides',
-    'simple_ip_management' : False,	
+    'simple_ip_management' : False,
     'user_home': 'openstack_dashboard.views.get_user_home',
     'ajax_queue_limit': 10,
     'auto_fade_alerts': {
@@ -146,9 +151,10 @@ except ImportError:
 
 # Default Ubuntu apache configuration uses /horizon as the application root.
 # Configure auth redirects here accordingly.
-LOGIN_URL='/horizon/auth/login/'
-LOGOUT_URL='/horizon/auth/logout/'
-LOGIN_REDIRECT_URL='/horizon'
+WEBROOT = '/horizon'
+LOGIN_URL = WEBROOT + '/auth/login/'
+LOGOUT_URL = WEBROOT + '/auth/logout/'
+LOGIN_REDIRECT_URL = WEBROOT
 
 # The Ubuntu package includes pre-compressed JS and compiled CSS to allow
 # offline compression by default.  To enable online compression, install
@@ -178,7 +184,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # ]
 
 OPENSTACK_HOST = "openstack.<%=node['bcpc']['cluster_domain']%>"
-OPENSTACK_KEYSTONE_URL = "<%=node['bcpc']['protocol']['keystone']%>://%s:5000/v2.0" % OPENSTACK_HOST
+
+OPENSTACK_KEYSTONE_URL = "<%=node['bcpc']['protocol']['keystone']%>://%s:5000/<%= node['bcpc']['catalog']['identity']['uris']['internal'] %>" % OPENSTACK_HOST
 OPENSTACK_KEYSTONE_DEFAULT_ROLE = "<%=node['bcpc']['member_role']%>"
 
 <% if node['bcpc']['ssl_certificate'] %>

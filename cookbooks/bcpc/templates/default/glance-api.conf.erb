@@ -20,6 +20,7 @@ workers = <%= node['bcpc']['glance']['workers'] %>
 # max_header_line = 16384
 admin_role = <%=node['bcpc']['admin_role']%>
 #allow_anonymous_access = False
+# v1 API must remain on even in Liberty
 enable_v1_api = True
 enable_v2_api = True
 show_image_direct_url = True
@@ -191,17 +192,12 @@ connection = mysql://<%=get_config('mysql-glance-user')%>:<%=get_config('mysql-g
 #db_max_retries = 20
 
 [keystone_authtoken]
-# cafile = /etc/ssl/certs/ssl-bcpc.pem
-auth_uri = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:5000/v2.0/
-#auth_host = <%=node['bcpc']['management']['vip']%>
-#auth_port = 35357
-#auth_protocol = <%=node['bcpc']['protocol']['keystone']%>
+auth_uri = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:5000/<%= node['bcpc']['catalog']['identity']['uris']['internal'] %>/
 identity_uri = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:35357
-auth_version = v2.0
+auth_version = <%= node['bcpc']['catalog']['identity']['uris']['internal'] %>
 admin_tenant_name = <%=node['bcpc']['admin_tenant']%>
 admin_user = <%=get_config('keystone-admin-user')%>
 admin_password = <%=get_config('keystone-admin-password')%>
-#admin_token = <%=get_config('keystone-admin-token')%>
 signing_dir = /var/lib/glance
 
 [paste_deploy]

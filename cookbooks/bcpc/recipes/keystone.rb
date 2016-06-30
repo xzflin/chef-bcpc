@@ -40,18 +40,98 @@ ruby_block "initialize-keystone-config" do
 end
 
 package 'keystone' do
-    action :upgrade
-    options "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
+  action :upgrade
+  notifies :run, 'bash[clean-old-pyc-files]', :immediately
+  notifies :run, 'bash[flush-memcached]', :immediately
 end
 
-# needed to parse openstack json output
-package 'jq' do
+# sometimes the way tokens are stored changes and causes issues,
+# so flush memcached if Keystone is upgraded
+bash 'flush-memcached' do
+  code "echo flush_all | nc #{node['bcpc']['management']['ip']} 11211"
+  action :nothing
+end
+
+# these packages need to be updated in Liberty but are not upgraded when Keystone is upgraded
+%w( python-oslo.i18n python-oslo.serialization python-pyasn1 ).each do |pkg|
+  package pkg do
     action :upgrade
+    notifies :restart, "service[apache2]", :immediately
+    not_if { is_kilo? }
+  end
 end
 
 # do not run or try to start standalone keystone service since it is now served by WSGI
 service "keystone" do
     action [:disable, :stop]
+end
+
+# if on Liberty, generate Fernet keys and persist the keys in the data bag (if not already
+# generated)
+fernet_key_directory = '/etc/keystone/fernet-keys'
+
+directory fernet_key_directory do
+  owner 'keystone'
+  group 'keystone'
+  mode  00700
+end
+
+# do stuff here for writing out existing keys (there will always be key 0 in the data bag
+# and maybe also 1 and 2, but not necessarily)
+ruby_block 'write-fernet-keys-to-disk' do
+  block do
+    (0..2).each do |idx|
+      if config_defined("keystone-fernet-key-#{idx}")
+        key_path = ::File.join(fernet_key_directory, idx.to_s)
+        key_in_databag = get_config("keystone-fernet-key-#{idx}")
+        need_to_write_key = false
+        if ::File.exist?(key_path)
+    	    key_on_disk = ::File.read(key_path)
+    	    need_to_write_key = !(key_on_disk == key_in_databag)
+    	  else
+    	  	need_to_write_key = true
+        end
+        ::File.write(key_path, key_in_databag) if need_to_write_key
+      end
+    end
+    # remove any other keys present in the directory (not 0, 1, or 2)
+    ::Dir.glob(::File.join(fernet_key_directory, '*')).reject do |path|
+    	path.end_with?(*(0..2).collect { |x| x.to_s })
+    end.each do |file_to_delete|
+    	::File.delete(file_to_delete)
+    end
+  end
+  only_if { config_defined('keystone-fernet-key-0') }
+  notifies :restart, 'service[apache2]', :immediately
+end
+
+bash 'generate-fernet-keys' do
+  code 'keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone'
+  not_if { ::File.exist?(::File.join(fernet_key_directory, '0')) }
+  notifies :restart, 'service[apache2]', :immediately
+end
+
+# key indexes in the data bag will not necessarily match the files on disk
+# (primary key is always key 0 and other keys are rotated down with monotonically
+# increasing integers, so you may have 0/3/4 for example after a few rotations)
+#
+# this block always runs to ensure the data bag does not get desynced with on-disk keys
+ruby_block 'add-fernet-keys-to-data-bag' do
+  block do
+    fernet_keys = ::Dir.glob(::File.join(fernet_key_directory, '*')).sort
+    fernet_keys.each_with_index do |key_path, idx|
+      db_key = "keystone-fernet-key-#{idx}"
+      disk_key_value = ::File.read(key_path)
+      begin
+        db_key_value = get_config(db_key)
+        make_config(db_key, disk_key_value, force=true) unless db_key_value == disk_key_value
+        # save old key to backup slot Just In Case
+        make_config("#{db_key}-backup", db_key_value, force=true)
+      rescue
+        make_config(db_key, disk_key_value)
+      end
+    end
+  end
 end
 
 # standalone Keystone service has a window to start up in and create keystone.log with
@@ -105,6 +185,13 @@ end
 
 template "/root/adminrc" do
     source "adminrc.erb"
+    owner "root"
+    group "root"
+    mode 00600
+end
+
+template "/root/api_versionsrc" do
+    source "api_versionsrc.erb"
     owner "root"
     group "root"
     mode 00600
@@ -168,6 +255,14 @@ ruby_block "keystone-database-creation" do
     not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['keystone']}\"'|grep \"#{node['bcpc']['dbname']['keystone']}\" >/dev/null" }
 end
 
+ruby_block 'update-keystone-db-schema-for-liberty' do
+  block do
+    self.notifies :run, "bash[keystone-database-sync]", :immediately
+    self.resolve_notification_references
+  end
+  only_if { ::File.exist?('/usr/local/etc/kilo_to_liberty_upgrade') }
+end
+
 bash "keystone-database-sync" do
     action :nothing
     user "root"
@@ -191,8 +286,6 @@ bash "wait-for-keystone-to-become-operational" do
   timeout node['bcpc']['keystone']['wait_for_keystone_timeout']
 end
 
-
-
 bash "keystone-create-admin-user" do
     user "root"
     code <<-EOH
@@ -202,7 +295,6 @@ bash "keystone-create-admin-user" do
     EOH
     not_if ". /root/keystonerc; . /root/adminrc; keystone user-get $OS_USERNAME"
 end
-
 
 bash "keystone-create-admin-tenant" do
     user "root"
@@ -248,44 +340,123 @@ end
 
 # create services and endpoints
 node['bcpc']['catalog'].each do |svc, svcprops|
+  # attempt to delete endpoints that no longer match the environment
+  # (keys off the service type, so it is possible to orphan endpoints if you remove an
+  # entry from the environment service catalog)
+  ruby_block "keystone-delete-outdated-#{svc}-endpoint" do
+    block do
+      svc_endpoints_raw = execute_in_keystone_admin_context('openstack endpoint list -f json')
+      begin
+        #puts svc_endpoints_raw
+        svc_endpoints = JSON.parse(svc_endpoints_raw)
+        #puts svc_endpoints
+        svc_ids = svc_endpoints.select { |k| k['Service Type'] == svc }.collect { |v| v['ID'] }
+        #puts svc_ids
+        svc_ids.each do |svc_id|
+          execute_in_keystone_admin_context("openstack endpoint delete #{svc_id} 2>&1")
+        end
+      rescue JSON::ParserError
+      end
+    end
+    not_if {
+      #puts 'starting not_if block'
+      svc_endpoints_raw = execute_in_keystone_admin_context('openstack endpoint list -f json')
+      begin
+        #puts "\nsvc_endpoints_raw: #{svc_endpoints_raw}"
+        svc_endpoints = JSON.parse(svc_endpoints_raw)
+        #puts "\nsvc_endpoints: #{svc_endpoints}"
+        next if svc_endpoints.empty?
+        # get the endpoint ID here
+        svcs = svc_endpoints.select { |k| k['Service Type'] == svc }
+        #puts "\nsvcs: #{svcs}"
+        next if svcs.empty?
+
+        # openstack endpoint list output completely changes between Kilo and Liberty, because OpenStack
+        if is_kilo?
+          endpoint_id = svcs[0]['ID']
+          #puts "\n#{endpoint_id}"
+          endpoint_urls_raw = execute_in_keystone_admin_context("openstack endpoint show #{endpoint_id} -f json")
+          endpoint_urls = JSON.parse(endpoint_urls_raw)
+          #puts "\nendpoint_urls: #{endpoint_urls}"
+
+          # nil is a dodge to avoid issues when standing a service up during a fresh install
+          adminurl_raw = endpoint_urls.select { |v| v if v['Field'] == 'adminurl' } || nil
+          adminurl = adminurl_raw.empty? ? nil : adminurl_raw[0]['Value']
+          internalurl_raw = endpoint_urls.select { |v| v if v['Field'] == 'internalurl' } || nil
+          internalurl = internalurl_raw.empty? ? nil : internalurl_raw[0]['Value']
+          publicurl_raw = endpoint_urls.select { |v| v if v['Field'] == 'publicurl' } || nil
+          publicurl = publicurl_raw.empty? ? nil : publicurl_raw[0]['Value']
+        else
+          adminurl_raw = svcs.select { |v| v['URL'] if v['Interface'] == 'admin' }
+          adminurl = adminurl_raw.empty? ? nil : adminurl_raw[0]['URL']
+          internalurl_raw = svcs.select { |v| v['URL'] if v['Interface'] == 'internal' }
+          internalurl = internalurl_raw.empty? ? nil : internalurl_raw[0]['URL']
+          publicurl_raw = svcs.select { |v| v['URL'] if v['Interface'] == 'public' }
+          publicurl = publicurl_raw.empty? ? nil : publicurl_raw[0]['URL']
+        end
+
+        #puts "\n"
+        #puts "Comparing #{adminurl} to #{generate_service_catalog_uri(svcprops, 'admin')}"
+        #puts "Comparing #{internalurl} to #{generate_service_catalog_uri(svcprops, 'internal')}"
+        #puts "Comparing #{publicurl} to #{generate_service_catalog_uri(svcprops, 'public')}"
+
+        adminurl_match = adminurl.nil? ? true : (adminurl == generate_service_catalog_uri(svcprops, 'admin'))
+        internalurl_match = internalurl.nil? ? true : (internalurl == generate_service_catalog_uri(svcprops, 'internal'))
+        publicurl_match = publicurl.nil? ? true : (publicurl == generate_service_catalog_uri(svcprops, 'public'))
+
+        #puts 'ending not_if block successfully'
+
+        adminurl_match && internalurl_match && publicurl_match
+      rescue JSON::ParserError
+        #puts 'failing out of not_if block'
+        false
+      end
+    }
+  end
+
+  # why no corresponding deletion for out of date services?
+  # services don't get outdated in the way endpoints do (since endpoints encode version numbers and ports),
+  # services just say that service X is present in the catalog, not how to access it
+
   ruby_block "keystone-create-#{svc}-service" do
     block do
-      %x[
-        export OS_TOKEN="#{get_config('keystone-admin-token')}";
-        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['admin']}/#{node['bcpc']['catalog']['identity']['uris']['admin']}/";
-        openstack service create --name '#{svcprops['name']}' --description '#{svcprops['description']}' #{svc}
-      ]
+      execute_in_keystone_admin_context("openstack service create --name '#{svcprops['name']}' --description '#{svcprops['description']}' #{svc}")
     end
     only_if {
-      services_raw = %x[
-        export OS_TOKEN=\"#{get_config('keystone-admin-token')}\";
-        export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['admin']}/#{node['bcpc']['catalog']['identity']['uris']['admin']}/\";
-        openstack service list -f json
-      ]
+      services_raw = execute_in_keystone_admin_context('openstack service list -f json')
       services = JSON.parse(services_raw)
       services.select { |s| s['Type'] == svc }.length.zero?
     }
   end
 
+  # openstack command syntax changes between identity API v2 and v3, so calculate the endpoint creation command ahead of time
+  identity_api_version = node['bcpc']['catalog']['identity']['uris']['public'].scan(/^[^\d]*(\d+)/)[0][0].to_i
+  if identity_api_version == 3
+    endpoint_create_cmd = <<-EOH
+      openstack endpoint create \
+          --region '#{node['bcpc']['region_name']}' #{svc} public "#{generate_service_catalog_uri(svcprops, 'public')}" ;
+      openstack endpoint create \
+          --region '#{node['bcpc']['region_name']}' #{svc} internal "#{generate_service_catalog_uri(svcprops, 'internal')}" ;
+      openstack endpoint create \
+          --region '#{node['bcpc']['region_name']}' #{svc} admin "#{generate_service_catalog_uri(svcprops, 'admin')}" ;
+    EOH
+  else
+    endpoint_create_cmd = <<-EOH
+      openstack endpoint create \
+          --region '#{node['bcpc']['region_name']}' \
+          --publicurl "#{generate_service_catalog_uri(svcprops, 'public')}" \
+          --adminurl "#{generate_service_catalog_uri(svcprops, 'admin')}" \
+          --internalurl "#{generate_service_catalog_uri(svcprops, 'internal')}" \
+          #{svc}
+    EOH
+  end
+
   ruby_block "keystone-create-#{svc}-endpoint" do
     block do
-      %x[
-        export OS_TOKEN="#{get_config('keystone-admin-token')}";
-        export OS_URL="#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['admin']}/#{node['bcpc']['catalog']['identity']['uris']['admin']}/";
-        openstack endpoint create \
-            --region '#{node['bcpc']['region_name']}' \
-            --publicurl '#{node['bcpc']['protocol'][svcprops['project']]}://openstack.#{node['bcpc']['cluster_domain']}:#{svcprops['ports']['public']}/#{svcprops['uris']['public']}' \
-            --adminurl '#{node['bcpc']['protocol'][svcprops['project']]}://openstack.#{node['bcpc']['cluster_domain']}:#{svcprops['ports']['admin']}/#{svcprops['uris']['admin']}' \
-            --internalurl '#{node['bcpc']['protocol'][svcprops['project']]}://openstack.#{node['bcpc']['cluster_domain']}:#{svcprops['ports']['internal']}/#{svcprops['uris']['internal']}' \
-            #{svc}
-      ]
+      execute_in_keystone_admin_context(endpoint_create_cmd)
     end
     only_if {
-      endpoints_raw = %x[
-        export OS_TOKEN=\"#{get_config('keystone-admin-token')}\";
-        export OS_URL=\"#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['admin']}/#{node['bcpc']['catalog']['identity']['uris']['admin']}/\";
-        openstack endpoint list -f json
-      ]
+      endpoints_raw = execute_in_keystone_admin_context('openstack endpoint list -f json')
       endpoints = JSON.parse(endpoints_raw)
       endpoints.select { |e| e['Service Type'] == svc }.length.zero?
     }

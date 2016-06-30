@@ -79,7 +79,11 @@ notification_driver = <%= node['bcpc']['keystone']['drivers']['notification'] %>
 #control_exchange = keystone
 
 [assignment]
+<% if is_kilo? %>
 driver = keystone.assignment.backends.<%= node['bcpc']['keystone']['drivers']['assignment'] %>.Assignment
+<% else %>
+driver = <%= node['bcpc']['keystone']['drivers']['assignment'] %>
+<% end %>
 
 [auth]
 #methods = external,password,token,oauth1
@@ -118,7 +122,11 @@ memcache_pool_connection_get_timeout = 1
 
 [catalog]
 #template_file = default_catalog.templates
+<% if is_kilo? %>
 driver = keystone.catalog.backends.<%= node['bcpc']['keystone']['drivers']['catalog'] %>.Catalog
+<% else %>
+driver = <%= node['bcpc']['keystone']['drivers']['catalog'] %>
+<% end %>
 <% if node['bcpc']['keystone']['enable_caching'] %>
 caching = true
 <% else %>
@@ -128,7 +136,11 @@ cache_time = 3600
 #list_limit = <None>
 
 [credential]
+<% if is_kilo? %>
 driver = keystone.credential.backends.<%= node['bcpc']['keystone']['drivers']['credential'] %>.Credential
+<% else %>
+driver = <%= node['bcpc']['keystone']['drivers']['credential'] %>
+<% end %>
 
 [database]
 #sqlite_db = oslo.sqlite
@@ -153,7 +165,11 @@ connection = mysql://<%=get_config('mysql-keystone-user')%>:<%=get_config('mysql
 #db_max_retries = 20
 
 [domain_config]
+<% if is_kilo? %>
 driver = keystone.resource.config_backends.<%= node['bcpc']['keystone']['drivers']['domain_config'] %>.DomainConfig
+<% else %>
+driver = <%= node['bcpc']['keystone']['drivers']['domain_config'] %>
+<% end %>
 <% if node['bcpc']['keystone']['enable_caching'] %>
 caching = true
 <% else %>
@@ -162,12 +178,19 @@ caching = false
 cache_time = 300
 
 [endpoint_filter]
+<% if is_kilo? %>
 driver = keystone.contrib.endpoint_filter.backends.<%= node['bcpc']['keystone']['drivers']['endpoint_filter'] %>.EndpointFilter
+<% else %>
+driver = <%= node['bcpc']['keystone']['drivers']['endpoint_filter'] %>
+<% end %>
 #return_all_endpoints_if_no_filter = true
 
 [endpoint_policy]
+<% if is_kilo? %>
 driver = keystone.contrib.endpoint_policy.backends.<%= node['bcpc']['keystone']['drivers']['endpoint_policy'] %>.EndpointPolicy
-
+<% else %>
+driver = <%= node['bcpc']['keystone']['drivers']['endpoint_policy'] %>
+<% end %>
 
 [eventlet_server]
 #public_workers = <None>
@@ -192,7 +215,11 @@ admin_bind_host = <%=node['bcpc']['management']['ip']%>
 #cert_required = false
 
 [federation]
+<% if is_kilo? %>
 driver = keystone.contrib.federation.backends.<%= node['bcpc']['keystone']['drivers']['federation'] %>.Federation
+<% else %>
+driver = <%= node['bcpc']['keystone']['drivers']['federation'] %>
+<% end %>
 #assertion_prefix =
 #remote_id_attribute = <None>
 #federated_domain_name = Federated
@@ -208,7 +235,11 @@ driver = keystone.contrib.federation.backends.<%= node['bcpc']['keystone']['driv
 #domain_specific_drivers_enabled = false
 #domain_configurations_from_database = false
 #domain_config_dir = /etc/keystone/domains
+<% if is_kilo? %>
 driver = keystone.identity.backends.<%=node['bcpc']['keystone']['drivers']['identity']%>.Identity
+<% else %>
+driver = <%= node['bcpc']['keystone']['drivers']['identity'] %>
+<% end %>
 <% if node['bcpc']['keystone']['enable_caching'] %>
 caching = true
 <% else %>
@@ -219,7 +250,11 @@ cache_time = 600
 #list_limit = <None>
 
 [identity_mapping]
+<% if is_kilo? %>
 driver = keystone.identity.mapping_backends.<%= node['bcpc']['keystone']['drivers']['identity_mapping'] %>.Mapping
+<% else %>
+driver = <%= node['bcpc']['keystone']['drivers']['identity_mapping'] %>
+<% end %>
 #generator = keystone.identity.id_generators.sha256.Generator
 #backward_compatible_ids = true
 
@@ -259,7 +294,11 @@ servers = <%=@servers.map{|x| x['bcpc']['management']['ip'] + ":11211"}.join(','
 #pool_connection_get_timeout = 10
 
 [oauth1]
+<% if is_kilo? %>
 driver = keystone.contrib.oauth1.backends.<%= node['bcpc']['keystone']['drivers']['oauth1'] %>.OAuth1
+<% else %>
+driver = <%= node['bcpc']['keystone']['drivers']['oauth1'] %>
+<% end %>
 #request_token_duration = 28800
 #access_token_duration = 86400
 
@@ -332,7 +371,11 @@ driver = keystone.contrib.oauth1.backends.<%= node['bcpc']['keystone']['drivers'
 #config_file = keystone-paste.ini
 
 [policy]
+<% if is_kilo? %>
 driver = keystone.policy.backends.<%= node['bcpc']['keystone']['drivers']['policy'] %>.Policy
+<% else %>
+driver = <%= node['bcpc']['keystone']['drivers']['policy'] %>
+<% end %>
 #list_limit = <None>
 
 [resource]
@@ -346,7 +389,11 @@ caching = false
 #list_limit = <None>
 
 [revoke]
+<% if is_kilo? %>
 driver = keystone.contrib.revoke.backends.<%= node['bcpc']['keystone']['drivers']['revoke'] %>.Revoke
+<% else %>
+driver = <%= node['bcpc']['keystone']['drivers']['revoke'] %>
+<% end %>
 #expiration_buffer = 1800
 <% if node['bcpc']['keystone']['enable_caching'] %>
 caching = true
@@ -356,7 +403,11 @@ caching = false
 #cache_time = 3600
 
 [role]
+<% if is_kilo? %>
 driver = keystone.assignment.role_backends.<%= node['bcpc']['keystone']['drivers']['role'] %>.Role
+<% else %>
+driver = <%= node['bcpc']['keystone']['drivers']['role'] %>
+<% end %>
 <% if node['bcpc']['keystone']['enable_caching'] %>
 caching = true
 <% else %>
@@ -403,9 +454,17 @@ ca_certs = /etc/keystone/cert.pem
 #bind =
 #enforce_token_bind = permissive
 #expiration = 3600
-provider=keystone.token.providers.pki.Provider
+<% if is_kilo? %>
+provider = keystone.token.providers.<%= node['bcpc']['keystone']['providers']['token'] %>.Provider
+<% else %>
+provider = <%= node['bcpc']['keystone']['providers']['token'] %>
+<% end %>
 <% if node['bcpc']['keystone']['enable_caching'] %>
+<% if is_kilo? %>
 driver = keystone.token.persistence.backends.memcache.Token
+<% else %>
+driver = <%= node['bcpc']['keystone']['drivers']['token'] %>
+<% end %>
 caching = true
 <% else %>
 #driver = keystone.token.persistence.backends.memcache.Token
@@ -420,4 +479,8 @@ caching = false
 #enabled = true
 #allow_redelegation = false
 #max_redelegation_count = 3
+<% if is_kilo? %>
 driver = keystone.trust.backends.<%= node['bcpc']['keystone']['drivers']['trust'] %>.Trust
+<% else %>
+driver = <%= node['bcpc']['keystone']['drivers']['trust'] %>
+<% end %>

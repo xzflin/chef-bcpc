@@ -16,6 +16,11 @@
 # limitations under the License.
 #
 
+bash "wait-for-flavors-to-become-operational" do
+  code ". /root/adminrc; until openstack flavor list >/dev/null 2>&1; do sleep 1; done"
+  timeout 60
+end
+
 node['bcpc']['flavors'].each do |name, flavor|
   bcpc_osflavor name do
     memory_mb flavor['memory_mb']
