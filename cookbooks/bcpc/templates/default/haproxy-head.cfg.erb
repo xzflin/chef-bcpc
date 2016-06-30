@@ -107,7 +107,7 @@ listen nova-ec2
   balance source
   option tcplog
   option httpchk GET /
-  http-check expect status 404
+  http-check expect status 400
 <% @servers.each do |server| -%>
   <%= "server #{server['hostname']} #{server['bcpc']['management']['ip']}:8773 check inter 5s rise 1 fall 1" %>
 <% end -%>

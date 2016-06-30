@@ -31,7 +31,6 @@ if node['bcpc']['enabled']['logging'] then
 
     package 'kibana' do
         action :upgrade
-        options '-o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"'
     end
 
     template "/opt/kibana/config/kibana.yml" do

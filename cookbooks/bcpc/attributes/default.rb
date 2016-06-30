@@ -7,7 +7,7 @@ default['bcpc']['country'] = "US"
 default['bcpc']['state'] = "NY"
 default['bcpc']['location'] = "New York"
 default['bcpc']['organization'] = "Bloomberg"
-default['bcpc']['openstack_release'] = "kilo"
+default['bcpc']['openstack_release'] = "liberty"
 # Can be "updates" or "proposed"
 default['bcpc']['openstack_branch'] = "proposed"
 # Should be kvm (or qemu if testing in VMs that don't support VT-x)
@@ -206,6 +206,7 @@ default['bcpc']['mirror']['kibana-dist'] = '4.1'
 #
 ###########################################
 default['bcpc']['dbname']['nova'] = "nova"
+default['bcpc']['dbname']['nova_api'] = "nova_api"
 default['bcpc']['dbname']['cinder'] = "cinder"
 default['bcpc']['dbname']['glance'] = "glance"
 default['bcpc']['dbname']['horizon'] = "horizon"
@@ -250,104 +251,6 @@ default['bcpc']['horizon']['disable_panels'] = ['containers']
 
 ###########################################
 #
-# Service catalog (API versions/endpoints)
-#
-###########################################
-default['bcpc']['catalog'] = {
-  'identity' => {
-    'name' => 'keystone',
-    'project' => 'keystone',
-    'description' => 'OpenStack Identity',
-    'ports' => {
-      'admin' => 35357,
-      'internal' => 5000,
-      'public' => 5000
-    },
-    'uris' => {
-      'admin' => 'v2.0',
-      'internal' => 'v2.0',
-      'public' => 'v2.0'
-    }
-  },
-  'compute' => {
-    'name' => 'Compute Service',
-    'project' => 'nova',
-    'description' => 'OpenStack Compute Service',
-    'ports' => {
-      'admin' => 8774,
-      'internal' => 8774,
-      'public' => 8774
-    },
-    'uris' => {
-      'admin' => 'v1.1/$(tenant_id)s',
-      'internal' => 'v1.1/$(tenant_id)s',
-      'public' => 'v1.1/$(tenant_id)s'
-    }
-  },
-  'ec2' => {
-    'name' => 'EC2 Service',
-    'project' => 'nova',
-    'description' => 'OpenStack EC2 Service',
-    'ports' => {
-      'admin' => 8773,
-      'internal' => 8773,
-      'public' => 8773
-    },
-    'uris' => {
-      'admin' => 'services/Admin',
-      'internal' => 'services/Cloud',
-      'public' => 'services/Cloud'
-    }
-  },
-  'volume' => {
-    'name' => 'Volume Service',
-    'project' => 'cinder',
-    'description' => 'OpenStack Volume Service',
-    'ports' => {
-      'admin' => 8776,
-      'internal' => 8776,
-      'public' => 8776
-    },
-    'uris' => {
-      'admin' => 'v1/$(tenant_id)s',
-      'internal' => 'v1/$(tenant_id)s',
-      'public' => 'v1/$(tenant_id)s'
-    }
-  },
-  'volumev2' => {
-    'name' => 'cinderv2',
-    'project' => 'cinder',
-    'description' => 'OpenStack Volume Service V2',
-    'ports' => {
-      'admin' => 8776,
-      'internal' => 8776,
-      'public' => 8776
-    },
-    'uris' => {
-      'admin' => 'v2/$(tenant_id)s',
-      'internal' => 'v2/$(tenant_id)s',
-      'public' => 'v2/$(tenant_id)s'
-    }
-  },
-  'image' => {
-    'name' => 'Image Service',
-    'project' => 'glance',
-    'description' => 'OpenStack Image Service',
-    'ports' => {
-      'admin' => 9292,
-      'internal' => 9292,
-      'public' => 9292
-    },
-    'uris' => {
-      'admin' => 'v2',
-      'internal' => 'v2',
-      'public' => 'v2'
-    }
-  }
-}
-
-###########################################
-#
 #  Keystone Settings
 #
 ###########################################
@@ -389,9 +292,12 @@ default['bcpc']['keystone']['drivers']['oauth1'] = 'sql'
 default['bcpc']['keystone']['drivers']['policy'] = 'sql'
 default['bcpc']['keystone']['drivers']['revoke'] = 'sql'
 default['bcpc']['keystone']['drivers']['role'] = 'sql'
+default['bcpc']['keystone']['drivers']['token'] = 'memcache_pool'
 default['bcpc']['keystone']['drivers']['trust'] = 'sql'
 # Notifications driver
 default['bcpc']['keystone']['drivers']['notification'] = 'log'
+# token format
+default['bcpc']['keystone']['providers']['token'] = 'fernet'
 # Notifications format. See: http://docs.openstack.org/developer/keystone/event_notifications.html
 default['bcpc']['keystone']['notification_format'] = 'cadf'
 
@@ -471,6 +377,7 @@ default['bcpc']['nova']['quota'] = {
 ###########################################
 # Verbose logging (level INFO)
 default['bcpc']['cinder']['verbose'] = false
+default['bcpc']['cinder']['debug'] = false
 default['bcpc']['cinder']['workers'] = 5
 default['bcpc']['cinder']['allow_az_fallback'] = true
 default['bcpc']['cinder']['rbd_flatten_volume_from_snapshot'] = true
@@ -479,10 +386,18 @@ default['bcpc']['cinder']['rbd_flatten_volume_from_snapshot'] = true
 default['bcpc']['cinder']['rbd_max_clone_depth'] = 5
 default['bcpc']['cinder']['quota'] = {
   "volumes" => -1,
-  "quota_snapshots" => 10,
-  "consistencygroups" => 10,
+  "snapshots" => 10,
   "gigabytes" => 1000
 }
+
+###########################################
+#
+#  Glance Settings
+#
+###########################################
+# Verbose logging (level INFO)
+default['bcpc']['glance']['verbose'] = false
+default['bcpc']['glance']['workers'] = 5
 
 ###########################################
 #

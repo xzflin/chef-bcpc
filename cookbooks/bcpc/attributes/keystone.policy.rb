@@ -11,6 +11,7 @@ default['bcpc']['keystone']['policy'] = {
   "admin_or_owner" => "rule:admin_required or rule:owner",
   "token_subject" => "user_id:%(target.token.user_id)s",
   "admin_or_token_subject" => "rule:admin_required or rule:token_subject",
+  "service_admin_or_token_subject" => "rule:service_or_admin or rule:token_subject",
 
   "default" => "rule:admin_required",
 
@@ -133,6 +134,7 @@ default['bcpc']['keystone']['policy'] = {
   "identity:list_projects_associated_with_endpoint_group" => "rule:admin_required",
   "identity:list_endpoints_associated_with_endpoint_group" => "rule:admin_required",
   "identity:get_endpoint_group_in_project" => "rule:admin_required",
+  "identity:list_endpoint_groups_for_project" => "rule:admin_required",
   "identity:add_endpoint_group_to_project" => "rule:admin_required",
   "identity:remove_endpoint_group_from_project" => "rule:admin_required",
 

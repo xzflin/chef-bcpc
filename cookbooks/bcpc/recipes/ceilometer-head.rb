@@ -44,6 +44,14 @@ ruby_block "ceilometer-database-creation" do
     end
 end
 
+ruby_block 'update-ceilometer-db-schema-for-liberty' do
+  block do
+    self.notifies :run, "bash[ceilometer-database-sync]", :immediately
+    self.resolve_notification_references
+  end
+  only_if { ::File.exist?('/usr/local/etc/kilo_to_liberty_upgrade') }
+end
+
 bash "ceilometer-database-sync" do
     action :nothing
     user "root"

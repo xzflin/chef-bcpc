@@ -24,23 +24,39 @@ def whyrun_supported?
 end
 
 def openstack_cli
-  args =  ["openstack",
-      "--os-project-name", node['bcpc']['admin_tenant'],
-      "--os-username", get_config('keystone-admin-user'),
-      "--os-auth-url", "#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:5000/v2.0/",
-      "--os-region-name", node['bcpc']['region_name'],
-      "--os-password" , get_config('keystone-admin-password')]
+  args = ["openstack",
+          "--os-tenant-name", node['bcpc']['admin_tenant'],
+          "--os-project-name", node['bcpc']['admin_tenant'],
+          "--os-username", get_config('keystone-admin-user'),
+          "--os-compute-api-version", "2",
+          "--os-auth-url", "#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['public']}/#{node['bcpc']['catalog']['identity']['uris']['public']}/",
+          "--os-region-name", node['bcpc']['region_name'],
+          "--os-password" , get_config('keystone-admin-password')]
+
+  if get_api_version(:identity) == "3"
+    args += ["--os-project-domain-name", "default", "--os-user-domain-name", "default"]
+  end
+
+  return args
 end
 
 def nova_cli
   # Note the amazing lack of consistency between openstack CLI and nova CLI when it
   # comes to args e.g. "--os-user-name" vs "--os-username".
-  args =  ["nova",
-      "--os-project-name", node['bcpc']['admin_tenant'],
-      "--os-username", get_config('keystone-admin-user'),
-      "--os-auth-url", "#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:5000/v2.0/",
-      "--os-region-name", node['bcpc']['region_name'],
-      "--os-password" , get_config('keystone-admin-password')]
+  args = ["nova",
+          "--os-tenant-name", node['bcpc']['admin_tenant'],
+          "--os-project-name", node['bcpc']['admin_tenant'],
+          "--os-user-name", get_config('keystone-admin-user'),
+          "--os-compute-api-version", "2",
+          "--os-auth-url", "#{node['bcpc']['protocol']['keystone']}://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog']['identity']['ports']['public']}/#{node['bcpc']['catalog']['identity']['uris']['public']}/",
+          "--os-region-name", node['bcpc']['region_name'],
+          "--os-password" , get_config('keystone-admin-password')]
+
+  if get_api_version(:identity) == "3"
+    args += ["--os-project-domain-name", "default", "--os-user-domain-name", "default"]
+  end
+
+  return args
 end
 
 action :create do
@@ -90,7 +106,7 @@ action :create do
                                                  "--id=#{@new_resource.flavor_id}",
                                                  "#{ispub}"]
                                         ) )
-      Chef::Log.error "Failed to create flavor" unless status.success?
+      Chef::Log.error "Failed to create flavor: #{stdout} | #{stderr}" unless status.success?
     end
   end
 
@@ -98,7 +114,7 @@ action :create do
   # so fall back to nova CLI.
   stdout, stderr, status = Open3.capture3(*(nova_cli + ["flavor-show",  @new_resource.name] ))
   if not status.success?
-    Chef::Log.error "Failed to get flavor info"
+    Chef::Log.error "Failed to get flavor info: #{stdout} | #{stderr}"
     raise("Unable to get flavor info.")
   end
 
@@ -114,8 +130,8 @@ action :create do
   if current_specs != new_specs
     converge_by("Update flavor extra_specs") do
       kvp = new_specs.collect { |k,v| k + "=" + v}
-      stdout, status = Open3.capture2(*(nova_cli + ["flavor-key",  @new_resource.name, "set"] + kvp ))
-      Chef::Log.error "Failed to update flavor extra_specs" unless status.success?
+      stdout, stderr, status = Open3.capture3(*(nova_cli + ["flavor-key",  @new_resource.name, "set"] + kvp ))
+      Chef::Log.error "Failed to update flavor extra_specs: #{stdout} | #{stderr}" unless status.success?
     end
   end
 end
@@ -125,9 +141,9 @@ action :delete do
                                             ["flavor", "show", @new_resource.name]))
   if status.success?
     converge_by("deleting #{new_resource.name}") do
-      stdout, status = Open3.capture2(*(openstack_cli +
+      stdout, stderr, status = Open3.capture3(*(openstack_cli +
                                         ["flavor", "delete", @new_resource.name ] ))
-      Chef::Log.error "Failed to delete to flavor" unless status.success?
+      Chef::Log.error "Failed to delete flavor: #{stdout} | #{stderr}" unless status.success?
     end
   end
 end
