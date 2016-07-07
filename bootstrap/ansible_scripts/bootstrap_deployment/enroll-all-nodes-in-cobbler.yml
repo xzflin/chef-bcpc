@@ -22,14 +22,8 @@
       fail: msg="Please provide a cluster.yaml or cluster.yml in /bcpc/deployed on the bootstrap node"
       when: not cluster_yaml_stat.stat.exists and not cluster_yml_stat.stat.exists
 
-    - name: register head nodes from cluster YAML
-      command: ./bootstrap/ansible_scripts/scripts/enroll_cobbler.py add_role -t head chdir={{ bootstrap_deployed_dir }}
-
-    - name: register OSD work nodes from cluster YAML
-      command: ./bootstrap/ansible_scripts/scripts/enroll_cobbler.py add_role -t work chdir={{ bootstrap_deployed_dir }}
-
-    - name: register ephemeral work nodes from cluster YAML
-      command: ./bootstrap/ansible_scripts/scripts/enroll_cobbler.py add_role -t work-ephemeral chdir={{ bootstrap_deployed_dir }}
+    - name: register all nodes from cluster YAML
+      command: ./bootstrap/ansible_scripts/scripts/enroll_cobbler.py add_all chdir={{ bootstrap_deployed_dir }}
 
     - name: sync Cobbler
       command: cobbler sync
