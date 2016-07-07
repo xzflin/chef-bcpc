@@ -46,9 +46,9 @@ def get_api_version(service, uri_type='public')
   api_version_list = node['bcpc']['catalog'][service_str]['uris'][uri_type_str].scan(/^[^\d]*(\d+)/)
 
   if api_version_list.empty?
-    # Glance URL should not include a version number, default to Glance API v1 for Kilo and v2 otherwise
+    # Glance URL should not include a version number, default to Glance API v2 in all cases
     if service_str == 'image'
-      return (is_kilo? ? '1' : '2')
+      return '2'
     else
       fail "Could not derive API version for #{service_str} from #{uri_type_str} URI, please inspect service catalog"
     end
