@@ -28,7 +28,7 @@ function remove_DHCPservers {
 
     VBoxManage list dhcpservers | grep -E "^NetworkName:\s+HostInterfaceNetworking" | awk '{print $2}' |
     while read -r network_name; do
-      [[ -n $existing_nets_reg_ex ]] && ! egrep -q $existing_nets_reg_ex <<< $network_name && continue
+      [[ -n $existing_nets_reg_ex ]] && ! egrep -q "$existing_nets_reg_ex" <<< $network_name && continue
       remove_DHCPservers $network_name
     done
   else
