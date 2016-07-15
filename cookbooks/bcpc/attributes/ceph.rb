@@ -49,3 +49,8 @@ default['bcpc']['ceph']['rebalance'] = false
 # Set the default niceness of Ceph OSD and monitor processes
 default['bcpc']['ceph']['osd_niceness'] = -10
 default['bcpc']['ceph']['mon_niceness'] = -10
+
+# set the following 2 parameters to true to reduce
+# osds primary affinity to 0 on headnodes
+default['bcpc']['ceph']['allow_primary_affinity'] = true
+default['bcpc']['ceph']['set_headnode_affinity'] = true
