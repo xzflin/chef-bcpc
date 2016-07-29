@@ -64,6 +64,22 @@ def get_api_version(service, uri_type='public')
   end
 end
 
+# helper to return a composed URI for the requested service and visibility type
+# (admin/internal/public)
+def get_service_uri(service, visibility, append_to_path='')
+  unless node['bcpc']['catalog'].keys.include? service.to_s
+    raise "#{service} is an invalid service type, select from #{node['bcpc']['catalog'].keys.join(',')}"
+  end
+
+  valid_visibilities = %w(admin internal public)
+  unless valid_visibilities.include? visibility.to_s
+    raise "#{visibility} is an invalid visibility type, select from #{valid_visibilities.join(',')}"
+  end
+
+  # does not use URI::HTTPS.build because it chokes on the tenant_id placeholders when composing the path
+  "https://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog'][service.to_s]['ports'][visibility.to_s]}/#{node['bcpc']['catalog'][service.to_s]['uris'][visibility.to_s]}/#{append_to_path}"
+end
+
 def is_vip?
     ipaddr = `ip addr show dev #{node['bcpc']['management']['interface']}`
     return ipaddr.include? node['bcpc']['management']['vip']
