@@ -39,7 +39,7 @@ ec2_listen = <%= node['bcpc']['management']['ip'] %>
 ec2_host = <%= node['bcpc']['management']['vip'] %>
 ec2_workers = <%= node['bcpc']['nova']['workers'] %>
 ec2_private_dns_show_ip = True
-keystone_ec2_url = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:<%= node['bcpc']['catalog']['identity']['ports']['public'] %>/<%= node['bcpc']['catalog']['identity']['uris']['public'] %>/ec2tokens
+keystone_ec2_url = <%= get_service_uri(:identity, :public, 'ec2tokens') %>
 
 <% if node['bcpc']['nova']['notifications']['enabled'] %>
 # Nova notification settings
@@ -181,9 +181,13 @@ idle_timeout=3600
 # Keystone settings
 [keystone_authtoken]
 # cafile = /etc/ssl/certs/ssl-bcpc.pem
-auth_uri = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:5000/<%= node['bcpc']['catalog']['identity']['uris']['internal'] %>/
-identity_uri = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:35357
-auth_version = <%= node['bcpc']['catalog']['identity']['uris']['internal'] %>
+auth_uri = <%= get_service_uri(:identity, :internal) %>
+identity_uri = https://openstack.<%=node['bcpc']['cluster_domain']%>:<%= node['bcpc']['catalog']['identity']['ports']['admin'] %>
+
+#auth_uri = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:5000/<%= node['bcpc']['catalog']['identity']['uris']['internal'] %>/
+#identity_uri = <%=node['bcpc']['protocol']['keystone']%>://openstack.<%=node['bcpc']['cluster_domain']%>:35357
+#auth_version = <%= node['bcpc']['catalog']['identity']['uris']['internal'] %>
+
 admin_tenant_name = <%=node['bcpc']['admin_tenant']%>
 admin_user = <%=get_config('keystone-admin-user')%>
 admin_password = <%=get_config('keystone-admin-password')%>
@@ -197,8 +201,9 @@ memcache_pool_dead_retry=60
 workers=<%=node['bcpc']['nova']['workers']%>
 
 [glance]
-api_servers=<%=node['bcpc']['protocol']['glance']%>://<%=node['bcpc']['management']['vip']%>:9292
-api_insecure=True
+api_servers=<%= get_service_uri(:image, :internal) %>
+#api_servers=<%=node['bcpc']['protocol']['glance']%>://<%=node['bcpc']['management']['vip']%>:9292
+#api_insecure=True
 
 [libvirt]
 # Always boot nova VMs from RBD

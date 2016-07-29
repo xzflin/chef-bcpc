@@ -77,7 +77,9 @@ def get_service_uri(service, visibility, append_to_path='')
   end
 
   # does not use URI::HTTPS.build because it chokes on the tenant_id placeholders when composing the path
-  "https://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog'][service.to_s]['ports'][visibility.to_s]}/#{node['bcpc']['catalog'][service.to_s]['uris'][visibility.to_s]}/#{append_to_path}"
+  return_path = "https://openstack.#{node['bcpc']['cluster_domain']}:#{node['bcpc']['catalog'][service.to_s]['ports'][visibility.to_s]}/#{node['bcpc']['catalog'][service.to_s]['uris'][visibility.to_s]}/#{append_to_path}"
+  # chop a final double slash down to one slash when returning
+  return_path =~ /\/\/$/ ? return_path[0...-1] : return_path
 end
 
 def is_vip?
