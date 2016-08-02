@@ -17,7 +17,7 @@ default['bcpc']['nova']['policy'] = {
 
   "compute:get" => "rule:admin_or_owner",
   "compute:get_all" => "rule:admin_or_owner",
-  "compute:get_all_tenants" => "rule:admin_or_owner",
+  "compute:get_all_tenants" => "is_admin:True",
 
   "compute:update" => "rule:admin_or_owner",
 
