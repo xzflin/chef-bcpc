@@ -32,7 +32,7 @@
     # the below steps are done to enroll the node rather than knife bootstrap
     # because we do not keep the operations private key on any cluster member
     - name: Register validator key on bootstrap node to a variable
-      command: cat /etc/chef/validation.pem
+      command: cat /etc/opscode/bcpc-validator.pem
       register: chef_validator_key
       delegate_to: "{{ groups['bootstraps'][0] }}"
       when: node_enrolled.rc != 0
