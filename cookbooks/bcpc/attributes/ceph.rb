@@ -54,3 +54,25 @@ default['bcpc']['ceph']['mon_niceness'] = -10
 # osds primary affinity to 0 on headnodes
 default['bcpc']['ceph']['allow_primary_affinity'] = true
 default['bcpc']['ceph']['set_headnode_affinity'] = true
+
+# expected tunables when running ceph osd crush show-tunables
+# any deviation from these settings will stop the recipe from
+# reapplying optimal tunables
+default['bcpc']['ceph']['expected_tunables'] = {
+  "choose_local_tries"=>0,
+  "choose_local_fallback_tries"=>0,
+  "choose_total_tries"=>50,
+  "chooseleaf_descend_once"=>1,
+  "chooseleaf_vary_r"=>1,
+  "straw_calc_version"=>1,
+  "allowed_bucket_algs"=>54,
+  "profile"=>"hammer",
+  "optimal_tunables"=>0,
+  "legacy_tunables"=>0,
+  "require_feature_tunables"=>1,
+  "require_feature_tunables2"=>1,
+  "require_feature_tunables3"=>1,
+  "has_v2_rules"=>0,
+  "has_v3_rules"=>0,
+  "has_v4_buckets"=>1
+}
