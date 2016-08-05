@@ -16,7 +16,7 @@
       - always
 
   - name: Get root of repository
-    local_action: command git rev-parse --show-toplevel
+    local_action: command git rev-parse --show-toplevel warn=no
     register: repo_root
     become: no
     run_once: true
