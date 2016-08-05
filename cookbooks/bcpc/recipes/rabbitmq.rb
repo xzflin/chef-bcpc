@@ -102,7 +102,7 @@ end
 
 service "rabbitmq-server" do
     stop_command "service rabbitmq-server stop && epmd -kill"
-    action [:enable]
+    action [:enable, :start]
     supports :status => true
 end
 
