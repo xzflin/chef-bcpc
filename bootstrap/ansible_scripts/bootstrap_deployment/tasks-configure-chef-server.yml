@@ -62,7 +62,7 @@
       - chef
 
   - name: Restart Chef Server components after upgrade
-    sudo: yes
+    become: yes
     command: chef-server-ctl restart
     when: chef_server_installation.changed
     tags:
