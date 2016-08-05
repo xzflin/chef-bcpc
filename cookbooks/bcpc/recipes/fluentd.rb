@@ -94,6 +94,7 @@ if node['bcpc']['enabled']['logging'] then
 
     service "td-agent" do
         action [:enable, :start]
+        restart_command "service td-agent stop; while service td-agent status; do sleep 1; done; service td-agent start; while ! service td-agent status; do sleep 1; done"
     end
 
 end
