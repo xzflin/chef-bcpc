@@ -110,6 +110,13 @@ bash "set-ceph-crush-tunables" do
         ceph --name mon. --keyring /var/lib/ceph/mon/ceph-#{node['hostname']}/keyring \
             osd crush tunables optimal
     EOH
+    # do not apply if any tunables have been modified from their defaults
+    not_if do
+      show_tunables = Mixlib::ShellOut.new('ceph osd crush show-tunables')
+      show_tunables.run_command
+      raise 'Could not check Ceph tunables' if show_tunables.error!
+      JSON.load(show_tunables.stdout) != node['bcpc']['ceph']['expected_tunables']
+    end
 end
 
 # Remove MDS in a later pull request... Wait_for_pg_create uses mdmap so it will need to change...
