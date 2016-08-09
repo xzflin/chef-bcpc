@@ -76,46 +76,107 @@ directory fernet_key_directory do
   mode  00700
 end
 
-# do stuff here for writing out existing keys (there will always be key 0 in the data bag
-# and maybe also 1 and 2, but not necessarily)
-ruby_block 'write-fernet-keys-to-disk' do
+# write out keys if defined in the data bag
+# (there should always be at least 0 (staged) and 1 (primary) in the data bag)
+ruby_block 'write-out-fernet-keys-from-data-bag' do
   block do
     (0..2).each do |idx|
       if config_defined("keystone-fernet-key-#{idx}")
         key_path = ::File.join(fernet_key_directory, idx.to_s)
         key_in_databag = get_config("keystone-fernet-key-#{idx}")
-        need_to_write_key = false
-        if ::File.exist?(key_path)
-    	    key_on_disk = ::File.read(key_path)
-    	    need_to_write_key = !(key_on_disk == key_in_databag)
-    	  else
-    	  	need_to_write_key = true
-        end
-        ::File.write(key_path, key_in_databag) if need_to_write_key
+        ::File.write(key_path, key_in_databag)
       end
     end
     # remove any other keys present in the directory (not 0, 1, or 2)
     ::Dir.glob(::File.join(fernet_key_directory, '*')).reject do |path|
-    	path.end_with?(*(0..2).collect { |x| x.to_s })
+      path.end_with?(*(0..2).collect(&:to_s))
     end.each do |file_to_delete|
-    	::File.delete(file_to_delete)
+      ::File.delete(file_to_delete)
     end
   end
-  only_if { config_defined('keystone-fernet-key-0') }
+  # if any key needs to be rewritten, then we'll rewrite them all
+  only_if do
+    need_to_write_keys = []
+    (0..2).each do |idx|
+      key_path = ::File.join(fernet_key_directory, idx.to_s)
+      if ::File.exist?(key_path)
+        key_on_disk = ::File.read(key_path)
+        if config_defined("keystone-fernet-key-#{idx}")
+          need_to_write_keys << (key_on_disk != get_config("keystone-fernet-key-#{idx}"))
+        end
+      end
+    end
+    need_to_write_keys.any?
+  end
   notifies :restart, 'service[apache2]', :immediately
 end
 
-bash 'generate-fernet-keys' do
-  code 'keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone'
+# generate Fernet keys if there are not any on disk (first time setup)
+ruby_block 'first-time-fernet-key-generation' do
+  block do
+    Mixlib::ShellOut.new('keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone').run_command.error!
+    make_config('keystone-fernet-last-rotation', Time.now)
+  end
   not_if { ::File.exist?(::File.join(fernet_key_directory, '0')) }
   notifies :restart, 'service[apache2]', :immediately
 end
 
+# if the staged key's mtime is at least this many days old and the data bag
+# has recorded a last rotation timestamp , execute a rotation
+ruby_block 'rotate-fernet-keys' do
+  block do
+    fernet_keys = ::Dir.glob(::File.join(fernet_key_directory, '*')).sort
+
+    # the current staged key (0) will become the new master
+    new_master_key = ::File.read(fernet_keys.first)
+    # the current master key (highest index) will become a secondary key
+    old_master_key = ::File.read(fernet_keys.last)
+    # execute a rotation via keystone-manage so that we get a new staging key
+    Mixlib::ShellOut.new('keystone-manage fernet_rotate --keystone-user keystone --keystone-group keystone').run_command.error!
+    # 0 is now the new staging key so read that file again
+    new_staging_key = ::File.read(fernet_keys.first)
+
+    # destroy the on-disk keys before we rewrite them to disk
+    ::Dir.glob(::File.join(fernet_key_directory, '*')).each do |fk|
+      ::File.delete(fk)
+    end
+
+    # write new master key to 2
+    ::File.write(::File.join(fernet_key_directory, '2'), new_master_key)
+    # write staging key to 0
+    ::File.write(::File.join(fernet_key_directory, '0'), new_staging_key)
+    # write old master key to 1
+    ::File.write(::File.join(fernet_key_directory, '1'), old_master_key)
+
+    # re-permission all keys to ensure they are owned by keystone and chmod 600
+    Mixlib::ShellOut.new('chown keystone:keystone /etc/keystone/fernet-keys/*').run_command.error!
+    Mixlib::ShellOut.new('chmod 0600 /etc/keystone/fernet-keys/*').run_command.error!
+
+    # update keystone-fernet-last-rotation timestamp
+    make_config('keystone-fernet-last-rotation', Time.now.to_i, force=true)
+
+    # (writing these keys into the data bag will be done by the add-fernet-keys-to-data-bag resource)
+  end
+  only_if do
+    # if key rotation is disabled then skip out
+    if node['bcpc']['keystone']['rotate_fernet_tokens']
+      if config_defined('keystone-fernet-last-rotation')
+        Time.now.to_i - get_config('keystone-fernet-last-rotation').to_i > node['bcpc']['keystone']['fernet_token_max_age_seconds']
+      else
+        # always run if keystone-fernet-last-rotation is not defined
+        # (upgrade from 6.0.0)
+        true
+      end
+    else
+      false
+    end
+  end
+  notifies :restart, 'service[apache2]', :immediately
+end
+
 # key indexes in the data bag will not necessarily match the files on disk
-# (primary key is always key 0 and other keys are rotated down with monotonically
-# increasing integers, so you may have 0/3/4 for example after a few rotations)
-#
-# this block always runs to ensure the data bag does not get desynced with on-disk keys
+# (staged key is always key 0, primary key is the highest-indexed one, any
+# keys in between are former primary keys that can only decrypt)
 ruby_block 'add-fernet-keys-to-data-bag' do
   block do
     fernet_keys = ::Dir.glob(::File.join(fernet_key_directory, '*')).sort
@@ -131,6 +192,21 @@ ruby_block 'add-fernet-keys-to-data-bag' do
         make_config(db_key, disk_key_value)
       end
     end
+  end
+  only_if do
+    need_to_add_keys = []
+    (0..2).each do |idx|
+      key_path = ::File.join(fernet_key_directory, idx.to_s)
+      if ::File.exist?(key_path)
+        key_on_disk = ::File.read(key_path)
+        if config_defined("keystone-fernet-key-#{idx}")
+          need_to_add_keys << (key_on_disk != get_config("keystone-fernet-key-#{idx}"))
+        else
+          true
+        end
+      end
+    end
+    need_to_add_keys.any?
   end
 end
 

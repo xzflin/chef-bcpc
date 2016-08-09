@@ -298,6 +298,11 @@ default['bcpc']['keystone']['drivers']['trust'] = 'sql'
 default['bcpc']['keystone']['drivers']['notification'] = 'log'
 # token format
 default['bcpc']['keystone']['providers']['token'] = 'fernet'
+# enable automatic key rotation for Fernet tokens
+# (recommended but just in case you want it off)
+default['bcpc']['keystone']['rotate_fernet_tokens'] = true
+# rotate Fernet tokens after they reach this age (if enabled)
+default['bcpc']['keystone']['fernet_token_max_age_seconds'] = 7*24*60*60
 # Notifications format. See: http://docs.openstack.org/developer/keystone/event_notifications.html
 default['bcpc']['keystone']['notification_format'] = 'cadf'
 
