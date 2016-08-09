@@ -96,19 +96,17 @@ ruby_block 'write-out-fernet-keys-from-data-bag' do
   end
   # if any key needs to be rewritten, then we'll rewrite them all
   only_if do
-    if config_defined('keystone-fernet-key-0') && config_defined('keystone-fernet-key-1')
-      need_to_write_keys = []
-      (0..2).each do |idx|
-        key_path = ::File.join(fernet_key_directory, idx.to_s)
-        if ::File.exist?(key_path)
-          key_on_disk = ::File.read(key_path)
+    need_to_write_keys = []
+    (0..2).each do |idx|
+      key_path = ::File.join(fernet_key_directory, idx.to_s)
+      if ::File.exist?(key_path)
+        key_on_disk = ::File.read(key_path)
+        if config_defined("keystone-fernet-key-#{idx}")
           need_to_write_keys << (key_on_disk != get_config("keystone-fernet-key-#{idx}"))
         end
       end
-      need_to_write_keys.any?
-    else
-      false
     end
+    need_to_write_keys.any?
   end
   notifies :restart, 'service[apache2]', :immediately
 end
