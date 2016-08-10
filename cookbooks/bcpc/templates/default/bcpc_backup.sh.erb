@@ -139,7 +139,7 @@ CHEF_ENVS=( $CHEF_ENVS_RAW )
 for CHEF_ENV in ${CHEF_ENVS[@]}; do
   DATABAG_BACKUP_PATH=$BACKUP_PATH/$CHEF_ENV-databag.json
   if [ ! -f $DATABAG_BACKUP_PATH ]; then
-    $KNIFE data bag show configs -f json $CHEF_ENV > $DATABAG_BACKUP_PATH 2>/dev/null
+    $KNIFE data bag show configs -F json $CHEF_ENV > $DATABAG_BACKUP_PATH 2>/dev/null
     log "Backed up data bag for $CHEF_ENV to $DATABAG_BACKUP_PATH."
   else
     error "File $DATABAG_BACKUP_PATH already exists, refusing to overwrite."
@@ -147,7 +147,7 @@ for CHEF_ENV in ${CHEF_ENVS[@]}; do
 
   ENVIRONMENT_BACKUP_PATH=$BACKUP_PATH/$CHEF_ENV-environment.json
   if [ ! -f $ENVIRONMENT_BACKUP_PATH ]; then
-    $KNIFE environment show -f json $CHEF_ENV > $ENVIRONMENT_BACKUP_PATH 2>/dev/null
+    $KNIFE environment show -F json $CHEF_ENV > $ENVIRONMENT_BACKUP_PATH 2>/dev/null
     log "Backed up environment for $CHEF_ENV to $ENVIRONMENT_BACKUP_PATH."
   else
     error "File $ENVIRONMENT_BACKUP_PATH already exists, refusing to overwrite."
