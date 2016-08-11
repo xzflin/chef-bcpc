@@ -112,6 +112,12 @@ chef_bcpc_deploy_from_dir: /deploy/chef-bcpc/from/here/
 #  version:  1.0.0
 internal_cookbooks: []
 
+# berks_packages is for deploying additional cookbooks that are packaged
+# by Berkshelf, e.g.:
+#berks_packages:
+#- cookbook: blah
+#  version: 1470755000
+
 # these cookbooks are obtained by looking for a .tar.gz in
 # bootstrap-files/cookbooks with the appropriate name and version
 dependency_cookbooks:
