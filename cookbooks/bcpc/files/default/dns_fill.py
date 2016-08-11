@@ -7,17 +7,16 @@ Asks openstack about all the running instances that currently have floats
 then creates a CNAME record to point to the public-X.X.X.X username
 
 """
+import keystoneclient
+from keystoneclient.v2_0 import client as kclient
+from keystoneclient import exceptions as kc_exceptions
+import MySQLdb as mdb
+import re
+import syslog
 
 
 class dns_popper(object):
     def __init__(self, config):
-        import keystoneclient
-        from keystoneclient.v2_0 import client as kclient
-        from keystoneclient import exceptions as kc_exceptions
-        import MySQLdb as mdb
-        import re
-        import syslog
-
         self.config = config
         self.keystone = kclient.Client(
             username=config["OS_USERNAME"],
