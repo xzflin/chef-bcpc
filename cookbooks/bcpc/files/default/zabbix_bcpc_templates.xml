@@ -1575,7 +1575,7 @@
                     <history>3</history>
                     <trends>30</trends>
                     <status>0</status>
-                    <value_type>3</value_type>
+                    <value_type>4</value_type>
                     <allowed_hosts/>
                     <units/>
                     <delta>0</delta>
@@ -4491,7 +4491,7 @@
             <dependencies/>
         </trigger>
         <trigger>
-            <expression>{BCPC-Headnode:mysql.ping.last(0)}&lt;&gt;1</expression>
+            <expression>{BCPC-Headnode:mysql.ping.str(1,#1)}&lt;&gt;1</expression>
             <name>MySQL is not pingable from {HOST.NAME}</name>
             <url/>
             <status>0</status>
