@@ -61,6 +61,14 @@
   command: mv {{ staging_location.path }}/{{ item.cookbook }}-{{ item.version }} {{ bootstrap_deployed_dir }}/cookbooks/{{ item.cookbook }}
   with_items: "{{ internal_cookbooks }}"
 
+- name: Decompress Berks-packaged cookbooks to temporary location
+  unarchive: copy=no src={{ bootstrap_git_staging_dir }}/{{ item.cookbook }}-{{ item.version }}.tar.gz dest={{ staging_location.path }}
+  with_items: "{{ berks_packages|default([]) }}"
+
+- name: Move additional Berks-packaged cookbooks into deployment directory cookbooks
+  shell: mv {{ staging_location.path }}/cookbooks/* {{ bootstrap_deployed_dir }}/cookbooks/
+  when: berks_packages is defined
+
 - name: Discard temporary staging location
   file: path={{ staging_location.path }} state=absent
 
