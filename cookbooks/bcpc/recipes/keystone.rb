@@ -39,6 +39,10 @@ ruby_block "initialize-keystone-config" do
     end
 end
 
+package 'python-ldappool' do
+  action :upgrade
+end
+
 package 'keystone' do
   action :upgrade
   notifies :run, 'bash[clean-old-pyc-files]', :immediately
