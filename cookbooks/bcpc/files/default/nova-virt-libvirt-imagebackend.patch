@@ -1,0 +1,15 @@
+diff --git a/nova/virt/libvirt/imagebackend.py b/nova/virt/libvirt/imagebackend.py
+index d5a44e3..c24721a 100644
+--- a/nova/virt/libvirt/imagebackend.py
++++ b/nova/virt/libvirt/imagebackend.py
+@@ -218,7 +218,9 @@ class Image(object):
+                               *args, **kwargs)
+
+         if size:
+-            if size > self.get_disk_size(base):
++            # create_image() only creates the base image if needed, so
++            # we cannot rely on it to exist here
++            if os.path.exists(base) and size > self.get_disk_size(base):
+                 self.resize_image(size)
+
+             if (self.preallocate and self._can_fallocate() and
