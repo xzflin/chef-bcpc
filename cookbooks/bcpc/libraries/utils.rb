@@ -112,15 +112,19 @@ def get_config(key)
     return result
 end
 
+def get_memoized_search_results
+    @all_nodes ||= search(:node).select { |n| n.environment == node.chef_environment }
+end
+
 def search_nodes(key, value)
     if key == "recipe"
-        results = search(:node, "recipes:bcpc\\:\\:#{value} AND chef_environment:#{node.chef_environment}")
+        results = get_memoized_search_results.select { |n| n.recipes.include? "bcpc::#{value}" }
         results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
         if not results.include?(node) and node.run_list.expand(node.chef_environment).recipes.include?("bcpc::#{value}")
             results.push(node)
         end
     elsif key == "role"
-        results = search(:node, "#{key}:#{value} AND chef_environment:#{node.chef_environment}")
+        results = get_memoized_search_results.select { |n| n.roles.include? value }
         results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
         if not results.include?(node) and node.run_list.expand(node.chef_environment).roles.include?(value)
             results.push(node)
@@ -133,7 +137,7 @@ def search_nodes(key, value)
 end
 
 def get_all_nodes
-    results = search(:node, "recipes:bcpc AND chef_environment:#{node.chef_environment}")
+    results = get_memoized_search_results.select { |n| n.recipes.any? { |r| r.start_with? 'bcpc' } }
     if results.any? { |x| x['hostname'] == node['hostname'] }
         results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
     else
@@ -143,7 +147,7 @@ def get_all_nodes
 end
 
 def get_ceph_osd_nodes
-  results = search(:node, "recipes:bcpc\\:\\:ceph-osd AND chef_environment:#{node.chef_environment}")
+    results = get_memoized_search_results.select { |n| n.recipes.include? "bcpc::ceph-osd" }
     if results.any? { |x| x['hostname'] == node['hostname'] }
         results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
     else
@@ -153,7 +157,7 @@ def get_ceph_osd_nodes
 end
 
 def get_head_nodes
-    results = search(:node, "role:BCPC-Headnode AND chef_environment:#{node.chef_environment}")
+    results = get_memoized_search_results.select { |n| n.roles.include? "BCPC-Headnode" }
     results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
     if not results.include?(node) and node.run_list.roles.include?('BCPC-Headnode')
         results.push(node)
@@ -162,7 +166,7 @@ def get_head_nodes
 end
 
 def get_bootstrap_node
-    results = search(:node, "role:BCPC-Bootstrap AND chef_environment:#{node.chef_environment}")
+    results = get_memoized_search_results.select { |n| n.roles.include? "BCPC-Bootstrap" }
     raise 'There is not exactly one bootstrap node found.' if results.size != 1
     results.first
 end
