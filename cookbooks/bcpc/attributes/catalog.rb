@@ -30,9 +30,9 @@ default['bcpc']['catalog'] = {
       'public' => 8774
     },
     'uris' => {
-      'admin' => 'v2/%(tenant_id)s',
-      'internal' => 'v2/%(tenant_id)s',
-      'public' => 'v2/%(tenant_id)s'
+      'admin' => 'v2.1/%(tenant_id)s',
+      'internal' => 'v2.1/%(tenant_id)s',
+      'public' => 'v2.1/%(tenant_id)s'
     }
   },
   'ec2' => {
