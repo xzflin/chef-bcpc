@@ -43,7 +43,7 @@ def get_api_version(service, uri_type='public')
     fail "#{service_str} is not a valid service, please select from #{node['bcpc']['catalog'].keys.join('/')}"
   end
 
-  api_version_list = node['bcpc']['catalog'][service_str]['uris'][uri_type_str].scan(/^[^\d]*(\d+)/)
+  api_version_list = node['bcpc']['catalog'][service_str]['uris'][uri_type_str].scan(/(\d+(\.\d+)?)/)
 
   if api_version_list.empty?
     # Glance URL should not include a version number, default to Glance API v2 in all cases
@@ -54,14 +54,7 @@ def get_api_version(service, uri_type='public')
     end
   end
 
-  # special workarounds for certain fussy non-Glance APIs
-  if service_str == 'identity' and api_version_list[0][0] == "2"
-    return "2.0"
-  elsif service_str == 'compute' and api_version_list[0][0] == "1"
-    return "1.1"
-  else
-    return api_version_list[0][0]
-  end
+  api_version_list[0][0]
 end
 
 def is_vip?
