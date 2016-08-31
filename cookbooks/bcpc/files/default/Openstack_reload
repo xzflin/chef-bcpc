@@ -1,0 +1,147 @@
+#!/bin/sh
+#
+#
+#	Osr OCF RA. Hack to run vip_lost and vip_won until we get a newer
+#   Pacemaker version with native support of events
+#
+#
+
+#######################################################################
+# Initialization:
+
+: ${OCF_FUNCTIONS_DIR=${OCF_ROOT}/lib/heartbeat}
+. ${OCF_FUNCTIONS_DIR}/ocf-shellfuncs
+
+#######################################################################
+
+meta_data() {
+	cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="Osr" version="0.9">
+<version>1.0</version>
+
+<longdesc lang="en">
+This is a Osr Resource Agent. It does absolutely nothing except
+</longdesc>
+<shortdesc lang="en">Temporary hack until we get a newer Pacemaker version</shortdesc>
+
+<parameters>
+<parameter name="state" unique="1">
+<longdesc lang="en">
+Location to store the resource state in.
+</longdesc>
+<shortdesc lang="en">State file</shortdesc>
+<content type="string" default="${HA_RSCTMP}/Osr-${OCF_RESOURCE_INSTANCE}.state" />
+</parameter>
+
+<parameter name="fake" unique="0">
+<longdesc lang="en">
+Fake attribute that can be changed to cause a reload
+</longdesc>
+<shortdesc lang="en">Fake attribute that can be changed to cause a reload</shortdesc>
+<content type="string" default="osr" />
+</parameter>
+
+</parameters>
+
+<actions>
+<action name="start"        timeout="20" />
+<action name="stop"         timeout="20" />
+<action name="monitor"      timeout="20" interval="10" depth="0" />
+<action name="reload"       timeout="20" />
+<action name="migrate_to"   timeout="20" />
+<action name="migrate_from" timeout="20" />
+<action name="meta-data"    timeout="5" />
+<action name="validate-all"   timeout="20" />
+</actions>
+</resource-agent>
+END
+}
+
+#######################################################################
+
+osr_usage() {
+	cat <<END
+usage: $0 {start|stop|monitor|migrate_to|migrate_from|validate-all|meta-data}
+
+Expects to have a fully populated OCF RA-compliant environment set.
+END
+}
+
+osr_start() {
+    osr_monitor
+    if [ $? =  $OCF_SUCCESS ]; then
+	return $OCF_SUCCESS
+    fi
+    touch ${OCF_RESKEY_state}
+}
+
+osr_stop() {
+    osr_monitor
+    if [ $? =  $OCF_SUCCESS ]; then
+	rm ${OCF_RESKEY_state}
+    fi
+    return $OCF_SUCCESS
+}
+
+osr_monitor() {
+	# Monitor _MUST!_ differentiate correctly between running
+	# (SUCCESS), failed (ERROR) or _cleanly_ stopped (NOT RUNNING).
+	# That is THREE states, not just yes/no.
+
+	if [ -f ${OCF_RESKEY_state} ]; then
+	    return $OCF_SUCCESS
+	fi
+	if false ; then
+		return $OCF_ERR_GENERIC
+	fi
+	return $OCF_NOT_RUNNING
+}
+
+osr_validate() {
+
+    # Is the state directory writable?
+    state_dir=`dirname "$OCF_RESKEY_state"`
+    touch "$state_dir/$$"
+    if [ $? != 0 ]; then
+	return $OCF_ERR_ARGS
+    fi
+    rm "$state_dir/$$"
+
+    return $OCF_SUCCESS
+}
+
+: ${OCF_RESKEY_state=${HA_RSCTMP}/Osr-${OCF_RESOURCE_INSTANCE}.state}
+: ${OCF_RESKEY_fake="osr"}
+
+case $__OCF_ACTION in
+meta-data)	meta_data
+		exit $OCF_SUCCESS
+		;;
+start)		osr_start
+		/usr/local/bin/vip_won
+		;;
+stop)		osr_stop
+		/usr/local/bin/vip_lost
+		;;
+monitor)	osr_monitor;;
+migrate_to)	ocf_log info "Migrating ${OCF_RESOURCE_INSTANCE} to ${OCF_RESKEY_CRM_meta_migrate_target}."
+	        osr_stop
+		;;
+migrate_from)	ocf_log info "Migrating ${OCF_RESOURCE_INSTANCE} from ${OCF_RESKEY_CRM_meta_migrate_source}."
+	        osr_start
+		;;
+reload)		ocf_log info "Reloading ${OCF_RESOURCE_INSTANCE} ..."
+		;;
+validate-all)	osr_validate;;
+usage|help)	osr_usage
+		exit $OCF_SUCCESS
+		;;
+*)		osr_usage
+		exit $OCF_ERR_UNIMPLEMENTED
+		;;
+esac
+rc=$?
+ocf_log debug "${OCF_RESOURCE_INSTANCE} $__OCF_ACTION : $rc"
+exit $rc

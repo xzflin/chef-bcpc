@@ -1,0 +1,13 @@
+property stonith-enabled=false
+primitive management_vip ocf:heartbeat:IPaddr2 \
+        params ip="<%=node['bcpc']['management']['vip']%>" cidr_netmask="<%=node['bcpc']['management']['cidr'].split('/')[1] %>" \
+        nic="<%=node['bcpc']['management']['interface']%>" \
+        op monitor interval="20s"
+primitive floating_vip ocf:heartbeat:IPaddr2 \
+    params ip="<%=node['bcpc']['floating']['vip']%>" cidr_netmask="<%=node['bcpc']['floating']['cidr'].split('/')[1] %>" \
+        nic="<%=node['bcpc']['floating']['interface']%>" \
+        op monitor interval="20s"
+primitive openstack_reload ocf:heartbeat:Osr \
+        op start timeout="90" interval="0" \
+        op stop timeout="90" interval="0"
+group cluster_vips management_vip floating_vip openstack_reload
