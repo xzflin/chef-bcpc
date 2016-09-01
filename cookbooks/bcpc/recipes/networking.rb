@@ -69,6 +69,21 @@ bash "enable-8021q" do
     not_if "grep -e '^8021q' /etc/modules"
 end
 
+# needed for kernel 3.18+
+bash "enable-br_netfilter" do
+    user "root"
+    code <<-EOH
+        modprobe br_netfilter
+        sed --in-place '/^br_netfilter/d' /etc/modules
+        echo 'br_netfilter' >> /etc/modules
+    EOH
+    only_if do
+      mod_present_cmd = Mixlib::ShellOut.new('modinfo br_netfilter').run_command
+      grep_cmd = Mixlib::ShellOut.new("grep -e '^br_netfilter' /etc/modules").run_command
+      !mod_present_cmd.error? && grep_cmd.error? && !node['bcpc']['monitoring']['provider']
+    end
+end
+
 directory "/etc/network/interfaces.d" do
     owner "root"
     group "root"
