@@ -11,7 +11,8 @@ default['bcpc']['monitoring']['vip'] = "10.17.1.16"
 # List of monitoring clients external to cluster that we are monitoring
 default['bcpc']['monitoring']['external_clients'] = []
 # Monitoring database settings
-default['bcpc']['monitoring']['mysql']['innodb_buffer_pool_size'] = nil
+default['bcpc']['monitoring']['mysql']['innodb_buffer_pool_size'] = '128M'
+default['bcpc']['monitoring']['mysql']['innodb_buffer_pool_instances'] = 1
 # Pagerduty integration
 default['bcpc']['monitoring']['pagerduty']['enabled'] = false
 # Pagerduty service key
