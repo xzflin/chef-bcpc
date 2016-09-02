@@ -67,7 +67,8 @@ template "/etc/mysql/conf.d/wsrep.cnf" do
         :wsrep_port => 4577,
         :galera_user_key => "mysql-monitoring-galera-user",
         :galera_pass_key => "mysql-monitoring-galera-password",
-        :innodb_buffer_pool_size => node['bcpc']['monitoring']['mysql']['innodb_buffer_pool_size']
+        :innodb_buffer_pool_size => node['bcpc']['monitoring']['mysql']['innodb_buffer_pool_size'],
+        :innodb_buffer_pool_instances => node['bcpc']['monitoring']['mysql']['innodb_buffer_pool_instances']
     )
     notifies :restart, "service[mysql]", :immediately
 end

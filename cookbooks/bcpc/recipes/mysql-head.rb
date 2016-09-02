@@ -70,7 +70,9 @@ template "/etc/mysql/conf.d/wsrep.cnf" do
         :wsrep_cluster_name => node['bcpc']['region_name'],
         :wsrep_port => 4567,
         :galera_user_key => "mysql-galera-user",
-        :galera_pass_key => "mysql-galera-password"
+        :galera_pass_key => "mysql-galera-password",
+        :innodb_buffer_pool_size => node['bcpc']['mysql-head']['innodb_buffer_pool_size'],
+        :innodb_buffer_pool_instances => node['bcpc']['mysql-head']['innodb_buffer_pool_instances']
     )
     notifies :restart, "service[mysql]", :immediately
 end

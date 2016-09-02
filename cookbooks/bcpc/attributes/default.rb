@@ -432,6 +432,10 @@ default['bcpc']['routemon']['numfixes'] = 0
 # If set to 0, max_connections for MySQL on heads will default to an
 # auto-calculated value.
 default['bcpc']['mysql-head']['max_connections'] = 0
+# for pools larger than 1GB, it is recommended to divide it into multiple
+# pools of at least 1GB in size each
+default['bcpc']['mysql-head']['innodb_buffer_pool_instances'] = 1
+default['bcpc']['mysql-head']['innodb_buffer_pool_size'] = '128M'
 
 ###########################################
 #
