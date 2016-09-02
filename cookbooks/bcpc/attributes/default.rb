@@ -323,6 +323,10 @@ default['bcpc']['ldap']['config'] = {}
 default['bcpc']['nova']['ram_allocation_ratio'] = 1.0
 default['bcpc']['nova']['reserved_host_memory_mb'] = 1024
 default['bcpc']['nova']['cpu_allocation_ratio'] = 2.0
+# CPU passthrough/masking configurations
+default['bcpc']['nova']['cpu_config']['cpu_mode'] = nil
+default['bcpc']['nova']['cpu_config']['cpu_model'] = nil
+default['bcpc']['nova']['cpu_config']['vcpu_pin_set'] = nil
 # select from between this many equally optimal hosts when launching an instance
 default['bcpc']['nova']['scheduler_host_subset_size'] = 3
 # maximum number of builds to allow the scheduler to run simultaneously
@@ -344,7 +348,7 @@ default['bcpc']['nova']['debug'] = false
 # Nova default log levels
 default['bcpc']['nova']['default_log_levels'] = nil
 # Nova scheduler default filters
-default['bcpc']['nova']['scheduler_default_filters'] = ['AggregateInstanceExtraSpecsFilter', 'RetryFilter', 'AvailabilityZoneFilter', 'RamFilter', 'ComputeFilter', 'ComputeCapabilitiesFilter', 'ImagePropertiesFilter', 'ServerGroupAntiAffinityFilter', 'ServerGroupAffinityFilter']
+default['bcpc']['nova']['scheduler_default_filters'] = ['AggregateInstanceExtraSpecsFilter', 'RetryFilter', 'AvailabilityZoneFilter', 'RamFilter', 'ComputeFilter', 'ComputeCapabilitiesFilter', 'NUMATopologyFilter', 'ImagePropertiesFilter', 'ServerGroupAntiAffinityFilter', 'ServerGroupAffinityFilter']
 
 # configure optional Nova notification system
 default['bcpc']['nova']['notifications']['enabled'] = false

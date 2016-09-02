@@ -19,6 +19,12 @@
 include_recipe "bcpc::ceph-work"
 include_recipe "bcpc::nova-common"
 
+# see https://specs.openstack.org/openstack/nova-specs/specs/juno/implemented/virt-driver-numa-placement.html
+# for information about NUMA in OpenStack
+package 'numactl' do
+  action :upgrade
+end
+
 package "nova-compute-#{node['bcpc']['virt_type']}" do
   action :upgrade
   notifies :restart, 'service[nova-compute]', :immediately
