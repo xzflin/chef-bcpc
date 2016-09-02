@@ -92,6 +92,9 @@ use_cow_images=True
 #snapshot_image_format=qcow2
 sync_power_state_interval=<%= node['bcpc']['nova']['sync_power_state_interval'] %>
 resume_guests_state_on_host_boot=<%= node['bcpc']['nova']['resume_guests_state_on_host_boot'] %>
+<% if node['bcpc']['nova']['cpu_config']['vcpu_pin_set'] %>
+vcpu_pin_set = <%= node['bcpc']['nova']['cpu_config']['vcpu_pin_set'] %>
+<% end %>
 
 # Nova Volume settings
 volume_api_class=nova.volume.cinder.API
@@ -222,6 +225,12 @@ live_migration_flag="VIR_MIGRATE_UNDEFINE_SOURCE,VIR_MIGRATE_PEER2PEER,VIR_MIGRA
 virt_type=<%=node['bcpc']['virt_type']%>
 use_virtio_for_bridges=True
 hw_disk_discard = unmap
+<% if node['bcpc']['nova']['cpu_config']['cpu_mode'] %>
+cpu_mode = <%= node['bcpc']['nova']['cpu_config']['cpu_mode'] %>
+<% end %>
+<% if node['bcpc']['nova']['cpu_config']['cpu_model'] %>
+cpu_model = <%= node['bcpc']['nova']['cpu_config']['cpu_model'] %>
+<% end %>
 
 <% unless node["bcpc"]["vendordata_config"].nil? %>
 [metadata]
