@@ -9,7 +9,7 @@
 verbose = <%= node['bcpc']['glance']['verbose'] %>
 
 # Show debugging output in logs (sets DEBUG log level output)
-#debug = False
+debug = <%= node['bcpc']['glance']['debug'] %>
 
 # Address to bind the registry server
 bind_host = <%=node['bcpc']['management']['ip']%>
