@@ -9,7 +9,7 @@
 verbose = <%= node['bcpc']['glance']['verbose'] %>
 
 # Show debugging output in logs (sets DEBUG log level output)
-#debug = False
+debug = <%= node['bcpc']['glance']['debug'] %>
 
 # Log to this file. Make sure you do not set the same log file for both the API
 # and registry servers!

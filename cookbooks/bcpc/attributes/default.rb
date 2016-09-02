@@ -402,6 +402,7 @@ default['bcpc']['cinder']['quota'] = {
 ###########################################
 # Verbose logging (level INFO)
 default['bcpc']['glance']['verbose'] = false
+default['bcpc']['glance']['debug'] = false
 default['bcpc']['glance']['workers'] = 5
 
 ###########################################
