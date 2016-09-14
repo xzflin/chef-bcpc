@@ -256,6 +256,7 @@ if node['bcpc']['enabled']['dns'] then
       :floating_vip        => node['bcpc']['floating']['vip'],
       :management_vip      => node['bcpc']['management']['vip'],
       :monitoring_vip      => node['bcpc']['monitoring']['vip'],
+      :storage_vip         => node['bcpc']['storage']['vip'],
       :reverse_fixed_zone  => (node['bcpc']['fixed']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['fixed']['cidr'])),
       :reverse_float_zone  => (node['bcpc']['floating']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['floating']['cidr'])),
       :management_zone     => calc_reverse_dns_zone(node['bcpc']['management']['cidr'])

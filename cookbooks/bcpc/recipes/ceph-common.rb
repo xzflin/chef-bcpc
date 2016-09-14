@@ -35,7 +35,7 @@ bash "remove-old-ceph-key" do
 end
 
 if platform?("debian", "ubuntu")
-    include_recipe "bcpc::networking"
+    include_recipe "bcpc::networking-prereqs"
 end
 
 %w{librados2 librbd1 libcephfs1 python-ceph ceph ceph-common ceph-fs-common ceph-mds ceph-fuse}.each do |pkg|

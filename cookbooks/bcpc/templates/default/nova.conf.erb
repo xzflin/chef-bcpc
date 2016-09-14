@@ -21,7 +21,9 @@ api_paste_config=/etc/nova/api-paste.ini
 s3_host=<%=node['bcpc']['management']['vip']%>
 osapi_compute_listen=<%= node['bcpc']['management']['ip'] %>
 osapi_compute_workers=<%=node['bcpc']['nova']['workers']%>
-metadata_listen=169.254.169.254
+#metadata_listen=169.254.169.254
+#metadata_listen=<%= node['bcpc']['management']['ip'] %>
+metadata_listen=127.0.0.1
 metadata_host=169.254.169.254
 metadata_workers=<%=node['bcpc']['nova']['workers']%>
 dmz_cidr=169.254.169.254/32
@@ -57,32 +59,6 @@ cpu_allocation_ratio=<%=node['bcpc']['nova']['cpu_allocation_ratio']%>
 scheduler_host_subset_size=<%= node['bcpc']['nova']['scheduler_host_subset_size'] %>
 max_concurrent_builds=<%= node['bcpc']['nova']['max_concurrent_builds'] %>
 
-# Nova Network settings
-network_manager=nova.network.manager.VlanManager
-firewall_driver=nova.virt.libvirt.firewall.IptablesFirewallDriver
-allow_same_net_traffic=False
-public_interface=<%=node['bcpc']['floating']['interface']%>
-vlan_interface=<%=node['bcpc']['fixed']['vlan_interface']%>
-vlan_start=<%=node['bcpc']['fixed']['vlan_start']%>
-multi_host=True
-fixed_range=<%=node['bcpc']['fixed']['cidr']%>
-floating_range=<%=node['bcpc']['floating']['cidr']%>
-network_size=<%=node['bcpc']['fixed']['network_size']%>
-flat_network_dns=<%=node['bcpc']['management']['vip']%>
-dhcpbridge_flagfile=/etc/nova/nova.conf
-dhcpbridge=/usr/bin/nova-dhcpbridge
-force_dhcp_release=False
-share_dhcp_address=True
-teardown_unused_network_gateway=True
-fixed_ip_disassociate_timeout=30
-dhcp_lease_time=<%=node['bcpc']['fixed']['dhcp_lease_time']%>
-send_arp_for_ha=True
-my_ip=<%=node['bcpc']['management']['ip']%>
-routing_source_ip=<%=node['bcpc']['floating']['ip']%>
-dhcp_domain=<%=node['bcpc']['cluster_domain']%>
-default_availability_zone=
-default_floating_pool = <%= node['bcpc']['region_name'] %>
-
 # Nova Compute settings
 compute_driver=libvirt.LibvirtDriver
 <% unless is_kilo? %>
@@ -95,9 +71,20 @@ resume_guests_state_on_host_boot=<%= node['bcpc']['nova']['resume_guests_state_o
 <% if node['bcpc']['nova']['cpu_config']['vcpu_pin_set'] %>
 vcpu_pin_set = <%= node['bcpc']['nova']['cpu_config']['vcpu_pin_set'] %>
 <% end %>
+#start_guests_on_host_boot=True
 
 # Nova Volume settings
 volume_api_class=nova.volume.cinder.API
+
+# Nova VNC settings
+ssl_only=false
+key=/etc/nova/ssl-bcpc.key
+cert=/etc/nova/ssl-bcpc.pem
+novnc_enabled=True
+novncproxy_base_url=https://openstack.<%=node['bcpc']['cluster_domain']%>:6080/vnc_auto.html
+vncserver_proxyclient_address=<%=node['bcpc']['management']['ip']%>
+novncproxy_host=<%=node['bcpc']['management']['ip']%>
+vncserver_listen=<%=node['bcpc']['management']['ip']%>
 
 # Glance settings
 image_service=nova.image.glance.GlanceImageService
@@ -135,25 +122,49 @@ quota_<%=key%> = <%= value %>
 max_age = 28800
 until_refresh = 10
 
-# Nova VNC settings
-<%# Liberty and beyond uses a separate [vnc] section for some options %>
-novncproxy_host=<%=node['bcpc']['management']['ip']%>
-<% unless is_kilo? %>
-[vnc]
-enabled=True
+# Networking settings
+network_manager=nova.network.manager.VlanManager
+# firewall_driver=nova.virt.libvirt.firewall.IptablesFirewallDriver
+firewall_driver=nova.virt.firewall.NoopFirewallDriver
+security_group_api = neutron
+allow_same_net_traffic=False
+public_interface=<%=node['bcpc']['floating']['interface']%>
+vlan_interface=<%=node['bcpc']['fixed']['vlan_interface']%>
+vlan_start=<%=node['bcpc']['fixed']['vlan_start']%>
+multi_host=True
+fixed_range=<%=node['bcpc']['fixed']['cidr']%>
+floating_range=<%=node['bcpc']['floating']['cidr']%>
+network_size=<%=node['bcpc']['fixed']['network_size']%>
+flat_network_dns=<%=node['bcpc']['management']['vip']%>
+dhcpbridge_flagfile=/etc/nova/nova.conf
+dhcpbridge=/usr/bin/nova-dhcpbridge
+force_dhcp_release=False
+share_dhcp_address=True
+teardown_unused_network_gateway=True
+fixed_ip_disassociate_timeout=30
+dhcp_lease_time=<%=node['bcpc']['fixed']['dhcp_lease_time']%>
+send_arp_for_ha=True
+my_ip=<%=node['bcpc']['management']['ip']%>
+routing_source_ip=<%=node['bcpc']['floating']['ip']%>
+dhcp_domain=<%=node['bcpc']['cluster_domain']%>
+default_availability_zone=
+
+<% if node['bcpc']['enabled']['neutron'] %>
+network_api_class = nova.network.neutronv2.api.API
+# linuxnet_interface_driver = nova.network.linux_net.NeutronLinuxBridgeInterfaceDriver
+vif_plugging_is_fatal = False
+vif_plugging_timeout = 0
+
+[neutron]
+url = <%= node['bcpc']['protocol']['neutron'] %>://openstack.<%= node['bcpc']['cluster_domain'] %>:9696
+admin_tenant_name = <%= node['bcpc']['admin_tenant'] %>
+auth_strategy = keystone
+admin_auth_url = <%= node['bcpc']['protocol']['keystone'] %>://openstack.<%= node['bcpc']['cluster_domain'] %>:35357/v2.0/
+admin_username = <%= get_config('keystone-admin-user') %>
+admin_password = <%= get_config('keystone-admin-password') %>
 <% else %>
-novnc_enabled=True
+network_api_class = nova.network.api.API
 <% end %>
-ssl_only=false
-key=/etc/nova/ssl-bcpc.key
-cert=/etc/nova/ssl-bcpc.pem
-<% if node['bcpc']['vnc']['proxy_use_vip'] %>
-novncproxy_base_url=https://<%=node['bcpc']['management']['vip']%>:6080/vnc_auto.html
-<% else %>
-novncproxy_base_url=https://openstack.<%=node['bcpc']['cluster_domain']%>:6080/vnc_auto.html
-<% end %>
-vncserver_proxyclient_address=<%=node['bcpc']['management']['ip']%>
-vncserver_listen=<%=node['bcpc']['management']['ip']%>
 
 [oslo_concurrency]
 lock_path=/var/lock/nova

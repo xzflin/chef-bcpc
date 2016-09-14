@@ -49,7 +49,7 @@ export BOOTSTRAP_CHEF_ENV=Test-Laptop-Vagrant
 # default setup of VM1 being a head node and VM2/3 being work nodes, you do not need
 # to change this. If you want a different setup (e.g., 3 head nodes), set this to 0 to
 # tell *_configure_chef.sh to not run the final convergence step.
-export BOOTSTRAP_CHEF_DO_CONVERGE=1
+export BOOTSTRAP_CHEF_DO_CONVERGE=0
 
 # Set servers to be used as an HTTP/HTTPS proxy. Provide without scheme (no http/https).
 export BOOTSTRAP_HTTP_PROXY=

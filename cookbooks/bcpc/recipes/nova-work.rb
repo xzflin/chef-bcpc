@@ -31,7 +31,12 @@ package "nova-compute-#{node['bcpc']['virt_type']}" do
   notifies :run, 'bash[clean-old-pyc-files]', :immediately
 end
 
-%w{nova-api nova-network nova-compute nova-novncproxy}.each do |pkg|
+nova_service_list = %w{nova-api nova-compute nova-novncproxy}
+unless node['bcpc']['enabled']['neutron']
+  nova_service_list += ['nova-network']
+end
+
+nova_service_list.each do |pkg|
     package pkg do
         action :upgrade
         notifies :run, 'bash[clean-old-pyc-files]', :immediately
@@ -213,37 +218,6 @@ file "/usr/local/bin/nova-service-restart-wrapper" do
   action :delete
 end
 
-# patch Nova metadata for our hostname format (ip-x-x-x-x and public-x-x-x-x)
-bcpc_patch 'nova-api-metadata-base-kilo' do
-  patch_file           'nova-api-metadata-base.patch'
-  patch_root_dir       '/usr/lib/python2.7/dist-packages'
-  shasums_before_apply 'nova-api-metadata-base-kilo-BEFORE.SHASUMS'
-  shasums_after_apply  'nova-api-metadata-base-kilo-AFTER.SHASUMS'
-  notifies :restart, 'service[nova-api]', :immediately
-  only_if "dpkg --compare-versions $(dpkg -s python-nova | egrep '^Version:' | awk '{ print $NF }') lt 2:0"
-end
-
-# two different sets of checksums for Liberty (12.0.0 has one, 12.0.1+ another)
-# NOTE: SHASUM for base.py in Git is _different_ from package (somebody moved a line
-# in the packaged version)
-bcpc_patch 'nova-api-metadata-base-liberty-12.0.0' do
-  patch_file           'nova-api-metadata-base.patch'
-  patch_root_dir       '/usr/lib/python2.7/dist-packages'
-  shasums_before_apply 'nova-api-metadata-base-liberty-12.0.0-BEFORE.SHASUMS'
-  shasums_after_apply  'nova-api-metadata-base-liberty-12.0.0-AFTER.SHASUMS'
-  notifies :restart, 'service[nova-api]', :immediately
-  only_if "dpkg --compare-versions $(dpkg -s python-nova | egrep '^Version:' | awk '{ print $NF }') eq 2:12.0.0-0ubuntu1~cloud0"
-end
-
-bcpc_patch 'nova-api-metadata-base-liberty-12.0.1-plus' do
-  patch_file           'nova-api-metadata-base.patch'
-  patch_root_dir       '/usr/lib/python2.7/dist-packages'
-  shasums_before_apply 'nova-api-metadata-base-liberty-12.0.1-plus-BEFORE.SHASUMS'
-  shasums_after_apply  'nova-api-metadata-base-liberty-12.0.1-plus-AFTER.SHASUMS'
-  notifies :restart, 'service[nova-api]', :immediately
-  only_if "dpkg --compare-versions $(dpkg -s python-nova | egrep '^Version:' | awk '{ print $NF }') ge 2:12.0.1-0ubuntu1~cloud0"
-end
-
 # Remove patch files used by older patching resource
 file "/usr/lib/python2.7/dist-packages/nova/network/linux_net.py.prepatch" do
   action :delete
@@ -253,6 +227,15 @@ file "/usr/lib/python2.7/dist-packages/nova_network_linux_net.patch" do
   action :delete
 end
 
+unless node['bcpc']['enabled']['neutron']
+
+bcpc_patch 'nova-api-metadata-base' do
+  patch_file           'nova-api-metadata-base.patch'
+  patch_root_dir       '/usr/lib/python2.7/dist-packages'
+  shasums_before_apply 'nova-api-metadata-base-BEFORE.SHASUMS'
+  shasums_after_apply  'nova-api-metadata-base-AFTER.SHASUMS'
+  notifies :restart, 'service[nova-api]', :immediately
+end
 # This patches nova-network to have dnsmasq bind to the tenant's bridged
 # interface, so unicast DHCP replies are correctly responded to.
 # This presumes linux_net.py has the BCPC hostnames patch applied by an
@@ -314,4 +297,5 @@ bcpc_patch "nova-virt-libvirt-imagebackend-12.0.4" do
   shasums_after_apply  'nova-virt-libvirt-imagebackend-AFTER.SHASUMS'
   notifies :restart, 'service[nova-compute]', :immediately
   only_if "dpkg --compare-versions $(dpkg -s python-nova | egrep '^Version:' | awk '{ print $NF }') ge 2:12.0.4-0ubuntu1~cloud1 && dpkg --compare-versions $(dpkg -s python-nova | egrep '^Version:' | awk '{ print $NF }') lt 2:13.0.0"
+end
 end

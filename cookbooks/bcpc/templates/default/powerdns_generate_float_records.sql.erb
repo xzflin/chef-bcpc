@@ -10,13 +10,9 @@ INSERT INTO <%=@database_name%>.records (domain_id, name, type, content, bcpc_re
 -- then the temporary table is cleaned up
 CREATE TEMPORARY TABLE soa_records_to_delete_<%=get_config('powerdns-update-timestamp')%> (id int);
 <% [@cluster_domain, @reverse_float_zone, @reverse_fixed_zone, @management_zone].each do |zone| %>
-
--- delete malformed NS record where the content is the management VIP instead of cluster domain
-DELETE FROM <%= @database_name %>.records WHERE type='NS' and content='<%= @management_vip %>';
-
 INSERT INTO <%=@database_name%>.records (domain_id, name, type, content, bcpc_record_type) VALUES
-    ((SELECT id FROM <%=@database_name%>.domains WHERE name='<%=zone%>'), '<%=zone%>', 'NS', '<%= @cluster_domain %>', 'STATIC')
-    ON DUPLICATE KEY UPDATE domain_id=(SELECT id FROM <%=@database_name%>.domains WHERE name='<%=zone%>'), name='<%=zone%>', type='NS', content='<%= @cluster_domain %>', bcpc_record_type='STATIC';
+    ((SELECT id FROM <%=@database_name%>.domains WHERE name='<%=zone%>'), '<%=zone%>', 'NS', '<%=@management_vip%>', 'STATIC')
+    ON DUPLICATE KEY UPDATE domain_id=(SELECT id FROM <%=@database_name%>.domains WHERE name='<%=zone%>'), name='<%=zone%>', type='NS', content='<%=@management_vip%>', bcpc_record_type='STATIC';
 
 INSERT INTO <%=@database_name%>.records (domain_id, name, type, content, bcpc_record_type) VALUES
     ((SELECT id FROM <%=@database_name%>.domains WHERE name='<%=zone%>'), '<%=zone%>', 'SOA', '<%=@cluster_domain%> root.<%=@cluster_domain%> <%=get_config('powerdns-update-timestamp')%>', 'static')
@@ -66,8 +62,8 @@ INSERT INTO <%=@database_name%>.records (domain_id, name, type, content, bcpc_re
     ON DUPLICATE KEY UPDATE domain_id=(SELECT id FROM domains WHERE name='<%=@cluster_domain%>'), name='kibana.<%=@cluster_domain%>', type='A', content='<%=@monitoring_vip%>', bcpc_record_type='STATIC';
 -- insert A record and CNAME for object storage
 INSERT INTO <%=@database_name%>.records (domain_id, name, type, content, bcpc_record_type) VALUES
-    ((SELECT id FROM domains WHERE name='<%=@cluster_domain%>'), 's3.<%=@cluster_domain%>', 'A', '<%=@floating_vip%>', 'STATIC')
-    ON DUPLICATE KEY UPDATE domain_id=(SELECT id FROM domains WHERE name='<%=@cluster_domain%>'), name='s3.<%=@cluster_domain%>', type='A', content='<%=@floating_vip%>', bcpc_record_type='STATIC';
+    ((SELECT id FROM domains WHERE name='<%=@cluster_domain%>'), 's3.<%=@cluster_domain%>', 'A', '<%= @storage_vip %>', 'STATIC')
+    ON DUPLICATE KEY UPDATE domain_id=(SELECT id FROM domains WHERE name='<%=@cluster_domain%>'), name='s3.<%=@cluster_domain%>', type='A', content='<%=@storage_vip%>', bcpc_record_type='STATIC';
 INSERT INTO <%=@database_name%>.records (domain_id, name, type, content, bcpc_record_type) VALUES
     ((SELECT id FROM domains WHERE name='<%=@cluster_domain%>'), '*.s3.<%=@cluster_domain%>', 'CNAME', 's3.<%=@cluster_domain%>', 'STATIC')
     ON DUPLICATE KEY UPDATE domain_id=(SELECT id FROM domains WHERE name='<%=@cluster_domain%>'), name='*.s3.<%=@cluster_domain%>', type='CNAME', content='s3.<%=@cluster_domain%>', bcpc_record_type='STATIC';

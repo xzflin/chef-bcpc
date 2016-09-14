@@ -4,7 +4,7 @@
     "run_list": [
       "role[Basic]",
       "recipe[bcpc]",
-      "recipe[bcpc::networking]",
+      "recipe[bcpc::networking-prereqs]",
       "recipe[bcpc::networking-link-test]",
       "recipe[bcpc::networking-gw-test]",
       "recipe[bcpc::networking-route-test]",
@@ -19,7 +19,9 @@
       "recipe[bcpc::checks-work]",
       "recipe[bcpc::zabbix-agent]",
       "recipe[bcpc::host-aggregates]",
-      "recipe[bcpc::kilo-to-liberty-upgrade-cleanup]"
+      "recipe[bcpc::kilo-to-liberty-upgrade-cleanup]",
+      "recipe[bcpc::bird]",
+      "recipe[bcpc::calico-compute]"
     ],
     "description": "Run list for a general compute function. Building block, not designed as an applied role.",
     "chef_type": "role"

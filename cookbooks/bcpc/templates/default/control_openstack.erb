@@ -23,6 +23,7 @@ for i in apache2 \
          nova-cert \
          nova-conductor \
          nova-consoleauth \
+         neutron-server \
          nova-scheduler
 do
     service $i $1
@@ -34,7 +35,7 @@ echo "################################"
 echo "# WORK NODE SERVICES"
 for i in nova-api \
          nova-compute \
-         nova-network \
+         calico-dhcp-agent \
          nova-novncproxy
 do
     service $i $1

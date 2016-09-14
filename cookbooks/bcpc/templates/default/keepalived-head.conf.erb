@@ -65,10 +65,10 @@ vrrp_instance VI2_<%=node['bcpc']['region_name']%> {
   state     BACKUP
   nopreempt
 
-  interface <%= node['bcpc']['floating']['interface'] %>
+  interface <%= node['bcpc']['storage']['interface'] %>
 
   virtual_ipaddress {
-    <%="#{node['bcpc']['floating']['vip']}/#{(node['bcpc']['floating']['cidr'].match /\d+\.\d+\.\d+\.\d+\/(\d+)/)[1].to_i}"%>
+    <%="#{node['bcpc']['storage']['vip']}/#{(node['bcpc']['storage']['cidr'].match /\d+\.\d+\.\d+\.\d+\/(\d+)/)[1].to_i}"%>
   }
   authentication {
     auth_type PASS

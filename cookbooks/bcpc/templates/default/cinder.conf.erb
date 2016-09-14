@@ -18,7 +18,7 @@ auth_strategy = keystone
 state_path = /var/lib/cinder
 logdir=/var/log/cinder
 # v1 API is being removed in Liberty
-enable_v1_api=<%= is_kilo? %>
+enable_v1_api=true
 enable_v2_api=true
 
 # Bind to mgt IP only
