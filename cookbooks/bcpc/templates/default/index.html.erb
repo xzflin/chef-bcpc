@@ -42,7 +42,7 @@
 
 		<h2><%= node['bcpc']['region_name'] %> - openstack.<%= node['bcpc']['cluster_domain'] %> (<%= node['bcpc']['management']['vip'] %>)</h2>
 		<p class="version">BCPC cookbook <%= @cookbook_version %> (<%= node['bcpc']['openstack_release'] %>-<%= node['bcpc']['openstack_branch'] %>)</p>
-		
+
 		<h3>Web Interfaces</h3>
         <table>
             <tr>
@@ -77,7 +77,7 @@
             </tr>
             <tr>
                 <td><em>Graphite</em></td>
-                <td><a href="https://<%= node['bcpc']['graphite']['fqdn'] %>">https://<%= node['bcpc']['graphite']['fqdn'] %></a></td>    
+                <td><a href="https://<%= node['bcpc']['graphite']['fqdn'] %>">https://<%= node['bcpc']['graphite']['fqdn'] %></a></td>
                 <td><a href="https://<%= node['bcpc']['monitoring']['vip'] %>:8888">https://<%= node['bcpc']['monitoring']['vip'] %>:8888</a></td>
             </tr>
             <tr>
@@ -93,51 +93,14 @@
         </table>
 
 		<h3>API Endpoints</h3>
-		<em>While other API versions may be available for a given endpoint, only the ones listed here are supported for tenant use. Unlisted API versions may change or go away without notice.</em>
-		<br/>
-		<table>
-		    <tr>
-		        <th>Resource</th>
-		        <th>URL</th>
-		        <th>IP-based URL (deprecated)</th>
-		    <tr>
-		    <tr>
-		        <td><em>Keystone API</em></td>
-		        <td><a href="<%= node['bcpc']['protocol']['keystone'] %>://openstack.<%= node['bcpc']['cluster_domain'] %>:5000/v2.0"><%= node['bcpc']['protocol']['keystone'] %>://openstack.<%= node['bcpc']['cluster_domain'] %>:5000/v2.0</a></td>
-		        <td><a href="<%= node['bcpc']['protocol']['keystone'] %>://<%= node['bcpc']['management']['vip'] %>:5000/v2.0"><%= node['bcpc']['protocol']['keystone'] %>://<%= node['bcpc']['management']['vip'] %>:5000/v2.0</a></td>
-		    </tr>
-		    <tr>
-		        <td><em>Keystone Admin API</em></td>
-		        <td><a href="<%= node['bcpc']['protocol']['keystone'] %>://openstack.<%= node['bcpc']['cluster_domain'] %>:35357/v2.0"><%= node['bcpc']['protocol']['keystone'] %>://openstack.<%= node['bcpc']['cluster_domain'] %>:35357/v2.0</a></td>
-		        <td><a href="<%= node['bcpc']['protocol']['keystone'] %>://<%= node['bcpc']['management']['vip'] %>:35357/v2.0"><%= node['bcpc']['protocol']['keystone'] %>://<%= node['bcpc']['management']['vip'] %>:35357/v2.0</a></td>
-		    </tr>
-            <tr>
-                <td><em>Nova API</em></td>
-                <td><a href="<%= node['bcpc']['protocol']['nova'] %>://openstack.<%= node['bcpc']['cluster_domain'] %>:8774/v1.1"><%= node['bcpc']['protocol']['nova'] %>://openstack.<%= node['bcpc']['cluster_domain'] %>:8774/v1.1</a></td>
-                <td><a href="<%= node['bcpc']['protocol']['nova'] %>://<%= node['bcpc']['management']['vip'] %>:8774/v1.1"><%= node['bcpc']['protocol']['nova'] %>://<%= node['bcpc']['management']['vip'] %>:8774/v1.1</a></td>
-            </tr>
-            <tr>
-                <td><em>Glance API</em></td>
-                <td><a href="<%= node['bcpc']['protocol']['glance'] %>://openstack.<%= node['bcpc']['cluster_domain'] %>:9292/v2"><%= node['bcpc']['protocol']['glance'] %>://openstack.<%= node['bcpc']['cluster_domain'] %>:9292/v2</a></td>
-                <td><a href="<%= node['bcpc']['protocol']['glance'] %>://<%= node['bcpc']['management']['vip'] %>:9292/v2"><%= node['bcpc']['protocol']['glance'] %>://<%= node['bcpc']['management']['vip'] %>:9292/v2</a></td>
-            </tr>
-            <tr>
-                <td><em>Cinder API</em></td>
-                <td><a href="<%= node['bcpc']['protocol']['cinder'] %>://openstack.<%= node['bcpc']['cluster_domain'] %>:8776/v1"><%= node['bcpc']['protocol']['cinder'] %>://openstack.<%= node['bcpc']['cluster_domain'] %>:8776/v1</a></td>
-                <td><a href="<%= node['bcpc']['protocol']['cinder'] %>://<%= node['bcpc']['management']['vip'] %>:8776/v1"><%= node['bcpc']['protocol']['cinder'] %>://<%= node['bcpc']['management']['vip'] %>:8776/v1</a></td>
-            </tr>
-            <tr>
-                <td><em>EC2 API</em></td>
-                <td><a href="<%= node['bcpc']['protocol']['nova'] %>://openstack.<%= node['bcpc']['cluster_domain'] %>:8773/services/Cloud"><%= node['bcpc']['protocol']['nova'] %>://openstack.<%= node['bcpc']['cluster_domain'] %>:8773/services/Cloud</a></td>
-                <td><a href="<%= node['bcpc']['protocol']['nova'] %>://<%= node['bcpc']['management']['vip'] %>:8773/services/Cloud"><%= node['bcpc']['protocol']['nova'] %>://<%= node['bcpc']['management']['vip'] %>:8773/services/Cloud</a></td>
-            </tr>
-		</table>
+
+    <p>For API endpoint information, please consult the Service Endpoint list in OpenStack Horizon under <strong>Project > Compute > Access & Security > API Access</strong>.
 
 		<h3>SSL Certificate</h3>
         <code>
             <%= get_config('ssl-certificate').gsub(/\n/, '<br/>') %>
         </code>
-        
+
         <% if node['bcpc']['ssl_intermediate_certificate'] %>
         <h3>SSL CA certificate</h3>
         <code>
