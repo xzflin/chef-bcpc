@@ -26,14 +26,15 @@ dd if=/dev/zero of=$d bs=4M count=16 || echo "Write to $d failed" \
 done
 d-i     partman-auto/disk string /dev/sda
 d-i     partman-auto/method string regular
-d-i     partman-auto/expert_recipe string root :: 5000 100000 10000000000 ext4 \
-$primary{ } $bootable{ } method{ format } \
-format{ } use_filesystem{ } filesystem{ ext4 } \
-mountpoint{ / } \
-. \
-8192 8192 8192 linux-swap \
-$primary{ } method{ swap } format{ } \
-.
+d-i     partman-auto/expert_recipe string root :: \
+                1 1 1 free method{ biosgrub } . \
+                5000 100000 10000000000 ext4 \
+                $primary{ } $bootable{ } method{ format } \
+                format{ } use_filesystem{ } filesystem{ ext4 } \
+                mountpoint{ / } \
+                . \
+                8192 8192 8192 linux-swap \
+                $primary{ } method{ swap } format{ } \
 d-i     partman-auto/choose_recipe select root
 d-i     partman-partitioning/confirm_write_new_label boolean true
 d-i     partman/choose_partition select Finish partitioning and write changes to disk
