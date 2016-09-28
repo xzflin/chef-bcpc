@@ -206,7 +206,7 @@ ruby_block 'add-fernet-keys-to-data-bag' do
         if config_defined("keystone-fernet-key-#{idx}")
           need_to_add_keys << (key_on_disk != get_config("keystone-fernet-key-#{idx}"))
         else
-          true
+          need_to_add_keys << true
         end
       end
     end
