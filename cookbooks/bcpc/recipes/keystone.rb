@@ -108,6 +108,9 @@ ruby_block 'write-out-fernet-keys-from-data-bag' do
         if config_defined("keystone-fernet-key-#{idx}")
           need_to_write_keys << (key_on_disk != get_config("keystone-fernet-key-#{idx}"))
         end
+      else
+        # key does not exist on disk, ensure that it is written out
+        need_to_write_keys << true
       end
     end
     need_to_write_keys.any?
