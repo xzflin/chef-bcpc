@@ -703,3 +703,11 @@ default['bcpc']['getty']['ttys'] = %w( ttyS0 ttyS1 )
 # VNC uses cluster domain name by default
 # for proxy base url. Set to 'true' to use vip
 default['bcpc']['vnc']['proxy_use_vip'] = false
+###########################################
+#
+#  Bootstrap tftpd settings
+#
+###########################################
+#
+# Address and port to listen
+default['bcpc']['tftpd']['address'] = ':69'

@@ -121,6 +121,15 @@ node['bcpc']['cobbler']['profiles'].each do |profile, profile_attrs|
   end
 end
 
+template '/etc/default/tftpd-hpa' do
+  source 'etc_default_tftpd-hpa.erb'
+  mode 00644
+  variables(
+    :address => node['bcpc']['tftpd']['address']
+  )
+  notifies :restart, 'service[tftpd-hpa]', :delayed
+end
+
 service "isc-dhcp-server" do
     action [:enable, :start]
 end
@@ -132,4 +141,8 @@ end
 bash "run-cobbler-sync" do
   code "cobbler sync"
   action :nothing
+end
+
+service 'tftpd-hpa' do
+  action [:enable, :start]
 end
