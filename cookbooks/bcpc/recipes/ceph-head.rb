@@ -46,7 +46,7 @@ end
 
 ruby_block "add-ceph-mon-hints" do
     block do
-        get_head_nodes.each do |server|
+        get_ceph_mon_nodes.each do |server|
             system "ceph --admin-daemon /var/run/ceph/ceph-mon.#{node['hostname']}.asok " +
                 "add_bootstrap_peer_hint #{server['bcpc']['storage']['ip']}:6789"
         end
@@ -54,7 +54,7 @@ ruby_block "add-ceph-mon-hints" do
     # not_if checks to see if all head node IPs are in the mon list
     not_if {
       mon_list = %x[ceph mon stat]
-      get_head_nodes.collect{ |x| x['bcpc']['storage']['ip'] }.map{ |ip| mon_list.include? ip }.uniq == [true]
+      get_ceph_mon_nodes.collect{ |x| x['bcpc']['storage']['ip'] }.map{ |ip| mon_list.include? ip }.uniq == [true]
     }
 end
 
@@ -203,7 +203,7 @@ end
 
 # Commented out 'data' and 'metadata' since the number of pools can impact pgs
 # data metadata - removed from loop below - After firefly data and metadata are no longer default pools
-if get_head_nodes.length == 1; then
+if get_ceph_mon_nodes.length == 1
     rule = (node['bcpc']['ceph']['default']['type'] == "ssd") ? node['bcpc']['ceph']['ssd']['ruleset'] : node['bcpc']['ceph']['hdd']['ruleset']
     ["rbd"].each do |pool|
         bash "move-#{pool}-rados-pool" do
@@ -290,5 +290,3 @@ ruby_block "store-glance-ceph-key" do
   end
   only_if { File.exist?('/etc/ceph/ceph.client.glance.keyring') and ((config_defined('glance-ceph-key') and (get_config('glance-ceph-key') != `ceph auth get-key client.glance`)) or (not config_defined('glance-ceph-key'))) }
 end
-
-include_recipe "bcpc::ceph-osd"

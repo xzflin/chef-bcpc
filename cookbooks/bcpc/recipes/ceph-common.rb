@@ -69,7 +69,7 @@ end
 template '/etc/ceph/ceph.conf' do
     source 'ceph.conf.erb'
     mode '0644'
-    variables(:servers => get_head_nodes)
+    variables(:servers => get_ceph_mon_nodes)
 end
 
 directory "/var/run/ceph/" do

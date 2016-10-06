@@ -170,7 +170,26 @@ def get_ceph_osd_nodes
         'roles' => ['roles']
       }
     }
-    results = search(:node, "recipes:bcpc\\:\\:ceph-osd AND chef_environment:#{node.chef_environment}", filter)
+    results = search(:node, "roles:BCPC-CephOSDNode AND chef_environment:#{node.chef_environment}", filter)
+    if results.any? { |x| x['hostname'] == node['hostname'] }
+        results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
+    else
+        results.push(node)
+    end
+    return results.sort! { |a, b| a['hostname'] <=> b['hostname'] }
+end
+
+def get_ceph_mon_nodes
+    filter = {
+      :filter_result => {
+        'ipaddress' => ['ipaddress'],
+        'hostname' => ['hostname'],
+        'fqdn' => ['fqdn'],
+        'bcpc' => ['bcpc'],
+        'roles' => ['roles']
+      }
+    }
+    results = search(:node, "roles:BCPC-CephMonitorNode AND chef_environment:#{node.chef_environment}", filter)
     if results.any? { |x| x['hostname'] == node['hostname'] }
         results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
     else
@@ -189,7 +208,7 @@ def get_head_nodes
         'roles' => ['roles']
       }
     }
-    results = search(:node, "role:BCPC-Headnode AND chef_environment:#{node.chef_environment}", filter)
+    results = search(:node, "roles:BCPC-Headnode AND chef_environment:#{node.chef_environment}", filter)
     results.map! { |x| x['hostname'] == node['hostname'] ? node : x }
     if not results.include?(node) and node.run_list.roles.include?('BCPC-Headnode')
         results.push(node)

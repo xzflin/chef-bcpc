@@ -1,0 +1,11 @@
+{
+  "chef_type": "role",
+  "default_attributes": {},
+  "description": "Ceph monitor node in a BCPC cluster",
+  "json_class": "Chef::Role",
+  "name": "BCPC-CephMonitorNode",
+  "run_list": [
+    "role[BCPC-Base]",
+    "recipe[bcpc::ceph-head]"
+  ]
+}

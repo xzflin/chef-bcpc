@@ -1,0 +1,10 @@
+{
+  "chef_type": "role",
+  "description": "Node that provides Ceph OSDs to a cluster",
+  "json_class": "Chef::Role",
+  "name": "BCPC-CephOSDNode",
+  "run_list": [
+    "role[BCPC-Base]",
+    "recipe[bcpc::ceph-osd]"
+  ]
+}
