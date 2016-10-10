@@ -4,6 +4,8 @@ set -e
 
 # set a flag to tell shared_functions.sh how to SSH to machines
 export BOOTSTRAP_METHOD=vagrant
+# build a converged cluster by default
+export CLUSTER_TYPE=converged
 
 echo " ____   ____ ____   ____ "
 echo "| __ ) / ___|  _ \ / ___|"
@@ -15,14 +17,23 @@ echo "BCPC Vagrant BootstrapV2 0.2"
 echo "--------------------------------------------"
 echo "Bootstrapping local Vagrant environment..."
 
-while getopts "v" opt; do
+
+while getopts "vs" opt; do
   case $opt in
     # verbose
     v)
       set -x
       ;;
+    # build a storage cluster instead of converged
+    s)
+      export CLUSTER_TYPE=storage
+      ;;
   esac
 done
+
+echo
+echo "Building a BCPC cluster of type $CLUSTER_TYPE"
+echo
 
 # Source common bootstrap functions. This is the only place that uses a
 # relative path; everything henceforth must use $REPO_ROOT.
@@ -54,9 +65,11 @@ $REPO_ROOT/bootstrap/vagrant_scripts/vagrant_create.sh
 
 # Install and configure Chef on all Vagrant hosts.
 echo "Installing and configuring Chef on all nodes..."
-$REPO_ROOT/bootstrap/shared/shared_configure_chef.sh
+$REPO_ROOT/bootstrap/shared/shared_configure_chef.sh $CLUSTER_TYPE
 
-# Dump out useful information for users.
-$REPO_ROOT/bootstrap/vagrant_scripts/vagrant_print_useful_info.sh
+# Dump out OpenStack information for users if a converged cluster
+if [[ $CLUSTER_TYPE == 'converged' ]]; then
+  $REPO_ROOT/bootstrap/vagrant_scripts/vagrant_print_useful_info.sh
+fi
 
 echo "Finished in $SECONDS seconds"

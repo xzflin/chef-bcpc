@@ -100,10 +100,17 @@ done
 ENVIRONMENT_SET="$ENVIRONMENT_SET :"
 do_on_node vm-bootstrap $ENVIRONMENT_SET
 
-do_on_node vm-bootstrap "$KNIFE node run_list set bcpc-vm-bootstrap.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Hardware-Virtual],role[BCPC-Bootstrap]' \
-  && $KNIFE node run_list set bcpc-vm1.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Hardware-Virtual],role[BCPC-Headnode]' \
-  && $KNIFE node run_list set bcpc-vm2.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Hardware-Virtual],role[BCPC-Worknode]' \
-  && $KNIFE node run_list set bcpc-vm3.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Hardware-Virtual],role[BCPC-EphemeralWorknode]'"
+if [[ $CLUSTER_TYPE == 'converged' ]]; then
+  do_on_node vm-bootstrap "$KNIFE node run_list set bcpc-vm-bootstrap.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Hardware-Virtual],role[BCPC-Bootstrap]' \
+    && $KNIFE node run_list set bcpc-vm1.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Hardware-Virtual],role[BCPC-Headnode]' \
+    && $KNIFE node run_list set bcpc-vm2.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Hardware-Virtual],role[BCPC-Worknode]' \
+    && $KNIFE node run_list set bcpc-vm3.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Hardware-Virtual],role[BCPC-EphemeralWorknode]'"
+elif [[ $CLUSTER_TYPE = 'storage' ]]; then
+  do_on_node vm-bootstrap "$KNIFE node run_list set bcpc-vm-bootstrap.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Hardware-Virtual],role[BCPC-Bootstrap]' \
+    && $KNIFE node run_list set bcpc-vm1.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Hardware-Virtual],role[BCPC-CephMonitorNode]' \
+    && $KNIFE node run_list set bcpc-vm2.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Hardware-Virtual],role[BCPC-CephOSDNode]' \
+    && $KNIFE node run_list set bcpc-vm3.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Hardware-Virtual],role[BCPC-CephOSDNode]'"
+fi
 
 # set bootstrap, vm1 and mon vms (if any) as admins so that they can write into the data bag
 ADMIN_SET="true && "
@@ -130,10 +137,12 @@ else
   done
   # run on head node one last time to update HAProxy with work node IPs
   do_on_node vm1 "sudo chef-client"
-  # HUP OpenStack services on each node to ensure everything's in a working state
-  for vm in $vms; do
-    do_on_node $vm "sudo hup_openstack || true"
-  done
+  # HUP OpenStack services on each node to ensure everything's in a working state if converged
+  if [[ $CLUSTER_TYPE == 'converged' ]]; then
+    for vm in $vms; do
+      do_on_node $vm "sudo hup_openstack || true"
+    done
+  fi
   # Run chef on each mon VM before assigning next node for monitoring.
   for vm in $mon_vms; do
     do_on_node vm-bootstrap "$KNIFE node run_list set bcpc-$vm.$BCPC_HYPERVISOR_DOMAIN 'role[BCPC-Monitoring]'"
