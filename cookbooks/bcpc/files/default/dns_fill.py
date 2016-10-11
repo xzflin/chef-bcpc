@@ -8,7 +8,6 @@ then creates a CNAME record to point to the public-X.X.X.X username
 
 """
 import keystoneclient
-from keystoneclient.v2_0 import client as kclient
 from keystoneclient import exceptions as kc_exceptions
 import MySQLdb as mdb
 import re
@@ -18,12 +17,22 @@ import syslog
 class dns_popper(object):
     def __init__(self, config):
         self.config = config
-        self.keystone = kclient.Client(
-            username=config["OS_USERNAME"],
-            password=config["OS_PASSWORD"],
-            tenant_name=config["OS_TENANT_NAME"],
-            auth_url=config["OS_AUTH_URL"],
-            insecure=True)
+        self.api_version = config["IDENTITY_URI"]
+        auth_params = {
+            'username': config['OS_USERNAME'],
+            'password': config['OS_PASSWORD'],
+            'insecure': True
+        }
+        auth_params['auth_url'] = config['OS_AUTH_URL'] + \
+            "/%s/" % self.api_version
+        if self.api_version == 'v2.0':
+            from keystoneclient.v2_0 import client as kclient
+            auth_params['tenant_name'] = config['OS_PROJECT_NAME']
+        else:
+            from keystoneclient.v3 import client as kclient
+            auth_params['project_name'] = config['OS_PROJECT_NAME']
+        self.keystone = kclient.Client(**auth_params)
+
         dbc = self.config["db"]
         self.db_con = mdb.connect(
             dbc["host"], dbc["user"], dbc["password"], db=dbc["name"])
@@ -61,21 +70,20 @@ class dns_popper(object):
         for server in servers:
             project_id = server[2]
             try:
-                tenant = self.keystone.tenants.get(project_id)
-            except kc_exceptions.NotFound:
-                syslog.syslog(
-                    syslog.LOG_NOTICE,
-                    "Non-existent project %s: " % tid +
-                    "Check that %s is not attached to orphaned instance." %
-                    add["addr"])
+                if self.api_version == 'v2.0':
+                    project = self.keystone.tenants.get(project_id)
+                else:
+                    project = self.keystone.projects.get(project_id)
+            except kc_exceptions.NotFound as e:
+                syslog.syslog(syslog.LOG_NOTICE, e.args[0])
                 continue
 
-            tname = make_rfc1123_compliant(tenant.name)
+            pname = make_rfc1123_compliant(project.name)
             sname = make_rfc1123_compliant(server[1])
             address = server[3]
 
             dnsname = str(
-                ("%s.%s.%s" % (sname,  tname, self.config["domain"])).lower())
+                ("%s.%s.%s" % (sname,  pname, self.config["domain"])).lower())
             rc.append(
                 (dnsname,
                  "CNAME",
