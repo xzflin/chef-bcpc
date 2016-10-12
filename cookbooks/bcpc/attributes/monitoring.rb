@@ -18,6 +18,11 @@ default['bcpc']['monitoring']['mysql']['innodb_io_capacity'] = 200
 default['bcpc']['monitoring']['mysql']['innodb_log_buffer_size'] = '8M'
 default['bcpc']['monitoring']['mysql']['innodb_flush_method'] = 'O_DIRECT'
 default['bcpc']['monitoring']['mysql']['wsrep_slave_threads'] = 4
+# slow query log settings
+default['bcpc']['monitoring']['mysql']['slow_query_log'] = true
+default['bcpc']['monitoring']['mysql']['slow_query_log_file'] = '/var/log/mysql/slow.log'
+default['bcpc']['monitoring']['mysql']['long_query_time'] = 10
+default['bcpc']['monitoring']['mysql']['log_queries_not_using_indexes'] = false
 # Pagerduty integration
 default['bcpc']['monitoring']['pagerduty']['enabled'] = false
 # Pagerduty service key
