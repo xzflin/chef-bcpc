@@ -101,3 +101,13 @@ template '/etc/logrotate.d/mysql_slow_query' do
   )
 end
 
+
+template '/usr/local/bin/mysql_slow_query_check.sh' do
+  source 'mysql_slow_query_check.sh.erb'
+  mode  '00755'
+  owner 'root'
+  group 'root'
+  variables(
+    slow_query_log_file: node['bcpc']['mysql-head']['slow_query_log_file']
+  )
+end
