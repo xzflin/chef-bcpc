@@ -55,7 +55,15 @@ action :create do
 
   if status.success?
     ha_fields = JSON.parse(stdout)
-    current_properties = ha_fields.select {|x| x['Field'] == "properties"}[0]["Value"]
+    current_properties = if is_mitaka?
+      # in Mitaka properties are expressed as a string for some reason, e.g.
+      # "ephemeral_compute='no', general_compute='yes', maintenance='no'"
+      ha_fields['properties'].split(', ').each_with_object({}) do |x, memo|
+        memo[x.split('=')[0]] = x.split('=')[1].gsub(/'/,'')
+      end
+    else
+      ha_fields.select {|x| x['Field'] == "properties"}[0]["Value"]
+    end
 
     # update metadata if needed
     new_properties = current_properties.clone
@@ -87,7 +95,11 @@ action :member do
   raise "Unable to find host aggregate #{@new_resource.name}" unless status.success?
 
   ha_fields = JSON.parse(stdout)
-  current_hosts = ha_fields.select {|x| x['Field'] == "hosts"}[0]["Value"]
+  current_hosts = if is_mitaka?
+    ha_fields['hosts']
+  else
+    ha_fields.select {|x| x['Field'] == "hosts"}[0]["Value"]
+  end
 
   unless current_hosts.include?(hostname)
     converge_by ("Adding host") do
@@ -105,7 +117,11 @@ action :depart do
   raise "Unable to find host aggregate #{@new_resource.name}" unless status.success?
 
   ha_fields = JSON.parse(stdout)
-  current_hosts = ha_fields.select {|x| x['Field'] == "hosts"}[0]["Value"]
+  current_hosts = if is_mitaka?
+    ha_fields['hosts']
+  else
+    ha_fields.select {|x| x['Field'] == "hosts"}[0]["Value"]
+  end
   if current_hosts.include?(hostname)
     converge_by ("Removing host") do
       stdout, stderr, status = Open3.capture3(*(openstack_cli +

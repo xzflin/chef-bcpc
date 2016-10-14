@@ -65,7 +65,11 @@ action :create do
   args = openstack_cli
   stdout, stderr, status = Open3.capture3(*(args+ ["flavor", "show", @new_resource.name, "-f", "json"] ))
   if status.success?
-    flavor_info = openstack_json_to_hash(JSON.parse(stdout))
+    flavor_info = if is_mitaka?
+      JSON.parse(stdout)
+    else
+      openstack_json_to_hash(JSON.parse(stdout))
+    end
     # mapping of resource attribute names to flavor attributes
     {
       'disk' => :disk_gb,
