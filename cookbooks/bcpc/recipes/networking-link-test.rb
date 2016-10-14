@@ -29,12 +29,12 @@ if node['bcpc']['enabled']['network_tests'] then
             get_all_nodes.each do |host|
                 if (
                     not othernodes.include? host and (
-                        host.roles.include? "BCPC-Worknode" or
-                        host.roles.include? "BCPC-Headnode"
+                        host['roles'].include? "BCPC-Worknode" or
+                        host['roles'].include? "BCPC-Headnode"
                     ) and
                     host['hostname'] != node['hostname']
                 ) then
-                    Chef::Log.info("Found a peer : #{host.hostname}")
+                    Chef::Log.info("Found a peer: #{host['hostname']}")
                     othernodes.push host
                     float_addr.push host['bcpc']['floating']['ip']
                     storage_addr.push host['bcpc']['storage']['ip']
