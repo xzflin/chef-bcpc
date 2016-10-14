@@ -113,3 +113,14 @@ template "/usr/local/bin/chk_mysql_quorum" do
     owner "root"
     group "root"
 end
+
+
+template '/usr/local/bin/mysql_slow_query_check.sh' do
+  source 'mysql_slow_query_check.sh.erb'
+  mode  '00755'
+  owner 'root'
+  group 'root'
+  variables(
+    slow_query_log_file: node['bcpc']['monitoring']['mysql']['slow_query_log_file']
+  )
+end
