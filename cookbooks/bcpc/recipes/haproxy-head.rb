@@ -28,7 +28,7 @@ concat_fragment "haproxy-main-config" do
     lazy {
       {
         :servers => get_head_nodes,
-        :all_servers => get_ceph_osd_nodes
+        :radosgw_servers => get_ceph_osd_nodes
       }
     }
   )
