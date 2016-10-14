@@ -79,7 +79,10 @@ if node['bcpc']['enabled']['metrics'] then
         owner "diamond"
         group "root"
         mode 00600
-        variables(:servers => get_head_nodes)
+        variables(
+          :servers  => get_head_nodes,
+          :handlers => node['bcpc']['diamond']['handlers']
+        )
         notifies :restart, "service[diamond]", :delayed
     end
 
