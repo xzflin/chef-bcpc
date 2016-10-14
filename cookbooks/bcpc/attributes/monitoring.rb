@@ -8,6 +8,10 @@
 default['bcpc']['monitoring']['provider'] = false
 # VIP for monitoring services and agents
 default['bcpc']['monitoring']['vip'] = "10.17.1.16"
+# CIDR of monitoring endpoints outside of cluster.
+default['bcpc']['monitoring']['cidrs'] = ['10.17.1.0/24']
+# Agent TCP ports that monitoring servers need to reach
+default['bcpc']['monitoring']['agent_tcp_ports'] = [10050]
 # List of monitoring clients external to cluster that we are monitoring
 default['bcpc']['monitoring']['external_clients'] = []
 # Monitoring database settings
@@ -62,6 +66,15 @@ default['bcpc']['graphite']['use_whitelist'] = {
 #
 ###########################################
 #
+# Handlers
+default['bcpc']['diamond']['handlers'] = {
+  'diamond.handler.graphitepickle.GraphitePickleHandler' => {
+    'host' => node['bcpc']['monitoring']['vip'],
+    'port' => 2014,
+    'batch' => 512,
+    'timeout' => 15
+  }
+}
 # CPU Collector parameters
 default['bcpc']['diamond']['collectors']['CPU']['normalize'] = 'True'
 default['bcpc']['diamond']['collectors']['CPU']['percore'] = 'False'
