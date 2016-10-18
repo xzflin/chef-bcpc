@@ -39,9 +39,9 @@ template "/etc/bird/bird.conf" do
       :servers => get_all_nodes
     }
   })
-  # notifies :restart, "service[bird]", :immediately
+  notifies :restart, "service[bird]", :immediately
 end
 
-bash "restart-bird" do
-   code "service bird restart"
+service "bird" do
+    action [:enable, :start]
 end
