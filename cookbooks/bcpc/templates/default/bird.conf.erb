@@ -43,7 +43,7 @@ protocol device {
 
 protocol direct {
    debug all;
-   interface "-dummy0", "dummy1", "eth*", "em*", "en*", "br-mgmt";
+   interface "-dummy0", "dummy1", "eth*", "em*", "en*", "br-mgmt", "<%=node['bcpc']['management']['interface']%>";
 }
 
 <% @servers.each do |server| -%>

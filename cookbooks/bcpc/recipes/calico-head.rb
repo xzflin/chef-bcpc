@@ -17,8 +17,6 @@
 # limitations under the License.
 #
 
-# include_recipe "bird" instead of explicit inclusion in run-list???
-
 apt_repository "calico" do
   uri node['bcpc']['repos']['calico']
   distribution node['lsb']['codename']
@@ -27,7 +25,7 @@ apt_repository "calico" do
   notifies :run, "execute[apt-get update]", :immediately
 end
 
-# install etcd (this comes from calico repo!)
+# installs etcd from calico repo
 package "etcd" do
     action :upgrade
 end
@@ -36,32 +34,44 @@ package "python-etcd" do
     action :upgrade
 end
 
-# stop etcd while we create a tmpfs datadir and write proper config
 service "etcd" do
-    action [:enable, :stop]
+    action [:enable]
 end
 
-# TODO: HACK
 bash "etcd-data-dir" do
   user 'root'
   code <<-EOH
        service etcd stop
        sleep 5
-       rm -rf /var/lib/etcd/*
        mount -t tmpfs -o size=512m tmpfs /var/lib/etcd
        egrep '^tmpfs /var/lib/etcd' /etc/fstab || echo 'tmpfs /var/lib/etcd tmpfs nodev,nosuid,noexec,nodiratime,size=512M 0 0' >> /etc/fstab
   EOH
-  # not_if "grep '/var/lib/etcd' /etc/fstab"
+  not_if "mount | egrep '^tmpfs on /var/lib/etcd type tmpfs'"
+end
+
+ruby_block 'add-self-to-etcd-cluster' do
+  block do
+      if get_head_nodes.length > 1
+          headnodes = get_head_nodes
+          headnodes.delete(node)
+          random_etcd_member = get_shuffled_servers(headnodes)[0]
+          Mixlib::ShellOut.new("curl -X POST http://#{random_etcd_member['bcpc']['management']['ip']}:2379/v2/members -H \"Content-Type: application/json\" -d '{ \"peerURLs\" : [\"http://#{node['bcpc']['management']['ip']}:2380\"] }'").run_command.error!
+      end
+  end
 end
 
 # /etc/init/etcd.conf
-# pass head_nodes => get_head_nodes
 # and check for node['hostname']
 template "/etc/init/etcd.conf" do
     source "etcd.conf.erb"
     owner "root"
     group "root"
     mode 00644
+    variables( lazy {
+            {
+                :members => get_head_nodes
+            }
+    })
     notifies :start, "service[etcd]", :immediately
 end
 
@@ -96,11 +106,15 @@ package "jq" do
     action :upgrade
 end
 
+# TODO:
+# we need to create an external (float) network
+# internal network, a router (with correct ports assignment for floats to work)
+
 # create sample networks for testing
-bash "create-calico-net" do
-    code "source /root/adminrc; neutron net-create --shared --provider:network_type local calico_int_net"
-    not_if "source /root/adminrc; neutron net-list -f json | jq '.[] | .name' | grep '\"calico_int_net\"'"
-end
+#bash "create-calico-net" do
+#    code "source /root/adminrc; neutron net-create --shared --provider:network_type local calico_int_net"
+#    not_if "source /root/adminrc; neutron net-list -f json | jq '.[] | .name' | grep '\"calico_int_net\"'"
+#end
 
 #bash "create-calico-subnet" do
 #    code "source /root/adminrc; neutron subnet-create --name calico_int_subnet --allocation-pool start=192.168.100.30,end=192.168.100.50  calico_int_net 192.168.100.0/25"

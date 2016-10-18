@@ -25,7 +25,7 @@ apt_repository "calico" do
   notifies :run, "execute[apt-get update]", :immediately
 end
 
-# install etcd from calico repo
+# installs etcd from calico repo
 package "etcd" do
     action :upgrade
 end
@@ -34,21 +34,19 @@ package "python-etcd" do
     action :upgrade
 end
 
-# stop etcd while we create a tmpfs datadir and write proper config
 service "etcd" do
-    action [:enable, :stop]
+    action [:enable]
 end
 
-# TODO: make sure we need this
 bash "etcd-data-dir" do
+  user 'root'
   code <<-EOH
        service etcd stop
        sleep 5
-       rm -rf /var/lib/etcd/*
        mount -t tmpfs -o size=512m tmpfs /var/lib/etcd
-       egrep '^tmpfs /var/lib/etcd ' /etc/fstab || echo 'tmpfs /var/lib/etcd tmpfs nodev,nosuid,noexec,nodiratime,size=512M 0 0' >> /etc/fstab
+       egrep '^tmpfs /var/lib/etcd' /etc/fstab || echo 'tmpfs /var/lib/etcd tmpfs nodev,nosuid,noexec,nodiratime,size=512M 0 0' >> /etc/fstab
   EOH
-  # not_if "grep '/var/lib/etcd' /etc/fstab"
+  not_if "mount | egrep '^tmpfs on /var/lib/etcd type tmpfs'"
 end
 
 template "/etc/init/etcd.conf" do
@@ -56,6 +54,11 @@ template "/etc/init/etcd.conf" do
     owner "root"
     group "root"
     mode 00644
+    variables( lazy {
+            {
+                :members => get_head_nodes
+            }
+    })
     notifies :start, "service[etcd]", :immediately
 end
 
@@ -73,19 +76,15 @@ package "dnsmasq-utils" do
     action :upgrade
 end
 
-# might need to do this:
-#sudo service neutron-dhcp-agent stop
-#echo manual | sudo tee /etc/init/neutron-dhcp-agent.override
-
 bash "disable-neutron-dhcp-agent" do
     code "echo manual | tee /etc/init/neutron-dhcp-agent.override"
 end
 
 # service neutron-dhcp-agent stop
-bash "stop-neutron-dhcp-agent" do
-   code "service neutron-dhcp-agent stop"
-   ignore_failure true
-end
+#bash "stop-neutron-dhcp-agent" do
+#   code "service neutron-dhcp-agent stop"
+#   ignore_failure true
+#end
 
 package "calico-dhcp-agent" do
     action :upgrade

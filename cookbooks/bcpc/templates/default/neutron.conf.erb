@@ -64,7 +64,7 @@ bind_host = <%= node['bcpc']['management']['ip'] %>
 # entrypoint name.
 #
 
-core_plugin = ml2
+core_plugin = calico
 # Example: core_plugin = ml2
 
 # (ListOpt) List of service plugin entrypoints to be loaded from the
@@ -74,7 +74,7 @@ core_plugin = ml2
 # of its entrypoint name.
 #
 
-service_plugins = router,firewall
+service_plugins = 
 # Example: service_plugins = router,firewall,lbaas,vpnaas,metering
 
 # Paste configuration file

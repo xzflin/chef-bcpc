@@ -17,6 +17,8 @@
 # limitations under the License.
 #
 
+# TODO: disable bird ipv6
+
 apt_repository "bird" do
   uri node['bcpc']['repos']['bird']
   distribution node['lsb']['codename']
@@ -34,8 +36,7 @@ template "/etc/bird/bird.conf" do
   mode 00644
   variables(lazy {
     {
-      :servers => get_all_nodes,
-      :headnodes => get_head_nodes
+      :servers => get_all_nodes
     }
   })
   # notifies :restart, "service[bird]", :immediately
