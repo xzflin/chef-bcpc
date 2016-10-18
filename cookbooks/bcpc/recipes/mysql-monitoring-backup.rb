@@ -28,3 +28,16 @@ ruby_block "initial-mysql-monitoring-backup-config" do
       %x[MYSQL_PWD=#{get_config('mysql-monitoring-root-password')} mysql -N --batch -uroot -e 'SELECT count(user) from mysql.user where user=\"#{get_config('mysql-backup-user')}\";'].to_i < 1
     }
 end
+
+# needed to disable/enable slow query logging
+ruby_block "give-mysql-backup-user-super-privileges" do
+    block do
+        %x[ export MYSQL_PWD=#{get_config('mysql-monitoring-root-password')};
+            mysql -u root -e "GRANT SUPER ON *.* TO '#{get_config('mysql-backup-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-backup-password')}';"
+            mysql -u root -e "FLUSH PRIVILEGES;"
+        ]
+    end
+    only_if {
+      %x[MYSQL_PWD=#{get_config('mysql-monitoring-root-password')} mysql -N --batch -uroot -e 'SELECT count(user) from mysql.user where user=\"#{get_config('mysql-backup-user')}\" AND super_priv = "Y";'].to_i < 1
+    }
+end
