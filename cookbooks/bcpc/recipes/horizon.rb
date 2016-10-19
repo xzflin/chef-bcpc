@@ -178,7 +178,7 @@ template "/usr/share/openstack-dashboard/openstack_dashboard/conf/nova_policy.js
     variables(:policy => JSON.pretty_generate(node['bcpc']['nova']['policy']))
 end
 
-# Horizon does not have a database in Liberty
+# Horizon does not have a database in Liberty and beyond
 if is_kilo?
   ruby_block "horizon-database-creation" do
       block do
@@ -219,6 +219,7 @@ end
 
 # we must patch the API access view to include the settings object so that
 # API versions are accessible, if set explicitly in the Horizon config
+# (only needed in Liberty, Mitaka has separate download links for each file)
 bcpc_patch 'horizon-openrc-api-versions-liberty' do
   patch_file           'horizon-openrc-api-versions.patch'
   patch_root_dir       '/usr/share/openstack-dashboard'
@@ -227,16 +228,6 @@ bcpc_patch 'horizon-openrc-api-versions-liberty' do
   notifies :reload, 'service[apache2]', :immediately
   only_if "dpkg --compare-versions $(dpkg -s openstack-dashboard | egrep '^Version:' | awk '{ print $NF }') ge 2:0 && dpkg --compare-versions $(dpkg -s openstack-dashboard | egrep '^Version:' | awk '{ print $NF }') lt 2:9"
 end
-
-# TODO FOR MITAKA
-# bcpc_patch 'horizon-openrc-api-versions' do
-#   patch_file           'horizon-openrc-api-versions.patch'
-#   patch_root_dir       '/usr/share/openstack-dashboard'
-#   shasums_before_apply 'horizon-openrc-api-versions-BEFORE.SHASUMS'
-#   shasums_after_apply  'horizon-openrc-api-versions-AFTER.SHASUMS'
-#   notifies :reload, 'service[apache2]', :immediately
-#   only_if "dpkg --compare-versions $(dpkg -s openstack-dashboard | egrep '^Version:' | awk '{ print $NF }') ge 2:0 && dpkg --compare-versions $(dpkg -s openstack-dashboard | egrep '^Version:' | awk '{ print $NF }') lt 2:9"
-# end
 
 # fix upstream bug 1593751 - broken LDAP groups in Horizon
 bcpc_patch 'horizon-ldap-groups-liberty' do
@@ -248,25 +239,16 @@ bcpc_patch 'horizon-ldap-groups-liberty' do
   only_if "dpkg --compare-versions $(dpkg -s openstack-dashboard | egrep '^Version:' | awk '{ print $NF }') ge 2:0 && dpkg --compare-versions $(dpkg -s openstack-dashboard | egrep '^Version:' | awk '{ print $NF }') lt 2:9"
 end
 
-# TODO FOR MITAKA
-# bcpc_patch 'horizon-ldap-groups-liberty' do
-#   patch_file           'horizon-ldap-groups.patch'
-#   patch_root_dir       '/usr/share/openstack-dashboard'
-#   shasums_before_apply 'horizon-ldap-groups-BEFORE.SHASUMS'
-#   shasums_after_apply  'horizon-ldap-groups-AFTER.SHASUMS'
-#   notifies :reload, 'service[apache2]', :delayed
-#   only_if "dpkg --compare-versions $(dpkg -s openstack-dashboard | egrep '^Version:' | awk '{ print $NF }') ge 2:0 && dpkg --compare-versions $(dpkg -s openstack-dashboard | egrep '^Version:' | awk '{ print $NF }') lt 2:9"
-# end
-
-
 # update openrc.sh template to provide additional environment variables and user domain
+# for Liberty - for Mitaka, restore the original file
 openrc_path = ::File.join(
   '/usr', 'share', 'openstack-dashboard', 'openstack_dashboard',
   'dashboards', 'project', 'access_and_security', 'templates',
   'access_and_security', 'api_access', 'openrc.sh.template')
 cookbook_file openrc_path do
-  source 'horizon.openrc.sh.template'
+  source "horizon.#{node['bcpc']['openstack_release']}.openrc.sh.template"
   owner  'root'
   group  'root'
   mode   00644
+  not_if { is_kilo? }
 end
