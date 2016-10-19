@@ -79,6 +79,12 @@ end
     end
 end
 
+# remove cliff-tablib from Mitaka and beyond because it collides with built-in formatters
+package 'cliff-tablib' do
+  action :remove
+  not_if { is_kilo? || is_liberty? }
+end
+
 %w{control_openstack hup_openstack logwatch}.each do |script|
     template "/usr/local/bin/#{script}" do
         source "#{script}.erb"
