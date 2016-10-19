@@ -41,6 +41,10 @@ package "nova-common" do
   notifies :run, 'bash[clean-old-pyc-files]', :immediately
 end
 
+package "qemu-system-common" do
+  action :upgrade
+end
+
 template "/etc/nova/nova.conf" do
     source "nova.conf.erb"
     owner "nova"

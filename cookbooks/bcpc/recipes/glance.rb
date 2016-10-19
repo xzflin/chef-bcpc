@@ -162,9 +162,7 @@ cookbook_file "/tmp/cirros-0.3.4-x86_64-disk.img" do
     mode 00444
 end
 
-package "qemu-utils" do
-    action :upgrade
-end
+package "qemu-utils"
 
 bash "glance-cirros-image" do
     user "root"
