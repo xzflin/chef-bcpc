@@ -20,11 +20,18 @@
 include_recipe "bcpc::default"
 include_recipe "bcpc::packages-openstack"
 
-# are we performing an upgrade from Kilo to Liberty?
-kilo_to_liberty_upgrade_check = Mixlib::ShellOut.new("dpkg --compare-versions $(dpkg -s python-nova | egrep '^Version:' | awk '{ print $NF }') lt 2:12.0.0")
-kilo_to_liberty_upgrade_check.run_command
-if !kilo_to_liberty_upgrade_check.error? && node['bcpc']['openstack_release'] == 'liberty'
-  file '/usr/local/etc/kilo_to_liberty_upgrade' do
+# are we performing an upgrade to Liberty/Mitaka?
+upgrade_check_version = \
+  if is_mitaka?
+    '2:13.0.0'
+  else
+    '2:12.0.0'
+  end
+
+upgrade_check = Mixlib::ShellOut.new("dpkg --compare-versions $(dpkg -s python-nova | egrep '^Version:' | awk '{ print $NF }') lt #{upgrade_check_version}")
+upgrade_check.run_command
+if !upgrade_check.error?
+  file '/usr/local/etc/openstack_upgrade' do
     notifies :run, 'bash[clean-old-pyc-files]', :immediately
   end
 end
@@ -34,13 +41,23 @@ bash 'clean-old-pyc-files' do
   action :nothing
 end
 
-# python-nova will be used as the canary package to determine whether at least
-# 2015.1.2 is being installed
+# python-nova is used as the canary package
+min_version = \
+  if is_kilo?
+    '1:2015.1.2'
+  elsif is_liberty?
+    '2:12.0.0'
+  elsif is_mitaka?
+    '2:13.1.1'
+  else
+    raise "You are attempting to install an unsupported OpenStack version."
+  end
+
 ruby_block 'evaluate-version-eligibility' do
   block do
-    minimum_nova_version = Mixlib::ShellOut.new("dpkg --compare-versions $(apt-cache show --no-all-versions python-nova | egrep '^Version:' | awk '{ print $NF }') ge 1:2015.1.2")
+    minimum_nova_version = Mixlib::ShellOut.new("dpkg --compare-versions $(apt-cache show --no-all-versions python-nova | egrep '^Version:' | awk '{ print $NF }') ge #{min_version}")
     cmd_result = minimum_nova_version.run_command
-    fail('You must install OpenStack Kilo 2015.1.2 or better. Earlier versions are not supported.') if cmd_result.error?
+    fail("You must install OpenStack #{node['bcpc']['openstack_release']} #{min_version} or better. Earlier versions are not supported.") if cmd_result.error?
   end
 end
 

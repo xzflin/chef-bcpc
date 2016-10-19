@@ -19,7 +19,7 @@
       "recipe[bcpc::checks-work]",
       "recipe[bcpc::zabbix-agent]",
       "recipe[bcpc::host-aggregates]",
-      "recipe[bcpc::kilo-to-liberty-upgrade-cleanup]"
+      "recipe[bcpc::openstack-upgrade-cleanup]"
     ],
     "description": "Run list for a general compute function. Building block, not designed as an applied role.",
     "chef_type": "role"

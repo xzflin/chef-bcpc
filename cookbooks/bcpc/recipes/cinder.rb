@@ -149,12 +149,12 @@ ruby_block "cinder-database-creation" do
     not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['cinder']}\"'|grep \"#{node['bcpc']['dbname']['cinder']}\" >/dev/null" }
 end
 
-ruby_block 'update-cinder-db-schema-for-liberty' do
+ruby_block 'update-cinder-db-schema-for-upgrade' do
   block do
     self.notifies :run, "bash[cinder-database-sync]", :immediately
     self.resolve_notification_references
   end
-  only_if { ::File.exist?('/usr/local/etc/kilo_to_liberty_upgrade') }
+  only_if { ::File.exist?('/usr/local/etc/openstack_upgrade') }
 end
 
 bash "cinder-database-sync" do

@@ -50,12 +50,13 @@ ruby_block "nova-api-database-creation" do
     only_if { !is_kilo? }
 end
 
-ruby_block 'update-nova-db-schema-for-liberty' do
+ruby_block 'update-nova-db-schemas' do
   block do
     self.notifies :run, "bash[nova-database-sync]", :immediately
+    self.notifies :run, "bash[nova-api-database-sync]", :immediately
     self.resolve_notification_references
   end
-  only_if { ::File.exist?('/usr/local/etc/kilo_to_liberty_upgrade') }
+  only_if { ::File.exist?('/usr/local/etc/openstack_upgrade') }
 end
 
 bash "nova-database-sync" do

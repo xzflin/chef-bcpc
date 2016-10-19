@@ -338,12 +338,12 @@ ruby_block "keystone-database-creation" do
     not_if { system "MYSQL_PWD=#{get_config('mysql-root-password')} mysql -uroot -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['dbname']['keystone']}\"'|grep \"#{node['bcpc']['dbname']['keystone']}\" >/dev/null" }
 end
 
-ruby_block 'update-keystone-db-schema-for-liberty' do
+ruby_block 'update-keystone-db-schema' do
   block do
     self.notifies :run, "bash[keystone-database-sync]", :immediately
     self.resolve_notification_references
   end
-  only_if { ::File.exist?('/usr/local/etc/kilo_to_liberty_upgrade') }
+  only_if { ::File.exist?('/usr/local/etc/openstack_upgrade') }
 end
 
 bash "keystone-database-sync" do

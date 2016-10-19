@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: bcpc
-# Recipe:: kilo-to-liberty-upgrade-cleanup
+# Recipe:: openstack-upgrade-cleanup
 #
 # Copyright 2016, Bloomberg Finance L.P.
 #
@@ -19,15 +19,15 @@
 
 bash 'clean-out-pyc-files-after-upgrade' do
   code 'find /usr/lib/python2.7/dist-packages -name \*.pyc -delete'
-  only_if { ::File.exist?('/usr/local/etc/kilo_to_liberty_upgrade') }
+  only_if { ::File.exist?('/usr/local/etc/openstack_upgrade') }
 end
 
 bash 'hup-openstack-after-upgrade' do
   code '/usr/local/bin/hup_openstack'
-  only_if { ::File.exist?('/usr/local/etc/kilo_to_liberty_upgrade') }
+  only_if { ::File.exist?('/usr/local/etc/openstack_upgrade') }
 end
 
-file 'cleanup-kilo_to_liberty_upgrade-lockfile' do
-  path '/usr/local/etc/kilo_to_liberty_upgrade'
+file 'cleanup-openstack_upgrade-lockfile' do
+  path '/usr/local/etc/openstack_upgrade'
   action :delete
 end
