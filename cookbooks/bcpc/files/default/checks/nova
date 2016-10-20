@@ -4,7 +4,7 @@ import syslog
 import socket
 import time
 import novaclient
-from novaclient.v1_1 import client
+from novaclient.v2 import client
 
 
 
@@ -16,7 +16,7 @@ class TestNovaCompute(object):
         self.client  = client.Client(config["user"], config["password"],
                                      config["tenant"], config["auth_url"],
                                      service_type="compute", insecure=True)
-    
+
 
         self.instance_name = "test2-" + socket.gethostname()
         if "timeout" not in self.config:
@@ -116,7 +116,7 @@ class TestNovaCompute(object):
         # Kill the server
         #
         self._delete_server(server)
-    
+
         return True, ""
 
 
@@ -134,7 +134,7 @@ if __name__ == '__main__':
             rc["result"]= "OKAY"
         else:
             rc["result"] = "FAIL"
-            
+
     except Exception as e:
         rc["result"] = "ERROR"
         rc["msg"]  = "%s : %s" %(str(type(e)), e.message)
