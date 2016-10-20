@@ -13,7 +13,7 @@
 [server]
 
 # Handlers for published metrics.
-handlers = diamond.handler.graphitepickle.GraphitePickleHandler
+handlers = <%= node['bcpc']['diamond']['handlers'].keys.sort.join(',') %>
 
 # User diamond will run as
 # Leave empty to use the current user
@@ -48,82 +48,16 @@ keys = rotated_file
 ### Defaults options for all Handlers
 [[default]]
 
-[[ArchiveHandler]]
-
-# File to write archive log files
-log_file = /var/log/diamond/archive.log
-
-# Number of days to keep archive log files
-days = 7
-
-[[GraphiteHandler]]
-### Options for GraphiteHandler
-
-# Graphite server host
-host = <%=node['bcpc']['monitoring']['vip']%>
-
-# Port to send metrics to
-port = 2013
-
-# Socket timeout (seconds)
-timeout = 15
-
-# Batch size for metrics
-batch = 512
-
-[[GraphitePickleHandler]]
-### Options for GraphitePickleHandler
-
-# Graphite server host
-host = <%=node['bcpc']['monitoring']['vip']%>
-
-# Port to send metrics to
-port = 2014
-
-# Socket timeout (seconds)
-timeout = 15
-
-# Batch size for pickled metrics
-batch = 512
-
-[[MySQLHandler]]
-### Options for MySQLHandler
-
-# MySQL Connection Info
-hostname    = 127.0.0.1
-port        = 3306
-username    = root
-password    =
-database    = diamond
-table       = metrics
-# INT UNSIGNED NOT NULL
-col_time    = timestamp
-# VARCHAR(255) NOT NULL
-col_metric  = metric
-# VARCHAR(255) NOT NULL
-col_value   = value
-
-[[StatsdHandler]]
-host = 127.0.0.1
-port = 8125
-
-[[TSDBHandler]]
-host = 127.0.0.1
-port = 4242
-timeout = 15
-
-[[LibratoHandler]]
-user = user@example.com
-apikey = abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz01
-
-
-[[HttpPostHandler]]
-
-### Urp to post the metrics
-url = http://localhost:8888/
-### Metrics batch size
-batch = 100
-
+<% @handlers.sort.each do |handler, params| -%>
+[[<%= handler.split('.').last %>]]
+<% params.sort.each do |param, value| -%>
+<% if param == 'host' and value.empty? %>
+host = <%= node['bcpc']['management']['ip'] %>
+<% else %>
+<%= param %> = <%= value %>
+<% end %>
+<% end %>
+<% end %>
 
 ################################################################################
 ### Options for collectors
