@@ -27,6 +27,13 @@ apt_repository "ceph" do
   notifies :run, "execute[apt-get update]", :immediately
 end
 
+# configure an apt preference to prefer the RedHat vendor to Canonical
+apt_preference 'ceph' do
+  glob '*'
+  pin 'release o=RedHat'
+  pin_priority '900'
+end
+
 # delete the compromised Ceph signing key (17ED316D)
 # if the new Ceph release key is installed (460F3994)
 bash "remove-old-ceph-key" do
