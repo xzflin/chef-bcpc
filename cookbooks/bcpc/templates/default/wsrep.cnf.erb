@@ -79,6 +79,14 @@ init-connect='SET NAMES utf8'
 character-set-server = utf8
 
 ##
+## Slow query log options
+##
+slow_query_log=<%= @slow_query_log ? '1' : '0' %>
+slow_query_log_file=<%= @slow_query_log_file %>
+long_query_time=<%= @long_query_time %>
+log_queries_not_using_indexes=<%= @log_queries_not_using_indexes ? '1' : '0' %>
+
+##
 ## WSREP options
 ##
 

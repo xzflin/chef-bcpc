@@ -14,3 +14,4 @@ UserParameter=mysql.size[*],echo "select sum($(case "$3" in both|"") echo "data_
 
 UserParameter=mysql.ping,HOME=/var/lib/zabbix mysqladmin --defaults-file=/etc/mysql/debian.cnf ping | grep -c alive
 UserParameter=mysql.version,mysql -V
+UserParameter=mysql.slow_queries,/usr/local/bin/mysql_slow_query_check.sh

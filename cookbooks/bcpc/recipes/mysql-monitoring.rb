@@ -73,9 +73,28 @@ template "/etc/mysql/conf.d/wsrep.cnf" do
         :innodb_io_capacity => node['bcpc']['monitoring']['mysql']['innodb_io_capacity'],
         :innodb_log_buffer_size => node['bcpc']['monitoring']['mysql']['innodb_log_buffer_size'],
         :innodb_flush_method => node['bcpc']['monitoring']['mysql']['innodb_flush_method'],
-        :wsrep_slave_threads => node['bcpc']['monitoring']['mysql']['wsrep_slave_threads']
+        :wsrep_slave_threads => node['bcpc']['monitoring']['mysql']['wsrep_slave_threads'],
+        :slow_query_log => node['bcpc']['monitoring']['mysql']['slow_query_log'],
+        :slow_query_log_file => node['bcpc']['monitoring']['mysql']['slow_query_log_file'],
+        :long_query_time => node['bcpc']['monitoring']['mysql']['long_query_time'],
+        :log_queries_not_using_indexes => node['bcpc']['monitoring']['mysql']['log_queries_not_using_indexes']
     )
     notifies :restart, "service[mysql]", :immediately
+end
+
+# logrotate_app resource is not used because it does not support lazy {}
+template '/etc/logrotate.d/mysql_slow_query' do
+  source 'logrotate_mysql_slow_query.erb'
+  mode   '00400'
+  variables(
+    lazy {
+      {
+        :slow_query_log_file => node['bcpc']['monitoring']['mysql']['slow_query_log_file'],
+        :mysql_root_password => get_config('mysql-monitoring-root-password'),
+        :mysql_root_user     => get_config('mysql-monitoring-root-user')
+      }
+    }
+  )
 end
 
 template "/usr/local/etc/chk_mysql_quorum.sql" do
@@ -93,4 +112,15 @@ template "/usr/local/bin/chk_mysql_quorum" do
     mode 0750
     owner "root"
     group "root"
+end
+
+
+template '/usr/local/bin/mysql_slow_query_check.sh' do
+  source 'mysql_slow_query_check.sh.erb'
+  mode  '00755'
+  owner 'root'
+  group 'root'
+  variables(
+    slow_query_log_file: node['bcpc']['monitoring']['mysql']['slow_query_log_file']
+  )
 end
