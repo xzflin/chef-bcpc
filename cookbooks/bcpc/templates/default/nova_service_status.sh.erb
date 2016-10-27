@@ -1,0 +1,14 @@
+#!/bin/bash
+
+export OS_TENANT_NAME=<%= @node['bcpc']['admin_tenant'] %>
+export OS_USERNAME=<%= get_config('keystone-admin-user') %>
+export OS_PASSWORD=<%= get_config('keystone-admin-password') %>
+export OS_AUTH_URL=<%= @node['bcpc']['protocol']['keystone'] %>://openstack.<%= @node['bcpc']['cluster_domain'] %>:<%= @node['bcpc']['catalog']['identity']['ports']['public'] %>/<%= @node['bcpc']['catalog']['identity']['uris']['public'] %>/
+export OS_REGION_NAME=<%= @node['bcpc']['region_name'] %>
+export OS_NO_CACHE=1
+<% if get_api_version(:identity) == "3" %>
+export OS_PROJECT_DOMAIN_NAME=default
+export OS_USER_DOMAIN_NAME=default
+<% end %>
+
+python /usr/local/bin/nova_service_status.py

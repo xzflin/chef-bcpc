@@ -81,5 +81,20 @@ end
     end
 end
 
+# add some scripts used to monitor for failed/stuck nova services
+cookbook_file '/usr/local/bin/nova_service_status.py' do
+  source 'nova_service_status.py'
+  mode   '00644'
+  owner  'root'
+  group  'root'
+end
+
+template '/usr/local/bin/nova_service_status.sh' do
+  source 'nova_service_status.sh.erb'
+  mode   '00750'
+  owner  'root'
+  group  'adm'
+end
+
 include_recipe "bcpc::nova-work"
 include_recipe "bcpc::nova-setup"
