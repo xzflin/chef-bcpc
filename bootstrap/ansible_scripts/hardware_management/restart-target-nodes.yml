@@ -1,17 +1,27 @@
 # USAGE:
-# - specify the nodes to be rebooted via -e target=blah, where
-#   blah is a hosts pattern (start with ~, e.g. "~blah" for
-#   a regex pattern)
-# - specify a particular head node to use to execute the
-#   Ceph/nova management commands via -e control_headnode=blah
-#   (strictly speaking it does not have to be a head node,
-#   but it must have access to Ceph
+#
+# - target: specify the nodes to be rebooted via a hosts pattern
+#   (start with ~, e.g. "~blah" for a regex pattern)
+#
+# - control_headnode: specify the  head node to use to execute the
+#   Ceph/nova management commands (strictly speaking it does not have
+#   to be a head node, but it must have admin access to Ceph
 #   and have /root/adminrc present with admin credentials)
-# - specify the number of nodes to work on at once via -e serial=#
+#
+# - serial (default 1): specify the number of nodes to work on at once
 #   WARNING: for serial higher than 1 it is strongly recommended to also
 #   specify -c paramiko to avoid Ansible tripping over itself and closing
 #   the SSH shared connection for the delegation, which will require all
 #   sorts of obnoxious cleanup
+#   WARNING: note that when waiting for nova-network with serial > 1,
+#   the sleep time will be the value calculated for the first node
+#   alphabetically in the batch of nodes being worked on (so it may be
+#   insufficiently long for the rest of the nodes in the batch to get
+#   all their networks set up again)
+#
+# - chef_after_reboot (default true): do not rechef nodes after reboot (the
+#   default, in order to ensure MD devices are configured and kernel tools
+#   packages are installed after kernel upgrades)
 ---
 - include: ../common_playbooks/validate_environment.yml
 
@@ -52,6 +62,9 @@
       tags:
         - stopstart
 
+    - name: Run Chef after reboot?
+      set_fact: chef_after_reboot_internal="{{ chef_after_reboot | default(True) }}"
+
     - name: Get hosts in general compute aggregate
       shell: ". /root/adminrc && nova aggregate-details general_compute"
       register: general_compute_agg
@@ -86,7 +99,7 @@
 
     - name: nova stop running instances on hypervisor
       shell: ". /root/adminrc && nova stop {{ item }} && sleep 2"
-      with_items: running_instances
+      with_items: "{{ running_instances }}"
       when: item != ""
       delegate_to: "{{ control_headnode }}"
       tags:
@@ -99,7 +112,7 @@
       ignore_errors: true
       retries: 20
       delay: 3
-      with_items: running_instances
+      with_items: "{{ running_instances }}"
       when: item != ""
       delegate_to: "{{ control_headnode }}"
       tags:
@@ -115,12 +128,16 @@
       become: no
       local_action: wait_for host={{ ansible_ssh_host }} port=22 state=started timeout=1800
 
-    - name: Wait 300 seconds to allow Nova Networking to recreate tenant networks
-      pause: seconds=300
+    - name: Wait to allow Nova Networking to recreate tenant networks
+      pause: seconds="{{ ((running_instances | length) * 20)+1 }}"
+
+    - name: Rechef node
+      command: chef-client
+      when: chef_after_reboot_internal
 
     - name: nova start instances on hypervisor
       shell: ". /root/adminrc && nova start {{ item }} && sleep 15"
-      with_items: running_instances
+      with_items: "{{ running_instances }}"
       delegate_to: "{{ control_headnode }}"
       when: "{{ restart_instances | default(True) }} and item != ''"
       ignore_errors: true
@@ -129,14 +146,14 @@
 
     - name: Add node back to general compute aggregate
       shell: ". /root/adminrc && nova aggregate-add-host general_compute {{ inventory_hostname }}"
-      when: general_compute_agg.stdout | search("{{ inventory_hostname }}")
+      when: (general_compute_agg.stdout | search("{{ inventory_hostname }}")) and (not chef_after_reboot_internal)
       delegate_to: "{{ control_headnode }}"
       tags:
         - stopstart
 
     - name: Add node back to ephemeral compute aggregate
       shell: ". /root/adminrc && nova aggregate-add-host ephemeral_compute {{ inventory_hostname }}"
-      when: ephemeral_compute_agg.stdout | search("{{ inventory_hostname }}")
+      when: (ephemeral_compute_agg.stdout | search("{{ inventory_hostname }}")) and (not chef_after_reboot_internal)
       delegate_to: "{{ control_headnode }}"
       tags:
         - stopstart
